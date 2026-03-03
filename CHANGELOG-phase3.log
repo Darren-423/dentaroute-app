@@ -1,0 +1,122 @@
+================================================================================
+  CHANGELOG — Phase 3: Quality Improvements
+  Date: 2026-03-03
+================================================================================
+
+TASK 1: Replace Hardcoded Names with Dynamic Store Data
+────────────────────────────────────────────────────────
+Problem:
+  Several files had patient/doctor names hardcoded instead of loading
+  them dynamically from the store. This caused the app to always display
+  demo data regardless of the actual logged-in user.
+
+Fixes (7 locations across 5 files):
+
+  ┌───┬────────────────────────────────────┬────────────────────────────────────┐
+  │ # │ File : Line                        │ Change                             │
+  ├───┼────────────────────────────────────┼────────────────────────────────────┤
+  │ 1 │ patient/clinic-checkin.tsx:177      │ "Sarah Johnson"                    │
+  │   │                                    │ → patientName (loaded from store)   │
+  ├───┼────────────────────────────────────┼────────────────────────────────────┤
+  │ 2 │ patient/treatment-complete.tsx:92   │ "Sarah Johnson"                    │
+  │   │                                    │ → patientName (loaded from store)   │
+  ├───┼────────────────────────────────────┼────────────────────────────────────┤
+  │ 3 │ doctor/patient-info.tsx:192-193     │ "Dr. Kim Minjun"                   │
+  │   │                                    │ → doctorProfile?.name || "Doctor"   │
+  │   │                                    │ "Seoul Bright Dental"               │
+  │   │                                    │ → doctorProfile?.clinic || "Clinic" │
+  ├───┼────────────────────────────────────┼────────────────────────────────────┤
+  │ 4 │ doctor/profile.tsx:33-46           │ Hardcoded full fallback profile     │
+  │   │                                    │ → store.getDoctorProfile()          │
+  ├───┼────────────────────────────────────┼────────────────────────────────────┤
+  │ 5 │ doctor/final-invoice.tsx:339+336   │ "Sarah Johnson" + "S" initial       │
+  │   │                                    │ → casePatientName (from case data)  │
+  ├───┼────────────────────────────────────┼────────────────────────────────────┤
+  │ 6 │ doctor/case-detail.tsx:104         │ "Dr. Kim Minjun" fallback           │
+  │   │                                    │ → profile?.name || "Doctor"         │
+  ├───┼────────────────────────────────────┼────────────────────────────────────┤
+  │ 7 │ doctor/case-detail.tsx:183-184     │ "Dr. Kim Minjun" + "Seoul Bright"   │
+  │   │                                    │ → doctorProfile?.name/clinic        │
+  └───┴────────────────────────────────────┴────────────────────────────────────┘
+
+  Additional state variables added:
+  - clinic-checkin.tsx: `patientName` state, loaded from getCurrentUser/getPatientProfile
+  - treatment-complete.tsx: `patientName` state, loaded from getCurrentUser/getPatientProfile
+  - patient-info.tsx: `doctorProfile` state, loaded from getDoctorProfile
+  - final-invoice.tsx: `casePatientName` state, loaded from store.getCase()
+
+  Verification: grep "Sarah Johnson|Dr. Kim Minjun|Seoul Bright" app/ → 0 results
+
+Status: DONE
+
+
+TASK 2: Improve `any` Types with Proper TypeScript Types
+─────────────────────────────────────────────────────────
+Problem:
+  Multiple useState hooks used `any` or `any[]` when proper interfaces
+  were already exported from lib/store.ts.
+
+Fixes:
+
+  a) DentistQuote interface extended (lib/store.ts):
+     Added optional fields used in quote-detail.tsx:
+     + clinicPhotos?: string[]
+     + yearsExperience?: number
+     + specialties?: string[]
+
+  b) State typing improvements:
+     ┌──────────────────────────────┬──────────────────────┬─────────────────────────┐
+     │ File                         │ Before               │ After                   │
+     ├──────────────────────────────┼──────────────────────┼─────────────────────────┤
+     │ patient/quotes.tsx           │ useState<any[]>      │ useState<DentistQuote[]> │
+     │ patient/quote-detail.tsx     │ useState<any>        │ useState<DentistQuote|null> │
+     │ patient/payment.tsx          │ useState<any>        │ useState<DentistQuote|null> │
+     └──────────────────────────────┴──────────────────────┴─────────────────────────┘
+
+  c) Downstream `any` casts removed (quote-detail.tsx):
+     - quotes.find((q: any) =>  →  quotes.find((q) =>
+     - quote.treatments?.map((t: any, i: number) =>  →  .map((t, i) =>
+     - quote.visits.map((v: any, idx: number) =>  →  .map((v, idx) =>
+
+  d) Null safety fixes (quote-detail.tsx):
+     - setQuote(found)  →  setQuote(found ?? null)
+     - quote.visits.map  →  quote.visits!.map  (guarded by enclosing if)
+     - v.paymentPercent > 0  →  (v.paymentPercent ?? 0) > 0
+     - v.gapMonths > 0  →  (v.gapMonths ?? 0) > 0
+
+Status: DONE
+
+
+TASK 3: Add Help Center Shortcut to Patient Dashboard
+──────────────────────────────────────────────────────
+File: app/patient/dashboard.tsx
+
+Change:
+  Added 4th Quick Action card linking to /patient/help-center:
+  - Icon: ❓
+  - Label: "Help"
+  - Background: #fef3c7 (warm yellow, matches amber theme)
+  - Position: After "Messages" in the Quick Actions grid
+
+  This provides patients quick access to Help Center from the dashboard,
+  complementing the existing link in the Profile screen.
+
+Status: DONE
+
+
+VERIFICATION
+────────────
+1. TypeScript build: npx tsc --noEmit → 0 errors ✓
+2. Hardcoded names search: 0 results in app/ directory ✓
+3. DentistQuote types properly imported and used ✓
+4. Help Center shortcut present in dashboard Quick Actions ✓
+5. Doctor profile loaded dynamically (not from hardcoded fallback) ✓
+
+================================================================================
+  SUMMARY
+  - 7 hardcoded name references replaced with dynamic store data (5 files)
+  - 3 useState hooks properly typed + 3 downstream any casts removed
+  - DentistQuote interface extended with 3 optional fields
+  - Help Center shortcut added to patient dashboard
+  - TypeScript: 0 errors
+================================================================================

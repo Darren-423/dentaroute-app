@@ -1,0 +1,72 @@
+================================================================
+ DentaRoute Phase 1 — TypeScript Build Fix Log
+ Date: 2026-03-03
+ Status: COMPLETE (0 TS errors)
+================================================================
+
+BEFORE: 4 TypeScript errors across 3 files (build blocked)
+AFTER:  0 TypeScript errors (npx tsc --noEmit passes clean)
+
+----------------------------------------------------------------
+FIX 1: app/doctor/earnings.tsx (2 errors)
+----------------------------------------------------------------
+  ERROR:  TS2304 — Cannot find name 'allTotal' (lines 141, 175)
+  CAUSE:  `allTotal` is a local variable inside the `load()` async
+          callback (line 52). It goes out of scope after `load()`
+          finishes. The JSX render tried to reference it directly
+          instead of using the `totalAllTime` state variable that
+          receives the same value via `setTotalAllTime(allTotal)`
+          on line 105.
+  FIX:    Replaced `allTotal` → `totalAllTime` in both JSX locations.
+          - Line 141: Summary card "All Time" display
+          - Line 175: Breakdown section "Total Revenue" display
+
+----------------------------------------------------------------
+FIX 2: app/doctor/patient-info.tsx (1 error)
+----------------------------------------------------------------
+  ERROR:  TS2345 — Argument of type 'never[] | { xrays: string[];
+          treatmentPlans: string[]; photos: string[] }' is not
+          assignable to parameter of type 'SetStateAction<any[]>'
+  CAUSE:  `getPatientFiles()` returns an object with xrays,
+          treatmentPlans, photos fields — NOT an array. But
+          the state was typed as `useState<any[]>([])`, causing
+          a type mismatch on `setFiles(f || [])`.
+          Additionally, the seed data stores numeric counts
+          ({xrays: 2, ...}) while the type signature declares
+          string arrays ({xrays: string[], ...}).
+  FIX:    - Changed state type: `useState<any[]>([])` → `useState<any>(null)`
+          - Changed setter: `setFiles(f || [])` → `setFiles(f)`
+          - Changed display (line 143): `files.length` → computed
+            count that handles both number values (seed data) and
+            array values (real upload data) via Object.values reduce.
+
+----------------------------------------------------------------
+FIX 3: app/patient/clinic-map.tsx (1 error)
+----------------------------------------------------------------
+  ERROR:  TS2749 — 'MapView' refers to a value, but is being
+          used as a type here.
+  CAUSE:  MapView is conditionally assigned at runtime:
+            let MapView: any = View;
+            if (Platform.OS !== "web") { MapView = Maps.default; }
+          This makes MapView a value (variable), not a type.
+          `useRef<MapView>` tries to use it as a generic type
+          parameter, which TypeScript rejects.
+  FIX:    Changed `useRef<MapView>(null)` → `useRef<any>(null)`.
+          This is appropriate since MapView is already typed as
+          `any` and the ref is only used for `.animateToRegion()`.
+
+================================================================
+VERIFICATION
+================================================================
+  Command:  npx tsc --noEmit --pretty
+  Result:   Exit code 0 — no output (all clean)
+
+================================================================
+ALSO COMPLETED IN THIS SESSION (prior to Phase 1)
+================================================================
+  - Help Center feature (app/patient/help-center.tsx) — new file
+  - lib/store.ts — added SupportInquiry type, INQUIRIES key,
+    submitInquiry/getInquiries methods, "system" notification type
+  - app/patient/profile.tsx — added Help & Support menu item
+
+================================================================

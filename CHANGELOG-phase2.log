@@ -1,0 +1,93 @@
+================================================================================
+  CHANGELOG — Phase 2: Feature Improvements
+  Date: 2026-03-03
+================================================================================
+
+TASK 1: Fix Booking Status After Deposit Payment
+─────────────────────────────────────────────────
+File: app/patient/payment.tsx
+Line: 106
+
+Problem:
+  After a patient pays a deposit, the booking status was set to "confirmed",
+  but per the state machine the doctor hasn't proposed visit times yet.
+  Correct flow: pending_times → times_proposed → confirmed
+
+Fix:
+  - status: "confirmed"
+  + status: "pending_times"
+
+Status: DONE
+
+
+TASK 2: Unify Color Theme
+─────────────────────────
+Investigation Result: NOT NEEDED (by design)
+
+Findings:
+  - Patient screens use purple theme (#4A0080) — intentional role branding
+  - Doctor screens use teal theme (#0f766e)  — intentional role branding
+  - The only old teal (#0d7a6e) found in patient files was inside
+    VISIT_COLORS arrays (1 color among 10+ visit indicator colors), not a
+    theming issue.
+  - Conclusion: The dual-color scheme is a deliberate design choice for
+    role-based differentiation, not a bug.
+
+Status: SKIPPED (correct by design)
+
+
+TASK 3: Guard DEV SKIP Buttons with __DEV__
+────────────────────────────────────────────
+Problem:
+  10 "DEV SKIP" buttons across 8 files were always visible, including in
+  production builds. These buttons bypass normal app flow by directly
+  mutating AsyncStorage booking data.
+
+Fix:
+  Wrapped each <TouchableOpacity> with {__DEV__ && ...} so they only
+  render in development mode and are stripped from production bundles.
+
+Files modified (10 buttons, 8 files):
+
+  Patient screens (7 buttons, 6 files):
+  ┌────────────────────────────────────────┬──────────────────────┐
+  │ File                                   │ DEV SKIP action      │
+  ├────────────────────────────────────────┼──────────────────────┤
+  │ app/patient/arrival-info.tsx           │ → flight_submitted   │
+  │ app/patient/clinic-checkin.tsx         │ → checked_in_clinic  │
+  │ app/patient/hotel-arrived.tsx          │ → arrived_korea      │
+  │ app/patient/departure-pickup.tsx       │ → departure_set      │
+  │ app/patient/pick-times.tsx             │ → confirmed          │
+  │ app/patient/final-payment.tsx (btn 1)  │ → treatment_done     │
+  │ app/patient/final-payment.tsx (btn 2)  │ → payment_complete   │
+  └────────────────────────────────────────┴──────────────────────┘
+
+  Doctor screens (2 buttons, 2 files):
+  ┌────────────────────────────────────────┬──────────────────────┐
+  │ File                                   │ DEV SKIP action      │
+  ├────────────────────────────────────────┼──────────────────────┤
+  │ app/doctor/final-invoice.tsx           │ → treatment_done     │
+  │ app/doctor/propose-times.tsx           │ → times_proposed     │
+  └────────────────────────────────────────┴──────────────────────┘
+
+  Note: arrival-info.tsx was wrapped in an earlier edit (beginning of
+  Phase 2); the remaining 9 buttons were wrapped in this session.
+
+Status: DONE (all 10/10 verified)
+
+
+VERIFICATION
+────────────
+1. TypeScript build: npx tsc --noEmit → 0 errors ✓
+2. All 10 DEV SKIP buttons confirmed wrapped with {__DEV__ && ...} ✓
+3. No unrelated code changes ✓
+4. Pattern used: {__DEV__ && <TouchableOpacity ...>...</TouchableOpacity>}
+   - React Native strips __DEV__ === false branches in production
+
+================================================================================
+  SUMMARY
+  - 1 bug fix (payment.tsx status)
+  - 1 investigation (color theme — no change needed)
+  - 10 DEV SKIP buttons guarded across 8 files
+  - TypeScript: 0 errors
+================================================================================
