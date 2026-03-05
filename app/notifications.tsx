@@ -9,7 +9,7 @@ import {
 import { AppNotification, store } from "../lib/store";
 
 const T = {
-  teal: "#4A0080", tealMid: "#5C10A0", tealLight: "#f0e6f6",
+  teal: "#0f766e", tealMid: "#134e4a", tealLight: "#14b8a6",
   navy: "#0f172a", slate: "#64748b", slateLight: "#94a3b8",
   border: "#e2e8f0", bg: "#f8fafc", white: "#fff",
   blue: "#3b82f6", blueLight: "#eff6ff",
@@ -119,12 +119,12 @@ export default function NotificationsScreen() {
           <View style={s.emptyState}>
             <Text style={{ fontSize: 48, marginBottom: 12 }}>🔔</Text>
             <Text style={[s.emptyTitle, isDark && { color: T.white }]}>No notifications yet</Text>
-            <Text style={s.emptyDesc}>You'll be notified about quotes, messages, and updates here.</Text>
+            <Text style={[s.emptyDesc, isDark && { color: "rgba(255,255,255,0.5)" }]}>You'll be notified about quotes, messages, and updates here.</Text>
           </View>
         ) : (
           groups.map((group) => (
             <View key={group.label} style={s.group}>
-              <Text style={[s.groupLabel, isDark && { color: T.slateLight }]}>{group.label}</Text>
+              <Text style={[s.groupLabel, isDark && { color: "rgba(255,255,255,0.45)" }]}>{group.label}</Text>
               {group.items.map((n) => (
                 <TouchableOpacity
                   key={n.id}
@@ -137,7 +137,7 @@ export default function NotificationsScreen() {
                   onPress={() => handleTap(n)}
                   activeOpacity={0.7}
                 >
-                  <View style={s.notifIconWrap}>
+                  <View style={[s.notifIconWrap, isDark && s.notifIconWrapDark]}>
                     <Text style={s.notifIcon}>{n.icon}</Text>
                   </View>
                   <View style={{ flex: 1 }}>
@@ -145,8 +145,8 @@ export default function NotificationsScreen() {
                       <Text style={[s.notifTitle, isDark && { color: T.white }]} numberOfLines={1}>{n.title}</Text>
                       {!n.read && <View style={s.unreadDot} />}
                     </View>
-                    <Text style={s.notifBody} numberOfLines={2}>{n.body}</Text>
-                    <Text style={s.notifTime}>{timeAgo(n.createdAt)}</Text>
+                    <Text style={[s.notifBody, isDark && { color: "rgba(255,255,255,0.6)" }]} numberOfLines={2}>{n.body}</Text>
+                    <Text style={[s.notifTime, isDark && { color: "rgba(255,255,255,0.4)" }]}>{timeAgo(n.createdAt)}</Text>
                   </View>
                   {n.route && <Text style={[s.notifArrow, isDark && { color: "rgba(255,255,255,0.2)" }]}>›</Text>}
                 </TouchableOpacity>
@@ -161,12 +161,12 @@ export default function NotificationsScreen() {
 
 const s = StyleSheet.create({
   container: { flex: 1, backgroundColor: T.bg },
-  containerDark: { backgroundColor: "#0f172a" },
+  containerDark: { backgroundColor: "#042f2e" },
   header: {
     paddingHorizontal: 24, paddingTop: 60, paddingBottom: 18,
     borderBottomWidth: 1, borderBottomColor: T.border, backgroundColor: T.white,
   },
-  headerDark: { backgroundColor: "#1e293b", borderBottomColor: "rgba(255,255,255,0.06)" },
+  headerDark: { backgroundColor: "#0f766e", borderBottomColor: "rgba(255,255,255,0.12)" },
   headerTop: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 8 },
   backBtn: {
     width: 36, height: 36, borderRadius: 12,
@@ -175,18 +175,18 @@ const s = StyleSheet.create({
     alignItems: "center", justifyContent: "center",
   },
   backBtnDark: {
-    backgroundColor: "rgba(255,255,255,0.12)",
-    borderColor: "rgba(255,255,255,0.15)",
+    backgroundColor: "rgba(255,255,255,0.15)",
+    borderColor: "rgba(255,255,255,0.2)",
   },
   backArrow: { fontSize: 24, color: "#0f172a", fontWeight: "600", marginTop: -2 },
   backArrowDark: { color: "#fff" },
-  markAllText: { color: T.teal, fontSize: 13, fontWeight: "600" },
+  markAllText: { color: T.tealLight, fontSize: 13, fontWeight: "600" },
   title: { fontSize: 24, fontWeight: "700", color: T.navy },
   unreadBadge: {
-    alignSelf: "flex-start", backgroundColor: T.tealLight,
+    alignSelf: "flex-start", backgroundColor: "rgba(20,184,166,0.15)",
     borderRadius: 10, paddingHorizontal: 10, paddingVertical: 4, marginTop: 8,
   },
-  unreadBadgeText: { fontSize: 12, fontWeight: "600", color: T.teal },
+  unreadBadgeText: { fontSize: 12, fontWeight: "600", color: T.tealLight },
 
   content: { padding: 20, gap: 20, paddingBottom: 60 },
 
@@ -205,17 +205,18 @@ const s = StyleSheet.create({
     padding: 16, borderRadius: 14,
     backgroundColor: T.white, borderWidth: 1, borderColor: T.border,
   },
-  notifCardDark: { backgroundColor: "rgba(255,255,255,0.04)", borderColor: "rgba(255,255,255,0.06)" },
+  notifCardDark: { backgroundColor: "rgba(255,255,255,0.06)", borderColor: "rgba(255,255,255,0.08)" },
   notifCardUnread: { backgroundColor: T.blueLight, borderColor: "rgba(59,130,246,0.15)" },
-  notifCardUnreadDark: { backgroundColor: "rgba(59,130,246,0.08)", borderColor: "rgba(59,130,246,0.15)" },
+  notifCardUnreadDark: { backgroundColor: "rgba(20,184,166,0.12)", borderColor: "rgba(20,184,166,0.2)" },
   notifIconWrap: {
     width: 44, height: 44, borderRadius: 22,
     backgroundColor: "#f1f5f9", alignItems: "center", justifyContent: "center",
   },
+  notifIconWrapDark: { backgroundColor: "rgba(255,255,255,0.1)" },
   notifIcon: { fontSize: 22 },
   notifTitleRow: { flexDirection: "row", alignItems: "center", gap: 6 },
   notifTitle: { fontSize: 14, fontWeight: "700", color: T.navy, flex: 1 },
-  unreadDot: { width: 8, height: 8, borderRadius: 4, backgroundColor: T.blue },
+  unreadDot: { width: 8, height: 8, borderRadius: 4, backgroundColor: T.tealLight },
   notifBody: { fontSize: 12, color: T.slate, marginTop: 2, lineHeight: 17 },
   notifTime: { fontSize: 11, color: T.slateLight, marginTop: 4 },
   notifArrow: { fontSize: 22, color: T.slateLight },

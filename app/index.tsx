@@ -1,7 +1,7 @@
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
-import { useRef, useState } from 'react';
-import { Dimensions, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { useEffect, useRef, useState } from 'react';
+import { Animated, Dimensions, Easing, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 const { width } = Dimensions.get('window');
 const CARD_WIDTH = width - 56;
@@ -15,6 +15,16 @@ export default function SplashScreen() {
   const router = useRouter();
   const [activeIndex, setActiveIndex] = useState(0);
   const scrollViewRef = useRef(null);
+  const arrowPulse = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    Animated.loop(
+      Animated.sequence([
+        Animated.timing(arrowPulse, { toValue: 1, duration: 1600, easing: Easing.inOut(Easing.cubic), useNativeDriver: true }),
+        Animated.timing(arrowPulse, { toValue: 0, duration: 1600, easing: Easing.inOut(Easing.cubic), useNativeDriver: true }),
+      ])
+    ).start();
+  }, []);
 
   const handleScroll = (event: any) => {
     const scrollPosition = event.nativeEvent.contentOffset.x;
@@ -117,7 +127,17 @@ export default function SplashScreen() {
         style={styles.button}
         onPress={() => router.push('/auth/role-select')}
       >
-        <Text style={styles.buttonText}>Get Started →</Text>
+        <View style={styles.buttonInner}>
+          <Text style={styles.buttonText}>Get Started</Text>
+          <Animated.View style={[styles.arrowCircle, {
+            transform: [
+              { translateX: arrowPulse.interpolate({ inputRange: [0, 1], outputRange: [0, 3] }) },
+              { scale: arrowPulse.interpolate({ inputRange: [0, 0.5, 1], outputRange: [1, 1.06, 1] }) },
+            ],
+          }]}>
+            <View style={styles.chevron} />
+          </Animated.View>
+        </View>
       </TouchableOpacity>
 
       {/* Founder Line */}
@@ -271,11 +291,29 @@ const styles = StyleSheet.create({
     shadowRadius: 24,
     elevation: 8,
   },
+  buttonInner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 10,
+  },
   buttonText: {
     fontSize: 17,
     fontWeight: '700',
     color: T.purple,
     letterSpacing: 0.3,
+  },
+  arrowCircle: {
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  chevron: {
+    width: 9,
+    height: 9,
+    borderTopWidth: 2.5,
+    borderRightWidth: 2.5,
+    borderColor: T.purple,
+    transform: [{ rotate: '45deg' }],
   },
   founderText: {
     fontSize: 11,

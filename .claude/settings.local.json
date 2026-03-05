@@ -1,0 +1,34 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(ls -la C:/Dentaroute/app/patient/*.tsx)",
+      "Bash(xargs -I {} basename {})",
+      "Bash(ls -la C:/Dentaroute/app/doctor/*.tsx)",
+      "mcp__Claude_Preview__preview_start",
+      "Bash(where npm)",
+      "Bash(ls \"C:/Dentaroute/node_modules/.bin/expo\"*)",
+      "Bash(node -e \"const p = require.resolve\\(''@expo/cli''\\); console.log\\(p\\);\")",
+      "Bash(node -e \"const p = require.resolve\\(''expo''\\); console.log\\(p\\);\")",
+      "Bash(ls /c/Dentaroute/node_modules/expo/bin/cli*)",
+      "Bash(npx tsc --noEmit app/doctor/case-detail.tsx)",
+      "Bash(npx tsc --noEmit)",
+      "Bash(netstat -ano)",
+      "Bash(taskkill //PID 30752 //F)",
+      "Bash(xargs grep -l \"expo-font\\\\|useFonts\\\\|Font\\\\.\")",
+      "Bash(npx tsc --noEmit --pretty)",
+      "Bash(xargs grep -h \"TODO\\\\|FIXME\\\\|HACK\\\\|XXX\\\\|placeholder\\\\|mock\")",
+      "Bash(ls -la app/patient/*.tsx)",
+      "Bash(ls -la app/doctor/*.tsx)",
+      "Bash(ls -1 app/patient/*.tsx)",
+      "Bash(ls -1 app/doctor/*.tsx)",
+      "Bash(ls -1 app/auth/*.tsx)",
+      "Bash(find /c/Dentaroute/app -name \"*.tsx\" -type f ! -name \"dev-menu.tsx\" -exec grep -l \"Sarah\\\\|Kim\\\\|Bright Dental\" {} ;)",
+      "Bash(git add .gitignore .vscode/ README.md app.json app/_layout.tsx app/modal.tsx app/auth/ app/dev-menu.tsx app/doctor/ app/index.tsx app/notifications.tsx app/patient/ assets/ components/ constants/ hooks/ lib/ CLAUDE.md CHANGELOG-phase1.log CHANGELOG-phase2.log CHANGELOG-phase3.log docs/ eas.json eslint.config.js metro.config.js package.json package-lock.json scripts/ tsconfig.json)",
+      "Bash(git commit:*)",
+      "Bash(echo \"EXIT: $?\")",
+      "Bash(git add app/ lib/ components/ hooks/ constants/ docs/ .gitignore .vscode/ CHANGELOG-phase1.log CHANGELOG-phase2.log CHANGELOG-phase3.log CLAUDE.md README.md app.json eas.json eslint.config.js metro.config.js package.json package-lock.json scripts/ tsconfig.json assets/)",
+      "Bash(git push -u origin master)",
+      "Bash(ls C:/Dentaroute/*.*)"
+    ]
+  }
+}
