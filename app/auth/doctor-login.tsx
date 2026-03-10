@@ -1,6 +1,7 @@
+import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   ActivityIndicator,
   KeyboardAvoidingView,
@@ -9,19 +10,40 @@ import {
   StyleSheet,
   Text,
   TextInput,
-  TouchableOpacity,
-  View
+  View,
+  Pressable,
+  Dimensions
 } from "react-native";
+import Animated, {
+  useSharedValue,
+  useAnimatedStyle,
+  withSpring,
+  FadeInDown,
+} from "react-native-reanimated";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { StatusBar } from "expo-status-bar";
 import { store } from "../../lib/store";
 
-const API_URL = "https://dentaroute-api.onrender.com/api";
+const { width } = Dimensions.get('window');
+
+const T = {
+  white: "#ffffff",
+  tealDeep: "#064e3b",
+  tealMid: "#0f766e",
+  tealLight: "#14b8a6",
+  coralError: "#ff4d4f",
+};
 
 export default function DoctorLoginScreen() {
+  const insets = useSafeAreaInsets();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+
+  // Animations
+  const buttonScale = useSharedValue(1);
 
   const handleLogin = async () => {
     setLoading(true);
@@ -40,69 +62,97 @@ export default function DoctorLoginScreen() {
     }
   };
 
+  const buttonAnimatedStyle = useAnimatedStyle(() => {
+    return {
+      transform: [{ scale: buttonScale.value }],
+    };
+  });
+
   return (
-    <LinearGradient
-      colors={["#0f766e", "#134e4a"]}
-      start={{ x: 0.2, y: 0 }}
-      end={{ x: 0.8, y: 1 }}
-      style={styles.container}
-    >
+    <View style={styles.container}>
+      <StatusBar style="light" />
+
+      {/* Premium Background */}
+      <LinearGradient
+        colors={[T.tealDeep, T.tealMid, T.tealLight]}
+        locations={[0, 0.55, 1]}
+        start={{ x: 0.5, y: 1 }}
+        end={{ x: 0, y: 0 }}
+        style={StyleSheet.absoluteFill}
+      />
+
+
       <KeyboardAvoidingView
         behavior={Platform.OS === "ios" ? "padding" : "height"}
         style={{ flex: 1 }}
       >
         <ScrollView
-          contentContainerStyle={styles.scrollContent}
+          contentContainerStyle={[
+            styles.scrollContent,
+            { paddingTop: Math.max(insets.top + 20, 60), paddingBottom: Math.max(insets.bottom + 20, 40) }
+          ]}
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
         >
-          {/* Back */}
-          <TouchableOpacity
-            style={styles.backBtn}
-            onPress={() => router.back()}
-            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-          >
-            <Text style={styles.backArrow}>‹</Text>
-          </TouchableOpacity>
+          {/* Back Button */}
+          <Animated.View entering={FadeInDown.duration(600).delay(100)}>
+            <Pressable
+              onPress={() => router.back()}
+              style={({ pressed }) => [
+                styles.backBtn,
+                pressed && { opacity: 0.7 }
+              ]}
+              hitSlop={{ top: 15, bottom: 15, left: 15, right: 15 }}
+            >
+              <Ionicons name="arrow-back" size={24} color={T.white} />
+            </Pressable>
+          </Animated.View>
 
           {/* Header */}
-          <View style={styles.header}>
-            <Text style={styles.emoji}>👨‍⚕️</Text>
-            <Text style={styles.title}>Welcome back</Text>
-            <Text style={styles.subtitle}>Sign in to continue</Text>
-          </View>
+          <Animated.View entering={FadeInDown.duration(800).delay(200)} style={styles.header}>
+            <View style={styles.iconBadge}>
+              <Ionicons name="medkit" size={28} color={T.white} />
+            </View>
+            <Text style={styles.title}>Provider Portal</Text>
+            <Text style={styles.subtitle}>Sign in to manage your practice</Text>
+          </Animated.View>
 
           {/* Error Banner */}
           {error ? (
-            <View style={styles.errorBanner}>
-              <Text style={styles.errorBannerText}>❌ {error}</Text>
-            </View>
+            <Animated.View entering={FadeInDown.duration(400)} style={styles.errorBanner}>
+              <Ionicons name="alert-circle" size={18} color={T.coralError} />
+              <Text style={styles.errorBannerText}>{error}</Text>
+            </Animated.View>
           ) : null}
 
-          {/* Form */}
+          {/* Form Area */}
           <View style={styles.formArea}>
             {/* Email */}
-            <View style={styles.fieldGroup}>
+            <Animated.View entering={FadeInDown.duration(700).delay(300)} style={styles.fieldGroup}>
               <Text style={styles.label}>EMAIL</Text>
-              <TextInput
-                style={styles.input}
-                placeholder="your@email.com"
-                placeholderTextColor="rgba(255,255,255,0.3)"
-                value={email}
-                onChangeText={(t) => { setEmail(t); setError(""); }}
-                keyboardType="email-address"
-                autoCapitalize="none"
-                autoCorrect={false}
-                editable={!loading}
-              />
-            </View>
+              <View style={styles.inputContainer}>
+                <Ionicons name="mail-outline" size={20} color="rgba(255,255,255,0.5)" style={styles.inputIcon} />
+                <TextInput
+                  style={styles.input}
+                  placeholder="doctor@clinic.com"
+                  placeholderTextColor="rgba(255,255,255,0.3)"
+                  value={email}
+                  onChangeText={(t) => { setEmail(t); setError(""); }}
+                  keyboardType="email-address"
+                  autoCapitalize="none"
+                  autoCorrect={false}
+                  editable={!loading}
+                />
+              </View>
+            </Animated.View>
 
             {/* Password */}
-            <View style={styles.fieldGroup}>
+            <Animated.View entering={FadeInDown.duration(700).delay(400)} style={styles.fieldGroup}>
               <Text style={styles.label}>PASSWORD</Text>
-              <View style={styles.passwordWrap}>
+              <View style={styles.inputContainer}>
+                <Ionicons name="lock-closed-outline" size={20} color="rgba(255,255,255,0.5)" style={styles.inputIcon} />
                 <TextInput
-                  style={[styles.input, { paddingRight: 52 }]}
+                  style={[styles.input, { paddingRight: 50 }]}
                   placeholder="••••••••"
                   placeholderTextColor="rgba(255,255,255,0.3)"
                   value={password}
@@ -111,131 +161,219 @@ export default function DoctorLoginScreen() {
                   autoCapitalize="none"
                   editable={!loading}
                 />
-                <TouchableOpacity
+                <Pressable
                   style={styles.eyeBtn}
                   onPress={() => setShowPassword(!showPassword)}
-                  hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                  hitSlop={{ top: 15, bottom: 15, left: 15, right: 15 }}
                 >
-                  <Text style={styles.eyeText}>{showPassword ? "Hide" : "Show"}</Text>
-                </TouchableOpacity>
+                  <Ionicons name={showPassword ? "eye-off-outline" : "eye-outline"} size={22} color="rgba(255,255,255,0.7)" />
+                </Pressable>
               </View>
-            </View>
+            </Animated.View>
 
             {/* Forgot Password */}
-            <TouchableOpacity style={styles.forgotBtn}>
-              <Text style={styles.forgotText}>Forgot password?</Text>
-            </TouchableOpacity>
+            <Animated.View entering={FadeInDown.duration(700).delay(500)}>
+              <Pressable style={({ pressed }) => [styles.forgotBtn, pressed && { opacity: 0.6 }]}>
+                <Text style={styles.forgotText}>Forgot password?</Text>
+              </Pressable>
+            </Animated.View>
           </View>
 
-          {/* Spacer */}
           <View style={{ flex: 1, minHeight: 40 }} />
 
           {/* Sign In Button */}
-          <TouchableOpacity
-            style={[styles.signInBtn, loading && { opacity: 0.6 }]}
-            onPress={handleLogin}
-            disabled={loading}
-            activeOpacity={0.85}
-          >
-            {loading ? (
-              <ActivityIndicator color="#0f766e" size="small" />
-            ) : (
-              <Text style={styles.signInBtnText}>Sign in →</Text>
-            )}
-          </TouchableOpacity>
+          <Animated.View entering={FadeInDown.duration(800).delay(600)}>
+            <Animated.View style={buttonAnimatedStyle}>
+              <Pressable
+                style={({ pressed }) => [
+                  styles.signInBtnWrapper,
+                  loading && { opacity: 0.6 }
+                ]}
+                onPressIn={() => { buttonScale.value = withSpring(0.96, { damping: 15, stiffness: 300 }); }}
+                onPressOut={() => { buttonScale.value = withSpring(1, { damping: 15, stiffness: 300 }); }}
+                onPress={handleLogin}
+                disabled={loading}
+              >
+                <LinearGradient
+                  colors={['rgba(255,255,255,0.25)', 'rgba(255,255,255,0.1)']}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 1 }}
+                  style={styles.signInGradient}
+                />
+                {loading ? (
+                  <ActivityIndicator color={T.white} size="small" />
+                ) : (
+                  <Text style={styles.signInBtnText}>Sign in</Text>
+                )}
+                {!loading && <Ionicons name="arrow-forward" size={20} color={T.white} style={{ marginLeft: 8 }} />}
+              </Pressable>
+            </Animated.View>
+          </Animated.View>
 
           {/* Create Account Link */}
-          <View style={styles.bottomLink}>
-            <Text style={styles.bottomLinkText}>New here? </Text>
-            <TouchableOpacity
+          <Animated.View entering={FadeInDown.duration(800).delay(700)} style={styles.bottomLink}>
+            <Text style={styles.bottomLinkText}>New clinic? </Text>
+            <Pressable
               onPress={() => router.push("/auth/doctor-create-account" as any)}
+              style={({ pressed }) => [pressed && { opacity: 0.6 }]}
             >
-              <Text style={styles.bottomLinkAction}>Create account</Text>
-            </TouchableOpacity>
-          </View>
+              <Text style={styles.bottomLinkAction}>Join DentaRoute</Text>
+            </Pressable>
+          </Animated.View>
         </ScrollView>
       </KeyboardAvoidingView>
-    </LinearGradient>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1 },
+  container: {
+    flex: 1,
+    backgroundColor: '#064e3b', // Fallback
+  },
+
   scrollContent: {
     flexGrow: 1,
     paddingHorizontal: 28,
-    paddingTop: 60,
-    paddingBottom: 56,
   },
   backBtn: {
-    width: 36, height: 36, borderRadius: 12,
-    backgroundColor: "rgba(255,255,255,0.12)",
+    width: 44, height: 44, borderRadius: 22,
+    backgroundColor: "rgba(255,255,255,0.08)",
     borderWidth: 1, borderColor: "rgba(255,255,255,0.15)",
     alignItems: "center", justifyContent: "center",
-    marginBottom: 8,
+    marginBottom: 20,
   },
-  backArrow: { fontSize: 24, color: "#fff", fontWeight: "600", marginTop: -2 },
-  header: { marginBottom: 28 },
-  emoji: { fontSize: 36, marginBottom: 10 },
-  title: { fontSize: 30, fontWeight: "700", color: "#ffffff", marginBottom: 6 },
-  subtitle: { fontSize: 14, color: "rgba(255,255,255,0.45)", fontWeight: "300" },
-  errorBanner: {
-    backgroundColor: "#fef2ee",
-    borderRadius: 8,
-    paddingHorizontal: 12,
-    paddingVertical: 12,
+  header: {
+    marginBottom: 32,
+  },
+  iconBadge: {
+    width: 56,
+    height: 56,
+    borderRadius: 18,
+    backgroundColor: 'rgba(255,255,255,0.1)',
+    alignItems: 'center',
+    justifyContent: 'center',
     marginBottom: 16,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.2)',
   },
-  errorBannerText: { color: "#e05a3a", fontSize: 12 },
-  formArea: { gap: 16 },
-  fieldGroup: { gap: 6 },
-  label: {
-    fontSize: 11,
-    fontWeight: "600",
-    color: "rgba(255,255,255,0.5)",
-    letterSpacing: 0.8,
+  title: {
+    fontSize: 34,
+    fontWeight: "800",
+    color: T.white,
+    marginBottom: 8,
+    letterSpacing: -0.5,
   },
-  input: {
-    borderWidth: 1.5,
-    borderColor: "rgba(255,255,255,0.15)",
-    backgroundColor: "rgba(255,255,255,0.08)",
+  subtitle: {
+    fontSize: 15,
+    color: "rgba(255,255,255,0.6)",
+    fontWeight: "400",
+    lineHeight: 22,
+  },
+  errorBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: "rgba(255,77,79,0.15)",
+    borderWidth: 1,
+    borderColor: "rgba(255,77,79,0.3)",
     borderRadius: 12,
     paddingHorizontal: 16,
-    paddingVertical: 13,
-    fontSize: 14,
-    color: "#ffffff",
+    paddingVertical: 14,
+    marginBottom: 20,
   },
-  passwordWrap: { position: "relative" },
+  errorBannerText: {
+    color: T.coralError,
+    fontSize: 13,
+    fontWeight: '500',
+    marginLeft: 8,
+  },
+  formArea: {
+    gap: 20,
+  },
+  fieldGroup: {
+    gap: 8,
+  },
+  label: {
+    fontSize: 12,
+    fontWeight: "600",
+    color: "rgba(255,255,255,0.6)",
+    letterSpacing: 1,
+    marginLeft: 4,
+  },
+  inputContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: "rgba(255,255,255,0.06)",
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.15)",
+    borderRadius: 16,
+    overflow: 'hidden',
+    height: 56,
+  },
+  inputIcon: {
+    paddingLeft: 16,
+    paddingRight: 10,
+  },
+  input: {
+    flex: 1,
+    height: '100%',
+    fontSize: 15,
+    color: T.white,
+    paddingRight: 16,
+  },
   eyeBtn: {
     position: "absolute",
-    right: 16,
+    right: 0,
     top: 0,
     bottom: 0,
     justifyContent: "center",
+    paddingHorizontal: 16,
   },
-  eyeText: { color: "rgba(255,255,255,0.85)", fontSize: 13, fontWeight: "600" },
-  forgotBtn: { alignSelf: "flex-end" },
-  forgotText: { color: "rgba(255,255,255,0.7)", fontSize: 13, fontWeight: "500" },
-  signInBtn: {
-    backgroundColor: "#ffffff",
-    borderRadius: 14,
-    paddingVertical: 15,
+  forgotBtn: {
+    alignSelf: "flex-end",
+    paddingVertical: 8,
+    paddingHorizontal: 4,
+  },
+  forgotText: {
+    color: "rgba(255,255,255,0.7)",
+    fontSize: 14,
+    fontWeight: "500",
+  },
+  signInBtnWrapper: {
+    flexDirection: 'row',
     alignItems: "center",
     justifyContent: "center",
-    minHeight: 52,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.15,
-    shadowRadius: 24,
-    elevation: 8,
+    height: 56,
+    borderRadius: 16,
+    overflow: 'hidden',
+    backgroundColor: 'rgba(255,255,255,0.1)',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.2)',
   },
-  signInBtnText: { color: "#0f766e", fontSize: 15, fontWeight: "600" },
+  signInGradient: {
+    ...StyleSheet.absoluteFillObject,
+  },
+  signInBtnText: {
+    color: T.white,
+    fontSize: 16,
+    fontWeight: "700",
+    letterSpacing: 0.5,
+  },
   bottomLink: {
     flexDirection: "row",
     justifyContent: "center",
-    marginTop: 16,
-    paddingBottom: 40,
+    marginTop: 24,
+    paddingBottom: 20,
   },
-  bottomLinkText: { fontSize: 13, color: "rgba(255,255,255,0.5)" },
-  bottomLinkAction: { fontSize: 13, color: "#ffffff", fontWeight: "700", textDecorationLine: "underline" },
+  bottomLinkText: {
+    fontSize: 14,
+    color: "rgba(255,255,255,0.6)",
+  },
+  bottomLinkAction: {
+    fontSize: 14,
+    color: T.white,
+    fontWeight: "700",
+    textDecorationLine: "underline",
+  },
 });
+
