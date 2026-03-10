@@ -1,3 +1,4 @@
+import { LinearGradient } from "expo-linear-gradient";
 import { router, useFocusEffect, useLocalSearchParams } from "expo-router";
 import React, { useCallback, useState } from "react";
 import {
@@ -8,12 +9,36 @@ import {
 } from "react-native";
 import { AppNotification, store } from "../lib/store";
 
-const T = {
-  teal: "#0f766e", tealMid: "#134e4a", tealLight: "#14b8a6",
-  navy: "#0f172a", slate: "#64748b", slateLight: "#94a3b8",
-  border: "#e2e8f0", bg: "#f8fafc", white: "#fff",
-  blue: "#3b82f6", blueLight: "#eff6ff",
-  red: "#ef4444",
+/* ── Palette per role ── */
+const PATIENT = {
+  gradient: ["#3D0070", "#2F0058", "#220040"] as const,
+  accent: "#4A0080",
+  accentSoft: "rgba(74,0,128,0.08)",
+  accentMid: "rgba(74,0,128,0.15)",
+  accentLight: "#f0e6f6",
+  unreadBg: "rgba(74,0,128,0.07)",
+  unreadBorder: "rgba(74,0,128,0.15)",
+  dot: "#7c3aed",
+};
+const DOCTOR = {
+  gradient: ["#0f766e", "#134e4a", "#0d3d38"] as const,
+  accent: "#0f766e",
+  accentSoft: "rgba(20,184,166,0.08)",
+  accentMid: "rgba(20,184,166,0.15)",
+  accentLight: "#e6faf8",
+  unreadBg: "rgba(20,184,166,0.07)",
+  unreadBorder: "rgba(20,184,166,0.15)",
+  dot: "#14b8a6",
+};
+
+const C = {
+  navy: "#0f172a",
+  text: "#1e293b",
+  sub: "#64748b",
+  muted: "#94a3b8",
+  border: "#e8ecf1",
+  bg: "#f6f7f9",
+  card: "#ffffff",
 };
 
 const timeAgo = (dateStr: string) => {
@@ -69,6 +94,7 @@ export default function NotificationsScreen() {
 
   const unreadCount = notifications.filter((n) => !n.read).length;
   const groups = groupByDate(notifications);
+  const theme = currentRole === "doctor" ? DOCTOR : PATIENT;
 
   const handleTap = async (notif: AppNotification) => {
     if (!notif.read) {
@@ -87,137 +113,140 @@ export default function NotificationsScreen() {
     setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
   };
 
-  const isDark = currentRole === "doctor";
-
   return (
-    <View style={[s.container, isDark && s.containerDark]}>
-      {/* Header */}
-      <View style={[s.header, isDark && s.headerDark]}>
+    <View style={s.container}>
+      {/* ── Gradient header ── */}
+      <LinearGradient
+        colors={theme.gradient as any}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+        style={s.header}
+      >
         <View style={s.headerTop}>
           <TouchableOpacity
-            style={[s.backBtn, isDark && s.backBtnDark]}
+            style={s.backBtn}
             onPress={() => router.back()}
+            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
           >
-            <Text style={[s.backArrow, isDark && s.backArrowDark]}>‹</Text>
+            <Text style={s.backArrow}>{"<"}</Text>
           </TouchableOpacity>
-          {unreadCount > 0 && (
-            <TouchableOpacity onPress={handleMarkAllRead}>
-              <Text style={s.markAllText}>Mark all read</Text>
+          <View style={s.headerCenter}>
+            <Text style={s.headerTitle}>Notifications</Text>
+            {unreadCount > 0 && (
+              <Text style={s.headerSub}>{unreadCount} unread</Text>
+            )}
+          </View>
+          {unreadCount > 0 ? (
+            <TouchableOpacity onPress={handleMarkAllRead} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
+              <Text style={s.markAllText}>Read all</Text>
             </TouchableOpacity>
+          ) : (
+            <View style={{ width: 36 }} />
           )}
         </View>
-        <Text style={[s.title, isDark && { color: T.white }]}>Notifications</Text>
-        {unreadCount > 0 && (
-          <View style={s.unreadBadge}>
-            <Text style={s.unreadBadgeText}>{unreadCount} new</Text>
-          </View>
-        )}
-      </View>
+      </LinearGradient>
 
       <ScrollView contentContainerStyle={s.content} showsVerticalScrollIndicator={false}>
         {notifications.length === 0 ? (
           <View style={s.emptyState}>
-            <Text style={{ fontSize: 48, marginBottom: 12 }}>🔔</Text>
-            <Text style={[s.emptyTitle, isDark && { color: T.white }]}>No notifications yet</Text>
-            <Text style={[s.emptyDesc, isDark && { color: "rgba(255,255,255,0.5)" }]}>You'll be notified about quotes, messages, and updates here.</Text>
+            <View style={[s.emptyIconWrap, { backgroundColor: theme.accentSoft, borderColor: theme.accentMid }]}>
+              <Text style={{ fontSize: 36 }}>🔔</Text>
+            </View>
+            <Text style={s.emptyTitle}>No notifications yet</Text>
+            <Text style={s.emptyDesc}>
+              You'll be notified about quotes,{"\n"}messages, and updates here.
+            </Text>
           </View>
         ) : (
           groups.map((group) => (
             <View key={group.label} style={s.group}>
-              <Text style={[s.groupLabel, isDark && { color: "rgba(255,255,255,0.45)" }]}>{group.label}</Text>
+              <Text style={s.groupLabel}>{group.label}</Text>
               {group.items.map((n) => (
                 <TouchableOpacity
                   key={n.id}
                   style={[
                     s.notifCard,
-                    isDark && s.notifCardDark,
-                    !n.read && s.notifCardUnread,
-                    !n.read && isDark && s.notifCardUnreadDark,
+                    !n.read && { backgroundColor: theme.unreadBg, borderColor: theme.unreadBorder },
                   ]}
                   onPress={() => handleTap(n)}
                   activeOpacity={0.7}
                 >
-                  <View style={[s.notifIconWrap, isDark && s.notifIconWrapDark]}>
+                  <View style={[s.notifIconWrap, !n.read && { backgroundColor: theme.accentSoft }]}>
                     <Text style={s.notifIcon}>{n.icon}</Text>
                   </View>
                   <View style={{ flex: 1 }}>
                     <View style={s.notifTitleRow}>
-                      <Text style={[s.notifTitle, isDark && { color: T.white }]} numberOfLines={1}>{n.title}</Text>
-                      {!n.read && <View style={s.unreadDot} />}
+                      <Text style={s.notifTitle} numberOfLines={1}>{n.title}</Text>
+                      {!n.read && <View style={[s.unreadDot, { backgroundColor: theme.dot }]} />}
                     </View>
-                    <Text style={[s.notifBody, isDark && { color: "rgba(255,255,255,0.6)" }]} numberOfLines={2}>{n.body}</Text>
-                    <Text style={[s.notifTime, isDark && { color: "rgba(255,255,255,0.4)" }]}>{timeAgo(n.createdAt)}</Text>
+                    <Text style={s.notifBody} numberOfLines={2}>{n.body}</Text>
+                    <Text style={s.notifTime}>{timeAgo(n.createdAt)}</Text>
                   </View>
-                  {n.route && <Text style={[s.notifArrow, isDark && { color: "rgba(255,255,255,0.2)" }]}>›</Text>}
+                  {n.route && <Text style={s.notifArrow}>›</Text>}
                 </TouchableOpacity>
               ))}
             </View>
           ))
         )}
+        <View style={{ height: 40 }} />
       </ScrollView>
     </View>
   );
 }
 
 const s = StyleSheet.create({
-  container: { flex: 1, backgroundColor: T.bg },
-  containerDark: { backgroundColor: "#042f2e" },
-  header: {
-    paddingHorizontal: 24, paddingTop: 60, paddingBottom: 18,
-    borderBottomWidth: 1, borderBottomColor: T.border, backgroundColor: T.white,
-  },
-  headerDark: { backgroundColor: "#0f766e", borderBottomColor: "rgba(255,255,255,0.12)" },
-  headerTop: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 8 },
+  container: { flex: 1, backgroundColor: C.bg },
+
+  /* ── Header ── */
+  header: { paddingHorizontal: 20, paddingTop: 60, paddingBottom: 18 },
+  headerTop: { flexDirection: "row", alignItems: "center" },
+  headerCenter: { flex: 1, alignItems: "center" },
   backBtn: {
     width: 36, height: 36, borderRadius: 12,
-    backgroundColor: "rgba(0,0,0,0.05)",
-    borderWidth: 1, borderColor: "rgba(0,0,0,0.08)",
+    backgroundColor: "rgba(255,255,255,0.12)",
+    borderWidth: 1, borderColor: "rgba(255,255,255,0.15)",
     alignItems: "center", justifyContent: "center",
   },
-  backBtnDark: {
-    backgroundColor: "rgba(255,255,255,0.15)",
-    borderColor: "rgba(255,255,255,0.2)",
-  },
-  backArrow: { fontSize: 24, color: "#0f172a", fontWeight: "600", marginTop: -2 },
-  backArrowDark: { color: "#fff" },
-  markAllText: { color: T.tealLight, fontSize: 13, fontWeight: "600" },
-  title: { fontSize: 24, fontWeight: "700", color: T.navy },
-  unreadBadge: {
-    alignSelf: "flex-start", backgroundColor: "rgba(20,184,166,0.15)",
-    borderRadius: 10, paddingHorizontal: 10, paddingVertical: 4, marginTop: 8,
-  },
-  unreadBadgeText: { fontSize: 12, fontWeight: "600", color: T.tealLight },
+  backArrow: { fontSize: 20, color: "#fff", fontWeight: "600" },
+  headerTitle: { fontSize: 17, fontWeight: "700", color: "#fff", letterSpacing: 0.1 },
+  headerSub: { fontSize: 11, color: "rgba(255,255,255,0.5)", marginTop: 2 },
+  markAllText: { fontSize: 12, fontWeight: "600", color: "rgba(255,255,255,0.7)" },
 
-  content: { padding: 20, gap: 20, paddingBottom: 60 },
+  /* ── Content ── */
+  content: { padding: 20, gap: 20 },
 
-  // Empty
+  /* ── Empty ── */
   emptyState: { alignItems: "center", paddingTop: 60 },
-  emptyTitle: { fontSize: 18, fontWeight: "700", color: T.navy },
-  emptyDesc: { fontSize: 13, color: T.slate, textAlign: "center", marginTop: 4 },
+  emptyIconWrap: {
+    width: 80, height: 80, borderRadius: 40,
+    alignItems: "center", justifyContent: "center",
+    borderWidth: 2, marginBottom: 16,
+  },
+  emptyTitle: { fontSize: 18, fontWeight: "700", color: C.navy },
+  emptyDesc: { fontSize: 13, color: C.sub, textAlign: "center", marginTop: 6, lineHeight: 20 },
 
-  // Groups
+  /* ── Groups ── */
   group: { gap: 8 },
-  groupLabel: { fontSize: 12, fontWeight: "700", color: T.slate, textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 4 },
+  groupLabel: {
+    fontSize: 12, fontWeight: "700", color: C.muted,
+    textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 4,
+  },
 
-  // Notification card
+  /* ── Notification card ── */
   notifCard: {
     flexDirection: "row", alignItems: "center", gap: 14,
     padding: 16, borderRadius: 14,
-    backgroundColor: T.white, borderWidth: 1, borderColor: T.border,
+    backgroundColor: C.card, borderWidth: 1, borderColor: C.border,
   },
-  notifCardDark: { backgroundColor: "rgba(255,255,255,0.06)", borderColor: "rgba(255,255,255,0.08)" },
-  notifCardUnread: { backgroundColor: T.blueLight, borderColor: "rgba(59,130,246,0.15)" },
-  notifCardUnreadDark: { backgroundColor: "rgba(20,184,166,0.12)", borderColor: "rgba(20,184,166,0.2)" },
   notifIconWrap: {
-    width: 44, height: 44, borderRadius: 22,
-    backgroundColor: "#f1f5f9", alignItems: "center", justifyContent: "center",
+    width: 44, height: 44, borderRadius: 14,
+    backgroundColor: C.bg, alignItems: "center", justifyContent: "center",
   },
-  notifIconWrapDark: { backgroundColor: "rgba(255,255,255,0.1)" },
-  notifIcon: { fontSize: 22 },
+  notifIcon: { fontSize: 20 },
   notifTitleRow: { flexDirection: "row", alignItems: "center", gap: 6 },
-  notifTitle: { fontSize: 14, fontWeight: "700", color: T.navy, flex: 1 },
-  unreadDot: { width: 8, height: 8, borderRadius: 4, backgroundColor: T.tealLight },
-  notifBody: { fontSize: 12, color: T.slate, marginTop: 2, lineHeight: 17 },
-  notifTime: { fontSize: 11, color: T.slateLight, marginTop: 4 },
-  notifArrow: { fontSize: 22, color: T.slateLight },
+  notifTitle: { fontSize: 14, fontWeight: "700", color: C.navy, flex: 1 },
+  unreadDot: { width: 8, height: 8, borderRadius: 4 },
+  notifBody: { fontSize: 12, color: C.sub, marginTop: 2, lineHeight: 17 },
+  notifTime: { fontSize: 11, color: C.muted, marginTop: 4 },
+  notifArrow: { fontSize: 22, color: C.muted },
 });
