@@ -215,7 +215,7 @@ const s = StyleSheet.create({
   // Header
   headerOverlay: {
     position: "absolute", top: 0, left: 0, right: 0, zIndex: 10,
-    paddingTop: 56, paddingHorizontal: 20, paddingBottom: 12,
+    paddingTop: 60, paddingHorizontal: 20, paddingBottom: 12,
     flexDirection: "row", alignItems: "center", gap: 12,
   },
   backBtn: {

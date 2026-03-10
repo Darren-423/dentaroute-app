@@ -306,7 +306,7 @@ const s = StyleSheet.create({
 
   header: {
     flexDirection: "row", alignItems: "center", gap: 12,
-    paddingHorizontal: 16, paddingTop: 56, paddingBottom: 14,
+    paddingHorizontal: 16, paddingTop: 60, paddingBottom: 14,
   },
   backBtn: {
     width: 36, height: 36, borderRadius: 12,

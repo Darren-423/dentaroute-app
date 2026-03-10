@@ -308,7 +308,7 @@ const s = StyleSheet.create({
   // Header
   header: {
     flexDirection: "row", alignItems: "center", gap: 12,
-    paddingHorizontal: 16, paddingTop: 56, paddingBottom: 14,
+    paddingHorizontal: 16, paddingTop: 60, paddingBottom: 14,
   },
   backBtn: { width: 36, height: 36, borderRadius: 12, backgroundColor: "rgba(255,255,255,0.12)", borderWidth: 1, borderColor: "rgba(255,255,255,0.15)", alignItems: "center", justifyContent: "center" },
   backArrow: { fontSize: 24, color: "#fff", fontWeight: "600", marginTop: -2 },
