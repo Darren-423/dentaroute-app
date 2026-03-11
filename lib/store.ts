@@ -160,6 +160,13 @@ export interface DeparturePickup {
   createdAt: string;
 }
 
+export interface PickupReview {
+  rating: number;               // 1-5 stars
+  tags: string[];               // quick feedback tags
+  comment?: string;
+  createdAt: string;
+}
+
 export interface Booking {
   id: string;
   caseId: string;
@@ -173,6 +180,7 @@ export interface Booking {
   arrivalInfo?: ArrivalInfo;
   finalInvoice?: FinalInvoice;
   departurePickup?: DeparturePickup;
+  pickupReview?: PickupReview;
   currentVisit?: number;       // 1-based, tracks which visit is active (default 1)
   status: "confirmed" | "flight_submitted" | "arrived_korea" | "checked_in_clinic" | "treatment_done" | "between_visits" | "returning_home" | "payment_complete" | "departure_set" | "cancelled";
   cancelledAt?: string;

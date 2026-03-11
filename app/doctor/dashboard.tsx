@@ -3,11 +3,13 @@ import { router, useFocusEffect } from "expo-router";
 import React, { useCallback, useMemo, useState } from "react";
 import {
   Image,
+  Platform,
   ScrollView,
   StyleSheet,
   Text, TouchableOpacity,
   View,
 } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Booking, PatientCase, store } from "../../lib/store";
 
 const T = {
@@ -64,6 +66,7 @@ const getResolvedStatus = (c: PatientCase, bks: Booking[]): string => {
 };
 
 export default function DoctorDashboardScreen() {
+  const insets = useSafeAreaInsets();
   const [cases, setCases] = useState<PatientCase[]>([]);
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
@@ -419,7 +422,33 @@ export default function DoctorDashboardScreen() {
             );
           })
         )}
+        <View style={{ height: 70 }} />
       </ScrollView>
+
+      {/* ── Bottom Bar ── */}
+      <View style={[s.bar, { paddingBottom: insets.bottom }]}>
+        <View style={s.barTopLine} />
+        <View style={s.barInner}>
+          {([
+            { icon: "📋", route: "/doctor/dashboard" },
+            { icon: "💰", route: "/doctor/earnings" },
+            { icon: "💬", route: "/doctor/chat-list", hasBadge: true },
+            { icon: "👤", route: "/doctor/profile" },
+          ] as const).map((item, i) => (
+            <TouchableOpacity
+              key={i}
+              style={s.barTab}
+              onPress={() => router.push(item.route as any)}
+              activeOpacity={0.4}
+            >
+              <Text style={s.barTabIcon}>{item.icon}</Text>
+              {"hasBadge" in item && unreadMessages > 0 && (
+                <View style={s.barDot} />
+              )}
+            </TouchableOpacity>
+          ))}
+        </View>
+      </View>
     </View>
   );
 }
@@ -662,5 +691,30 @@ const s = StyleSheet.create({
     fontSize: 20,
     color: T.textMuted,
     fontWeight: "300",
+  },
+
+  /* ── Bottom Bar ── */
+  bar: {
+    position: "absolute", bottom: 0, left: 0, right: 0,
+    backgroundColor: "#fff",
+    ...Platform.select({
+      ios: { shadowColor: "#000", shadowOffset: { width: 0, height: -1 }, shadowOpacity: 0.06, shadowRadius: 4 },
+      android: { elevation: 6 },
+    }),
+  },
+  barTopLine: { height: 0.5, backgroundColor: "#e2e8f0" },
+  barInner: {
+    flexDirection: "row", justifyContent: "space-evenly",
+    alignItems: "center", paddingVertical: 8,
+  },
+  barTab: {
+    alignItems: "center", justifyContent: "center",
+    width: 44, height: 32,
+  },
+  barTabIcon: { fontSize: 18 },
+  barDot: {
+    position: "absolute", top: 2, right: 6,
+    width: 7, height: 7, borderRadius: 4,
+    backgroundColor: "#ef4444", borderWidth: 1.5, borderColor: "#fff",
   },
 });

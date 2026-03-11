@@ -1,8 +1,9 @@
 import { LinearGradient } from "expo-linear-gradient";
 import { router, useLocalSearchParams } from "expo-router";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import {
-  ActivityIndicator, Alert, Animated, Easing,
+  ActivityIndicator, Alert, Animated, Dimensions, Easing,
+  PanResponder,
   ScrollView,
   StyleSheet,
   Text, TouchableOpacity,
@@ -25,6 +26,11 @@ const C = {
   card: "#ffffff",
 };
 
+const { width: SCREEN_W } = Dimensions.get("window");
+const SLIDER_PAD = 4;
+const THUMB_SZ = 56;
+const SLIDE_MAX = SCREEN_W - 40 - THUMB_SZ - SLIDER_PAD * 2;
+
 export default function HotelArrivedScreen() {
   const { bookingId } = useLocalSearchParams<{ bookingId: string }>();
   const [booking, setBooking] = useState<Booking | null>(null);
@@ -32,6 +38,8 @@ export default function HotelArrivedScreen() {
   const [confirming, setConfirming] = useState(false);
   const [confirmed, setConfirmed] = useState(false);
   const [pulseAnim] = useState(new Animated.Value(1));
+  const slideX = useRef(new Animated.Value(0)).current;
+  const confirmingRef = useRef(false);
 
   useEffect(() => {
     const load = async () => {
@@ -101,8 +109,55 @@ export default function HotelArrivedScreen() {
     });
 
     setConfirming(false);
+
+    // If pickup was requested, navigate to pickup review before showing confirmed state
+    if (booking.arrivalInfo?.pickupRequested) {
+      router.replace(`/patient/pickup-review?bookingId=${booking.id}` as any);
+      return;
+    }
+
     setConfirmed(true);
   };
+
+  /* ── Swipe slider logic ── */
+  const handleRef = useRef(handleConfirm);
+  handleRef.current = handleConfirm;
+
+  const panResponder = useRef(
+    PanResponder.create({
+      onStartShouldSetPanResponder: () => !confirmingRef.current,
+      onMoveShouldSetPanResponder: (_, g) => !confirmingRef.current && Math.abs(g.dx) > 5,
+      onPanResponderMove: (_, g) => {
+        if (confirmingRef.current) return;
+        slideX.setValue(Math.max(0, Math.min(g.dx, SLIDE_MAX)));
+      },
+      onPanResponderRelease: (_, g) => {
+        if (confirmingRef.current) return;
+        if (g.dx >= SLIDE_MAX * 0.75) {
+          confirmingRef.current = true;
+          Animated.spring(slideX, {
+            toValue: SLIDE_MAX,
+            useNativeDriver: true,
+            bounciness: 0,
+          }).start(() => {
+            handleRef.current();
+          });
+        } else {
+          Animated.spring(slideX, {
+            toValue: 0,
+            useNativeDriver: true,
+            friction: 5,
+          }).start();
+        }
+      },
+    })
+  ).current;
+
+  const sliderTextOpacity = slideX.interpolate({
+    inputRange: [0, SLIDE_MAX * 0.35],
+    outputRange: [1, 0],
+    extrapolate: "clamp",
+  });
 
   if (loading) {
     return (
@@ -297,9 +352,14 @@ export default function HotelArrivedScreen() {
             <View style={s.flightHeader}>
               <Text style={{ fontSize: 18 }}>✈️</Text>
               <Text style={s.flightTitle}>Your Flight</Text>
-              <View style={s.flightBadge}>
-                <Text style={s.flightBadgeText}>Submitted</Text>
-              </View>
+              <TouchableOpacity
+                style={s.editBtn}
+                onPress={() => router.push(`/patient/arrival-info?bookingId=${bookingId}` as any)}
+                activeOpacity={0.6}
+                hitSlop={{ top: 6, bottom: 6, left: 6, right: 6 }}
+              >
+                <Text style={s.editBtnText}>Edit</Text>
+              </TouchableOpacity>
             </View>
             <View style={s.flightDivider} />
             <View style={s.flightRow}>
@@ -322,6 +382,13 @@ export default function HotelArrivedScreen() {
                 <Text style={s.flightValue}>{booking.arrivalInfo.terminal}</Text>
               </View>
             )}
+            <View style={s.flightDivider} />
+            <View style={s.flightRow}>
+              <Text style={s.flightLabel}>Pickup Service</Text>
+              <Text style={[s.flightValue, { color: booking.arrivalInfo.pickupRequested ? "#16a34a" : C.muted }]}>
+                {booking.arrivalInfo.pickupRequested ? "Requested ✓" : "Not requested"}
+              </Text>
+            </View>
             {booking.arrivalInfo.pickupRequested && (
               <View style={s.pickupBanner}>
                 <Text style={{ fontSize: 13 }}>🚗</Text>
@@ -352,7 +419,7 @@ export default function HotelArrivedScreen() {
             <View style={[s.tlDot, s.tlDotCurrent]} />
             <View style={{ flex: 1 }}>
               <Text style={[s.tlText, { fontWeight: "700", color: C.navy }]}>Arriving at accommodation</Text>
-              <Text style={s.tlSub}>Tap below once you've settled in</Text>
+              <Text style={s.tlSub}>Swipe below once you've settled in</Text>
             </View>
           </View>
           <View style={s.tlConnector} />
@@ -369,28 +436,53 @@ export default function HotelArrivedScreen() {
           <View style={s.dividerLine} />
         </View>
 
-        {/* Big button */}
-        <Animated.View style={{ transform: [{ scale: pulseAnim }] }}>
-          <TouchableOpacity
-            style={s.arriveBtn}
-            onPress={handleConfirm}
-            disabled={confirming}
-            activeOpacity={0.8}
+        {/* Swipe to confirm slider */}
+        <View style={s.sliderOuter}>
+          <LinearGradient
+            colors={["#0f0520", "#261048", "#180830"]}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 0 }}
+            style={s.sliderTrack}
           >
-            {confirming ? (
-              <ActivityIndicator color="#fff" size="large" />
-            ) : (
-              <>
-                <Text style={s.arriveBtnEmoji}>🏨</Text>
-                <Text style={s.arriveBtnTitle}>Safely Arrived at Hotel</Text>
-                <Text style={s.arriveBtnSub}>Let your clinic know you've settled in</Text>
-              </>
-            )}
-          </TouchableOpacity>
-        </Animated.View>
+            {/* Breathing glow ring behind thumb */}
+            <Animated.View
+              pointerEvents="none"
+              style={[s.thumbRing, {
+                transform: [
+                  { translateX: slideX },
+                  { scale: pulseAnim.interpolate({ inputRange: [1, 1.04], outputRange: [1, 1.2] }) },
+                ],
+                opacity: pulseAnim.interpolate({ inputRange: [1, 1.04], outputRange: [0.55, 0] }),
+              }]}
+            />
+
+            {/* Center label + animated arrow */}
+            <Animated.View style={[s.sliderTextWrap, { opacity: sliderTextOpacity }]}>
+              <Text style={s.sliderLabel}>Slide to confirm arrival</Text>
+              <Animated.View style={{
+                opacity: pulseAnim.interpolate({ inputRange: [1, 1.04], outputRange: [0.15, 0.85] }),
+                transform: [{ translateX: pulseAnim.interpolate({ inputRange: [1, 1.04], outputRange: [0, 6] }) }],
+              }}>
+                <Text style={s.sliderArrow}>→</Text>
+              </Animated.View>
+            </Animated.View>
+
+            {/* Draggable thumb */}
+            <Animated.View
+              {...panResponder.panHandlers}
+              style={[s.sliderThumb, { transform: [{ translateX: slideX }] }]}
+            >
+              {confirming ? (
+                <ActivityIndicator color="#6B21A8" size="small" />
+              ) : (
+                <Text style={s.sliderThumbIcon}>🏨</Text>
+              )}
+            </Animated.View>
+          </LinearGradient>
+        </View>
 
         <Text style={s.hint}>
-          Tap this button after you've been picked up from the airport and arrived at your hotel or accommodation
+          Swipe right after you've been picked up and arrived at your hotel
         </Text>
 
         {/* Reschedule & Cancel — only before confirming arrival */}
@@ -460,7 +552,7 @@ const s = StyleSheet.create({
   container: { flex: 1, backgroundColor: C.bg },
 
   /* ── Header ── */
-  header: { paddingHorizontal: 20, paddingTop: 54, paddingBottom: 18 },
+  header: { paddingHorizontal: 20, paddingTop: 60, paddingBottom: 18 },
   headerRow: { flexDirection: "row", alignItems: "center" },
   headerCenter: { flex: 1, alignItems: "center" },
   backBtn: {
@@ -499,6 +591,15 @@ const s = StyleSheet.create({
     borderWidth: 1, borderColor: C.purpleMid,
   },
   pickupText: { fontSize: 12, color: C.text, flex: 1, lineHeight: 17 },
+  editBtn: {
+    backgroundColor: C.purpleSoft,
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 5,
+    borderWidth: 1,
+    borderColor: C.purpleMid,
+  },
+  editBtnText: { fontSize: 12, fontWeight: "600", color: C.purple },
 
   /* ── Timeline ── */
   timelineCard: {
@@ -523,16 +624,61 @@ const s = StyleSheet.create({
   dividerLine: { flex: 1, height: 1, backgroundColor: C.border },
   dividerText: { fontSize: 12, color: C.muted, fontWeight: "500" },
 
-  /* ── Arrive button ── */
-  arriveBtn: {
-    backgroundColor: C.purple, borderRadius: 24, paddingVertical: 30,
-    alignItems: "center", gap: 6,
-    shadowColor: "#3D0070", shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.25, shadowRadius: 16,
+  /* ── Swipe slider ── */
+  sliderOuter: {
+    borderRadius: 33,
+    shadowColor: "#7c3aed",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.4,
+    shadowRadius: 18,
+    elevation: 12,
+  },
+  sliderTrack: {
+    height: THUMB_SZ + SLIDER_PAD * 2,
+    borderRadius: (THUMB_SZ + SLIDER_PAD * 2) / 2,
+    justifyContent: "center",
+    paddingHorizontal: SLIDER_PAD,
+    borderWidth: 1,
+    borderColor: "rgba(139,92,246,0.2)",
+    overflow: "visible",
+  },
+  thumbRing: {
+    position: "absolute",
+    left: 0,
+    top: 0,
+    width: THUMB_SZ + SLIDER_PAD * 2,
+    height: THUMB_SZ + SLIDER_PAD * 2,
+    borderRadius: (THUMB_SZ + SLIDER_PAD * 2) / 2,
+    borderWidth: 2,
+    borderColor: "rgba(167,139,250,0.6)",
+  },
+  sliderTextWrap: {
+    ...StyleSheet.absoluteFillObject,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 10,
+    paddingLeft: THUMB_SZ + 4,
+  },
+  sliderLabel: {
+    fontSize: 14, fontWeight: "600", color: "rgba(255,255,255,0.75)",
+    letterSpacing: 0.5,
+  },
+  sliderArrow: {
+    fontSize: 18, color: "rgba(255,255,255,0.85)", fontWeight: "300",
+  },
+  sliderThumb: {
+    width: THUMB_SZ, height: THUMB_SZ,
+    borderRadius: THUMB_SZ / 2,
+    backgroundColor: "#ffffff",
+    alignItems: "center", justifyContent: "center",
+    shadowColor: "#a78bfa",
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.5,
+    shadowRadius: 12,
     elevation: 8,
   },
-  arriveBtnEmoji: { fontSize: 36 },
-  arriveBtnTitle: { fontSize: 22, fontWeight: "900", color: "#fff" },
-  arriveBtnSub: { fontSize: 12, color: "rgba(255,255,255,0.6)" },
+  sliderThumbIcon: { fontSize: 24 },
   hint: {
     fontSize: 12, color: C.muted, textAlign: "center", lineHeight: 17, paddingHorizontal: 16,
   },

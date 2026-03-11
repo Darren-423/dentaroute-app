@@ -28,7 +28,10 @@
       "Bash(echo \"EXIT: $?\")",
       "Bash(git add app/ lib/ components/ hooks/ constants/ docs/ .gitignore .vscode/ CHANGELOG-phase1.log CHANGELOG-phase2.log CHANGELOG-phase3.log CLAUDE.md README.md app.json eas.json eslint.config.js metro.config.js package.json package-lock.json scripts/ tsconfig.json assets/)",
       "Bash(git push -u origin master)",
-      "Bash(ls C:/Dentaroute/*.*)"
+      "Bash(ls C:/Dentaroute/*.*)",
+      "Bash(git push -u origin main)",
+      "Bash(git add app/patient/pickup-review.tsx app/patient/dashboard.tsx app/patient/hotel-arrived.tsx app/doctor/dashboard.tsx lib/store.ts app.json app/doctor/_layout.tsx app/doctor/chat.tsx app/patient/arrival-info.tsx app/patient/basic-info.tsx app/patient/cancel-booking.tsx app/patient/chat-list.tsx app/patient/chat.tsx app/patient/clinic-map.tsx app/patient/dental-history.tsx app/patient/medical-history.tsx app/patient/review.tsx app/patient/travel-dates.tsx app/patient/treatment-select.tsx app/patient/upload.tsx app/patient/write-review.tsx)",
+      "Bash(git push origin dev)"
     ]
   }
 }

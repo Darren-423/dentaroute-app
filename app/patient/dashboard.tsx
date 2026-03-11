@@ -5,11 +5,13 @@ import {
   Alert,
   Image,
   Modal,
+  Platform,
   ScrollView,
   StyleSheet,
   Text, TouchableOpacity,
   View,
 } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Booking, PatientCase, store } from "../../lib/store";
 
 const T = {
@@ -48,13 +50,14 @@ const getCaseEmoji = (treatments: { name: string; qty: number }[]): string => {
 };
 
 export default function PatientDashboardScreen() {
+  const insets = useSafeAreaInsets();
   const [cases, setCases] = useState<PatientCase[]>([]);
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [userName, setUserName] = useState("Patient");
   const [quoteCounts, setQuoteCounts] = useState<Record<string, number>>({});
   const [profileImage, setProfileImage] = useState<string | null>(null);
-  const [statusFilter, setStatusFilter] = useState<"all" | "active" | "with_quotes" | "bookings" | "in_treatment">("all");
+  const [statusFilter, setStatusFilter] = useState<"all" | "with_quotes" | "bookings" | "in_treatment" | "completed">("all");
   const [manageBooking, setManageBooking] = useState<Booking | null>(null);
 
   useFocusEffect(
@@ -88,8 +91,10 @@ export default function PatientDashboardScreen() {
   const firstName = userName.split(" ")[0];
   const initials = userName.split(" ").map((n) => n[0]).join("").slice(0, 2).toUpperCase();
 
-  const IN_TREATMENT_STATUSES = ["checked_in_clinic", "treatment_done", "payment_complete", "departure_set"];
+  const IN_TREATMENT_STATUSES = ["checked_in_clinic", "treatment_done", "between_visits", "returning_home"];
+  const COMPLETED_STATUSES = ["payment_complete", "departure_set"];
   const inTreatmentCount = bookings.filter((b) => IN_TREATMENT_STATUSES.includes(b.status)).length;
+  const completedCount = bookings.filter((b) => COMPLETED_STATUSES.includes(b.status)).length;
 
   const filteredCases = useMemo(() => {
     switch (statusFilter) {
@@ -99,13 +104,17 @@ export default function PatientDashboardScreen() {
         const bk = bookings.find((b) => b.caseId === c.id);
         return bk && IN_TREATMENT_STATUSES.includes(bk.status);
       });
-      default: return cases; // "all" and "active"
+      case "completed": return cases.filter((c) => {
+        const bk = bookings.find((b) => b.caseId === c.id);
+        return bk && COMPLETED_STATUSES.includes(bk.status);
+      });
+      default: return cases; // "all"
     }
   }, [cases, bookings, statusFilter]);
 
-  const filterSectionTitle = statusFilter === "all" || statusFilter === "active"
+  const filterSectionTitle = statusFilter === "all"
     ? "My Cases"
-    : { with_quotes: "Cases With Quotes", bookings: "Booked Cases", in_treatment: "In Treatment" }[statusFilter];
+    : { with_quotes: "Cases With Quotes", bookings: "Booked Cases", in_treatment: "In Treatment", completed: "Completed" }[statusFilter];
 
   const BOOKING_STEPS = [
     { key: "confirmed", label: "Booked", next: "Input flight info for pickup service", emoji: "📖" },
@@ -249,10 +258,10 @@ export default function PatientDashboardScreen() {
         {/* Stats */}
         <View style={s.statsRow}>
           {([
-            { key: "active" as const, label: "Active", count: cases.length },
             { key: "with_quotes" as const, label: "Quotes", count: totalQuotes },
             { key: "bookings" as const, label: "Bookings", count: bookings.length },
             { key: "in_treatment" as const, label: "Treatment", count: inTreatmentCount },
+            { key: "completed" as const, label: "Completed", count: completedCount },
           ]).map((item) => {
             const isActive = statusFilter === item.key;
             return (
@@ -394,52 +403,6 @@ export default function PatientDashboardScreen() {
           })
         )}
 
-        {/* Quick actions — compact 2×2 grid */}
-        <Text style={s.quickTitle}>Quick Actions</Text>
-        <View style={s.quickGrid}>
-          <View style={s.quickRow}>
-            <TouchableOpacity
-              style={s.quickCard}
-              onPress={() => router.push("/patient/basic-info?mode=edit" as any)}
-              activeOpacity={0.7}
-            >
-              <View style={s.quickDot} />
-              <Text style={s.quickIcon}>📝</Text>
-              <Text style={s.quickLabel}>Edit Profile</Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={s.quickCard}
-              onPress={() => router.push("/patient/upload?mode=standalone" as any)}
-              activeOpacity={0.7}
-            >
-              <View style={s.quickDot} />
-              <Text style={s.quickIcon}>📁</Text>
-              <Text style={s.quickLabel}>Upload Files</Text>
-            </TouchableOpacity>
-          </View>
-          <View style={s.quickRow}>
-            <TouchableOpacity
-              style={s.quickCard}
-              onPress={() => router.push("/patient/chat-list" as any)}
-              activeOpacity={0.7}
-            >
-              <View style={s.quickDot} />
-              <Text style={s.quickIcon}>💬</Text>
-              <Text style={s.quickLabel}>Messages</Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={s.quickCard}
-              onPress={() => router.push("/patient/help-center" as any)}
-              activeOpacity={0.7}
-            >
-              <View style={s.quickDot} />
-              <Text style={s.quickIcon}>❓</Text>
-              <Text style={s.quickLabel}>Help</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
 
         {/* Logout */}
         <TouchableOpacity
@@ -466,8 +429,33 @@ export default function PatientDashboardScreen() {
           <Text style={s.logoutText}>Log Out</Text>
         </TouchableOpacity>
 
-        <View style={{ height: 40 }} />
+        <View style={{ height: 70 }} />
       </ScrollView>
+
+      {/* ── Bottom Bar ── */}
+      <View style={[s.bar, { paddingBottom: insets.bottom }]}>
+        <View style={s.barTop} />
+        <View style={s.barInner}>
+          {([
+            { icon: "📝", route: "/patient/basic-info?mode=edit" },
+            { icon: "📁", route: "/patient/upload?mode=standalone" },
+            { icon: "💬", route: "/patient/chat-list", hasBadge: true },
+            { icon: "❓", route: "/patient/help-center" },
+          ] as const).map((item, i) => (
+            <TouchableOpacity
+              key={i}
+              style={s.barTab}
+              onPress={() => router.push(item.route as any)}
+              activeOpacity={0.4}
+            >
+              <Text style={s.barTabIcon}>{item.icon}</Text>
+              {"hasBadge" in item && unreadCount > 0 && (
+                <View style={s.barDot} />
+              )}
+            </TouchableOpacity>
+          ))}
+        </View>
+      </View>
 
       {/* ── Manage Booking Modal ── */}
       <Modal visible={!!manageBooking} transparent animationType="fade" onRequestClose={() => setManageBooking(null)}>
@@ -754,29 +742,6 @@ const s = StyleSheet.create({
     marginLeft: -1,
   },
 
-  /* Quick actions — compact 2×2 */
-  quickTitle: {
-    fontSize: 17, fontWeight: "700", color: T.navy,
-    marginTop: 28, marginBottom: 12,
-  },
-  quickGrid: { gap: 8 },
-  quickRow: { flexDirection: "row", gap: 8 },
-  quickCard: {
-    flex: 1, flexDirection: "row", alignItems: "center", gap: 10,
-    backgroundColor: T.white, borderRadius: 14,
-    paddingVertical: 14, paddingHorizontal: 14,
-    borderWidth: 1, borderColor: T.border,
-    shadowColor: "#0f172a", shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.03, shadowRadius: 6, elevation: 1,
-  },
-  quickDot: {
-    width: 4, height: 28, borderRadius: 2,
-    position: "absolute", left: 0, top: 12,
-    backgroundColor: "rgba(74,0,128,0.25)",
-  },
-  quickIcon: { fontSize: 18 },
-  quickLabel: { fontSize: 13, fontWeight: "600", color: T.navy },
-
   /* Logout */
   logoutBtn: {
     alignSelf: "center", marginTop: 28,
@@ -792,6 +757,31 @@ const s = StyleSheet.create({
     alignItems: "center", justifyContent: "center",
   },
   manageBtnText: { fontSize: 18, fontWeight: "900", color: T.teal, marginTop: -2 },
+
+  /* ── Bottom Bar ── */
+  bar: {
+    position: "absolute", bottom: 0, left: 0, right: 0,
+    backgroundColor: "#fff",
+    ...Platform.select({
+      ios: { shadowColor: "#000", shadowOffset: { width: 0, height: -1 }, shadowOpacity: 0.06, shadowRadius: 4 },
+      android: { elevation: 6 },
+    }),
+  },
+  barTop: { height: 0.5, backgroundColor: "#e2e8f0" },
+  barInner: {
+    flexDirection: "row", justifyContent: "space-evenly",
+    alignItems: "center", paddingVertical: 8,
+  },
+  barTab: {
+    alignItems: "center", justifyContent: "center",
+    width: 44, height: 32,
+  },
+  barTabIcon: { fontSize: 18 },
+  barDot: {
+    position: "absolute", top: 2, right: 6,
+    width: 7, height: 7, borderRadius: 4,
+    backgroundColor: "#ef4444", borderWidth: 1.5, borderColor: "#fff",
+  },
 
   /* ── Manage Booking Modal ── */
   modalOverlay: {

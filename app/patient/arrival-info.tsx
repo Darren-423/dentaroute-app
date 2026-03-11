@@ -654,7 +654,7 @@ const st = StyleSheet.create({
   container: { flex: 1, backgroundColor: C.bg },
 
   /* ── Header ── */
-  header: { paddingHorizontal: 20, paddingTop: 54, paddingBottom: 18 },
+  header: { paddingHorizontal: 20, paddingTop: 60, paddingBottom: 18 },
   headerRow: { flexDirection: "row", alignItems: "center" },
   headerCenter: { flex: 1, alignItems: "center" },
   backBtn: {
