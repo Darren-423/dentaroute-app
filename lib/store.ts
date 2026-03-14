@@ -24,6 +24,7 @@ const KEYS = {
   DOCTOR_PROFILE: "dr_doctor_profile",
   INQUIRIES: "dr_inquiries",
   TYPING_STATUS: "dr_typing_status",
+  WARRANTIES: "dr_warranties",
 };
 
 // ── 티어 설정 ──
@@ -269,6 +270,34 @@ export interface SupportInquiry {
   createdAt: string;
   response?: string;
   respondedAt?: string;
+}
+
+export interface TreatmentWarranty {
+  id: string;                          // "tw_" + timestamp
+  bookingId: string;
+  caseId: string;
+  patientName: string;
+  dentistName: string;
+  clinicName: string;
+  treatmentName: string;
+  treatmentQty: number;
+  treatmentDate: string;               // 치료 완료일 (ISO)
+  warrantyMonths: number;              // 보증 기간 (개월)
+  expiresAt: string;                   // 보증 만료일 (ISO)
+  status: "active" | "claimed" | "expired" | "voided";
+  claims: WarrantyClaim[];
+  createdAt: string;
+}
+
+export interface WarrantyClaim {
+  id: string;                          // "wc_" + timestamp
+  warrantyId: string;
+  description: string;
+  photos: string[];                    // 증거 사진 URI
+  status: "submitted" | "reviewing" | "approved" | "denied";
+  submittedAt: string;
+  resolvedAt?: string;
+  resolution?: string;
 }
 
 // ── Mock Translation (데모용, 나중에 DeepL/Google API로 교체) ──
@@ -920,6 +949,147 @@ export const store = {
   },
 
   // ══════════════════════════
+  //  WARRANTY (치료 보증)
+  // ══════════════════════════
+
+  getWarranties: async (): Promise<TreatmentWarranty[]> => {
+    const data = await AsyncStorage.getItem(KEYS.WARRANTIES);
+    return data ? JSON.parse(data) : [];
+  },
+
+  getWarrantiesForPatient: async (patientName: string): Promise<TreatmentWarranty[]> => {
+    const all = await store.getWarranties();
+    return all.filter((w) => w.patientName === patientName);
+  },
+
+  getWarrantiesForBooking: async (bookingId: string): Promise<TreatmentWarranty[]> => {
+    const all = await store.getWarranties();
+    return all.filter((w) => w.bookingId === bookingId);
+  },
+
+  getWarranty: async (warrantyId: string): Promise<TreatmentWarranty | null> => {
+    const all = await store.getWarranties();
+    return all.find((w) => w.id === warrantyId) || null;
+  },
+
+  createWarranty: async (data: Omit<TreatmentWarranty, "id" | "claims" | "createdAt" | "status">): Promise<TreatmentWarranty> => {
+    const all = await store.getWarranties();
+    const warranty: TreatmentWarranty = {
+      ...data,
+      id: "tw_" + Date.now(),
+      status: "active",
+      claims: [],
+      createdAt: new Date().toISOString(),
+    };
+    all.push(warranty);
+    await AsyncStorage.setItem(KEYS.WARRANTIES, JSON.stringify(all));
+
+    // 환자에게 알림
+    await store.addNotification({
+      role: "patient",
+      type: "system",
+      title: "Warranty Activated",
+      body: `${data.treatmentName} (×${data.treatmentQty}) is now covered for ${Math.floor(data.warrantyMonths / 12)} year(s).`,
+      icon: "🛡️",
+    });
+
+    return warranty;
+  },
+
+  // 예약의 모든 치료에 대해 보증 일괄 생성
+  createWarrantiesForBooking: async (bookingId: string): Promise<TreatmentWarranty[]> => {
+    const { WARRANTY_CONFIG } = require("../constants/warranty");
+    const booking = await store.getBooking(bookingId);
+    if (!booking || !booking.treatments) return [];
+
+    const existing = await store.getWarrantiesForBooking(bookingId);
+    if (existing.length > 0) return existing; // 이미 생성됨
+
+    const now = new Date();
+    const user = await store.getCurrentUser();
+    const created: TreatmentWarranty[] = [];
+
+    for (const t of booking.treatments) {
+      const config = WARRANTY_CONFIG[t.name];
+      if (!config || config.warrantyMonths === 0) continue;
+
+      const expiresAt = new Date(now);
+      expiresAt.setMonth(expiresAt.getMonth() + config.warrantyMonths);
+
+      const warranty = await store.createWarranty({
+        bookingId,
+        caseId: booking.caseId,
+        patientName: user?.name || "Patient",
+        dentistName: booking.dentistName,
+        clinicName: booking.clinicName,
+        treatmentName: t.name,
+        treatmentQty: t.qty,
+        treatmentDate: now.toISOString(),
+        warrantyMonths: config.warrantyMonths,
+        expiresAt: expiresAt.toISOString(),
+      });
+      created.push(warranty);
+    }
+
+    return created;
+  },
+
+  submitWarrantyClaim: async (
+    warrantyId: string,
+    data: { description: string; photos: string[] }
+  ): Promise<WarrantyClaim | null> => {
+    const all = await store.getWarranties();
+    const idx = all.findIndex((w) => w.id === warrantyId);
+    if (idx === -1) return null;
+
+    const warranty = all[idx];
+    if (warranty.status !== "active") return null;
+
+    const claim: WarrantyClaim = {
+      id: "wc_" + Date.now(),
+      warrantyId,
+      description: data.description,
+      photos: data.photos,
+      status: "submitted",
+      submittedAt: new Date().toISOString(),
+    };
+
+    warranty.claims.push(claim);
+    warranty.status = "claimed";
+    all[idx] = warranty;
+    await AsyncStorage.setItem(KEYS.WARRANTIES, JSON.stringify(all));
+
+    // 환자 알림
+    await store.addNotification({
+      role: "patient",
+      type: "system",
+      title: "Warranty Claim Submitted",
+      body: `Your claim for ${warranty.treatmentName} has been submitted. We'll review it within 1-3 business days.`,
+      icon: "📋",
+    });
+
+    return claim;
+  },
+
+  // 보증 만료 체크 (앱 시작 시 호출)
+  checkExpiredWarranties: async (): Promise<void> => {
+    const all = await store.getWarranties();
+    const now = new Date();
+    let changed = false;
+
+    for (const w of all) {
+      if (w.status === "active" && new Date(w.expiresAt) < now) {
+        w.status = "expired";
+        changed = true;
+      }
+    }
+
+    if (changed) {
+      await AsyncStorage.setItem(KEYS.WARRANTIES, JSON.stringify(all));
+    }
+  },
+
+  // ══════════════════════════
   //  데모 시드 데이터
   // ══════════════════════════
   seedDemoData: async () => {
@@ -1333,6 +1503,60 @@ export const store = {
       { id: "notif_009", role: "doctor", type: "new_message", title: "New Message", body: "Sarah Johnson: \"How long is the recovery time...\"", icon: "💬", read: true, route: "/doctor/chat-list", createdAt: "2026-02-25T10:12:00Z" },
     ];
     await AsyncStorage.setItem(KEYS.NOTIFICATIONS, JSON.stringify(demoNotifs));
+
+    // Demo warranties
+    const now = new Date();
+    const demoWarranties: TreatmentWarranty[] = [
+      {
+        id: "tw_demo_001",
+        bookingId: "bk_demo",
+        caseId: "1001",
+        patientName: "Sarah Johnson",
+        dentistName: "Dr. Kim Minjun",
+        clinicName: "Seoul Bright Dental",
+        treatmentName: "Dental Implant",
+        treatmentQty: 2,
+        treatmentDate: "2026-03-10T10:00:00Z",
+        warrantyMonths: 60,
+        expiresAt: "2031-03-10T10:00:00Z",
+        status: "active",
+        claims: [],
+        createdAt: "2026-03-10T10:00:00Z",
+      },
+      {
+        id: "tw_demo_002",
+        bookingId: "bk_demo",
+        caseId: "1001",
+        patientName: "Sarah Johnson",
+        dentistName: "Dr. Kim Minjun",
+        clinicName: "Seoul Bright Dental",
+        treatmentName: "Crown",
+        treatmentQty: 3,
+        treatmentDate: "2026-03-10T10:00:00Z",
+        warrantyMonths: 36,
+        expiresAt: "2029-03-10T10:00:00Z",
+        status: "active",
+        claims: [],
+        createdAt: "2026-03-10T10:00:00Z",
+      },
+      {
+        id: "tw_demo_003",
+        bookingId: "bk_demo",
+        caseId: "1001",
+        patientName: "Sarah Johnson",
+        dentistName: "Dr. Kim Minjun",
+        clinicName: "Seoul Bright Dental",
+        treatmentName: "Veneers",
+        treatmentQty: 4,
+        treatmentDate: "2026-03-10T10:00:00Z",
+        warrantyMonths: 24,
+        expiresAt: "2028-03-10T10:00:00Z",
+        status: "active",
+        claims: [],
+        createdAt: "2026-03-10T10:00:00Z",
+      },
+    ];
+    await AsyncStorage.setItem(KEYS.WARRANTIES, JSON.stringify(demoWarranties));
 
     // Set current user as patient
     await AsyncStorage.setItem(KEYS.CURRENT_USER, JSON.stringify({

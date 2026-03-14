@@ -11,6 +11,7 @@ import {
   View,
 } from "react-native";
 import { DentistQuote, store } from "../../lib/store";
+import { WARRANTY_CONFIG, warrantyLabel, hasWarranty } from "../../constants/warranty";
 
 const T = {
   teal: "#4A0080", tealMid: "#5C10A0", tealLight: "#f0e6f6",
@@ -238,6 +239,33 @@ export default function QuoteDetailScreen() {
               <Text style={s.depositValue}>${depositAmount.toLocaleString()}</Text>
             </View>
           </View>
+
+          {/* Warranty info */}
+          {quote.treatments && quote.treatments.some((t) => hasWarranty(t.name)) && (
+            <View style={s.warrantyCard}>
+              <View style={s.warrantyHeader}>
+                <Text style={s.warrantyIcon}>🛡️</Text>
+                <Text style={s.warrantyTitle}>Treatment Warranty Included</Text>
+              </View>
+              {quote.treatments.filter((t) => hasWarranty(t.name)).map((t, i) => {
+                const config = WARRANTY_CONFIG[t.name];
+                return (
+                  <View key={i} style={s.warrantyRow}>
+                    <Text style={s.warrantyTreatment}>{t.name} ×{t.qty}</Text>
+                    <Text style={s.warrantyPeriod}>{warrantyLabel(config?.warrantyMonths || 0)}</Text>
+                  </View>
+                );
+              })}
+              <View style={s.warrantyAftercare}>
+                <Text style={s.warrantyAftercareText}>
+                  🇺🇸 Includes US aftercare at partner clinics
+                </Text>
+              </View>
+              <Text style={s.warrantyNote}>
+                Warranty valid only for DentaRoute in-app payments
+              </Text>
+            </View>
+          )}
 
           {/* Plan details */}
           {quote.treatmentDetails && (
@@ -640,4 +668,25 @@ const s = StyleSheet.create({
     paddingVertical: 16, alignItems: "center",
   },
   selectBtnText: { color: T.white, fontSize: 15, fontWeight: "600" },
+
+  // Warranty
+  warrantyCard: {
+    backgroundColor: "#f0fdf4", borderRadius: 14, padding: 16,
+    borderWidth: 1, borderColor: "#bbf7d0", marginBottom: 16,
+  },
+  warrantyHeader: { flexDirection: "row", alignItems: "center", gap: 8, marginBottom: 12 },
+  warrantyIcon: { fontSize: 18 },
+  warrantyTitle: { fontSize: 15, fontWeight: "700", color: "#15803d" },
+  warrantyRow: {
+    flexDirection: "row", justifyContent: "space-between", alignItems: "center",
+    paddingVertical: 6, borderBottomWidth: 1, borderBottomColor: "rgba(22,163,74,0.1)",
+  },
+  warrantyTreatment: { fontSize: 13, color: "#166534", fontWeight: "600" },
+  warrantyPeriod: { fontSize: 13, color: "#15803d", fontWeight: "700" },
+  warrantyAftercare: {
+    marginTop: 10, paddingVertical: 8, paddingHorizontal: 10,
+    backgroundColor: "rgba(37,99,235,0.08)", borderRadius: 8,
+  },
+  warrantyAftercareText: { fontSize: 12, color: "#1d4ed8", fontWeight: "600" },
+  warrantyNote: { fontSize: 11, color: "#6b7280", marginTop: 8, fontStyle: "italic" },
 });
