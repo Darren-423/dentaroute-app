@@ -45,17 +45,29 @@ export default function WriteReviewScreen() {
   const [loading, setLoading] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [alreadyReviewed, setAlreadyReviewed] = useState(false);
+  const [notEligible, setNotEligible] = useState(false);
+  const [notEligibleReason, setNotEligibleReason] = useState("");
   const [showErrors, setShowErrors] = useState(false);
 
   useEffect(() => {
     const load = async () => {
       if (bookingId) {
+        // Check review eligibility first
+        const eligibility = await store.checkReviewEligibility(bookingId);
+        if (!eligibility.eligible) {
+          const b = await store.getBooking(bookingId);
+          setBooking(b);
+          const existing = await store.getReviewForBooking(bookingId);
+          if (existing) {
+            setAlreadyReviewed(true);
+          } else {
+            setNotEligible(true);
+            setNotEligibleReason(eligibility.reason);
+          }
+          return;
+        }
         const b = await store.getBooking(bookingId);
         setBooking(b);
-        if (b) {
-          const existing = await store.getReviewForBooking(bookingId);
-          if (existing) setAlreadyReviewed(true);
-        }
       }
     };
     load();
@@ -114,14 +126,37 @@ export default function WriteReviewScreen() {
     );
   }
 
+  if (notEligible) {
+    return (
+      <View style={[s.container, { justifyContent: "center", alignItems: "center", padding: 32 }]}>
+        <Text style={{ fontSize: 64, marginBottom: 16 }}>🛡️</Text>
+        <Text style={s.successTitle}>Verified Reviews Only</Text>
+        <Text style={s.successDesc}>{notEligibleReason}</Text>
+        <View style={s.eligibilityCard}>
+          <Text style={s.eligibilityTitle}>Why verified reviews?</Text>
+          <Text style={s.eligibilityItem}>✓ Ensures honest, real patient experiences</Text>
+          <Text style={s.eligibilityItem}>✓ Protects against fake or paid reviews</Text>
+          <Text style={s.eligibilityItem}>✓ Helps other patients make informed decisions</Text>
+          <Text style={s.eligibilityItem}>✓ Builds trust in the DentaRoute community</Text>
+        </View>
+        <TouchableOpacity style={s.successBtn} onPress={() => router.back()}>
+          <Text style={s.successBtnText}>Go Back</Text>
+        </TouchableOpacity>
+      </View>
+    );
+  }
+
   if (submitted) {
     return (
       <View style={[s.container, { justifyContent: "center", alignItems: "center", padding: 32 }]}>
         <Text style={{ fontSize: 64, marginBottom: 16 }}>🎉</Text>
         <Text style={s.successTitle}>Thank You!</Text>
         <Text style={s.successDesc}>
-          Your review helps other patients find great dental care in Korea.
+          Your verified review helps other patients find great dental care in Korea.
         </Text>
+        <View style={s.verifiedSuccessBadge}>
+          <Text style={s.verifiedSuccessText}>✓ Verified Patient Review</Text>
+        </View>
         <View style={s.successCard}>
           <StarRow rating={overallRating} onRate={() => {}} size={28} />
           <Text style={s.successReviewTitle}>{title}</Text>
@@ -150,6 +185,17 @@ export default function WriteReviewScreen() {
       </LinearGradient>
 
       <ScrollView style={{ flex: 1 }} contentContainerStyle={s.content} showsVerticalScrollIndicator={false}>
+        {/* Verified review info */}
+        <View style={s.verifiedInfoBanner}>
+          <Text style={s.verifiedInfoIcon}>🛡️</Text>
+          <View style={{ flex: 1 }}>
+            <Text style={s.verifiedInfoTitle}>Verified Patient Review</Text>
+            <Text style={s.verifiedInfoText}>
+              Your review will display a "Verified" badge since you completed treatment through DentaRoute.
+            </Text>
+          </View>
+        </View>
+
         {/* Doctor card */}
         <View style={s.doctorCard}>
           <View style={s.doctorAvatar}>
@@ -379,4 +425,30 @@ const s = StyleSheet.create({
     paddingVertical: 14, paddingHorizontal: 32, marginTop: 24,
   },
   successBtnText: { color: T.white, fontSize: 15, fontWeight: "600" },
+
+  // Verified info banner (in form)
+  verifiedInfoBanner: {
+    flexDirection: "row", alignItems: "center", gap: 12,
+    backgroundColor: "#f0fdf4", borderRadius: 14, padding: 14,
+    borderWidth: 1, borderColor: "#bbf7d0",
+  },
+  verifiedInfoIcon: { fontSize: 24 },
+  verifiedInfoTitle: { fontSize: 13, fontWeight: "700", color: "#166534", marginBottom: 2 },
+  verifiedInfoText: { fontSize: 11, color: "#166534", lineHeight: 16 },
+
+  // Verified success badge
+  verifiedSuccessBadge: {
+    backgroundColor: "#dcfce7", borderRadius: 10,
+    paddingHorizontal: 14, paddingVertical: 6, marginTop: 12,
+  },
+  verifiedSuccessText: { fontSize: 13, fontWeight: "700", color: "#16a34a" },
+
+  // Eligibility card (not eligible screen)
+  eligibilityCard: {
+    backgroundColor: T.white, borderRadius: 16, padding: 18,
+    borderWidth: 1, borderColor: T.border,
+    width: "100%", marginTop: 20, gap: 8,
+  },
+  eligibilityTitle: { fontSize: 14, fontWeight: "700", color: T.navy, marginBottom: 4 },
+  eligibilityItem: { fontSize: 13, color: T.slate, lineHeight: 20 },
 });

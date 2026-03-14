@@ -219,6 +219,8 @@ export interface Review {
   title: string;
   comment: string;
   treatments: string[];
+  verified: boolean;          // true = completed treatment through DentaRoute
+  verifiedTreatments?: string[]; // actual treatments from booking (tamper-proof)
   createdAt: string;
 }
 
@@ -861,10 +863,35 @@ export const store = {
   },
 
   // ── Review 관리 ──
-  createReview: async (data: Omit<Review, "id" | "createdAt">): Promise<Review> => {
+  createReview: async (data: Omit<Review, "id" | "createdAt" | "verified" | "verifiedTreatments"> & { verified?: boolean; verifiedTreatments?: string[] }): Promise<Review> => {
     const existing = await AsyncStorage.getItem(KEYS.REVIEWS);
     const reviews: Review[] = existing ? JSON.parse(existing) : [];
-    const review: Review = { ...data, id: `rev_${Date.now()}`, createdAt: new Date().toISOString() };
+
+    // Auto-verify: check if booking exists and treatment is done
+    let verified = data.verified ?? false;
+    let verifiedTreatments: string[] = data.verifiedTreatments ?? [];
+    if (data.bookingId) {
+      const booking = await store.getBooking(data.bookingId);
+      if (booking) {
+        const VERIFIED_STATUSES = new Set([
+          "treatment_done", "between_visits", "returning_home",
+          "payment_complete", "departure_set",
+        ]);
+        if (VERIFIED_STATUSES.has(booking.status)) {
+          verified = true;
+          // Pull actual treatments from booking (tamper-proof)
+          verifiedTreatments = booking.treatments?.map((t) => t.name) || booking.visitDates.map((v) => v.description);
+        }
+      }
+    }
+
+    const review: Review = {
+      ...data,
+      id: `rev_${Date.now()}`,
+      verified,
+      verifiedTreatments: verifiedTreatments.length > 0 ? verifiedTreatments : undefined,
+      createdAt: new Date().toISOString(),
+    };
     reviews.push(review);
     await AsyncStorage.setItem(KEYS.REVIEWS, JSON.stringify(reviews));
     return review;
@@ -883,6 +910,32 @@ export const store = {
   getReviewForBooking: async (bookingId: string): Promise<Review | null> => {
     const reviews = await store.getReviews();
     return reviews.find((r) => r.bookingId === bookingId) || null;
+  },
+
+  // Check if a booking is eligible for review (treatment must be done)
+  checkReviewEligibility: async (bookingId: string): Promise<{
+    eligible: boolean;
+    reason: string;
+  }> => {
+    const booking = await store.getBooking(bookingId);
+    if (!booking) return { eligible: false, reason: "Booking not found." };
+    if (booking.status === "cancelled") return { eligible: false, reason: "This booking was cancelled." };
+
+    const ELIGIBLE_STATUSES = new Set([
+      "treatment_done", "between_visits", "returning_home",
+      "payment_complete", "departure_set",
+    ]);
+    if (!ELIGIBLE_STATUSES.has(booking.status)) {
+      return {
+        eligible: false,
+        reason: "You can write a review after your treatment is completed. This ensures all reviews on DentaRoute come from verified patients.",
+      };
+    }
+
+    const existing = await store.getReviewForBooking(bookingId);
+    if (existing) return { eligible: false, reason: "You've already submitted a review for this booking." };
+
+    return { eligible: true, reason: "" };
   },
 
   // ── Notification 관리 ──
@@ -1470,7 +1523,9 @@ export const store = {
         patientName: "Michael T.", rating: 5, treatmentRating: 5, clinicRating: 5, communicationRating: 5,
         title: "Incredible experience!",
         comment: "Dr. Kim was amazing. The implants look completely natural. Staff spoke perfect English and the clinic was spotless. Would fly back just for dental work!",
-        treatments: ["Implant: Whole (Root + Crown)", "Crown"], createdAt: "2026-01-15T10:00:00Z",
+        treatments: ["Implant: Whole (Root + Crown)", "Crown"],
+        verified: true, verifiedTreatments: ["Implant: Whole (Root + Crown)", "Crown"],
+        createdAt: "2026-01-15T10:00:00Z",
       },
       {
         id: "rev_002", caseId: "prev_002", bookingId: "bk_prev_002",
@@ -1478,7 +1533,9 @@ export const store = {
         patientName: "Emma L.", rating: 5, treatmentRating: 5, clinicRating: 4, communicationRating: 5,
         title: "Best dental care I've ever had",
         comment: "Saved over $4,000 compared to prices back home. Dr. Kim explained everything clearly. Only minor note: the waiting room was a bit small.",
-        treatments: ["Veneer", "Veneers"], createdAt: "2026-01-28T14:00:00Z",
+        treatments: ["Veneer", "Veneers"],
+        verified: true, verifiedTreatments: ["Veneers"],
+        createdAt: "2026-01-28T14:00:00Z",
       },
       {
         id: "rev_003", caseId: "prev_003", bookingId: "bk_prev_003",
@@ -1486,7 +1543,9 @@ export const store = {
         patientName: "David K.", rating: 4, treatmentRating: 5, clinicRating: 4, communicationRating: 4,
         title: "Great results, smooth process",
         comment: "Very professional team. The airport pickup was a nice touch. Treatment was painless and results are great. Highly recommend for anyone considering dental tourism.",
-        treatments: ["Implant: Whole (Root + Crown)", "Gum Treatment"], createdAt: "2026-02-10T09:00:00Z",
+        treatments: ["Implant: Whole (Root + Crown)", "Gum Treatment"],
+        verified: true, verifiedTreatments: ["Implant: Whole (Root + Crown)", "Gum Treatment"],
+        createdAt: "2026-02-10T09:00:00Z",
       },
     ];
     await AsyncStorage.setItem(KEYS.REVIEWS, JSON.stringify(demoReviews));
