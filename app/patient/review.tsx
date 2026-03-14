@@ -65,13 +65,26 @@ export default function PatientReviewScreen() {
         if (medical) medicalNotes = JSON.stringify(medical);
       } catch {}
 
+      // 업로드된 파일 수 가져오기
+      let filesCount = { xrays: 0, treatmentPlans: 0, photos: 0 };
+      try {
+        const files = await store.getPatientFiles();
+        if (files) {
+          filesCount = {
+            xrays: files.xrays?.length || 0,
+            treatmentPlans: files.treatmentPlans?.length || 0,
+            photos: files.photos?.length || 0,
+          };
+        }
+      } catch {}
+
       const newCase = await store.createCase({
         patientName,
         country,
         treatments: treatmentList,
         medicalNotes,
         dentalIssues,
-        filesCount: { xrays: 0, treatmentPlans: 0, photos: 0 },
+        filesCount,
       });
 
       setCaseId(newCase.id);
