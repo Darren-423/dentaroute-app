@@ -1,5 +1,5 @@
 import { LinearGradient } from "expo-linear-gradient";
-import { router, useFocusEffect, useLocalSearchParams } from "expo-router";
+import { router, useFocusEffect } from "expo-router";
 import React, { useCallback, useState } from "react";
 import {
   ScrollView,
@@ -7,10 +7,9 @@ import {
   Text, TouchableOpacity,
   View,
 } from "react-native";
-import { AppNotification, store } from "../lib/store";
+import { AppNotification, store } from "../../lib/store";
 
-/* ── Palette per role ── */
-const PATIENT = {
+const THEME = {
   gradient: ["#3D0070", "#2F0058", "#220040"] as const,
   accent: "#4A0080",
   accentSoft: "rgba(74,0,128,0.08)",
@@ -19,16 +18,6 @@ const PATIENT = {
   unreadBg: "rgba(74,0,128,0.07)",
   unreadBorder: "rgba(74,0,128,0.15)",
   dot: "#7c3aed",
-};
-const DOCTOR = {
-  gradient: ["#0f766e", "#134e4a", "#0d3d38"] as const,
-  accent: "#0f766e",
-  accentSoft: "rgba(20,184,166,0.08)",
-  accentMid: "rgba(20,184,166,0.15)",
-  accentLight: "#e6faf8",
-  unreadBg: "rgba(20,184,166,0.07)",
-  unreadBorder: "rgba(20,184,166,0.15)",
-  dot: "#14b8a6",
 };
 
 const C = {
@@ -74,27 +63,21 @@ const groupByDate = (notifs: AppNotification[]) => {
   return groups;
 };
 
-export default function NotificationsScreen() {
-  const { role: paramRole } = useLocalSearchParams<{ role?: string }>();
+export default function PatientAlertsScreen() {
   const [notifications, setNotifications] = useState<AppNotification[]>([]);
-  const [currentRole, setCurrentRole] = useState<"patient" | "doctor">("patient");
 
   useFocusEffect(
     useCallback(() => {
       const load = async () => {
-        const user = await store.getCurrentUser();
-        const role = (paramRole as any) || user?.role || "patient";
-        setCurrentRole(role);
-        const notifs = await store.getNotifications(role);
+        const notifs = await store.getNotifications("patient");
         setNotifications(notifs);
       };
       load();
-    }, [paramRole])
+    }, [])
   );
 
   const unreadCount = notifications.filter((n) => !n.read).length;
   const groups = groupByDate(notifications);
-  const theme = currentRole === "doctor" ? DOCTOR : PATIENT;
 
   const handleTap = async (notif: AppNotification) => {
     if (!notif.read) {
@@ -109,7 +92,7 @@ export default function NotificationsScreen() {
   };
 
   const handleMarkAllRead = async () => {
-    await store.markAllNotificationsRead(currentRole);
+    await store.markAllNotificationsRead("patient");
     setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
   };
 
@@ -117,7 +100,7 @@ export default function NotificationsScreen() {
     <View style={s.container}>
       {/* ── Gradient header ── */}
       <LinearGradient
-        colors={theme.gradient as any}
+        colors={THEME.gradient as any}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
         style={s.header}
@@ -149,7 +132,7 @@ export default function NotificationsScreen() {
       <ScrollView contentContainerStyle={s.content} showsVerticalScrollIndicator={false}>
         {notifications.length === 0 ? (
           <View style={s.emptyState}>
-            <View style={[s.emptyIconWrap, { backgroundColor: theme.accentSoft, borderColor: theme.accentMid }]}>
+            <View style={[s.emptyIconWrap, { backgroundColor: THEME.accentSoft, borderColor: THEME.accentMid }]}>
               <Text style={{ fontSize: 36 }}>🔔</Text>
             </View>
             <Text style={s.emptyTitle}>No notifications yet</Text>
@@ -166,18 +149,18 @@ export default function NotificationsScreen() {
                   key={n.id}
                   style={[
                     s.notifCard,
-                    !n.read && { backgroundColor: theme.unreadBg, borderColor: theme.unreadBorder },
+                    !n.read && { backgroundColor: THEME.unreadBg, borderColor: THEME.unreadBorder },
                   ]}
                   onPress={() => handleTap(n)}
                   activeOpacity={0.7}
                 >
-                  <View style={[s.notifIconWrap, !n.read && { backgroundColor: theme.accentSoft }]}>
+                  <View style={[s.notifIconWrap, !n.read && { backgroundColor: THEME.accentSoft }]}>
                     <Text style={s.notifIcon}>{n.icon}</Text>
                   </View>
                   <View style={{ flex: 1 }}>
                     <View style={s.notifTitleRow}>
                       <Text style={s.notifTitle} numberOfLines={1}>{n.title}</Text>
-                      {!n.read && <View style={[s.unreadDot, { backgroundColor: theme.dot }]} />}
+                      {!n.read && <View style={[s.unreadDot, { backgroundColor: THEME.dot }]} />}
                     </View>
                     <Text style={s.notifBody} numberOfLines={2}>{n.body}</Text>
                     <Text style={s.notifTime}>{timeAgo(n.createdAt)}</Text>
@@ -190,7 +173,6 @@ export default function NotificationsScreen() {
         )}
         <View style={{ height: 80 }} />
       </ScrollView>
-
     </View>
   );
 }

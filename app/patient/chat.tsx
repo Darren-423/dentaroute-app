@@ -1,8 +1,9 @@
+import * as ImagePicker from "expo-image-picker";
 import { LinearGradient } from "expo-linear-gradient";
 import { router, useLocalSearchParams } from "expo-router";
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
-  ActivityIndicator, FlatList, KeyboardAvoidingView, Platform,
+  ActivityIndicator, Animated, FlatList, Image, KeyboardAvoidingView, Modal, Platform,
   StyleSheet,
   Text, TextInput, TouchableOpacity,
   View,
@@ -29,6 +30,29 @@ export default function PatientChatScreen() {
   const [failedIds, setFailedIds] = useState<Set<string>>(new Set());
   const translatingRef = useRef(false);
 
+  // Typing indicator
+  const [otherTyping, setOtherTyping] = useState(false);
+  const typingTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Image modal
+  const [previewImage, setPreviewImage] = useState<string | null>(null);
+  const [showAttachModal, setShowAttachModal] = useState(false);
+
+  // Typing dots animation
+  const dotAnim = useRef(new Animated.Value(0)).current;
+  useEffect(() => {
+    if (otherTyping) {
+      Animated.loop(
+        Animated.sequence([
+          Animated.timing(dotAnim, { toValue: 1, duration: 600, useNativeDriver: true }),
+          Animated.timing(dotAnim, { toValue: 0, duration: 600, useNativeDriver: true }),
+        ])
+      ).start();
+    } else {
+      dotAnim.setValue(0);
+    }
+  }, [otherTyping]);
+
   useEffect(() => {
     if (chatRoomId) {
       loadMessages();
@@ -36,9 +60,15 @@ export default function PatientChatScreen() {
     }
   }, [chatRoomId]);
 
-  // Poll for new messages every 2s (simulate real-time)
+  // Poll for new messages + typing status every 2s
   useEffect(() => {
-    const interval = setInterval(loadMessages, 2000);
+    const interval = setInterval(async () => {
+      await loadMessages();
+      if (chatRoomId) {
+        const typing = await store.getTyping(chatRoomId, "doctor");
+        setOtherTyping(typing);
+      }
+    }, 2000);
     return () => clearInterval(interval);
   }, [chatRoomId]);
 
@@ -122,7 +152,32 @@ export default function PatientChatScreen() {
     const text = input.trim();
     if (!text || !chatRoomId) return;
     setInput("");
+    if (chatRoomId) store.setTyping(chatRoomId, "patient", false);
     await store.sendMessage(chatRoomId, "patient", text);
+    await loadMessages();
+    setTimeout(() => flatListRef.current?.scrollToEnd({ animated: true }), 100);
+  };
+
+  const handleInputChange = (text: string) => {
+    setInput(text);
+    if (chatRoomId && text.trim()) {
+      store.setTyping(chatRoomId, "patient", true);
+      if (typingTimeout.current) clearTimeout(typingTimeout.current);
+      typingTimeout.current = setTimeout(() => {
+        store.setTyping(chatRoomId, "patient", false);
+      }, 3000);
+    }
+  };
+
+  const handlePickImage = async (useCamera: boolean) => {
+    setShowAttachModal(false);
+    const result = useCamera
+      ? await ImagePicker.launchCameraAsync({ mediaTypes: ["images"], quality: 0.8 })
+      : await ImagePicker.launchImageLibraryAsync({ mediaTypes: ["images"], quality: 0.8 });
+    if (result.canceled || !result.assets[0]) return;
+    const uri = result.assets[0].uri;
+    if (!chatRoomId) return;
+    await store.sendMessage(chatRoomId, "patient", "📷 Photo", { imageUri: uri });
     await loadMessages();
     setTimeout(() => flatListRef.current?.scrollToEnd({ animated: true }), 100);
   };
@@ -158,13 +213,20 @@ export default function PatientChatScreen() {
             </View>
           )}
           <View style={[s.bubble, isMe ? s.bubbleMe : s.bubbleThem]}>
-            {/* Original text */}
-            <Text style={[s.bubbleText, isMe ? s.bubbleTextMe : s.bubbleTextThem]}>
-              {item.text}
-            </Text>
+            {/* Image message */}
+            {item.messageType === "image" && item.imageUri ? (
+              <TouchableOpacity onPress={() => setPreviewImage(item.imageUri!)}>
+                <Image source={{ uri: item.imageUri }} style={s.msgImage} />
+              </TouchableOpacity>
+            ) : (
+              /* Original text */
+              <Text style={[s.bubbleText, isMe ? s.bubbleTextMe : s.bubbleTextThem]}>
+                {item.text}
+              </Text>
+            )}
 
-            {/* Translation (only when toggle is ON) */}
-            {translateOn && (
+            {/* Translation (only when toggle is ON and text message) */}
+            {translateOn && item.messageType !== "image" && (
               <>
                 {translatingIds.has(item.id) ? (
                   <View style={s.translatingRow}>
@@ -188,9 +250,16 @@ export default function PatientChatScreen() {
               </>
             )}
 
-            <Text style={[s.timeText, isMe ? s.timeTextMe : s.timeTextThem]}>
-              {formatTime(item.timestamp)}
-            </Text>
+            <View style={s.timeRow}>
+              <Text style={[s.timeText, isMe ? s.timeTextMe : s.timeTextThem]}>
+                {formatTime(item.timestamp)}
+              </Text>
+              {isMe && (
+                <Text style={[s.readReceipt, item.readAt ? s.readReceiptRead : s.readReceiptSent]}>
+                  {item.readAt ? "✓✓" : "✓"}
+                </Text>
+              )}
+            </View>
           </View>
         </View>
       </>
@@ -276,14 +345,29 @@ export default function PatientChatScreen() {
         </View>
       )}
 
+      {/* Typing indicator */}
+      {otherTyping && (
+        <View style={s.typingBar}>
+          <View style={s.typingAvatar}>
+            <Text style={s.typingAvatarText}>{(dentistName || "D").split(" ").pop()?.[0] || "D"}</Text>
+          </View>
+          <Animated.View style={[s.typingBubble, { opacity: dotAnim.interpolate({ inputRange: [0, 1], outputRange: [0.4, 1] }) }]}>
+            <Text style={s.typingDots}>...</Text>
+          </Animated.View>
+        </View>
+      )}
+
       {/* Input Bar */}
       <View style={s.inputBar}>
+        <TouchableOpacity style={s.attachBtn} onPress={() => setShowAttachModal(true)}>
+          <Text style={s.attachBtnText}>📎</Text>
+        </TouchableOpacity>
         <TextInput
           style={s.textInput}
           placeholder="Type a message..."
           placeholderTextColor={T.slateLight}
           value={input}
-          onChangeText={setInput}
+          onChangeText={handleInputChange}
           onSubmitEditing={handleSend}
           returnKeyType="send"
           multiline
@@ -298,6 +382,39 @@ export default function PatientChatScreen() {
           <Text style={s.sendBtnText}>→</Text>
         </TouchableOpacity>
       </View>
+
+      {/* Attach Modal */}
+      {showAttachModal && (
+        <Modal visible transparent animationType="fade" onRequestClose={() => setShowAttachModal(false)}>
+          <TouchableOpacity style={s.modalOverlay} activeOpacity={1} onPress={() => setShowAttachModal(false)}>
+            <View style={s.attachSheet}>
+              <TouchableOpacity style={s.attachOption} onPress={() => handlePickImage(true)}>
+                <Text style={s.attachOptionIcon}>📷</Text>
+                <Text style={s.attachOptionText}>Camera</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={s.attachOption} onPress={() => handlePickImage(false)}>
+                <Text style={s.attachOptionIcon}>🖼</Text>
+                <Text style={s.attachOptionText}>Photo Library</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={[s.attachOption, s.attachCancel]} onPress={() => setShowAttachModal(false)}>
+                <Text style={s.attachCancelText}>Cancel</Text>
+              </TouchableOpacity>
+            </View>
+          </TouchableOpacity>
+        </Modal>
+      )}
+
+      {/* Image Preview Modal */}
+      {previewImage && (
+        <Modal visible transparent animationType="fade" onRequestClose={() => setPreviewImage(null)}>
+          <View style={s.imagePreviewOverlay}>
+            <TouchableOpacity style={s.imagePreviewClose} onPress={() => setPreviewImage(null)}>
+              <Text style={s.imagePreviewCloseText}>✕</Text>
+            </TouchableOpacity>
+            <Image source={{ uri: previewImage }} style={s.imagePreviewImg} resizeMode="contain" />
+          </View>
+        </Modal>
+      )}
     </KeyboardAvoidingView>
   );
 }
@@ -368,9 +485,14 @@ const s = StyleSheet.create({
   bubbleText: { fontSize: 14, lineHeight: 20 },
   bubbleTextMe: { color: T.white },
   bubbleTextThem: { color: T.navy },
-  timeText: { fontSize: 10, marginTop: 4 },
-  timeTextMe: { color: "rgba(255,255,255,0.6)", textAlign: "right" },
+  timeRow: { flexDirection: "row", alignItems: "center", justifyContent: "flex-end", gap: 4, marginTop: 4 },
+  timeText: { fontSize: 10 },
+  timeTextMe: { color: "rgba(255,255,255,0.6)" },
   timeTextThem: { color: T.slateLight },
+  readReceipt: { fontSize: 11, fontWeight: "700" },
+  readReceiptSent: { color: "rgba(255,255,255,0.5)" },
+  readReceiptRead: { color: "#60a5fa" },
+  msgImage: { width: 200, height: 150, borderRadius: 12, marginBottom: 4 },
 
   // Translation bubble additions
   translatingRow: {
@@ -409,9 +531,34 @@ const s = StyleSheet.create({
   },
   quickChipText: { fontSize: 13, color: T.teal },
 
+  // Typing indicator
+  typingBar: { flexDirection: "row", alignItems: "center", gap: 8, paddingHorizontal: 16, paddingBottom: 4 },
+  typingAvatar: { width: 24, height: 24, borderRadius: 12, backgroundColor: T.tealLight, alignItems: "center", justifyContent: "center" },
+  typingAvatarText: { fontSize: 9, fontWeight: "700", color: T.teal },
+  typingBubble: { backgroundColor: T.white, borderRadius: 14, paddingHorizontal: 12, paddingVertical: 4, borderWidth: 1, borderColor: T.border },
+  typingDots: { fontSize: 20, color: T.slate, letterSpacing: 2 },
+
+  // Attach
+  attachBtn: { width: 40, height: 40, borderRadius: 20, backgroundColor: T.bg, borderWidth: 1, borderColor: T.border, alignItems: "center", justifyContent: "center" },
+  attachBtnText: { fontSize: 18 },
+
+  // Modals
+  modalOverlay: { flex: 1, backgroundColor: "rgba(0,0,0,0.4)", justifyContent: "flex-end" },
+  attachSheet: { backgroundColor: T.white, borderTopLeftRadius: 20, borderTopRightRadius: 20, padding: 20, paddingBottom: 40, gap: 8 },
+  attachOption: { flexDirection: "row", alignItems: "center", gap: 14, padding: 14, borderRadius: 12, backgroundColor: T.bg },
+  attachOptionIcon: { fontSize: 22 },
+  attachOptionText: { fontSize: 15, fontWeight: "600", color: T.navy },
+  attachCancel: { backgroundColor: "transparent", justifyContent: "center" },
+  attachCancelText: { fontSize: 15, fontWeight: "600", color: T.slate, textAlign: "center" },
+
+  imagePreviewOverlay: { flex: 1, backgroundColor: "rgba(0,0,0,0.92)", justifyContent: "center", alignItems: "center" },
+  imagePreviewClose: { position: "absolute", top: 56, right: 20, zIndex: 10, width: 36, height: 36, borderRadius: 18, backgroundColor: "rgba(255,255,255,0.15)", alignItems: "center", justifyContent: "center" },
+  imagePreviewCloseText: { color: "#fff", fontSize: 18, fontWeight: "600" },
+  imagePreviewImg: { width: "90%", height: "70%" },
+
   // Input
   inputBar: {
-    flexDirection: "row", alignItems: "flex-end", gap: 10,
+    flexDirection: "row", alignItems: "flex-end", gap: 8,
     paddingHorizontal: 16, paddingVertical: 12, paddingBottom: 56,
     backgroundColor: T.white, borderTopWidth: 1, borderTopColor: T.border,
   },

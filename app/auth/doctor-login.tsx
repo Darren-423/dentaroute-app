@@ -51,7 +51,10 @@ export default function DoctorLoginScreen() {
 
     try {
       // Demo mode: skip API, go to dashboard
-      await store.setCurrentUser("doctor", email.split("@")[0] || "Doctor");
+      // Use doctor profile name if available, otherwise fallback
+      const dp = await store.getDoctorProfile();
+      const doctorName = dp?.fullName || dp?.name || email.split("@")[0] || "Doctor";
+      await store.setCurrentUser("doctor", doctorName);
       setTimeout(() => {
         setLoading(false);
         router.replace("/doctor/dashboard" as any);
