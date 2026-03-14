@@ -2,12 +2,15 @@ import { router, useLocalSearchParams } from "expo-router";
 import React, { useEffect, useState } from "react";
 import {
     ActivityIndicator,
+    Dimensions,
+    Image,
+    Modal,
     ScrollView,
     StyleSheet,
     Text, TouchableOpacity,
     View
 } from "react-native";
-import { DentistQuote, Review, store } from "../../lib/store";
+import { DentistQuote, DoctorProfile, Review, store } from "../../lib/store";
 
 const T = {
   teal: "#4A0080", tealMid: "#5C10A0", tealLight: "#f0e6f6",
@@ -22,7 +25,9 @@ export default function DentistProfileScreen() {
   }>();
   const [reviews, setReviews] = useState<Review[]>([]);
   const [quote, setQuote] = useState<DentistQuote | null>(null);
+  const [doctorProfile, setDoctorProfile] = useState<DoctorProfile | null>(null);
   const [loading, setLoading] = useState(true);
+  const [avgResponseTime, setAvgResponseTime] = useState<number | null>(null);
 
   useEffect(() => {
     const load = async () => {
@@ -33,10 +38,26 @@ export default function DentistProfileScreen() {
         const q = quotes.find((qt) => qt.id === quoteId);
         if (q) setQuote(q);
       }
+      // Load doctor profile for certifications & before/after photos
+      const dp = await store.getDoctorProfile();
+      if (dp) {
+        setDoctorProfile(dp);
+      }
+      // Load average response time
+      const rt = await store.getAverageResponseTime(dentistName || "");
+      setAvgResponseTime(rt);
       setLoading(false);
     };
     load();
   }, [dentistName]);
+
+  const [galleryIndex, setGalleryIndex] = useState<number | null>(null);
+
+  // Certification data: prefer quote data (available for all dentists), fallback to doctor profile
+  const licenseVerified = quote?.licenseVerified ?? doctorProfile?.licenseVerified ?? false;
+  const certifications = quote?.certifications ?? doctorProfile?.certifications ?? [];
+  const beforeAfterPhotos = doctorProfile?.beforeAfterPhotos ?? [];
+  const screenW = Dimensions.get("window").width;
 
   const avgRating = reviews.length > 0
     ? (reviews.reduce((s, r) => s + r.rating, 0) / reviews.length).toFixed(1)
@@ -68,7 +89,14 @@ export default function DentistProfileScreen() {
           <View style={s.avatar}>
             <Text style={s.avatarText}>{initial}</Text>
           </View>
-          <Text style={s.name}>{dentistName}</Text>
+          <View style={s.nameRow}>
+            <Text style={s.name}>{dentistName}</Text>
+            {licenseVerified && (
+              <View style={s.verifiedBadge}>
+                <Text style={s.verifiedIcon}>✓</Text>
+              </View>
+            )}
+          </View>
           <Text style={s.clinic}>{clinicName}</Text>
 
           {/* Rating */}
@@ -103,7 +131,38 @@ export default function DentistProfileScreen() {
             <Text style={s.statNum}>{quote?.rating ? "12+" : "—"}</Text>
             <Text style={s.statLabel}>Years exp.</Text>
           </View>
+          <View style={s.statCard}>
+            <Text style={s.statIcon}>⏱</Text>
+            <Text style={s.statNum}>
+              {avgResponseTime !== null
+                ? avgResponseTime < 60
+                  ? `${avgResponseTime}m`
+                  : `${Math.round(avgResponseTime / 60)}h`
+                : "—"}
+            </Text>
+            <Text style={s.statLabel}>Avg. Response</Text>
+          </View>
         </View>
+
+        {/* Certifications */}
+        {certifications.length > 0 && (
+          <View style={s.certSection}>
+            <Text style={s.certTitle}>Certifications</Text>
+            <View style={s.certList}>
+              {certifications.map((cert, i) => (
+                <View key={i} style={s.certCard}>
+                  <Text style={s.certIcon}>🛡️</Text>
+                  <Text style={s.certText}>{cert}</Text>
+                  {cert === "License Verified" && licenseVerified && (
+                    <View style={s.certCheck}>
+                      <Text style={s.certCheckIcon}>✓</Text>
+                    </View>
+                  )}
+                </View>
+              ))}
+            </View>
+          </View>
+        )}
 
         {/* Clinic info from quote */}
         {quote && (
@@ -126,6 +185,69 @@ export default function DentistProfileScreen() {
               </View>
             )}
           </View>
+        )}
+
+        {/* Before & After Gallery */}
+        {beforeAfterPhotos.length > 0 && (
+          <View style={s.gallerySection}>
+            <Text style={s.galleryTitle}>Before & After</Text>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={s.galleryScroll}>
+              {beforeAfterPhotos.map((photo, i) => (
+                <TouchableOpacity key={i} style={s.galleryCard} onPress={() => setGalleryIndex(i)} activeOpacity={0.85}>
+                  <View style={s.galleryImages}>
+                    <View style={s.galleryImgWrap}>
+                      <Image source={{ uri: photo.before }} style={s.galleryImg} />
+                      <View style={s.galleryLabel}><Text style={s.galleryLabelText}>Before</Text></View>
+                    </View>
+                    <View style={s.galleryArrow}><Text style={s.galleryArrowText}>→</Text></View>
+                    <View style={s.galleryImgWrap}>
+                      <Image source={{ uri: photo.after }} style={s.galleryImg} />
+                      <View style={[s.galleryLabel, s.galleryLabelAfter]}><Text style={s.galleryLabelText}>After</Text></View>
+                    </View>
+                  </View>
+                  <Text style={s.galleryTreatment}>{photo.treatment}</Text>
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+          </View>
+        )}
+
+        {/* Before/After Fullscreen Modal */}
+        {galleryIndex !== null && beforeAfterPhotos[galleryIndex] && (
+          <Modal visible transparent animationType="fade" onRequestClose={() => setGalleryIndex(null)}>
+            <View style={s.modalOverlay}>
+              <TouchableOpacity style={s.modalClose} onPress={() => setGalleryIndex(null)}>
+                <Text style={s.modalCloseText}>✕</Text>
+              </TouchableOpacity>
+              <Text style={s.modalTreatment}>{beforeAfterPhotos[galleryIndex].treatment}</Text>
+              <ScrollView
+                horizontal pagingEnabled showsHorizontalScrollIndicator={false}
+                contentContainerStyle={s.modalScroll}
+              >
+                <View style={[s.modalPage, { width: screenW }]}>
+                  <Text style={s.modalLabel}>Before</Text>
+                  <Image source={{ uri: beforeAfterPhotos[galleryIndex].before }} style={s.modalImg} resizeMode="contain" />
+                </View>
+                <View style={[s.modalPage, { width: screenW }]}>
+                  <Text style={[s.modalLabel, { color: "#16a34a" }]}>After</Text>
+                  <Image source={{ uri: beforeAfterPhotos[galleryIndex].after }} style={s.modalImg} resizeMode="contain" />
+                </View>
+              </ScrollView>
+              <View style={s.modalNav}>
+                {galleryIndex > 0 && (
+                  <TouchableOpacity style={s.modalNavBtn} onPress={() => setGalleryIndex(galleryIndex - 1)}>
+                    <Text style={s.modalNavBtnText}>‹ Prev</Text>
+                  </TouchableOpacity>
+                )}
+                <Text style={s.modalNavCount}>{galleryIndex + 1} / {beforeAfterPhotos.length}</Text>
+                {galleryIndex < beforeAfterPhotos.length - 1 && (
+                  <TouchableOpacity style={s.modalNavBtn} onPress={() => setGalleryIndex(galleryIndex + 1)}>
+                    <Text style={s.modalNavBtnText}>Next ›</Text>
+                  </TouchableOpacity>
+                )}
+              </View>
+            </View>
+          </Modal>
         )}
 
         {/* Recent reviews */}
@@ -207,6 +329,12 @@ const s = StyleSheet.create({
 
   // Profile
   profileSection: { alignItems: "center", gap: 6 },
+  nameRow: { flexDirection: "row", alignItems: "center", gap: 8 },
+  verifiedBadge: {
+    width: 22, height: 22, borderRadius: 11, backgroundColor: "#2563eb",
+    alignItems: "center", justifyContent: "center",
+  },
+  verifiedIcon: { color: "#fff", fontSize: 13, fontWeight: "700" },
   avatar: {
     width: 88, height: 88, borderRadius: 44, backgroundColor: T.teal,
     alignItems: "center", justifyContent: "center", marginBottom: 6,
@@ -229,6 +357,23 @@ const s = StyleSheet.create({
   statNum: { fontSize: 20, fontWeight: "800", color: T.teal },
   statLabel: { fontSize: 11, color: T.slate, marginTop: 2 },
 
+  // Certifications
+  certSection: { gap: 10 },
+  certTitle: { fontSize: 15, fontWeight: "700", color: T.navy },
+  certList: { gap: 8 },
+  certCard: {
+    flexDirection: "row", alignItems: "center", gap: 10,
+    backgroundColor: "#eff6ff", borderRadius: 12, padding: 14,
+    borderWidth: 1, borderColor: "#bfdbfe",
+  },
+  certIcon: { fontSize: 18 },
+  certText: { fontSize: 13, fontWeight: "600", color: "#1e40af", flex: 1 },
+  certCheck: {
+    width: 18, height: 18, borderRadius: 9, backgroundColor: "#2563eb",
+    alignItems: "center", justifyContent: "center",
+  },
+  certCheckIcon: { color: "#fff", fontSize: 10, fontWeight: "700" },
+
   // Info
   infoCard: {
     backgroundColor: T.white, borderRadius: 16, padding: 18,
@@ -238,6 +383,54 @@ const s = StyleSheet.create({
   infoRow: { flexDirection: "row", alignItems: "center", gap: 10 },
   infoIcon: { fontSize: 16 },
   infoText: { fontSize: 13, color: T.slate, flex: 1 },
+
+  // Before/After Gallery
+  gallerySection: { gap: 10 },
+  galleryTitle: { fontSize: 15, fontWeight: "700", color: T.navy },
+  galleryScroll: { gap: 12 },
+  galleryCard: {
+    backgroundColor: T.white, borderRadius: 14, padding: 12,
+    borderWidth: 1, borderColor: T.border, width: 260,
+  },
+  galleryImages: { flexDirection: "row", alignItems: "center", gap: 6 },
+  galleryImgWrap: { flex: 1, position: "relative" },
+  galleryImg: { width: "100%", height: 100, borderRadius: 10, backgroundColor: T.border },
+  galleryLabel: {
+    position: "absolute", top: 6, left: 6,
+    backgroundColor: "rgba(0,0,0,0.6)", borderRadius: 4,
+    paddingHorizontal: 6, paddingVertical: 2,
+  },
+  galleryLabelAfter: { backgroundColor: "rgba(22,163,74,0.8)" },
+  galleryLabelText: { fontSize: 9, fontWeight: "700", color: "#fff" },
+  galleryArrow: { paddingHorizontal: 2 },
+  galleryArrowText: { fontSize: 16, color: T.slateLight, fontWeight: "700" },
+  galleryTreatment: { fontSize: 12, fontWeight: "600", color: T.navy, marginTop: 8, textAlign: "center" },
+
+  // Modal
+  modalOverlay: {
+    flex: 1, backgroundColor: "rgba(0,0,0,0.92)",
+    justifyContent: "center", alignItems: "center",
+  },
+  modalClose: {
+    position: "absolute", top: 56, right: 20, zIndex: 10,
+    width: 36, height: 36, borderRadius: 18, backgroundColor: "rgba(255,255,255,0.15)",
+    alignItems: "center", justifyContent: "center",
+  },
+  modalCloseText: { color: "#fff", fontSize: 18, fontWeight: "600" },
+  modalTreatment: { color: "#fff", fontSize: 16, fontWeight: "700", marginBottom: 16 },
+  modalScroll: {},
+  modalPage: { alignItems: "center", justifyContent: "center", paddingHorizontal: 20 },
+  modalLabel: { color: "#fff", fontSize: 14, fontWeight: "700", marginBottom: 10 },
+  modalImg: { width: "100%", height: 300, borderRadius: 16 },
+  modalNav: {
+    flexDirection: "row", alignItems: "center", gap: 20, marginTop: 20,
+  },
+  modalNavBtn: {
+    backgroundColor: "rgba(255,255,255,0.15)", borderRadius: 10,
+    paddingHorizontal: 16, paddingVertical: 8,
+  },
+  modalNavBtnText: { color: "#fff", fontSize: 14, fontWeight: "600" },
+  modalNavCount: { color: "rgba(255,255,255,0.6)", fontSize: 13 },
 
   // Reviews
   reviewsSection: { gap: 10 },

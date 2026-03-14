@@ -1,7 +1,8 @@
 import { LinearGradient } from "expo-linear-gradient";
 import { router, useFocusEffect } from "expo-router";
-import React, { useCallback, useMemo, useState } from "react";
+import React, { useCallback, useMemo, useRef, useState } from "react";
 import {
+  Animated,
   Image,
   Platform,
   ScrollView,
@@ -9,7 +10,6 @@ import {
   Text, TouchableOpacity,
   View,
 } from "react-native";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Booking, PatientCase, store } from "../../lib/store";
 
 const T = {
@@ -66,7 +66,6 @@ const getResolvedStatus = (c: PatientCase, bks: Booking[]): string => {
 };
 
 export default function DoctorDashboardScreen() {
-  const insets = useSafeAreaInsets();
   const [cases, setCases] = useState<PatientCase[]>([]);
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
@@ -75,6 +74,18 @@ export default function DoctorDashboardScreen() {
   const [patientProfileImage, setPatientProfileImage] = useState<string | null>(null);
   const [unreadMessages, setUnreadMessages] = useState(0);
   const [collapsedSections, setCollapsedSections] = useState<Record<string, boolean>>({});
+
+  // Stats toggle
+  const STATS_HEIGHT = 80;
+  const [statsOpen, setStatsOpen] = useState(true);
+  const statsAnim = useRef(new Animated.Value(0)).current;
+  const toggleStats = useCallback(() => {
+    const toValue = statsOpen ? -STATS_HEIGHT : 0;
+    setStatsOpen(!statsOpen);
+    Animated.timing(statsAnim, {
+      toValue, duration: 250, useNativeDriver: false,
+    }).start();
+  }, [statsOpen]);
 
   useFocusEffect(
     useCallback(() => {
@@ -243,27 +254,36 @@ export default function DoctorDashboardScreen() {
           </View>
         </View>
 
-        {/* Stats */}
-        <View style={s.statsRow}>
-          {([
-            { key: "new" as const, label: "New", count: newCount },
-            { key: "quoted" as const, label: "Quoted", count: quotedCount },
-            { key: "appointments" as const, label: "Appts", count: appointmentsCount },
-            { key: "in_process" as const, label: "In Process", count: inProcessCount },
-          ]).map((item) => {
-            const isActive = statusFilter === item.key;
-            return (
-              <TouchableOpacity
-                key={item.key}
-                style={[s.stat, isActive && s.statActive]}
-                onPress={() => setStatusFilter(statusFilter === item.key ? "all" : item.key)}
-                activeOpacity={0.7}
-              >
-                <Text style={[s.statNum, isActive && s.statNumActive]}>{item.count}</Text>
-                <Text style={[s.statLabel, isActive && s.statLabelActive]}>{item.label}</Text>
-              </TouchableOpacity>
-            );
-          })}
+        {/* Stats with toggle */}
+        <View style={s.statsToggleWrapper}>
+          <Animated.View style={[s.statsClip, { marginTop: statsAnim }]}>
+            <View style={s.statsRow}>
+              {([
+                { key: "new" as const, label: "New", count: newCount },
+                { key: "quoted" as const, label: "Quoted", count: quotedCount },
+                { key: "appointments" as const, label: "Appts", count: appointmentsCount },
+                { key: "in_process" as const, label: "In Process", count: inProcessCount },
+              ]).map((item) => {
+                const isActive = statusFilter === item.key;
+                return (
+                  <TouchableOpacity
+                    key={item.key}
+                    style={[s.stat, isActive && s.statActive]}
+                    onPress={() => setStatusFilter(statusFilter === item.key ? "all" : item.key)}
+                    activeOpacity={0.7}
+                  >
+                    <Text style={[s.statNum, isActive && s.statNumActive]}>{item.count}</Text>
+                    <Text style={[s.statLabel, isActive && s.statLabelActive]}>{item.label}</Text>
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
+          </Animated.View>
+        </View>
+        <View style={s.statsToggleBar}>
+          <TouchableOpacity style={s.statsToggleBtn} onPress={toggleStats} activeOpacity={0.6}>
+            <Text style={s.statsToggleIcon}>{statsOpen ? "▲" : "▼"}</Text>
+          </TouchableOpacity>
         </View>
       </LinearGradient>
 
@@ -425,30 +445,7 @@ export default function DoctorDashboardScreen() {
         <View style={{ height: 70 }} />
       </ScrollView>
 
-      {/* ── Bottom Bar ── */}
-      <View style={[s.bar, { paddingBottom: insets.bottom }]}>
-        <View style={s.barTopLine} />
-        <View style={s.barInner}>
-          {([
-            { icon: "📋", route: "/doctor/dashboard" },
-            { icon: "💰", route: "/doctor/earnings" },
-            { icon: "💬", route: "/doctor/chat-list", hasBadge: true },
-            { icon: "👤", route: "/doctor/profile" },
-          ] as const).map((item, i) => (
-            <TouchableOpacity
-              key={i}
-              style={s.barTab}
-              onPress={() => router.push(item.route as any)}
-              activeOpacity={0.4}
-            >
-              <Text style={s.barTabIcon}>{item.icon}</Text>
-              {"hasBadge" in item && unreadMessages > 0 && (
-                <View style={s.barDot} />
-              )}
-            </TouchableOpacity>
-          ))}
-        </View>
-      </View>
+      {/* Tab bar is rendered by _layout.tsx */}
     </View>
   );
 }
@@ -457,7 +454,7 @@ const s = StyleSheet.create({
   container: { flex: 1, backgroundColor: T.bg },
 
   // ── Header ──
-  headerGradient: { paddingHorizontal: 24, paddingTop: 60, paddingBottom: 24 },
+  headerGradient: { paddingHorizontal: 24, paddingTop: 60, paddingBottom: 8 },
   headerTop: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 20 },
   welcome: { fontSize: 12, color: "rgba(255,255,255,0.6)", marginBottom: 2 },
   userName: { fontSize: 24, fontWeight: "700", color: T.white },
@@ -466,7 +463,12 @@ const s = StyleSheet.create({
   iconBtnEmoji: { fontSize: 18 },
   iconBadge: { position: "absolute", top: 2, right: 2, backgroundColor: "#ef4444", borderRadius: 8, minWidth: 16, height: 16, alignItems: "center", justifyContent: "center", paddingHorizontal: 4 },
   iconBadgeText: { color: "#fff", fontSize: 9, fontWeight: "800" },
+  statsToggleWrapper: { overflow: "hidden" },
+  statsClip: {},
   statsRow: { flexDirection: "row", gap: 8 },
+  statsToggleBar: { backgroundColor: "transparent", alignItems: "center", paddingTop: 4, paddingBottom: 2 },
+  statsToggleBtn: { width: 24, height: 14, borderRadius: 7, backgroundColor: "rgba(255,255,255,0.12)", alignItems: "center", justifyContent: "center" },
+  statsToggleIcon: { fontSize: 8, color: "rgba(255,255,255,0.7)" },
   stat: { flex: 1, backgroundColor: "rgba(255,255,255,0.1)", borderRadius: 12, paddingVertical: 14, paddingHorizontal: 6, alignItems: "center", borderWidth: 1.5, borderColor: "transparent" },
   statActive: { backgroundColor: "rgba(255,255,255,0.25)", borderColor: "rgba(255,255,255,0.4)" },
   statNum: { fontSize: 22, fontWeight: "700", color: T.white, marginBottom: 2 },
@@ -693,28 +695,4 @@ const s = StyleSheet.create({
     fontWeight: "300",
   },
 
-  /* ── Bottom Bar ── */
-  bar: {
-    position: "absolute", bottom: 0, left: 0, right: 0,
-    backgroundColor: "#fff",
-    ...Platform.select({
-      ios: { shadowColor: "#000", shadowOffset: { width: 0, height: -1 }, shadowOpacity: 0.06, shadowRadius: 4 },
-      android: { elevation: 6 },
-    }),
-  },
-  barTopLine: { height: 0.5, backgroundColor: "#e2e8f0" },
-  barInner: {
-    flexDirection: "row", justifyContent: "space-evenly",
-    alignItems: "center", paddingVertical: 8,
-  },
-  barTab: {
-    alignItems: "center", justifyContent: "center",
-    width: 44, height: 32,
-  },
-  barTabIcon: { fontSize: 18 },
-  barDot: {
-    position: "absolute", top: 2, right: 6,
-    width: 7, height: 7, borderRadius: 4,
-    backgroundColor: "#ef4444", borderWidth: 1.5, borderColor: "#fff",
-  },
 });

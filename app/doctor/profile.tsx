@@ -3,12 +3,13 @@ import { router, useFocusEffect } from "expo-router";
 import React, { useCallback, useState } from "react";
 import {
     Alert,
+    Image,
     ScrollView,
     StyleSheet,
     Text, TouchableOpacity,
     View,
 } from "react-native";
-import { store } from "../../lib/store";
+import { DoctorProfile as DoctorProfileType, store } from "../../lib/store";
 
 const T = {
   teal: "#0f766e",
@@ -64,7 +65,14 @@ export default function DoctorProfileScreen() {
           <View style={s.avatar}>
             <Text style={s.avatarText}>{profile?.name?.[4] || "K"}</Text>
           </View>
-          <Text style={s.name}>{profile?.name || "Doctor"}</Text>
+          <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
+            <Text style={s.name}>{profile?.name || "Doctor"}</Text>
+            {profile?.licenseVerified && (
+              <View style={s.verifiedBadge}>
+                <Text style={s.verifiedIcon}>✓</Text>
+              </View>
+            )}
+          </View>
           <Text style={s.clinic}>{profile?.clinic || ""}</Text>
           {profile?.specialty && (
             <View style={s.specialtyBadge}>
@@ -111,6 +119,57 @@ export default function DoctorProfileScreen() {
             </View>
           </View>
         )}
+
+        {/* Certifications */}
+        {profile?.certifications && profile.certifications.length > 0 && (
+          <View style={s.section}>
+            <Text style={s.sectionTitle}>CERTIFICATIONS</Text>
+            <View style={{ gap: 8 }}>
+              {profile.certifications.map((cert: string, i: number) => (
+                <View key={i} style={s.certCard}>
+                  <Text style={s.certIcon}>🛡️</Text>
+                  <Text style={s.certText}>{cert}</Text>
+                  {cert === "License Verified" && profile.licenseVerified && (
+                    <View style={s.certCheck}>
+                      <Text style={s.certCheckIcon}>✓</Text>
+                    </View>
+                  )}
+                </View>
+              ))}
+            </View>
+          </View>
+        )}
+
+        {/* Before/After Photos — preview + link to dedicated page */}
+        <View style={s.section}>
+          <Text style={s.sectionTitle}>BEFORE & AFTER PHOTOS</Text>
+          <TouchableOpacity
+            style={s.baLinkCard}
+            onPress={() => router.push("/doctor/before-after" as any)}
+            activeOpacity={0.7}
+          >
+            {profile?.beforeAfterPhotos && profile.beforeAfterPhotos.length > 0 ? (
+              <View style={s.baPreviewRow}>
+                {profile.beforeAfterPhotos.slice(0, 2).map((photo: any, i: number) => (
+                  <Image key={i} source={{ uri: photo.after }} style={s.baPreviewThumb} />
+                ))}
+                <View style={s.baPreviewInfo}>
+                  <Text style={s.baPreviewCount}>📸 {profile.beforeAfterPhotos.length} photo set{profile.beforeAfterPhotos.length !== 1 ? "s" : ""}</Text>
+                  <Text style={s.baPreviewHint}>Tap to manage</Text>
+                </View>
+              </View>
+            ) : (
+              <View style={s.baPreviewEmpty}>
+                <Text style={s.baPreviewEmptyIcon}>📷</Text>
+                <View>
+                  <Text style={s.baPreviewEmptyText}>Add Before/After Photos</Text>
+                  <Text style={s.baPreviewHint}>Showcase your treatment results</Text>
+                </View>
+              </View>
+            )}
+            <Text style={s.menuArrow}>›</Text>
+          </TouchableOpacity>
+        </View>
 
         {/* Actions */}
         <View style={s.section}>
@@ -222,6 +281,43 @@ const s = StyleSheet.create({
     shadowColor: "#000", shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.05, shadowRadius: 4, elevation: 2,
   },
   bioText: { color: T.textSec, fontSize: 13, lineHeight: 20, paddingVertical: 14 },
+
+  // Verified badge
+  verifiedBadge: {
+    width: 22, height: 22, borderRadius: 11, backgroundColor: "#2563eb",
+    alignItems: "center", justifyContent: "center",
+  },
+  verifiedIcon: { color: "#fff", fontSize: 13, fontWeight: "700" },
+
+  // Certifications
+  certCard: {
+    flexDirection: "row", alignItems: "center", gap: 10,
+    backgroundColor: "#eff6ff", borderRadius: 12, padding: 14,
+    borderWidth: 1, borderColor: "#bfdbfe",
+  },
+  certIcon: { fontSize: 18 },
+  certText: { fontSize: 13, fontWeight: "600", color: "#1e40af", flex: 1 },
+  certCheck: {
+    width: 18, height: 18, borderRadius: 9, backgroundColor: "#2563eb",
+    alignItems: "center", justifyContent: "center",
+  },
+  certCheckIcon: { color: "#fff", fontSize: 10, fontWeight: "700" },
+
+  // Before/After link card
+  baLinkCard: {
+    flexDirection: "row", alignItems: "center",
+    backgroundColor: T.white, borderRadius: 14, padding: 16,
+    borderWidth: 1, borderColor: T.border,
+    shadowColor: "#000", shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.05, shadowRadius: 4, elevation: 2,
+  },
+  baPreviewRow: { flex: 1, flexDirection: "row", alignItems: "center", gap: 10 },
+  baPreviewThumb: { width: 44, height: 44, borderRadius: 10, backgroundColor: T.border },
+  baPreviewInfo: { flex: 1, gap: 2 },
+  baPreviewCount: { fontSize: 14, fontWeight: "600", color: T.text },
+  baPreviewHint: { fontSize: 11, color: T.textMuted },
+  baPreviewEmpty: { flex: 1, flexDirection: "row", alignItems: "center", gap: 12 },
+  baPreviewEmptyIcon: { fontSize: 24 },
+  baPreviewEmptyText: { fontSize: 14, fontWeight: "600", color: T.text },
 
   // Menu
   menuItem: {

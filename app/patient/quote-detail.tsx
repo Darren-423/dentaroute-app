@@ -41,6 +41,7 @@ export default function QuoteDetailScreen() {
   const caseId = Array.isArray(rawParams.caseId) ? rawParams.caseId[0] : rawParams.caseId || "";
   const [quote, setQuote] = useState<DentistQuote | null>(null);
   const [activePhoto, setActivePhoto] = useState(0);
+  const [avgResponseTime, setAvgResponseTime] = useState<number | null>(null);
 
   useEffect(() => {
     const load = async () => {
@@ -48,6 +49,10 @@ export default function QuoteDetailScreen() {
         const quotes = await store.getQuotesForCase(caseId);
         const found = quotes.find((q) => q.id === quoteId);
         setQuote(found ?? null);
+        if (found) {
+          const rt = await store.getAverageResponseTime(found.dentistName);
+          setAvgResponseTime(rt);
+        }
       }
     };
     load();
@@ -122,7 +127,14 @@ export default function QuoteDetailScreen() {
                 <Text style={s.avatarText}>{dentistInitial}</Text>
               </View>
               <View style={{ flex: 1 }}>
-                <Text style={s.dentistName}>{quote.dentistName}</Text>
+                <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
+                  <Text style={s.dentistName}>{quote.dentistName}</Text>
+                  {quote.licenseVerified && (
+                    <View style={s.verifiedBadge}>
+                      <Text style={s.verifiedIcon}>✓</Text>
+                    </View>
+                  )}
+                </View>
                 <Text style={s.clinicName}>{quote.clinicName}</Text>
               </View>
               <TouchableOpacity
@@ -161,6 +173,17 @@ export default function QuoteDetailScreen() {
               <View style={s.infoItem}>
                 <Text style={s.infoValue}>{quote.yearsExperience || "–"}</Text>
                 <Text style={s.infoLabel}>Experience</Text>
+              </View>
+              <View style={s.infoDivider} />
+              <View style={s.infoItem}>
+                <Text style={s.infoValue}>
+                  {avgResponseTime !== null
+                    ? avgResponseTime < 60
+                      ? `${avgResponseTime}m`
+                      : `${Math.round(avgResponseTime / 60)}h`
+                    : "–"}
+                </Text>
+                <Text style={s.infoLabel}>Response</Text>
               </View>
             </View>
 
@@ -427,6 +450,11 @@ const s = StyleSheet.create({
   },
   avatarText: { fontSize: 18, fontWeight: "700", color: T.teal },
   dentistName: { fontSize: 17, fontWeight: "700", color: T.navy },
+  verifiedBadge: {
+    width: 20, height: 20, borderRadius: 10, backgroundColor: "#2563eb",
+    alignItems: "center", justifyContent: "center",
+  },
+  verifiedIcon: { color: "#fff", fontSize: 11, fontWeight: "700" },
   clinicName: { fontSize: 13, color: T.slate, marginTop: 2 },
   profileViewBtn: {
     flexDirection: "row", alignItems: "center", gap: 5,

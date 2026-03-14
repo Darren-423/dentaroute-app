@@ -1,8 +1,9 @@
 import { LinearGradient } from "expo-linear-gradient";
 import { router, useFocusEffect } from "expo-router";
-import React, { useCallback, useMemo, useState } from "react";
+import React, { useCallback, useMemo, useRef, useState } from "react";
 import {
   Alert,
+  Animated,
   Image,
   Modal,
   Platform,
@@ -60,31 +61,46 @@ export default function PatientDashboardScreen() {
   const [statusFilter, setStatusFilter] = useState<"all" | "with_quotes" | "bookings" | "in_treatment" | "completed">("all");
   const [manageBooking, setManageBooking] = useState<Booking | null>(null);
 
+  // Stats toggle
+  const STATS_HEIGHT = 80;
+  const [statsOpen, setStatsOpen] = useState(true);
+  const statsAnim = useRef(new Animated.Value(0)).current;
+  const toggleStats = useCallback(() => {
+    const toValue = statsOpen ? -STATS_HEIGHT : 0;
+    setStatsOpen(!statsOpen);
+    Animated.timing(statsAnim, {
+      toValue, duration: 250, useNativeDriver: false,
+    }).start();
+  }, [statsOpen]);
+
+  const scrollRef = useRef<ScrollView>(null);
+
+  const loadData = useCallback(async () => {
+    const c = await store.getCases();
+    c.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+    setCases(c);
+    const b = await store.getBookings();
+    setBookings(b);
+    const uc = await store.getUnreadCount("patient");
+    setUnreadCount(uc);
+    const user = await store.getCurrentUser();
+    if (user?.name) setUserName(user.name);
+    const profile = await store.getPatientProfile();
+    if (profile?.fullName) setUserName(profile.fullName);
+    if (profile?.profileImage) setProfileImage(profile.profileImage);
+
+    const counts: Record<string, number> = {};
+    for (const cs of c) {
+      const quotes = await store.getQuotesForCase(cs.id);
+      counts[cs.id] = quotes.length;
+    }
+    setQuoteCounts(counts);
+  }, []);
+
   useFocusEffect(
     useCallback(() => {
-      const load = async () => {
-        const c = await store.getCases();
-        c.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
-        setCases(c);
-        const b = await store.getBookings();
-        setBookings(b);
-        const uc = await store.getUnreadCount("patient");
-        setUnreadCount(uc);
-        const user = await store.getCurrentUser();
-        if (user?.name) setUserName(user.name);
-        const profile = await store.getPatientProfile();
-        if (profile?.fullName) setUserName(profile.fullName);
-        if (profile?.profileImage) setProfileImage(profile.profileImage);
-
-        const counts: Record<string, number> = {};
-        for (const cs of c) {
-          const quotes = await store.getQuotesForCase(cs.id);
-          counts[cs.id] = quotes.length;
-        }
-        setQuoteCounts(counts);
-      };
-      load();
-    }, [])
+      loadData();
+    }, [loadData])
   );
 
   const totalQuotes = cases.filter((c) => c.status === "quotes_received").length;
@@ -243,7 +259,13 @@ export default function PatientDashboardScreen() {
             </TouchableOpacity>
             <TouchableOpacity
               style={s.headerIconBtn}
-              onPress={() => router.push("/notifications?role=patient" as any)}
+              onPress={() => router.push("/patient/help-center" as any)}
+            >
+              <Text style={s.headerIconText}>❓</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={s.headerIconBtn}
+              onPress={() => router.push("/patient/alerts" as any)}
             >
               <Text style={s.headerIconText}>🔔</Text>
               {unreadCount > 0 && (
@@ -255,31 +277,41 @@ export default function PatientDashboardScreen() {
           </View>
         </View>
 
-        {/* Stats */}
-        <View style={s.statsRow}>
-          {([
-            { key: "with_quotes" as const, label: "Quotes", count: totalQuotes },
-            { key: "bookings" as const, label: "Bookings", count: bookings.length },
-            { key: "in_treatment" as const, label: "Treatment", count: inTreatmentCount },
-            { key: "completed" as const, label: "Completed", count: completedCount },
-          ]).map((item) => {
-            const isActive = statusFilter === item.key;
-            return (
-              <TouchableOpacity
-                key={item.key}
-                style={[s.statCard, isActive && s.statCardActive]}
-                onPress={() => setStatusFilter(statusFilter === item.key ? "all" : item.key)}
-                activeOpacity={0.7}
-              >
-                <Text style={[s.statNum, isActive && s.statNumActive]}>{item.count}</Text>
-                <Text style={[s.statLabel, isActive && s.statLabelActive]}>{item.label}</Text>
-              </TouchableOpacity>
-            );
-          })}
+        {/* Stats with toggle */}
+        <View style={s.statsToggleWrapper}>
+          <Animated.View style={[s.statsClip, { marginTop: statsAnim }]}>
+            <View style={s.statsRow}>
+              {([
+                { key: "with_quotes" as const, label: "Quotes", count: totalQuotes },
+                { key: "bookings" as const, label: "Bookings", count: bookings.length },
+                { key: "in_treatment" as const, label: "Treatment", count: inTreatmentCount },
+                { key: "completed" as const, label: "Completed", count: completedCount },
+              ]).map((item) => {
+                const isActive = statusFilter === item.key;
+                return (
+                  <TouchableOpacity
+                    key={item.key}
+                    style={[s.statCard, isActive && s.statCardActive]}
+                    onPress={() => setStatusFilter(statusFilter === item.key ? "all" : item.key)}
+                    activeOpacity={0.7}
+                  >
+                    <Text style={[s.statNum, isActive && s.statNumActive]}>{item.count}</Text>
+                    <Text style={[s.statLabel, isActive && s.statLabelActive]}>{item.label}</Text>
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
+          </Animated.View>
+        </View>
+        <View style={s.statsToggleBar}>
+          <TouchableOpacity style={s.statsToggleBtn} onPress={toggleStats} activeOpacity={0.6}>
+            <Text style={s.statsToggleIcon}>{statsOpen ? "▲" : "▼"}</Text>
+          </TouchableOpacity>
         </View>
       </LinearGradient>
 
       <ScrollView
+        ref={scrollRef}
         style={{ flex: 1 }}
         contentContainerStyle={s.scrollContent}
         showsVerticalScrollIndicator={false}
@@ -432,31 +464,6 @@ export default function PatientDashboardScreen() {
         <View style={{ height: 70 }} />
       </ScrollView>
 
-      {/* ── Bottom Bar ── */}
-      <View style={[s.bar, { paddingBottom: insets.bottom }]}>
-        <View style={s.barTop} />
-        <View style={s.barInner}>
-          {([
-            { icon: "📝", route: "/patient/basic-info?mode=edit" },
-            { icon: "📁", route: "/patient/upload?mode=standalone" },
-            { icon: "💬", route: "/patient/chat-list", hasBadge: true },
-            { icon: "❓", route: "/patient/help-center" },
-          ] as const).map((item, i) => (
-            <TouchableOpacity
-              key={i}
-              style={s.barTab}
-              onPress={() => router.push(item.route as any)}
-              activeOpacity={0.4}
-            >
-              <Text style={s.barTabIcon}>{item.icon}</Text>
-              {"hasBadge" in item && unreadCount > 0 && (
-                <View style={s.barDot} />
-              )}
-            </TouchableOpacity>
-          ))}
-        </View>
-      </View>
-
       {/* ── Manage Booking Modal ── */}
       <Modal visible={!!manageBooking} transparent animationType="fade" onRequestClose={() => setManageBooking(null)}>
         <TouchableOpacity style={s.modalOverlay} activeOpacity={1} onPress={() => setManageBooking(null)}>
@@ -556,7 +563,7 @@ const s = StyleSheet.create({
 
   /* Header */
   header: {
-    paddingHorizontal: 24, paddingTop: 60, paddingBottom: 22,
+    paddingHorizontal: 24, paddingTop: 60, paddingBottom: 8,
   },
   headerTop: {
     flexDirection: "row", justifyContent: "space-between",
@@ -603,8 +610,24 @@ const s = StyleSheet.create({
   notifBadgeText: { color: "#fff", fontSize: 8, fontWeight: "800" },
 
   /* Stats */
+  statsToggleWrapper: {
+    overflow: "hidden",
+  },
+  statsToggleBar: {
+    backgroundColor: "transparent",
+    alignItems: "center", paddingTop: 4, paddingBottom: 2,
+  },
+  statsClip: {},
   statsRow: {
     flexDirection: "row", gap: 8,
+  },
+  statsToggleBtn: {
+    width: 24, height: 14, borderRadius: 7,
+    backgroundColor: "rgba(255,255,255,0.12)",
+    alignItems: "center", justifyContent: "center",
+  },
+  statsToggleIcon: {
+    fontSize: 8, color: "rgba(255,255,255,0.7)",
   },
   statCard: {
     flex: 1, alignItems: "center",
@@ -759,30 +782,6 @@ const s = StyleSheet.create({
   manageBtnText: { fontSize: 18, fontWeight: "900", color: T.teal, marginTop: -2 },
 
   /* ── Bottom Bar ── */
-  bar: {
-    position: "absolute", bottom: 0, left: 0, right: 0,
-    backgroundColor: "#fff",
-    ...Platform.select({
-      ios: { shadowColor: "#000", shadowOffset: { width: 0, height: -1 }, shadowOpacity: 0.06, shadowRadius: 4 },
-      android: { elevation: 6 },
-    }),
-  },
-  barTop: { height: 0.5, backgroundColor: "#e2e8f0" },
-  barInner: {
-    flexDirection: "row", justifyContent: "space-evenly",
-    alignItems: "center", paddingVertical: 8,
-  },
-  barTab: {
-    alignItems: "center", justifyContent: "center",
-    width: 44, height: 32,
-  },
-  barTabIcon: { fontSize: 18 },
-  barDot: {
-    position: "absolute", top: 2, right: 6,
-    width: 7, height: 7, borderRadius: 4,
-    backgroundColor: "#ef4444", borderWidth: 1.5, borderColor: "#fff",
-  },
-
   /* ── Manage Booking Modal ── */
   modalOverlay: {
     flex: 1, backgroundColor: "rgba(0,0,0,0.45)",

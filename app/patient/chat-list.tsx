@@ -19,7 +19,6 @@ const T = {
 
 export default function PatientChatListScreen() {
   const [rooms, setRooms] = useState<ChatRoom[]>([]);
-
   useFocusEffect(
     useCallback(() => {
       const load = async () => {
@@ -103,7 +102,7 @@ export default function PatientChatListScreen() {
           data={rooms}
           keyExtractor={(item) => item.id}
           renderItem={renderRoom}
-          contentContainerStyle={s.list}
+          contentContainerStyle={[s.list, { paddingBottom: 80 }]}
           showsVerticalScrollIndicator={false}
         />
       )}
