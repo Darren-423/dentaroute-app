@@ -13,6 +13,7 @@ import {
   View,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { authApi } from "../../lib/api";
 import { Booking, PatientCase, store } from "../../lib/store";
 
 const T = {
@@ -449,6 +450,7 @@ export default function PatientDashboardScreen() {
                   text: "Log Out",
                   style: "destructive",
                   onPress: async () => {
+                    try { await authApi.logout(); } catch {}
                     await store.clearCurrentUser();
                     router.replace("/auth/role-select" as any);
                   },

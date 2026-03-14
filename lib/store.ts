@@ -765,7 +765,9 @@ export const store = {
     // 동적 채팅 메시지 키도 함께 삭제 (dr_messages_<chatRoomId>)
     const allKeys = await AsyncStorage.getAllKeys();
     const dynamicMessageKeys = allKeys.filter((k) => k.startsWith(KEYS.MESSAGES + "_"));
-    await AsyncStorage.multiRemove([...keys, ...dynamicMessageKeys]);
+    // API 토큰 키도 함께 삭제
+    const apiTokenKeys = ["dr_access_token", "dr_refresh_token", "dr_auth_user"];
+    await AsyncStorage.multiRemove([...keys, ...dynamicMessageKeys, ...apiTokenKeys]);
   },
 
   // 디버그: 전체 데이터 출력
