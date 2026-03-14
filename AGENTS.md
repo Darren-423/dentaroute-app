@@ -584,7 +584,19 @@ PORT=3000
 | `lib/store.ts` | Claude Code | Will convert to API client |
 | `lib/chat-filter.ts` | Claude Code | Port logic to `server/src/services/chatFilter.ts` |
 | `constants/` | Claude Code | Port to `server/src/services/` |
-| `docs/` | Shared | Reference only |
+| `docs/` | Shared | API contracts and shared specs live here |
+
+### Collaboration Protocol
+This `AGENTS.md` section is the canonical Codex <-> Claude Code collaboration protocol. Do not create a separate collaboration-protocol doc elsewhere.
+
+1. Respect ownership boundaries strictly: Codex edits only `server/`, shared docs, and server-facing handoff files. Never edit `app/`, `lib/`, `components/`, or `constants/`.
+2. Treat repository files as the source of truth. Verbal chat context is not sufficient unless it is written into tracked files.
+3. Work contract-first for integration slices. Before implementing a backend slice, write `docs/api-contract-<slice>.md` and let Claude Code review it.
+4. Use these integration slices, in order: `Auth` -> `Cases + Quotes` -> `Bookings` -> `Chat` -> `Reviews + Warranty`.
+5. Record every backend/frontend handoff in `server/CHANGELOG.md` using the exact format defined below.
+6. If any enum, status value, or other cross-team contract changes, update `AGENTS.md` and `server/CHANGELOG.md` in the same change.
+7. Server seed data must reproduce the frontend `store.seedDemoData()` flow as closely as possible so both sides integrate against the same journey.
+8. Keep handoffs short and mechanical: changed files, contract shape, frontend expectations, test status, and readiness.
 
 ### Git Workflow
 1. Work on `dev` branch
@@ -593,14 +605,19 @@ PORT=3000
 4. Never force-push or rebase without coordinating
 
 ### Communication Protocol
-When you complete a major piece of work, add a note to `server/CHANGELOG.md`:
+Create `server/CHANGELOG.md` before backend implementation begins and append every slice handoff there.
+
+Use this exact format:
 ```markdown
-## [Date] - What was completed
-- Endpoints created: POST /api/cases, GET /api/cases, etc.
-- Database tables: cases, treatments, quotes
-- Auth middleware ready
-- Ready for frontend integration: YES/NO
+## [YYYY-MM-DD] Slice: Auth
+- Changed: server/routes/auth.ts created
+- Contract: POST /api/auth/login -> { token, user }
+- Frontend expects: JWT token in Authorization header
+- Tested: curl test completed
+- Status: Ready for integration
 ```
+
+The first collaboration slice is `Auth`. Before writing Auth server code, create and review `docs/api-contract-auth.md`.
 
 ---
 
@@ -644,4 +661,6 @@ Read these files to understand business logic before implementing:
 - `docs/per-visit-discount-spec.md` - 5% discount specification
 - `docs/multi-visit-billing-spec.md` - Multi-visit billing logic
 - `docs/anti-bypass-implementation-plan.md` - Anti-bypass strategy
+- `docs/api-contract-auth.md` - First backend/frontend contract slice
+- `server/CHANGELOG.md` - Required Codex <-> Claude handoff log
 - `CLAUDE.md` - Full project analysis and architecture

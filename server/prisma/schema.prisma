@@ -1,0 +1,151 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  PATIENT
+  DOCTOR
+}
+
+enum ProfileStatus {
+  NEEDS_PROFILE_SETUP
+  ACTIVE
+}
+
+enum LicenseVerificationStatus {
+  PENDING_REVIEW
+  VERIFIED
+  REJECTED
+}
+
+enum VerificationChannel {
+  EMAIL
+  SMS
+}
+
+enum CaseStatus {
+  PENDING
+  QUOTES_RECEIVED
+  BOOKED
+}
+
+model User {
+  id                        String                     @id @default(cuid())
+  role                      UserRole
+  fullName                  String
+  email                     String                     @unique
+  phone                     String
+  phoneCountryCode          String
+  normalizedPhone           String                     @unique
+  passwordHash              String
+  emailVerified             Boolean                    @default(false)
+  phoneVerified             Boolean                    @default(false)
+  profileStatus             ProfileStatus              @default(NEEDS_PROFILE_SETUP)
+  licenseVerificationStatus LicenseVerificationStatus?
+  createdAt                 DateTime                   @default(now())
+  updatedAt                 DateTime                   @updatedAt
+  refreshSessions           RefreshSession[]
+  doctorLicenseFiles        DoctorLicenseFile[]
+  patientCases              PatientCase[]              @relation("PatientCases")
+  doctorQuotes              DentistQuote[]             @relation("DoctorQuotes")
+}
+
+model VerificationCode {
+  id                String              @id @default(cuid())
+  channel           VerificationChannel
+  role              UserRole
+  target            String
+  codeHash          String
+  expiresAt         DateTime
+  resendAvailableAt DateTime
+  verifiedAt        DateTime?
+  consumedAt        DateTime?
+  createdAt         DateTime            @default(now())
+
+  @@index([channel, role, target])
+}
+
+model RefreshSession {
+  id         String    @id @default(cuid())
+  sessionId  String    @unique
+  userId     String
+  user       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt  DateTime
+  revokedAt  DateTime?
+  createdAt  DateTime  @default(now())
+  lastUsedAt DateTime?
+
+  @@index([userId])
+}
+
+model DoctorLicenseFile {
+  id           String   @id @default(cuid())
+  userId       String
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  originalName String
+  mimeType     String
+  sizeBytes    Int
+  storageKey   String
+  createdAt    DateTime @default(now())
+
+  @@index([userId])
+}
+
+model PatientCase {
+  id           Int           @id @default(autoincrement())
+  patientUserId String
+  patientUser   User         @relation("PatientCases", fields: [patientUserId], references: [id], onDelete: Cascade)
+  patientName   String
+  country       String
+  date          String
+  treatments    Json
+  medicalNotes  String
+  dentalIssues  Json
+  filesCount    Json
+  status        CaseStatus   @default(PENDING)
+  visitDate     String?
+  birthDate     String?
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+  quotes        DentistQuote[]
+
+  @@index([patientUserId])
+}
+
+model DentistQuote {
+  id               String      @id
+  caseId           Int
+  patientCase      PatientCase @relation(fields: [caseId], references: [id], onDelete: Cascade)
+  doctorUserId     String
+  doctorUser       User        @relation("DoctorQuotes", fields: [doctorUserId], references: [id], onDelete: Cascade)
+  dentistName      String
+  clinicName       String
+  location         String
+  address          String?
+  latitude         Float?
+  longitude        Float?
+  rating           Float
+  reviewCount      Int
+  totalPrice       Float
+  treatments       Json
+  treatmentDetails String
+  duration         String
+  visits           Json?
+  message          String
+  createdAt        DateTime    @default(now())
+  updatedAt        DateTime    @updatedAt
+  clinicPhotos     Json?
+  yearsExperience  Int?
+  specialties      Json?
+  licenseVerified  Boolean?
+  certifications   Json?
+
+  @@index([caseId])
+  @@index([doctorUserId])
+  @@unique([caseId, doctorUserId])
+}
