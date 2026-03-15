@@ -1,7 +1,7 @@
-import { LinearGradient } from "expo-linear-gradient";
+import { Feather } from "@expo/vector-icons";
 import { router } from "expo-router";
 import React, { useEffect, useRef, useState } from "react";
-import { Animated, Platform, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { Animated, Platform, StyleSheet, TouchableOpacity, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { setTabDirection } from "../lib/tabDirection";
 
@@ -13,11 +13,13 @@ interface DoctorTabBarProps {
   chatUnread?: number;
 }
 
-const TABS: { icon: string; label: DoctorTabName; route: string; hasBadge?: boolean }[] = [
-  { icon: "🏠", label: "Home", route: "/doctor/dashboard" },
-  { icon: "🔔", label: "Alerts", route: "/doctor/alerts", hasBadge: true },
-  { icon: "💬", label: "Chat", route: "/doctor/chat-list", hasBadge: true },
-  { icon: "👤", label: "Profile", route: "/doctor/profile" },
+type FeatherIconName = React.ComponentProps<typeof Feather>["name"];
+
+const TABS: { icon: FeatherIconName; label: DoctorTabName; route: string }[] = [
+  { icon: "home", label: "Home", route: "/doctor/dashboard" },
+  { icon: "bell", label: "Alerts", route: "/doctor/alerts" },
+  { icon: "message-circle", label: "Chat", route: "/doctor/chat-list" },
+  { icon: "user", label: "Profile", route: "/doctor/profile" },
 ];
 
 export function DoctorTabBar({ currentTab, notifUnread = 0, chatUnread = 0 }: DoctorTabBarProps) {
@@ -30,40 +32,25 @@ export function DoctorTabBar({ currentTab, notifUnread = 0, chatUnread = 0 }: Do
     Animated.spring(slideAnim, {
       toValue: activeIndex,
       useNativeDriver: true,
-      tension: 68,
-      friction: 12,
+      tension: 100,
+      friction: 15,
     }).start();
   }, [activeIndex]);
 
   const tabWidth = barWidth / TABS.length;
-  const indicatorWidth = 40;
+  const dotSize = 4;
   const translateX = slideAnim.interpolate({
     inputRange: TABS.map((_, i) => i),
-    outputRange: TABS.map((_, i) => i * tabWidth + (tabWidth - indicatorWidth) / 2),
+    outputRange: TABS.map((_, i) => i * tabWidth + tabWidth / 2 - dotSize / 2),
   });
 
   return (
-    <View style={[s.bar, { paddingBottom: insets.bottom }]}>
-      <LinearGradient
-        colors={["rgba(15,118,110,0.06)", "transparent", "rgba(15,118,110,0.06)"]}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 0 }}
-        style={s.barTopLine}
-      />
+    <View style={[s.bar, { paddingBottom: Math.max(insets.bottom, 4) }]}>
+      <View style={s.divider} />
       <View
         style={s.barInner}
         onLayout={(e) => setBarWidth(e.nativeEvent.layout.width)}
       >
-        {/* Sliding indicator */}
-        {barWidth > 0 && (
-          <Animated.View
-            style={[
-              s.indicator,
-              { width: indicatorWidth, transform: [{ translateX }] },
-            ]}
-          />
-        )}
-
         {TABS.map((item, i) => {
           const isActive = item.label === currentTab;
           return (
@@ -77,23 +64,32 @@ export function DoctorTabBar({ currentTab, notifUnread = 0, chatUnread = 0 }: Do
                   router.replace(item.route as any);
                 }
               }}
-              activeOpacity={0.5}
+              activeOpacity={0.6}
             >
-              <View style={s.barTabIconWrap}>
-                <Text style={s.barTabIcon}>{item.icon}</Text>
+              <View style={s.iconWrap}>
+                <Feather
+                  name={item.icon}
+                  size={20}
+                  color={isActive ? "#0f766e" : "#b0b0b0"}
+                  style={{ strokeWidth: 1.5 } as any}
+                />
                 {item.label === "Alerts" && notifUnread > 0 && (
-                  <View style={s.barDot} />
+                  <View style={s.badge} />
                 )}
                 {item.label === "Chat" && chatUnread > 0 && (
-                  <View style={s.barDot} />
+                  <View style={s.badge} />
                 )}
               </View>
-              <Text style={[s.barTabLabel, isActive && s.barTabLabelActive]}>
-                {item.label}
-              </Text>
             </TouchableOpacity>
           );
         })}
+
+        {/* Active dot indicator */}
+        {barWidth > 0 && (
+          <Animated.View
+            style={[s.activeDot, { transform: [{ translateX }] }]}
+          />
+        )}
       </View>
     </View>
   );
@@ -101,45 +97,59 @@ export function DoctorTabBar({ currentTab, notifUnread = 0, chatUnread = 0 }: Do
 
 const s = StyleSheet.create({
   bar: {
-    position: "absolute", bottom: 0, left: 0, right: 0,
+    position: "absolute",
+    bottom: 0,
+    left: 0,
+    right: 0,
     backgroundColor: "#fff",
-    borderTopLeftRadius: 20, borderTopRightRadius: 20,
     ...Platform.select({
-      ios: { shadowColor: "#000", shadowOffset: { width: 0, height: -4 }, shadowOpacity: 0.12, shadowRadius: 12 },
-      android: { elevation: 12 },
+      ios: {
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: -1 },
+        shadowOpacity: 0.04,
+        shadowRadius: 4,
+      },
+      android: { elevation: 4 },
     }),
   },
-  barTopLine: { height: 1, borderTopLeftRadius: 20, borderTopRightRadius: 20 },
+  divider: {
+    height: StyleSheet.hairlineWidth,
+    backgroundColor: "#e8e8e8",
+  },
   barInner: {
     flexDirection: "row",
-    alignItems: "center", paddingVertical: 10,
-  },
-  indicator: {
-    position: "absolute",
-    top: 10,
-    left: 0,
-    height: 34,
-    borderRadius: 12,
-    backgroundColor: "rgba(15,118,110,0.15)",
+    alignItems: "center",
+    paddingTop: 8,
+    paddingBottom: 2,
   },
   barTab: {
-    alignItems: "center", justifyContent: "center",
-    flex: 1, height: 52,
+    alignItems: "center",
+    justifyContent: "center",
+    flex: 1,
+    height: 36,
   },
-  barTabIconWrap: {
-    width: 40, height: 34, borderRadius: 12,
-    alignItems: "center", justifyContent: "center",
+  iconWrap: {
+    width: 36,
+    height: 28,
+    alignItems: "center",
+    justifyContent: "center",
   },
-  barTabIcon: { fontSize: 20 },
-  barTabLabel: {
-    fontSize: 10, fontWeight: "600", color: "#94a3b8", marginTop: 3,
+  badge: {
+    position: "absolute",
+    top: 0,
+    right: 4,
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: "#ef4444",
   },
-  barTabLabelActive: {
-    color: "#0f766e",
-  },
-  barDot: {
-    position: "absolute", top: 1, right: 1,
-    width: 8, height: 8, borderRadius: 4,
-    backgroundColor: "#ef4444", borderWidth: 1.5, borderColor: "#fff",
+  activeDot: {
+    position: "absolute",
+    bottom: 0,
+    left: 0,
+    width: 4,
+    height: 4,
+    borderRadius: 2,
+    backgroundColor: "#0f766e",
   },
 });
