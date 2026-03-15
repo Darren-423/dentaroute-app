@@ -177,9 +177,13 @@ export default function DoctorProfileSetupScreen() {
     setLoading(true);
     try {
       const allSpecialties = [...formData.specialties, ...customSpecialties];
+      const currentUser = await store.getCurrentUser();
+      const doctorName = currentUser?.name || "Doctor";
       await store.saveDoctorProfile({
-        fullName: formData.clinicName,
+        fullName: doctorName,
+        name: doctorName,
         clinicName: formData.clinicName,
+        clinic: formData.clinicName,
         location: formData.location,
         specialty: allSpecialties.join(", ") || "General",
         experience: parseInt(formData.yearsExperience) || 0,

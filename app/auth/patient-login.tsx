@@ -53,7 +53,10 @@ export default function PatientLoginScreen() {
 
     try {
       // Demo mode: skip API, go to dashboard
-      await store.setCurrentUser("patient", email.split("@")[0] || "Patient");
+      // Use patient profile name if available, otherwise fallback
+      const pp = await store.getPatientProfile();
+      const patientName = pp?.fullName || email.split("@")[0] || "Patient";
+      await store.setCurrentUser("patient", patientName);
       setTimeout(() => {
         setLoading(false);
         router.replace("/patient/dashboard" as any);

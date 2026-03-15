@@ -189,8 +189,8 @@ export default function DoctorCaseDetailScreen() {
     try {
       await store.createQuote({
         caseId: caseData.id,
-        dentistName: doctorProfile?.name || "Doctor",
-        clinicName: doctorProfile?.clinic || "Clinic",
+        dentistName: doctorProfile?.fullName || doctorProfile?.name || "Doctor",
+        clinicName: doctorProfile?.clinicName || doctorProfile?.clinic || "Clinic",
         location: doctorProfile?.location || "Gangnam, Seoul",
         rating: doctorProfile?.rating || 4.9,
         reviewCount: doctorProfile?.reviewCount || 127,

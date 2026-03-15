@@ -23,6 +23,7 @@ const KEYS = {
   NOTIFICATIONS: "dr_notifications",
   DOCTOR_PROFILE: "dr_doctor_profile",
   INQUIRIES: "dr_inquiries",
+  TYPING_STATUS: "dr_typing_status",
 };
 
 // ── 티어 설정 ──
@@ -69,6 +70,9 @@ export interface DentistQuote {
   clinicPhotos?: string[];
   yearsExperience?: number;
   specialties?: string[];
+  // 인증 배지
+  licenseVerified?: boolean;
+  certifications?: string[];
 }
 
 export interface ChatRoom {
@@ -91,6 +95,14 @@ export interface ChatMessage {
   translatedText?: string | null;
   originalLang?: "en" | "ko";
   timestamp: string;
+  // 읽음 확인
+  delivered?: boolean;
+  readAt?: string;
+  // 이미지/파일 공유
+  messageType?: "text" | "image" | "file";
+  imageUri?: string;
+  fileUri?: string;
+  fileName?: string;
 }
 
 export interface VisitDate {
@@ -219,6 +231,32 @@ export interface AppNotification {
   read: boolean;
   route?: string;
   createdAt: string;
+}
+
+export interface DoctorProfile {
+  fullName: string;
+  clinicName: string;
+  location: string;
+  address?: string;
+  specialty?: string;
+  experience?: number;
+  bio?: string;
+  email?: string;
+  phone?: string;
+  website?: string;
+  license?: string;
+  rating?: number;
+  reviewCount?: number;
+  latitude?: number;
+  longitude?: number;
+  tier?: DoctorTier;
+  platformFeeRate?: number;
+  tierUpdatedAt?: string;
+  // 인증 배지 시스템
+  licenseVerified?: boolean;
+  certifications?: string[];
+  // Before/After 갤러리
+  beforeAfterPhotos?: { before: string; after: string; treatment: string }[];
 }
 
 export interface SupportInquiry {
@@ -535,9 +573,15 @@ export const store = {
   },
 
   // 메시지 보내기
-  sendMessage: async (chatRoomId: string, sender: "patient" | "doctor", text: string): Promise<ChatMessage> => {
+  sendMessage: async (
+    chatRoomId: string,
+    sender: "patient" | "doctor",
+    text: string,
+    options?: { imageUri?: string; fileUri?: string; fileName?: string }
+  ): Promise<ChatMessage> => {
     const allMessages = await store.getMessages(chatRoomId);
     const originalLang = sender === "patient" ? "en" : "ko";
+    const messageType = options?.imageUri ? "image" : options?.fileUri ? "file" : "text";
     const msg: ChatMessage = {
       id: "msg_" + String(Date.now()).slice(-8),
       chatRoomId,
@@ -546,6 +590,11 @@ export const store = {
       originalLang,
       translatedText: null,
       timestamp: new Date().toISOString(),
+      delivered: true,
+      messageType,
+      ...(options?.imageUri && { imageUri: options.imageUri }),
+      ...(options?.fileUri && { fileUri: options.fileUri }),
+      ...(options?.fileName && { fileName: options.fileName }),
     };
     allMessages.push(msg);
     await AsyncStorage.setItem(KEYS.MESSAGES + "_" + chatRoomId, JSON.stringify(allMessages));
@@ -554,7 +603,8 @@ export const store = {
     const rooms = await store.getChatRooms();
     const idx = rooms.findIndex((r) => r.id === chatRoomId);
     if (idx !== -1) {
-      rooms[idx].lastMessage = text;
+      const preview = messageType === "image" ? "📷 Photo" : messageType === "file" ? `📎 ${options?.fileName || "File"}` : text;
+      rooms[idx].lastMessage = preview;
       rooms[idx].lastMessageAt = msg.timestamp;
       if (sender === "patient") rooms[idx].unreadDoctor += 1;
       else rooms[idx].unreadPatient += 1;
@@ -608,6 +658,70 @@ export const store = {
       else rooms[idx].unreadDoctor = 0;
       await AsyncStorage.setItem(KEYS.CHATS, JSON.stringify(rooms));
     }
+    // 상대방 메시지에 readAt 기록
+    const messages = await store.getMessages(chatRoomId);
+    const now = new Date().toISOString();
+    let updated = false;
+    for (const msg of messages) {
+      if (msg.sender !== role && !msg.readAt) {
+        msg.readAt = now;
+        updated = true;
+      }
+    }
+    if (updated) {
+      await AsyncStorage.setItem(KEYS.MESSAGES + "_" + chatRoomId, JSON.stringify(messages));
+    }
+  },
+
+  // ══════════════════════════
+  //  입력 중 표시
+  // ══════════════════════════
+  setTyping: async (chatRoomId: string, role: "patient" | "doctor", isTyping: boolean) => {
+    const data = await AsyncStorage.getItem(KEYS.TYPING_STATUS);
+    const all = data ? JSON.parse(data) : {};
+    const key = `${chatRoomId}_${role}`;
+    all[key] = { isTyping, timestamp: new Date().toISOString() };
+    await AsyncStorage.setItem(KEYS.TYPING_STATUS, JSON.stringify(all));
+  },
+
+  getTyping: async (chatRoomId: string, role: "patient" | "doctor"): Promise<boolean> => {
+    const data = await AsyncStorage.getItem(KEYS.TYPING_STATUS);
+    if (!data) return false;
+    const all = JSON.parse(data);
+    const key = `${chatRoomId}_${role}`;
+    const entry = all[key];
+    if (!entry || !entry.isTyping) return false;
+    // 5초 이상 된 것은 자동 false
+    const elapsed = Date.now() - new Date(entry.timestamp).getTime();
+    return elapsed < 5000;
+  },
+
+  // ══════════════════════════
+  //  의사 응답 시간
+  // ══════════════════════════
+  getAverageResponseTime: async (dentistName: string): Promise<number | null> => {
+    const rooms = await store.getChatRooms();
+    const dentistRooms = rooms.filter((r) => r.dentistName === dentistName);
+    const responseTimes: number[] = [];
+
+    for (const room of dentistRooms) {
+      const messages = await store.getMessages(room.id);
+      for (let i = 0; i < messages.length - 1; i++) {
+        if (messages[i].sender === "patient") {
+          // 다음 의사 메시지 찾기
+          for (let j = i + 1; j < messages.length; j++) {
+            if (messages[j].sender === "doctor") {
+              const diff = new Date(messages[j].timestamp).getTime() - new Date(messages[i].timestamp).getTime();
+              responseTimes.push(diff / 60000); // 분 단위
+              break;
+            }
+          }
+        }
+      }
+    }
+
+    if (responseTimes.length === 0) return null;
+    return Math.round(responseTimes.reduce((a, b) => a + b, 0) / responseTimes.length);
   },
 
   // ══════════════════════════
@@ -822,7 +936,9 @@ export const store = {
     // 2. Doctor Profile
     await AsyncStorage.setItem(KEYS.DOCTOR_PROFILE, JSON.stringify({
       fullName: "Dr. Kim Minjun",
+      name: "Dr. Kim Minjun",
       clinicName: "Seoul Bright Dental",
+      clinic: "Seoul Bright Dental",
       location: "Gangnam, Seoul",
       address: "123 Teheran-ro, Gangnam-gu, Seoul",
       specialty: "Implant Specialist",
@@ -839,6 +955,13 @@ export const store = {
       tier: "standard",
       platformFeeRate: 0.20,
       tierUpdatedAt: new Date().toISOString(),
+      licenseVerified: true,
+      certifications: ["License Verified", "ISO 9001", "Korean Dental Association"],
+      beforeAfterPhotos: [
+        { before: "https://placehold.co/200x150/e2e8f0/64748b?text=Before+1", after: "https://placehold.co/200x150/dcfce7/16a34a?text=After+1", treatment: "Dental Implant" },
+        { before: "https://placehold.co/200x150/e2e8f0/64748b?text=Before+2", after: "https://placehold.co/200x150/dcfce7/16a34a?text=After+2", treatment: "Veneers" },
+        { before: "https://placehold.co/200x150/e2e8f0/64748b?text=Before+3", after: "https://placehold.co/200x150/dcfce7/16a34a?text=After+3", treatment: "Teeth Whitening" },
+      ],
     }));
 
     // 3. Medical History
@@ -907,7 +1030,7 @@ export const store = {
         medicalNotes: "",
         dentalIssues: ["Discoloration", "Chipped Teeth"],
         filesCount: { xrays: 1, treatmentPlans: 0, photos: 4 },
-        status: "pending",
+        status: "quotes_received",
         visitDate: "TBD",
         birthDate: "1990-05-15",
       },
@@ -943,6 +1066,8 @@ export const store = {
         ],
         message: "We can complete all treatments during your visit. Airport pickup included!",
         createdAt: "2026-02-24T10:30:00Z",
+        licenseVerified: true,
+        certifications: ["License Verified", "ISO 9001", "Korean Dental Association"],
       },
       {
         id: "q002",
@@ -972,6 +1097,8 @@ export const store = {
         ],
         message: "Premium Straumann implants for the best long-term results. 10-year warranty included.",
         createdAt: "2026-02-24T14:15:00Z",
+        licenseVerified: true,
+        certifications: ["License Verified", "ISO 9001"],
       },
       {
         id: "q003",
@@ -999,6 +1126,54 @@ export const store = {
         ],
         message: "Most affordable option with great results. Clinic is walking distance from major hotels.",
         createdAt: "2026-02-25T09:00:00Z",
+        licenseVerified: false,
+        certifications: ["License Verified"],
+      },
+      // Quotes for case 1002
+      {
+        id: "q004",
+        caseId: "1002",
+        dentistName: "Dr. Kim Minjun",
+        clinicName: "Seoul Bright Dental",
+        location: "Gangnam, Seoul",
+        address: "123 Teheran-ro, Gangnam-gu, Seoul 06133",
+        latitude: 37.5012,
+        longitude: 127.0396,
+        rating: 4.9,
+        reviewCount: 127,
+        totalPrice: 3600,
+        treatments: [
+          { name: "Veneer", qty: 6, price: 600 },
+        ],
+        treatmentDetails: "Premium porcelain veneers with natural color matching.",
+        duration: "4 Days",
+        visits: [
+          { visit: 1, description: "Consultation and teeth preparation" },
+          { visit: 2, description: "Veneer fitting and bonding" },
+        ],
+        message: "We specialize in veneer treatments. Beautiful results guaranteed!",
+        createdAt: "2026-02-26T10:00:00Z",
+        licenseVerified: true,
+        certifications: ["License Verified", "ISO 9001", "Korean Dental Association"],
+      },
+      {
+        id: "q005",
+        caseId: "1002",
+        dentistName: "Dr. Park Soojin",
+        clinicName: "Apgujeong Dental Care",
+        location: "Apgujeong, Seoul",
+        rating: 4.8,
+        reviewCount: 89,
+        totalPrice: 4200,
+        treatments: [
+          { name: "Veneer", qty: 6, price: 700 },
+        ],
+        treatmentDetails: "Ultra-thin porcelain veneers. Minimal tooth preparation.",
+        duration: "5 Days",
+        message: "Premium ultra-thin veneers for the most natural look.",
+        createdAt: "2026-02-26T14:00:00Z",
+        licenseVerified: true,
+        certifications: ["License Verified", "ISO 9001"],
       },
     ];
     await AsyncStorage.setItem(KEYS.QUOTES, JSON.stringify(quotes));
@@ -1011,8 +1186,8 @@ export const store = {
         patientName: "Sarah Johnson",
         dentistName: "Dr. Kim Minjun",
         clinicName: "Seoul Bright Dental",
-        lastMessage: "Yes, we provide hotel recommendations near our clinic!",
-        lastMessageAt: "2026-02-25T11:30:00Z",
+        lastMessage: "📷 Photo",
+        lastMessageAt: "2026-02-25T11:35:00Z",
         unreadPatient: 1,
         unreadDoctor: 0,
       },
@@ -1029,6 +1204,8 @@ export const store = {
         originalLang: "en",
         translatedText: "[KO 번역] 안녕하세요! 치료 계획에 대해 질문이 있습니다.",
         timestamp: "2026-02-25T10:00:00Z",
+        delivered: true,
+        readAt: "2026-02-25T10:04:00Z",
       },
       {
         id: "msg_002",
@@ -1038,6 +1215,8 @@ export const store = {
         originalLang: "ko",
         translatedText: "[EN Translation] 안녕하세요 Sarah! 물론이죠, 무엇이 궁금하세요?",
         timestamp: "2026-02-25T10:05:00Z",
+        delivered: true,
+        readAt: "2026-02-25T10:10:00Z",
       },
       {
         id: "msg_003",
@@ -1047,6 +1226,8 @@ export const store = {
         originalLang: "en",
         translatedText: "How long is the recovery time for the implants? And do you recommend any hotels nearby? → [KO] 회복",
         timestamp: "2026-02-25T10:12:00Z",
+        delivered: true,
+        readAt: "2026-02-25T10:50:00Z",
       },
       {
         id: "msg_004",
@@ -1056,6 +1237,8 @@ export const store = {
         originalLang: "ko",
         translatedText: "[EN Translation] 임플란트 시술 자체는 1개당 약 1시간 소요됩니다. 시술 후 2-3일 휴식이 필요하며, 대부분 다음 날부터 부드러운 음식 섭취가 가능합니다.",
         timestamp: "2026-02-25T11:00:00Z",
+        delivered: true,
+        readAt: "2026-02-25T11:10:00Z",
       },
       {
         id: "msg_005",
@@ -1065,6 +1248,18 @@ export const store = {
         originalLang: "ko",
         translatedText: "[EN Translation] 네, 저희 클리닉 근처 호텔 추천도 해드립니다!",
         timestamp: "2026-02-25T11:30:00Z",
+        delivered: true,
+      },
+      {
+        id: "msg_006",
+        chatRoomId: "chat_001",
+        sender: "doctor",
+        text: "📷 Photo",
+        messageType: "image",
+        imageUri: "https://placehold.co/400x300/e2e8f0/64748b?text=X-Ray+Sample",
+        originalLang: "ko",
+        timestamp: "2026-02-25T11:35:00Z",
+        delivered: true,
       },
     ];
     await AsyncStorage.setItem(KEYS.MESSAGES + "_chat_001", JSON.stringify(messages));
@@ -1128,9 +1323,9 @@ export const store = {
 
     // 12. Demo Notifications
     const demoNotifs: AppNotification[] = [
-      { id: "notif_001", role: "patient", type: "new_quote", title: "New Quote Received!", body: "Dr. Kim Minjun sent you a quote for $2,800", icon: "💰", read: false, route: "/patient/quotes?caseId=1001", createdAt: "2026-02-25T10:30:00Z" },
-      { id: "notif_002", role: "patient", type: "new_quote", title: "New Quote Received!", body: "Dr. Park Soojin sent you a quote for $3,400", icon: "💰", read: false, route: "/patient/quotes?caseId=1001", createdAt: "2026-02-25T14:15:00Z" },
-      { id: "notif_003", role: "patient", type: "new_quote", title: "New Quote Received!", body: "Dr. Lee Jiwon sent you a quote for $2,400", icon: "💰", read: true, route: "/patient/quotes?caseId=1001", createdAt: "2026-02-25T09:00:00Z" },
+      { id: "notif_001", role: "patient", type: "new_quote", title: "New Quote Received!", body: "Dr. Kim Minjun sent you a quote for $4,150", icon: "💰", read: false, route: "/patient/quotes?caseId=1001", createdAt: "2026-02-25T10:30:00Z" },
+      { id: "notif_002", role: "patient", type: "new_quote", title: "New Quote Received!", body: "Dr. Park Soojin sent you a quote for $4,500", icon: "💰", read: false, route: "/patient/quotes?caseId=1001", createdAt: "2026-02-25T14:15:00Z" },
+      { id: "notif_003", role: "patient", type: "new_quote", title: "New Quote Received!", body: "Dr. Lee Jiwon sent you a quote for $3,600", icon: "💰", read: true, route: "/patient/quotes?caseId=1001", createdAt: "2026-02-25T09:00:00Z" },
       { id: "notif_005", role: "patient", type: "new_message", title: "New Message", body: "Dr. Kim Minjun: \"Yes, we provide hotel recommendations...\"", icon: "💬", read: true, route: "/patient/chat-list", createdAt: "2026-02-25T11:30:00Z" },
       { id: "notif_006", role: "patient", type: "reminder", title: "Complete Your Profile", body: "Add more dental photos to get more accurate quotes", icon: "📸", read: true, createdAt: "2026-02-23T09:00:00Z" },
       { id: "notif_007", role: "doctor", type: "new_case", title: "New Patient Case", body: "Sarah Johnson from USA submitted a new case with 3 treatments", icon: "🦷", read: false, route: "/doctor/case-detail?caseId=1001", createdAt: "2026-02-23T15:00:00Z" },

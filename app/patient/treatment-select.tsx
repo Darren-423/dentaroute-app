@@ -1,12 +1,12 @@
-import { LinearGradient } from "expo-linear-gradient";
 import { router, useLocalSearchParams } from "expo-router";
 import React, { useState } from "react";
 import {
   ActivityIndicator,
   ScrollView,
   StyleSheet,
-  Text, TextInput, TouchableOpacity,
-  View,
+  Text,
+  TouchableOpacity,
+  View
 } from "react-native";
 import { store } from "../../lib/store";
 
@@ -20,6 +20,11 @@ type Treatment = {
 };
 
 const treatments: Treatment[] = [
+  {
+    id: "connect", name: "Just connect me to a dentist", price: "—", icon: "🤝",
+    desc: "I need advice and a dentist match (no specific treatment yet)",
+    duration: "⏳ We’ll match you quickly", durationColor: "#4A0080",
+  },
   {
     id: "implant", name: "Implant", price: "$1,000–1,500", icon: "🦷",
     desc: "Replace missing teeth with permanent implants",
@@ -43,7 +48,9 @@ const treatments: Treatment[] = [
 ];
 
 export default function PatientTreatmentSelectScreen() {
-  const { from } = useLocalSearchParams<{ from?: string }>();
+  const { mode, from } = useLocalSearchParams<{ mode?: string; from?: string }>();
+  const isChooseMode = mode === "choose";
+
   const [selected, setSelected] = useState<Record<string, number>>({});
   const [implantSubs, setImplantSubs] = useState<Record<string, number>>({});
   const [implantExpanded, setImplantExpanded] = useState(false);
@@ -51,6 +58,32 @@ export default function PatientTreatmentSelectScreen() {
   const [newTreatment, setNewTreatment] = useState("");
   const [showAddInput, setShowAddInput] = useState(false);
   const [loading, setLoading] = useState(false);
+
+  React.useEffect(() => {
+    if (isChooseMode) {
+      // reset any previous selection from the intro screen
+      setSelected({});
+      setImplantSubs({});
+      setCustomTreatments([]);
+      setShowAddInput(false);
+    }
+  }, [isChooseMode]);
+
+  const handleConnect = async () => {
+    setLoading(true);
+    try {
+      await store.savePatientTreatments({ selected: {}, custom: [] });
+    } catch (err) {
+      console.log("Save error:", err);
+    }
+    setLoading(false);
+    if (from === "review") { router.back(); return; }
+    router.push("/patient/upload" as any);
+  };
+
+  const handleChoose = () => {
+    router.push({ pathname: "/patient/treatment-select", params: { mode: "choose" } } as any);
+  };
 
   const implantSubTotal = Object.values(implantSubs).reduce((s, v) => s + v, 0);
   const hasImplant = implantSubTotal > 0;
@@ -126,155 +159,138 @@ export default function PatientTreatmentSelectScreen() {
 
   return (
     <View style={st.container}>
-      <LinearGradient colors={["#3D0070", "#2F0058", "#220040"]} style={st.header}>
-        <View style={st.headerRow}>
-          <TouchableOpacity style={st.backBtn} onPress={() => router.back()} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
-            <Text style={st.backArrow}>‹</Text>
-          </TouchableOpacity>
-          <View style={st.headerCenter}>
-            <Text style={st.title}>Select Treatment</Text>
-            <Text style={st.subtitle}>What do you need? (Select all that apply)</Text>
-          </View>
-          <View style={{ width: 36 }} />
-        </View>
-      </LinearGradient>
-
-      <ScrollView contentContainerStyle={st.content} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
-        {treatments.map((t) => {
-          const isImplant = t.id === "implant";
-          const isSelected = isImplant ? hasImplant : !!selected[t.id];
-          const isExpanded = isImplant && (implantExpanded || hasImplant);
-
-          return (
-            <View key={t.id}>
-              <TouchableOpacity
-                style={[st.treatmentCard, isSelected && st.treatmentCardSelected, isExpanded && { borderBottomLeftRadius: 0, borderBottomRightRadius: 0 }]}
-                onPress={() => toggle(t.id)} activeOpacity={0.7}
-              >
-                <Text style={st.treatmentIcon}>{t.icon}</Text>
-                <View style={{ flex: 1 }}>
-                  <Text style={[st.treatmentName, isSelected && st.treatmentNameSelected]}>{t.name}</Text>
-                  <Text style={st.treatmentDesc}>{t.desc}</Text>
-                  <View style={st.metaRow}>
-                    <Text style={[st.treatmentPrice, isSelected && st.treatmentPriceSelected]}>{t.price} / each</Text>
-                  </View>
-                  <View style={[st.durationBadge, { backgroundColor: t.durationColor + "15" }]}>
-                    <Text style={[st.durationText, { color: t.durationColor }]}>{t.duration}</Text>
-                  </View>
-                </View>
-                {isSelected && !isImplant && <View style={st.checkCircle}><Text style={st.checkMark}>✓</Text></View>}
-                {isImplant && <Text style={{ fontSize: 14, color: T.slateLight }}>{isExpanded ? "▲" : "▼"}</Text>}
-              </TouchableOpacity>
-
-              {/* Implant sub-options */}
-              {isImplant && isExpanded && (
-                <View style={st.subSection}>
-                  <Text style={st.subTitle}>Choose implant type(s):</Text>
-                  {t.subOptions!.map((sub) => {
-                    const subQty = implantSubs[sub.id] || 0;
-                    const isSubSel = subQty > 0;
-                    return (
-                      <View key={sub.id} style={[st.subCard, isSubSel && st.subCardSelected]}>
-                        <View style={{ flex: 1 }}>
-                          <Text style={[st.subLabel, isSubSel && { color: T.teal }]}>{sub.label}</Text>
-                          <Text style={st.subDesc}>{sub.desc}</Text>
-                        </View>
-                        <View style={st.subQtyRow}>
-                          <TouchableOpacity style={[st.subQtyBtn, subQty === 0 && { opacity: 0.3 }]} onPress={() => changeImplantSubQty(sub.id, -1)} disabled={subQty === 0}>
-                            <Text style={st.subQtyBtnText}>−</Text>
-                          </TouchableOpacity>
-                          <View style={[st.subQtyDisplay, isSubSel && { borderColor: T.teal }]}>
-                            <Text style={[st.subQtyText, isSubSel && { color: T.teal }]}>{subQty}</Text>
-                          </View>
-                          <TouchableOpacity style={st.subQtyBtn} onPress={() => changeImplantSubQty(sub.id, 1)}>
-                            <Text style={st.subQtyBtnText}>+</Text>
-                          </TouchableOpacity>
-                        </View>
-                      </View>
-                    );
-                  })}
-                  {hasImplant && (
-                    <View style={st.implantSummary}>
-                      <Text style={st.implantSummaryText}>🦷 {implantSubTotal} implant item{implantSubTotal > 1 ? "s" : ""} selected</Text>
-                    </View>
-                  )}
-                </View>
-              )}
-
-              {/* Regular qty */}
-              {!isImplant && isSelected && (
-                <View style={st.qtySection}>
-                  <Text style={st.qtyLabel}>How many?</Text>
-                  <QtyStepper qty={selected[t.id]} onMinus={() => changeQty(t.id, -1)} onPlus={() => changeQty(t.id, 1)} />
-                </View>
-              )}
-            </View>
-          );
-        })}
-
-        {/* Custom */}
-        {customTreatments.length > 0 && (
-          <View style={st.customSection}>
-            <Text style={st.customLabel}>OTHER TREATMENTS</Text>
-            {customTreatments.map((item, index) => (
-              <View key={item.name}>
-                <View style={[st.treatmentCard, st.treatmentCardSelected, { paddingVertical: 14, borderBottomLeftRadius: 0, borderBottomRightRadius: 0 }]}>
-                  <Text style={st.treatmentIcon}>📝</Text>
-                  <Text style={[st.treatmentName, st.treatmentNameSelected, { flex: 1 }]}>{item.name}</Text>
-                  <TouchableOpacity onPress={() => { const u = [...customTreatments]; u.splice(index, 1); setCustomTreatments(u); }} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
-                    <Text style={st.removeText}>✕</Text>
-                  </TouchableOpacity>
-                </View>
-                <View style={st.qtySection}>
-                  <Text style={st.qtyLabel}>How many?</Text>
-                  <QtyStepper qty={item.qty} onMinus={() => changeCustomQty(index, -1)} onPlus={() => changeCustomQty(index, 1)} />
-                </View>
-              </View>
-            ))}
-          </View>
-        )}
-
-        {showAddInput ? (
-          <View style={st.addInputRow}>
-            <TextInput style={st.addInput} placeholder="Type a treatment..." placeholderTextColor={T.slateLight} value={newTreatment} onChangeText={setNewTreatment} onSubmitEditing={addCustomTreatment} returnKeyType="done" autoFocus />
-            <TouchableOpacity style={[st.addConfirmBtn, !newTreatment.trim() && { opacity: 0.4 }]} onPress={addCustomTreatment} disabled={!newTreatment.trim()}><Text style={st.addConfirmText}>Add</Text></TouchableOpacity>
-            <TouchableOpacity style={st.addCancelBtn} onPress={() => { setShowAddInput(false); setNewTreatment(""); }}><Text style={st.addCancelText}>✕</Text></TouchableOpacity>
-          </View>
-        ) : (
-          <TouchableOpacity style={st.addBtn} onPress={() => setShowAddInput(true)} activeOpacity={0.7}>
-            <Text style={st.addBtnPlus}>+</Text><Text style={st.addBtnText}>Add other treatment</Text>
-          </TouchableOpacity>
-        )}
-
-        <View style={st.noteBox}><Text style={st.noteText}>💡 Prices shown are typical ranges in Korea — much lower than US prices. Final quotes will come from dentists after reviewing your case.</Text></View>
-      </ScrollView>
-
-      <View style={st.bottomBar}>
-        <TouchableOpacity style={[st.nextBtn, totalSelected === 0 && st.nextBtnDisabled]} onPress={handleNext} disabled={totalSelected === 0 || loading} activeOpacity={0.85}>
-          {loading ? <ActivityIndicator color={T.white} size="small" /> : <Text style={st.nextBtnText}>Review & Submit ({totalSelected} selected) →</Text>}
+      <View style={st.header}>
+        <TouchableOpacity style={st.backBtn} onPress={() => router.back()} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
+          <Text style={st.backArrow}>‹</Text>
         </TouchableOpacity>
       </View>
+
+      <ScrollView contentContainerStyle={[st.content, !isChooseMode && st.centerContent]} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
+{!isChooseMode ? (
+          <>
+            <TouchableOpacity style={[st.treatmentCard, st.optionCard]} onPress={handleConnect} activeOpacity={0.7}>
+              <Text style={st.treatmentIcon}>🤝</Text>
+              <View style={{ flex: 1 }}>
+                <Text style={[st.treatmentName, st.optionTitle, st.treatmentNameSelected]}>Just connect me to a dentist</Text>
+                <Text style={[st.treatmentDesc, st.optionDesc]}>I need advice and a dentist match (no specific treatment yet).</Text>
+              </View>
+              {loading ? <ActivityIndicator color={T.teal} /> : <Text style={st.optionArrow}>›</Text>}
+            </TouchableOpacity>
+
+            <TouchableOpacity style={[st.treatmentCard, st.optionCard]} onPress={handleChoose} activeOpacity={0.7}>
+              <Text style={st.treatmentIcon}>✅</Text>
+              <View style={{ flex: 1 }}>
+                <Text style={[st.treatmentName, st.optionTitle]}>I know what I want</Text>
+                <Text style={[st.treatmentDesc, st.optionDesc]}>Choose your treatment(s) and send your case directly to dentists.</Text>
+              </View>
+              <Text style={st.optionArrow}>›</Text>
+            </TouchableOpacity>
+          </>
+        ) : (
+          treatments.filter((t) => t.id !== "connect").map((t) => {
+            const isImplant = t.id === "implant";
+            const isSelected = isImplant ? hasImplant : !!selected[t.id];
+            const isExpanded = isImplant && (implantExpanded || hasImplant);
+
+            return (
+              <View key={t.id}>
+                <TouchableOpacity
+                  style={[st.treatmentCard, isSelected && st.treatmentCardSelected, isExpanded && { borderBottomLeftRadius: 0, borderBottomRightRadius: 0 }]}
+                  onPress={() => toggle(t.id)} activeOpacity={0.7}
+                >
+                  <Text style={st.treatmentIcon}>{t.icon}</Text>
+                  <View style={{ flex: 1 }}>
+                    <Text style={[st.treatmentName, isSelected && st.treatmentNameSelected]}>{t.name}</Text>
+                    <Text style={st.treatmentDesc}>{t.desc}</Text>
+                    <View style={st.metaRow}>
+                      <Text style={[st.treatmentPrice, isSelected && st.treatmentPriceSelected]}>{t.price} / each</Text>
+                    </View>
+                    <View style={[st.durationBadge, { backgroundColor: t.durationColor + "15" }]}>
+                      <Text style={[st.durationText, { color: t.durationColor }]}>{t.duration}</Text>
+                    </View>
+                  </View>
+                  {isSelected && !isImplant && <View style={st.checkCircle}><Text style={st.checkMark}>✓</Text></View>}
+                  {isImplant && <Text style={{ fontSize: 14, color: T.slateLight }}>{isExpanded ? "▲" : "▼"}</Text>}
+                </TouchableOpacity>
+
+                {/* Implant sub-options */}
+                {isImplant && isExpanded && (
+                  <View style={st.subSection}>
+                    <Text style={st.subTitle}>Choose implant type(s):</Text>
+                    {t.subOptions!.map((sub) => {
+                      const subQty = implantSubs[sub.id] || 0;
+                      const isSubSel = subQty > 0;
+                      return (
+                        <View key={sub.id} style={[st.subCard, isSubSel && st.subCardSelected]}>
+                          <View style={{ flex: 1 }}>
+                            <Text style={[st.subLabel, isSubSel && { color: T.teal }]}>{sub.label}</Text>
+                            <Text style={st.subDesc}>{sub.desc}</Text>
+                          </View>
+                          <View style={st.subQtyRow}>
+                            <TouchableOpacity style={[st.subQtyBtn, subQty === 0 && { opacity: 0.3 }]} onPress={() => changeImplantSubQty(sub.id, -1)} disabled={subQty === 0}>
+                              <Text style={st.subQtyBtnText}>−</Text>
+                            </TouchableOpacity>
+                            <View style={[st.subQtyDisplay, isSubSel && { borderColor: T.teal }]}>
+                              <Text style={[st.subQtyText, isSubSel && { color: T.teal }]}>{subQty}</Text>
+                            </View>
+                            <TouchableOpacity style={st.subQtyBtn} onPress={() => changeImplantSubQty(sub.id, 1)}>
+                              <Text style={st.subQtyBtnText}>+</Text>
+                            </TouchableOpacity>
+                          </View>
+                        </View>
+                      );
+                    })}
+                    {hasImplant && (
+                      <View style={st.implantSummary}>
+                        <Text style={st.implantSummaryText}>🦷 {implantSubTotal} implant item{implantSubTotal > 1 ? "s" : ""} selected</Text>
+                      </View>
+                    )}
+                  </View>
+                )}
+
+                {/* Regular qty */}
+                {!isImplant && isSelected && (
+                  <View style={st.qtySection}>
+                    <Text style={st.qtyLabel}>How many?</Text>
+                    <QtyStepper qty={selected[t.id]} onMinus={() => changeQty(t.id, -1)} onPlus={() => changeQty(t.id, 1)} />
+                  </View>
+                )}
+              </View>
+            );
+          })
+        )}
+
+</ScrollView>
+
+      {isChooseMode && (
+        <View style={st.bottomBar}>
+          <TouchableOpacity style={[st.nextBtn, totalSelected === 0 && st.nextBtnDisabled]} onPress={handleNext} disabled={totalSelected === 0 || loading} activeOpacity={0.85}>
+            {loading ? <ActivityIndicator color={T.white} size="small" /> : <Text style={st.nextBtnText}>Review & Submit ({totalSelected} selected) →</Text>}
+          </TouchableOpacity>
+        </View>
+      )}
     </View>
   );
 }
 
 const st = StyleSheet.create({
   container: { flex: 1, backgroundColor: T.bg },
-  header: { paddingHorizontal: 20, paddingTop: 60, paddingBottom: 18 },
-  headerRow: { flexDirection: "row", alignItems: "center" },
-  headerCenter: { flex: 1, alignItems: "center" },
-  backBtn: { width: 36, height: 36, borderRadius: 12, backgroundColor: "rgba(255,255,255,0.12)", borderWidth: 1, borderColor: "rgba(255,255,255,0.15)", alignItems: "center", justifyContent: "center" },
-  backArrow: { fontSize: 24, color: "#fff", fontWeight: "600", marginTop: -2 },
-  title: { fontSize: 18, fontWeight: "700", color: "#fff" },
-  subtitle: { fontSize: 12, color: "rgba(255,255,255,0.55)", marginTop: 2 },
-  content: { padding: 20, gap: 12, paddingBottom: 60 },
+  header: { paddingHorizontal: 20, paddingTop: 36, paddingBottom: 10, flexDirection: "row", alignItems: "center" },
+  backBtn: { width: 36, height: 36, borderRadius: 12, backgroundColor: "rgba(0,0,0,0.06)", alignItems: "center", justifyContent: "center" },
+  backArrow: { fontSize: 24, color: "#0f172a", fontWeight: "600", marginTop: -2 },
+  content: { padding: 20, gap: 18, paddingBottom: 60 },
+  centerContent: { flexGrow: 1, justifyContent: "center" },
 
   treatmentCard: { flexDirection: "row", alignItems: "center", padding: 16, borderRadius: 14, borderWidth: 2, borderColor: T.border, backgroundColor: T.white, gap: 14 },
   treatmentCardSelected: { borderColor: T.tealMid, backgroundColor: T.tealLight },
+  optionCard: { paddingVertical: 26, paddingHorizontal: 20, borderRadius: 18, borderWidth: 2, borderColor: T.border, backgroundColor: T.white, marginBottom: 18, minWidth: "88%" },
   treatmentIcon: { fontSize: 32 },
   treatmentName: { fontSize: 15, fontWeight: "600", color: T.navy },
   treatmentNameSelected: { color: T.teal },
+  optionTitle: { fontSize: 18 },
   treatmentDesc: { fontSize: 12, color: T.slate, marginTop: 2 },
+  optionDesc: { fontSize: 14, color: T.slate, marginTop: 4 },
+  optionArrow: { fontSize: 22, color: T.slateLight, marginLeft: 10 },
   treatmentPrice: { fontSize: 13, fontWeight: "700", color: T.slateLight },
   treatmentPriceSelected: { color: T.teal },
   checkCircle: { width: 28, height: 28, borderRadius: 14, backgroundColor: T.teal, alignItems: "center", justifyContent: "center" },

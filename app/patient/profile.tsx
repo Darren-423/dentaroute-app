@@ -1,5 +1,5 @@
-import { LinearGradient } from "expo-linear-gradient";
 import * as ImagePicker from "expo-image-picker";
+import { LinearGradient } from "expo-linear-gradient";
 import { router, useFocusEffect } from "expo-router";
 import React, { useCallback, useState } from "react";
 import {
@@ -26,7 +26,6 @@ export default function PatientProfileScreen() {
   const [medical, setMedical] = useState<any>(null);
   const [dental, setDental] = useState<any>(null);
   const [stats, setStats] = useState({ cases: 0, bookings: 0, reviews: 0 });
-
   useFocusEffect(
     useCallback(() => {
       const load = async () => {
@@ -230,9 +229,9 @@ export default function PatientProfileScreen() {
             <Text style={s.menuText}>Help & Support</Text>
             <Text style={s.menuArrow}>›</Text>
           </TouchableOpacity>
-          <TouchableOpacity style={s.menuItem} onPress={() => router.push("/notifications?role=patient" as any)}>
-            <Text style={s.menuIcon}>🔔</Text>
-            <Text style={s.menuText}>Notifications</Text>
+          <TouchableOpacity style={s.menuItem} onPress={() => router.push("/patient/upload?mode=standalone" as any)}>
+            <Text style={s.menuIcon}>📁</Text>
+            <Text style={s.menuText}>My Files</Text>
             <Text style={s.menuArrow}>›</Text>
           </TouchableOpacity>
           <TouchableOpacity
@@ -242,7 +241,7 @@ export default function PatientProfileScreen() {
                 { text: "Cancel", style: "cancel" },
                 { text: "Log Out", style: "destructive", onPress: async () => {
                   await store.clearCurrentUser();
-                  router.replace("/" as any);
+                  router.push("/auth/role-select");
                 }},
               ]);
             }}
@@ -252,6 +251,7 @@ export default function PatientProfileScreen() {
             <Text style={[s.menuArrow, { color: T.red }]}>›</Text>
           </TouchableOpacity>
         </View>
+        <View style={{ height: 80 }} />
       </ScrollView>
     </View>
   );

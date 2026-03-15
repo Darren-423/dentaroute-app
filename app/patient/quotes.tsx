@@ -36,6 +36,8 @@ export default function PatientQuotesScreen() {
   const [quotes, setQuotes] = useState<DentistQuote[]>([]);
   const [sortBy, setSortBy] = useState<SortOption>("price");
   const [sortAsc, setSortAsc] = useState(true);
+  const [compareMode, setCompareMode] = useState(false);
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
 
   useEffect(() => {
     const load = async () => {
@@ -68,6 +70,21 @@ export default function PatientQuotesScreen() {
     else if (sortBy === "duration") diff = parseDuration(a.duration || "") - parseDuration(b.duration || "");
     return sortAsc ? diff : -diff;
   });
+  const toggleSelect = (id: string) => {
+    setSelectedIds((prev) =>
+      prev.includes(id) ? prev.filter((x) => x !== id) : prev.length < 3 ? [...prev, id] : prev
+    );
+  };
+
+  const goCompare = () => {
+    if (selectedIds.length >= 2) {
+      router.push({
+        pathname: "/patient/quote-compare" as any,
+        params: { caseId, quoteIds: selectedIds.join(",") },
+      });
+    }
+  };
+
   const lowestPrice = sorted.length > 0
     ? [...quotes].sort((a, b) => (a.totalPrice || 0) - (b.totalPrice || 0))[0].totalPrice
     : 0;
@@ -110,36 +127,58 @@ export default function PatientQuotesScreen() {
         </View>
       </LinearGradient>
 
-      {/* Sort options */}
+      {/* Sort options + Compare */}
       {quotes.length > 0 && (
-        <View style={s.sortRow}>
-          <Text style={s.sortLabel}>Sort by</Text>
-          {([
-            { key: "price" as SortOption, label: "Price" },
-            { key: "reviews" as SortOption, label: "Reviews" },
-            { key: "stars" as SortOption, label: "Rating" },
-            { key: "duration" as SortOption, label: "Duration" },
-          ]).map((opt) => {
-            const isActive = sortBy === opt.key;
-            return (
+        <View style={s.sortWrapper}>
+          <View style={s.sortRow}>
+            <Text style={s.sortLabel}>Sort by</Text>
+            {([
+              { key: "price" as SortOption, label: "Price" },
+              { key: "reviews" as SortOption, label: "Reviews" },
+              { key: "stars" as SortOption, label: "Rating" },
+              { key: "duration" as SortOption, label: "Duration" },
+            ]).map((opt) => {
+              const isActive = sortBy === opt.key;
+              return (
+                <TouchableOpacity
+                  key={opt.key}
+                  style={[s.sortBtn, isActive && s.sortBtnActive]}
+                  onPress={() => handleSort(opt.key)}
+                  activeOpacity={0.7}
+                >
+                  <Text style={[s.sortBtnText, isActive && s.sortBtnTextActive]}>
+                    {opt.label}
+                  </Text>
+                  {isActive && (
+                    <View style={s.sortArrows}>
+                      <View style={[s.sortTriUp, sortAsc && s.sortTriUpActive]} />
+                      <View style={[s.sortTriDown, !sortAsc && s.sortTriDownActive]} />
+                    </View>
+                  )}
+                </TouchableOpacity>
+              );
+            })}
+          </View>
+          {quotes.length >= 2 && (
+            <View style={s.compareRow}>
               <TouchableOpacity
-                key={opt.key}
-                style={[s.sortBtn, isActive && s.sortBtnActive]}
-                onPress={() => handleSort(opt.key)}
-                activeOpacity={0.7}
+                style={[s.compareBtn, compareMode && s.compareBtnActive]}
+                onPress={() => { setCompareMode(!compareMode); setSelectedIds([]); }}
               >
-                <Text style={[s.sortBtnText, isActive && s.sortBtnTextActive]}>
-                  {opt.label}
+                <Text style={[s.compareBtnText, compareMode && s.compareBtnTextActive]}>
+                  {compareMode ? "Cancel" : "⚖ Compare"}
                 </Text>
-                {isActive && (
-                  <View style={s.sortArrows}>
-                    <View style={[s.sortTriUp, sortAsc && s.sortTriUpActive]} />
-                    <View style={[s.sortTriDown, !sortAsc && s.sortTriDownActive]} />
-                  </View>
-                )}
               </TouchableOpacity>
-            );
-          })}
+              {compareMode && selectedIds.length >= 2 && (
+                <TouchableOpacity style={s.compareGoBtn} onPress={goCompare}>
+                  <Text style={s.compareGoBtnText}>Compare {selectedIds.length} →</Text>
+                </TouchableOpacity>
+              )}
+              {compareMode && (
+                <Text style={s.compareHint}>Select 2-3 quotes</Text>
+              )}
+            </View>
+          )}
         </View>
       )}
 
@@ -213,19 +252,26 @@ export default function PatientQuotesScreen() {
 
             {sorted.map((q: any, index: number) => {
               const isLowest = quotes.length > 1 && q.totalPrice === lowestPrice;
+              const isSelected = selectedIds.includes(q.id);
 
               return (
                 <TouchableOpacity
                   key={q.id || index}
-                  style={[s.quoteCard, isLowest && s.quoteCardHighlight]}
-                  onPress={() => router.push({
-                    pathname: "/patient/quote-detail" as any,
-                    params: { quoteId: q.id, caseId },
-                  })}
+                  style={[s.quoteCard, isLowest && s.quoteCardHighlight, compareMode && isSelected && s.quoteCardSelected]}
+                  onPress={() => {
+                    if (compareMode) {
+                      toggleSelect(q.id);
+                    } else {
+                      router.push({
+                        pathname: "/patient/quote-detail" as any,
+                        params: { quoteId: q.id, caseId },
+                      });
+                    }
+                  }}
                   activeOpacity={0.7}
                 >
                   {/* Best value badge */}
-                  {isLowest && (
+                  {isLowest && !compareMode && (
                     <View style={s.bestBadge}>
                       <Text style={s.bestBadgeText}>Best Value</Text>
                     </View>
@@ -233,9 +279,15 @@ export default function PatientQuotesScreen() {
 
                   {/* Top: Dentist info + Price */}
                   <View style={s.cardTop}>
-                    <View style={[s.rankCircle, isLowest && { backgroundColor: T.teal }]}>
-                      <Text style={[s.rankText, isLowest && { color: T.white }]}>{index + 1}</Text>
-                    </View>
+                    {compareMode ? (
+                      <View style={[s.checkbox, isSelected && s.checkboxActive]}>
+                        {isSelected && <Text style={s.checkboxIcon}>✓</Text>}
+                      </View>
+                    ) : (
+                      <View style={[s.rankCircle, isLowest && { backgroundColor: T.teal }]}>
+                        <Text style={[s.rankText, isLowest && { color: T.white }]}>{index + 1}</Text>
+                      </View>
+                    )}
                     <View style={s.avatar}>
                       <Text style={s.avatarText}>
                         {(q.dentistName || "D").split(" ").pop()?.[0] || "D"}
@@ -320,6 +372,7 @@ const s = StyleSheet.create({
   mapBtnText: { fontSize: 13, fontWeight: "600", color: "#fff" },
 
   /* Sort row */
+  sortWrapper: { backgroundColor: T.bg },
   sortRow: {
     flexDirection: "row", alignItems: "center", gap: 6,
     paddingHorizontal: 16, paddingVertical: 12,
@@ -364,6 +417,40 @@ const s = StyleSheet.create({
   },
   sortTriDownActive: {
     borderTopColor: "#fff",
+  },
+
+  /* Compare */
+  compareRow: {
+    flexDirection: "row", alignItems: "center", gap: 10,
+    paddingHorizontal: 16, paddingBottom: 10,
+  },
+  compareBtn: {
+    borderRadius: 10, paddingHorizontal: 14, paddingVertical: 8,
+    backgroundColor: T.white, borderWidth: 1, borderColor: T.border,
+  },
+  compareBtnActive: {
+    backgroundColor: "#fef2f2", borderColor: "#fca5a5",
+  },
+  compareBtnText: { fontSize: 12, fontWeight: "600", color: T.slate },
+  compareBtnTextActive: { color: "#dc2626" },
+  compareGoBtn: {
+    backgroundColor: T.teal, borderRadius: 10,
+    paddingHorizontal: 16, paddingVertical: 8,
+  },
+  compareGoBtnText: { fontSize: 12, fontWeight: "700", color: T.white },
+  compareHint: { fontSize: 11, color: T.slateLight, marginLeft: "auto" },
+
+  checkbox: {
+    width: 26, height: 26, borderRadius: 8,
+    borderWidth: 2, borderColor: T.border,
+    backgroundColor: T.white, alignItems: "center", justifyContent: "center",
+  },
+  checkboxActive: {
+    backgroundColor: T.teal, borderColor: T.teal,
+  },
+  checkboxIcon: { color: T.white, fontSize: 14, fontWeight: "700" },
+  quoteCardSelected: {
+    borderColor: T.teal, borderWidth: 2,
   },
 
   content: { padding: 20, gap: 12, paddingBottom: 40 },
