@@ -1,3 +1,4 @@
+import { Feather } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { router, useFocusEffect } from "expo-router";
 import React, { useCallback, useMemo, useRef, useState } from "react";
@@ -256,24 +257,22 @@ export default function PatientDashboardScreen() {
               style={s.headerIconBtn}
               onPress={() => router.push("/patient/alerts" as any)}
             >
-              <Text style={s.headerIconText}>🔔</Text>
+              <Feather name="bell" size={18} color="rgba(255,255,255,0.85)" />
               {unreadCount > 0 && (
-                <View style={s.notifBadge}>
-                  <Text style={s.notifBadgeText}>{unreadCount > 9 ? "9+" : unreadCount}</Text>
-                </View>
+                <View style={s.notifDot} />
               )}
             </TouchableOpacity>
             <TouchableOpacity
               style={s.headerIconBtn}
               onPress={() => router.push("/dev-menu" as any)}
             >
-              <Text style={s.headerIconText}>⚙</Text>
+              <Feather name="settings" size={18} color="rgba(255,255,255,0.85)" />
             </TouchableOpacity>
             <TouchableOpacity
               style={s.headerIconBtn}
               onPress={() => setMenuOpen(!menuOpen)}
             >
-              <Text style={s.kebabIcon}>⋮</Text>
+              <Feather name="more-vertical" size={18} color="rgba(255,255,255,0.85)" />
             </TouchableOpacity>
           </View>
         </View>
@@ -640,16 +639,12 @@ const s = StyleSheet.create({
     fontSize: 20, fontWeight: "700", color: T.white, marginTop: 1,
   },
   headerActions: {
-    flexDirection: "row", alignItems: "center", gap: 6,
+    flexDirection: "row", alignItems: "center", gap: 2,
   },
   headerIconBtn: {
-    width: 40, height: 40, borderRadius: 12,
-    backgroundColor: "rgba(255,255,255,0.1)",
-    borderWidth: 1, borderColor: "rgba(255,255,255,0.12)",
+    width: 36, height: 36, borderRadius: 18,
     alignItems: "center", justifyContent: "center",
   },
-  headerIconText: { fontSize: 18 },
-  kebabIcon: { fontSize: 22, color: "#fff", fontWeight: "800", lineHeight: 22 },
   menuOverlay: {
     position: "absolute", top: 0, left: 0, right: 0, bottom: 0, zIndex: 99,
   },
@@ -664,13 +659,11 @@ const s = StyleSheet.create({
   menuItem: { paddingVertical: 14, paddingHorizontal: 16 },
   menuItemText: { fontSize: 15, fontWeight: "600", color: "#0f172a" },
   menuDivider: { height: 1, backgroundColor: "#e2e8f0", marginHorizontal: 12 },
-  notifBadge: {
-    position: "absolute", top: 4, right: 4,
-    backgroundColor: "#ef4444", borderRadius: 7,
-    minWidth: 14, height: 14,
-    alignItems: "center", justifyContent: "center", paddingHorizontal: 3,
+  notifDot: {
+    position: "absolute", top: 6, right: 6,
+    width: 7, height: 7, borderRadius: 3.5,
+    backgroundColor: "#ef4444", borderWidth: 1.5, borderColor: "rgba(74,0,128,0.8)",
   },
-  notifBadgeText: { color: "#fff", fontSize: 8, fontWeight: "800" },
 
   /* Stats */
   statsToggleWrapper: {
