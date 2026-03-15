@@ -693,24 +693,6 @@ export default function FinalPaymentScreen() {
             </View>
           </View>
 
-          {/* Warranty Protection Banner */}
-          <View style={s.warrantyBanner}>
-            <Text style={s.warrantyBannerIcon}>🛡️</Text>
-            <View style={{ flex: 1 }}>
-              <Text style={s.warrantyBannerTitle}>Your treatments are protected</Text>
-              <Text style={s.warrantyBannerText}>
-                By paying through DentaRoute, you get:{"\n"}
-                • Up to 5-year treatment warranty{"\n"}
-                • US aftercare at partner clinics{"\n"}
-                • 5% app payment discount{"\n"}
-                • Secure escrow payment
-              </Text>
-              <Text style={s.warrantyBannerWarn}>
-                Direct payment = No warranty, no aftercare
-              </Text>
-            </View>
-          </View>
-
           <View style={{ height: 120 }} />
         </ScrollView>
       </KeyboardAvoidingView>
@@ -1084,15 +1066,4 @@ const s = StyleSheet.create({
     borderWidth: 1, borderColor: C.border,
   },
   actionDashText: { fontSize: 15, fontWeight: "600", color: C.navy },
-
-  /* Warranty banner */
-  warrantyBanner: {
-    flexDirection: "row", gap: 12, padding: 16,
-    backgroundColor: "#f0fdf4", borderRadius: 14,
-    borderWidth: 1, borderColor: "#bbf7d0", marginTop: 16,
-  },
-  warrantyBannerIcon: { fontSize: 24, marginTop: 2 },
-  warrantyBannerTitle: { fontSize: 14, fontWeight: "700", color: "#15803d", marginBottom: 6 },
-  warrantyBannerText: { fontSize: 12, color: "#166534", lineHeight: 20 },
-  warrantyBannerWarn: { fontSize: 11, color: "#dc2626", fontWeight: "600", marginTop: 8 },
 });

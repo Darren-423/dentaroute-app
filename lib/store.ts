@@ -24,7 +24,6 @@ const KEYS = {
   DOCTOR_PROFILE: "dr_doctor_profile",
   INQUIRIES: "dr_inquiries",
   TYPING_STATUS: "dr_typing_status",
-  WARRANTIES: "dr_warranties",
 };
 
 // ── 티어 설정 ──
@@ -219,8 +218,6 @@ export interface Review {
   title: string;
   comment: string;
   treatments: string[];
-  verified: boolean;          // true = completed treatment through DentaRoute
-  verifiedTreatments?: string[]; // actual treatments from booking (tamper-proof)
   createdAt: string;
 }
 
@@ -272,34 +269,6 @@ export interface SupportInquiry {
   createdAt: string;
   response?: string;
   respondedAt?: string;
-}
-
-export interface TreatmentWarranty {
-  id: string;                          // "tw_" + timestamp
-  bookingId: string;
-  caseId: string;
-  patientName: string;
-  dentistName: string;
-  clinicName: string;
-  treatmentName: string;
-  treatmentQty: number;
-  treatmentDate: string;               // 치료 완료일 (ISO)
-  warrantyMonths: number;              // 보증 기간 (개월)
-  expiresAt: string;                   // 보증 만료일 (ISO)
-  status: "active" | "claimed" | "expired" | "voided";
-  claims: WarrantyClaim[];
-  createdAt: string;
-}
-
-export interface WarrantyClaim {
-  id: string;                          // "wc_" + timestamp
-  warrantyId: string;
-  description: string;
-  photos: string[];                    // 증거 사진 URI
-  status: "submitted" | "reviewing" | "approved" | "denied";
-  submittedAt: string;
-  resolvedAt?: string;
-  resolution?: string;
 }
 
 // ── Mock Translation (데모용, 나중에 DeepL/Google API로 교체) ──
@@ -762,12 +731,7 @@ export const store = {
   // 전체 데이터 리셋 (개발용)
   resetAll: async () => {
     const keys = Object.values(KEYS);
-    // 동적 채팅 메시지 키도 함께 삭제 (dr_messages_<chatRoomId>)
-    const allKeys = await AsyncStorage.getAllKeys();
-    const dynamicMessageKeys = allKeys.filter((k) => k.startsWith(KEYS.MESSAGES + "_"));
-    // API 토큰 키도 함께 삭제
-    const apiTokenKeys = ["dr_access_token", "dr_refresh_token", "dr_auth_user"];
-    await AsyncStorage.multiRemove([...keys, ...dynamicMessageKeys, ...apiTokenKeys]);
+    await AsyncStorage.multiRemove(keys);
   },
 
   // 디버그: 전체 데이터 출력
@@ -868,35 +832,10 @@ export const store = {
   },
 
   // ── Review 관리 ──
-  createReview: async (data: Omit<Review, "id" | "createdAt" | "verified" | "verifiedTreatments"> & { verified?: boolean; verifiedTreatments?: string[] }): Promise<Review> => {
+  createReview: async (data: Omit<Review, "id" | "createdAt">): Promise<Review> => {
     const existing = await AsyncStorage.getItem(KEYS.REVIEWS);
     const reviews: Review[] = existing ? JSON.parse(existing) : [];
-
-    // Auto-verify: check if booking exists and treatment is done
-    let verified = data.verified ?? false;
-    let verifiedTreatments: string[] = data.verifiedTreatments ?? [];
-    if (data.bookingId) {
-      const booking = await store.getBooking(data.bookingId);
-      if (booking) {
-        const VERIFIED_STATUSES = new Set([
-          "treatment_done", "between_visits", "returning_home",
-          "payment_complete", "departure_set",
-        ]);
-        if (VERIFIED_STATUSES.has(booking.status)) {
-          verified = true;
-          // Pull actual treatments from booking (tamper-proof)
-          verifiedTreatments = booking.treatments?.map((t) => t.name) || booking.visitDates.map((v) => v.description);
-        }
-      }
-    }
-
-    const review: Review = {
-      ...data,
-      id: `rev_${Date.now()}`,
-      verified,
-      verifiedTreatments: verifiedTreatments.length > 0 ? verifiedTreatments : undefined,
-      createdAt: new Date().toISOString(),
-    };
+    const review: Review = { ...data, id: `rev_${Date.now()}`, createdAt: new Date().toISOString() };
     reviews.push(review);
     await AsyncStorage.setItem(KEYS.REVIEWS, JSON.stringify(reviews));
     return review;
@@ -917,32 +856,6 @@ export const store = {
     return reviews.find((r) => r.bookingId === bookingId) || null;
   },
 
-  // Check if a booking is eligible for review (treatment must be done)
-  checkReviewEligibility: async (bookingId: string): Promise<{
-    eligible: boolean;
-    reason: string;
-  }> => {
-    const booking = await store.getBooking(bookingId);
-    if (!booking) return { eligible: false, reason: "Booking not found." };
-    if (booking.status === "cancelled") return { eligible: false, reason: "This booking was cancelled." };
-
-    const ELIGIBLE_STATUSES = new Set([
-      "treatment_done", "between_visits", "returning_home",
-      "payment_complete", "departure_set",
-    ]);
-    if (!ELIGIBLE_STATUSES.has(booking.status)) {
-      return {
-        eligible: false,
-        reason: "You can write a review after your treatment is completed. This ensures all reviews on DentaRoute come from verified patients.",
-      };
-    }
-
-    const existing = await store.getReviewForBooking(bookingId);
-    if (existing) return { eligible: false, reason: "You've already submitted a review for this booking." };
-
-    return { eligible: true, reason: "" };
-  },
-
   // ── Notification 관리 ──
   addNotification: async (data: Omit<AppNotification, "id" | "createdAt" | "read">): Promise<void> => {
     const existing = await AsyncStorage.getItem(KEYS.NOTIFICATIONS);
@@ -960,6 +873,11 @@ export const store = {
   getUnreadCount: async (role: "patient" | "doctor"): Promise<number> => {
     const notifs = await store.getNotifications(role);
     return notifs.filter((n) => !n.read).length;
+  },
+
+  getChatUnreadCount: async (role: "patient" | "doctor"): Promise<number> => {
+    const rooms = await store.getChatRooms();
+    return rooms.reduce((sum, r) => sum + (role === "patient" ? r.unreadPatient : r.unreadDoctor), 0);
   },
 
   markNotificationRead: async (notifId: string): Promise<void> => {
@@ -1004,147 +922,6 @@ export const store = {
   getInquiries: async (): Promise<SupportInquiry[]> => {
     const data = await AsyncStorage.getItem(KEYS.INQUIRIES);
     return data ? JSON.parse(data) : [];
-  },
-
-  // ══════════════════════════
-  //  WARRANTY (치료 보증)
-  // ══════════════════════════
-
-  getWarranties: async (): Promise<TreatmentWarranty[]> => {
-    const data = await AsyncStorage.getItem(KEYS.WARRANTIES);
-    return data ? JSON.parse(data) : [];
-  },
-
-  getWarrantiesForPatient: async (patientName: string): Promise<TreatmentWarranty[]> => {
-    const all = await store.getWarranties();
-    return all.filter((w) => w.patientName === patientName);
-  },
-
-  getWarrantiesForBooking: async (bookingId: string): Promise<TreatmentWarranty[]> => {
-    const all = await store.getWarranties();
-    return all.filter((w) => w.bookingId === bookingId);
-  },
-
-  getWarranty: async (warrantyId: string): Promise<TreatmentWarranty | null> => {
-    const all = await store.getWarranties();
-    return all.find((w) => w.id === warrantyId) || null;
-  },
-
-  createWarranty: async (data: Omit<TreatmentWarranty, "id" | "claims" | "createdAt" | "status">): Promise<TreatmentWarranty> => {
-    const all = await store.getWarranties();
-    const warranty: TreatmentWarranty = {
-      ...data,
-      id: "tw_" + Date.now(),
-      status: "active",
-      claims: [],
-      createdAt: new Date().toISOString(),
-    };
-    all.push(warranty);
-    await AsyncStorage.setItem(KEYS.WARRANTIES, JSON.stringify(all));
-
-    // 환자에게 알림
-    await store.addNotification({
-      role: "patient",
-      type: "system",
-      title: "Warranty Activated",
-      body: `${data.treatmentName} (×${data.treatmentQty}) is now covered for ${Math.floor(data.warrantyMonths / 12)} year(s).`,
-      icon: "🛡️",
-    });
-
-    return warranty;
-  },
-
-  // 예약의 모든 치료에 대해 보증 일괄 생성
-  createWarrantiesForBooking: async (bookingId: string): Promise<TreatmentWarranty[]> => {
-    const { WARRANTY_CONFIG } = require("../constants/warranty");
-    const booking = await store.getBooking(bookingId);
-    if (!booking || !booking.treatments) return [];
-
-    const existing = await store.getWarrantiesForBooking(bookingId);
-    if (existing.length > 0) return existing; // 이미 생성됨
-
-    const now = new Date();
-    const user = await store.getCurrentUser();
-    const created: TreatmentWarranty[] = [];
-
-    for (const t of booking.treatments) {
-      const config = WARRANTY_CONFIG[t.name];
-      if (!config || config.warrantyMonths === 0) continue;
-
-      const expiresAt = new Date(now);
-      expiresAt.setMonth(expiresAt.getMonth() + config.warrantyMonths);
-
-      const warranty = await store.createWarranty({
-        bookingId,
-        caseId: booking.caseId,
-        patientName: user?.name || "Patient",
-        dentistName: booking.dentistName,
-        clinicName: booking.clinicName,
-        treatmentName: t.name,
-        treatmentQty: t.qty,
-        treatmentDate: now.toISOString(),
-        warrantyMonths: config.warrantyMonths,
-        expiresAt: expiresAt.toISOString(),
-      });
-      created.push(warranty);
-    }
-
-    return created;
-  },
-
-  submitWarrantyClaim: async (
-    warrantyId: string,
-    data: { description: string; photos: string[] }
-  ): Promise<WarrantyClaim | null> => {
-    const all = await store.getWarranties();
-    const idx = all.findIndex((w) => w.id === warrantyId);
-    if (idx === -1) return null;
-
-    const warranty = all[idx];
-    if (warranty.status !== "active") return null;
-
-    const claim: WarrantyClaim = {
-      id: "wc_" + Date.now(),
-      warrantyId,
-      description: data.description,
-      photos: data.photos,
-      status: "submitted",
-      submittedAt: new Date().toISOString(),
-    };
-
-    warranty.claims.push(claim);
-    warranty.status = "claimed";
-    all[idx] = warranty;
-    await AsyncStorage.setItem(KEYS.WARRANTIES, JSON.stringify(all));
-
-    // 환자 알림
-    await store.addNotification({
-      role: "patient",
-      type: "system",
-      title: "Warranty Claim Submitted",
-      body: `Your claim for ${warranty.treatmentName} has been submitted. We'll review it within 1-3 business days.`,
-      icon: "📋",
-    });
-
-    return claim;
-  },
-
-  // 보증 만료 체크 (앱 시작 시 호출)
-  checkExpiredWarranties: async (): Promise<void> => {
-    const all = await store.getWarranties();
-    const now = new Date();
-    let changed = false;
-
-    for (const w of all) {
-      if (w.status === "active" && new Date(w.expiresAt) < now) {
-        w.status = "expired";
-        changed = true;
-      }
-    }
-
-    if (changed) {
-      await AsyncStorage.setItem(KEYS.WARRANTIES, JSON.stringify(all));
-    }
   },
 
   // ══════════════════════════
@@ -1528,9 +1305,7 @@ export const store = {
         patientName: "Michael T.", rating: 5, treatmentRating: 5, clinicRating: 5, communicationRating: 5,
         title: "Incredible experience!",
         comment: "Dr. Kim was amazing. The implants look completely natural. Staff spoke perfect English and the clinic was spotless. Would fly back just for dental work!",
-        treatments: ["Implant: Whole (Root + Crown)", "Crown"],
-        verified: true, verifiedTreatments: ["Implant: Whole (Root + Crown)", "Crown"],
-        createdAt: "2026-01-15T10:00:00Z",
+        treatments: ["Implant: Whole (Root + Crown)", "Crown"], createdAt: "2026-01-15T10:00:00Z",
       },
       {
         id: "rev_002", caseId: "prev_002", bookingId: "bk_prev_002",
@@ -1538,9 +1313,7 @@ export const store = {
         patientName: "Emma L.", rating: 5, treatmentRating: 5, clinicRating: 4, communicationRating: 5,
         title: "Best dental care I've ever had",
         comment: "Saved over $4,000 compared to prices back home. Dr. Kim explained everything clearly. Only minor note: the waiting room was a bit small.",
-        treatments: ["Veneer", "Veneers"],
-        verified: true, verifiedTreatments: ["Veneers"],
-        createdAt: "2026-01-28T14:00:00Z",
+        treatments: ["Veneer", "Veneers"], createdAt: "2026-01-28T14:00:00Z",
       },
       {
         id: "rev_003", caseId: "prev_003", bookingId: "bk_prev_003",
@@ -1548,9 +1321,7 @@ export const store = {
         patientName: "David K.", rating: 4, treatmentRating: 5, clinicRating: 4, communicationRating: 4,
         title: "Great results, smooth process",
         comment: "Very professional team. The airport pickup was a nice touch. Treatment was painless and results are great. Highly recommend for anyone considering dental tourism.",
-        treatments: ["Implant: Whole (Root + Crown)", "Gum Treatment"],
-        verified: true, verifiedTreatments: ["Implant: Whole (Root + Crown)", "Gum Treatment"],
-        createdAt: "2026-02-10T09:00:00Z",
+        treatments: ["Implant: Whole (Root + Crown)", "Gum Treatment"], createdAt: "2026-02-10T09:00:00Z",
       },
     ];
     await AsyncStorage.setItem(KEYS.REVIEWS, JSON.stringify(demoReviews));
@@ -1567,60 +1338,6 @@ export const store = {
       { id: "notif_009", role: "doctor", type: "new_message", title: "New Message", body: "Sarah Johnson: \"How long is the recovery time...\"", icon: "💬", read: true, route: "/doctor/chat-list", createdAt: "2026-02-25T10:12:00Z" },
     ];
     await AsyncStorage.setItem(KEYS.NOTIFICATIONS, JSON.stringify(demoNotifs));
-
-    // Demo warranties
-    const now = new Date();
-    const demoWarranties: TreatmentWarranty[] = [
-      {
-        id: "tw_demo_001",
-        bookingId: "bk_demo",
-        caseId: "1001",
-        patientName: "Sarah Johnson",
-        dentistName: "Dr. Kim Minjun",
-        clinicName: "Seoul Bright Dental",
-        treatmentName: "Dental Implant",
-        treatmentQty: 2,
-        treatmentDate: "2026-03-10T10:00:00Z",
-        warrantyMonths: 60,
-        expiresAt: "2031-03-10T10:00:00Z",
-        status: "active",
-        claims: [],
-        createdAt: "2026-03-10T10:00:00Z",
-      },
-      {
-        id: "tw_demo_002",
-        bookingId: "bk_demo",
-        caseId: "1001",
-        patientName: "Sarah Johnson",
-        dentistName: "Dr. Kim Minjun",
-        clinicName: "Seoul Bright Dental",
-        treatmentName: "Crown",
-        treatmentQty: 3,
-        treatmentDate: "2026-03-10T10:00:00Z",
-        warrantyMonths: 36,
-        expiresAt: "2029-03-10T10:00:00Z",
-        status: "active",
-        claims: [],
-        createdAt: "2026-03-10T10:00:00Z",
-      },
-      {
-        id: "tw_demo_003",
-        bookingId: "bk_demo",
-        caseId: "1001",
-        patientName: "Sarah Johnson",
-        dentistName: "Dr. Kim Minjun",
-        clinicName: "Seoul Bright Dental",
-        treatmentName: "Veneers",
-        treatmentQty: 4,
-        treatmentDate: "2026-03-10T10:00:00Z",
-        warrantyMonths: 24,
-        expiresAt: "2028-03-10T10:00:00Z",
-        status: "active",
-        claims: [],
-        createdAt: "2026-03-10T10:00:00Z",
-      },
-    ];
-    await AsyncStorage.setItem(KEYS.WARRANTIES, JSON.stringify(demoWarranties));
 
     // Set current user as patient
     await AsyncStorage.setItem(KEYS.CURRENT_USER, JSON.stringify({

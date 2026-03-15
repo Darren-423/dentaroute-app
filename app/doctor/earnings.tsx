@@ -7,7 +7,7 @@ import {
   Text, TouchableOpacity,
   View,
 } from "react-native";
-import { Booking, DoctorTier, Review, TIER_CONFIG, store } from "../../lib/store";
+import { Booking, DoctorTier, TIER_CONFIG, store } from "../../lib/store";
 
 const T = {
   teal: "#0f766e",
@@ -47,8 +47,6 @@ export default function DoctorEarningsScreen() {
   const [currentFeeRate, setCurrentFeeRate] = useState(0.20);
   const [tierLabel, setTierLabel] = useState("Standard");
   const [tierColor, setTierColor] = useState("#78716c");
-  const [currentTier, setCurrentTier] = useState<DoctorTier>("standard");
-  const [reviewStats, setReviewStats] = useState({ total: 0, verified: 0, avgRating: 0 });
 
   useFocusEffect(
     useCallback(() => {
@@ -66,14 +64,6 @@ export default function DoctorEarningsScreen() {
           setCurrentFeeRate(profileFeeRate);
           setTierLabel(cfg.label);
           setTierColor(cfg.color);
-          setCurrentTier(tier);
-
-          // Review stats
-          const reviews: Review[] = await store.getReviewsForDentist(dp.fullName || dp.name || "");
-          const verifiedReviews = reviews.filter((r: Review) => r.verified);
-          const avgRating = reviews.length > 0
-            ? reviews.reduce((s: number, r: Review) => s + r.rating, 0) / reviews.length : 0;
-          setReviewStats({ total: reviews.length, verified: verifiedReviews.length, avgRating });
         }
 
         let allTotal = 0;
@@ -234,88 +224,6 @@ export default function DoctorEarningsScreen() {
           <Text style={s.tierNote}>Tier updates monthly based on your revenue</Text>
         </View>
 
-        {/* Tier Progress */}
-        {currentTier !== "gold" && (
-          <View style={s.section}>
-            <Text style={s.sectionTitle}>TIER PROGRESS</Text>
-            <View style={s.tierCard}>
-              <View style={s.tierProgressRow}>
-                {(["standard", "silver", "gold"] as DoctorTier[]).map((t, i) => {
-                  const cfg = TIER_CONFIG[t];
-                  const isActive = t === currentTier;
-                  const isPast = (["standard", "silver", "gold"].indexOf(currentTier) >= i);
-                  return (
-                    <View key={t} style={s.tierStep}>
-                      <View style={[s.tierDot, isPast && { backgroundColor: cfg.color }, isActive && s.tierDotActive]}>
-                        <Text style={s.tierDotText}>{isActive ? "●" : isPast ? "✓" : ""}</Text>
-                      </View>
-                      <Text style={[s.tierStepLabel, isActive && { fontWeight: "700", color: "#0f172a" }]}>{cfg.label}</Text>
-                      <Text style={s.tierStepFee}>{Math.round(cfg.feeRate * 100)}% fee</Text>
-                    </View>
-                  );
-                })}
-              </View>
-              <View style={s.tierProgressBar}>
-                <View style={[s.tierProgressFill, {
-                  width: currentTier === "gold" ? "100%" : currentTier === "silver" ? "50%" : "10%",
-                  backgroundColor: TIER_CONFIG[currentTier].color,
-                }]} />
-              </View>
-              <Text style={s.tierProgressHint}>
-                {currentTier === "standard"
-                  ? "💡 Increase bookings to reach Silver tier and save 2% on every transaction"
-                  : "💡 Keep growing to reach Gold tier and save an additional 3% on fees"}
-              </Text>
-            </View>
-          </View>
-        )}
-
-        {/* Platform Value */}
-        <View style={s.section}>
-          <Text style={s.sectionTitle}>PLATFORM VALUE</Text>
-          <View style={s.valueCard}>
-            <View style={s.valueRow}>
-              <Text style={s.valueIcon}>⭐</Text>
-              <View style={{ flex: 1 }}>
-                <Text style={s.valueLabel}>Verified Reviews</Text>
-                <Text style={s.valueDesc}>{reviewStats.verified} verified / {reviewStats.total} total{reviewStats.avgRating > 0 ? ` • ${reviewStats.avgRating.toFixed(1)} avg` : ""}</Text>
-              </View>
-            </View>
-            <View style={s.valueDivider} />
-            <View style={s.valueRow}>
-              <Text style={s.valueIcon}>🛡️</Text>
-              <View style={{ flex: 1 }}>
-                <Text style={s.valueLabel}>Treatment Warranty</Text>
-                <Text style={s.valueDesc}>Up to 5-year warranty for your patients, building long-term trust</Text>
-              </View>
-            </View>
-            <View style={s.valueDivider} />
-            <View style={s.valueRow}>
-              <Text style={s.valueIcon}>🇺🇸</Text>
-              <View style={{ flex: 1 }}>
-                <Text style={s.valueLabel}>US Aftercare Network</Text>
-                <Text style={s.valueDesc}>5 partner clinics across the US provide aftercare for your patients</Text>
-              </View>
-            </View>
-            <View style={s.valueDivider} />
-            <View style={s.valueRow}>
-              <Text style={s.valueIcon}>🔒</Text>
-              <View style={{ flex: 1 }}>
-                <Text style={s.valueLabel}>Secure Payments</Text>
-                <Text style={s.valueDesc}>Escrow-protected deposits and guaranteed payment collection</Text>
-              </View>
-            </View>
-            <View style={s.valueDivider} />
-            <View style={s.valueRow}>
-              <Text style={s.valueIcon}>🌍</Text>
-              <View style={{ flex: 1 }}>
-                <Text style={s.valueLabel}>Global Patient Access</Text>
-                <Text style={s.valueDesc}>Reach international patients you wouldn't find through other channels</Text>
-              </View>
-            </View>
-          </View>
-        </View>
-
         {/* Transaction history */}
         <View style={s.section}>
           <Text style={s.sectionTitle}>TRANSACTION HISTORY</Text>
@@ -430,43 +338,4 @@ const s = StyleSheet.create({
   empty: { alignItems: "center", paddingVertical: 40 },
   emptyTitle: { fontSize: 16, fontWeight: "600", color: T.textSec, marginBottom: 4 },
   emptyDesc: { fontSize: 13, color: T.textMuted, textAlign: "center" },
-
-  // ── Tier Progress ──
-  tierCard: {
-    backgroundColor: T.white, borderRadius: 14, padding: 18,
-    borderWidth: 1, borderColor: T.border,
-    shadowColor: "#000", shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.05, shadowRadius: 4, elevation: 2,
-  },
-  tierProgressRow: {
-    flexDirection: "row", justifyContent: "space-between", marginBottom: 16,
-  },
-  tierStep: { alignItems: "center", flex: 1, gap: 4 },
-  tierDot: {
-    width: 28, height: 28, borderRadius: 14,
-    backgroundColor: "#e2e8f0", alignItems: "center", justifyContent: "center",
-    borderWidth: 2, borderColor: "transparent",
-  },
-  tierDotActive: { borderColor: T.teal, borderWidth: 2 },
-  tierDotText: { fontSize: 10, color: "#fff", fontWeight: "800" },
-  tierStepLabel: { fontSize: 12, color: T.textMuted, fontWeight: "500" },
-  tierStepFee: { fontSize: 10, color: T.textMuted },
-  tierProgressBar: {
-    height: 6, backgroundColor: "#f1f5f9", borderRadius: 3, overflow: "hidden", marginBottom: 12,
-  },
-  tierProgressFill: { height: "100%", borderRadius: 3 },
-  tierProgressHint: { fontSize: 11, color: T.textSec, textAlign: "center", lineHeight: 16 },
-
-  // ── Platform Value ──
-  valueCard: {
-    backgroundColor: T.white, borderRadius: 14, paddingHorizontal: 16, paddingVertical: 4,
-    borderWidth: 1, borderColor: T.border,
-    shadowColor: "#000", shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.05, shadowRadius: 4, elevation: 2,
-  },
-  valueRow: {
-    flexDirection: "row", alignItems: "center", gap: 12, paddingVertical: 14,
-  },
-  valueIcon: { fontSize: 20, width: 28, textAlign: "center" },
-  valueLabel: { fontSize: 13, fontWeight: "600", color: T.text },
-  valueDesc: { fontSize: 11, color: T.textMuted, lineHeight: 16, marginTop: 2 },
-  valueDivider: { height: 1, backgroundColor: T.border },
 });

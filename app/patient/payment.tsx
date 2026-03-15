@@ -8,7 +8,7 @@ import {
   Text, TextInput, TouchableOpacity,
   View,
 } from "react-native";
-import { DentistQuote, TIER_CONFIG, store } from "../../lib/store";
+import { DentistQuote, store } from "../../lib/store";
 
 const T = {
   teal: "#4A0080", tealMid: "#5C10A0", tealLight: "#f0e6f6",
@@ -104,13 +104,6 @@ export default function PatientPaymentScreen() {
       if (caseId) {
         await store.updateCaseStatus(caseId, "booked");
         const rawNum = card.number.replace(/\s/g, "");
-        // 의사 프로필에서 현재 티어의 수수료율을 스냅샷으로 저장
-        let platformFeeRate = TIER_CONFIG.standard.feeRate; // 기본값 20%
-        try {
-          const dp = await store.getDoctorProfile();
-          if (dp?.platformFeeRate) platformFeeRate = dp.platformFeeRate;
-          else if (dp?.tier) platformFeeRate = TIER_CONFIG[dp.tier as keyof typeof TIER_CONFIG]?.feeRate || platformFeeRate;
-        } catch {}
         await store.createBooking({
           caseId,
           quoteId: quoteId || "",
@@ -121,7 +114,6 @@ export default function PatientPaymentScreen() {
           treatments: quote?.treatments || [],
           visitDates: visitDates,
           status: "confirmed",
-          platformFeeRate,
           savedCard: {
             last4: rawNum.slice(-4),
             brand: getCardBrand(rawNum),

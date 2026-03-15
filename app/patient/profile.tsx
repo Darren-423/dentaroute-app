@@ -13,7 +13,6 @@ import {
     View,
 } from "react-native";
 import { store } from "../../lib/store";
-import { authApi } from "../../lib/api";
 
 const T = {
   teal: "#4A0080", tealMid: "#5C10A0", tealLight: "#f0e6f6",
@@ -241,7 +240,6 @@ export default function PatientProfileScreen() {
               Alert.alert("Log Out", "Are you sure?", [
                 { text: "Cancel", style: "cancel" },
                 { text: "Log Out", style: "destructive", onPress: async () => {
-                  try { await authApi.logout(); } catch {}
                   await store.clearCurrentUser();
                   router.replace("/auth/role-select" as any);
                 }},

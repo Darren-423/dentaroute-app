@@ -33,6 +33,10 @@ export default function DoctorChatListScreen() {
         const allRooms = await store.getChatRoomsForUser("doctor", name);
         allRooms.sort((a, b) => new Date(b.lastMessageAt).getTime() - new Date(a.lastMessageAt).getTime());
         setRooms(allRooms);
+        // Mark all chat rooms as read
+        for (const room of allRooms) {
+          if (room.unreadDoctor > 0) await store.markAsRead(room.id, "doctor");
+        }
       };
       load();
     }, [])

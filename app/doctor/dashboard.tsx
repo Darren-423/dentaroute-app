@@ -10,7 +10,7 @@ import {
   Text, TouchableOpacity,
   View,
 } from "react-native";
-import { Booking, DoctorTier, PatientCase, Review, TIER_CONFIG, store } from "../../lib/store";
+import { Booking, PatientCase, store } from "../../lib/store";
 
 const T = {
   teal: "#0f766e",
@@ -74,9 +74,6 @@ export default function DoctorDashboardScreen() {
   const [patientProfileImage, setPatientProfileImage] = useState<string | null>(null);
   const [unreadMessages, setUnreadMessages] = useState(0);
   const [collapsedSections, setCollapsedSections] = useState<Record<string, boolean>>({});
-  const [reviewStats, setReviewStats] = useState({ total: 0, verified: 0, avgRating: 0 });
-  const [tierInfo, setTierInfo] = useState({ tier: "standard" as DoctorTier, label: "Standard", color: "#78716c", feeRate: 0.20 });
-  const [showBenefits, setShowBenefits] = useState(true);
 
   // Stats toggle
   const STATS_HEIGHT = 80;
@@ -106,25 +103,6 @@ export default function DoctorDashboardScreen() {
         const rooms = await store.getChatRooms();
         const totalUnread = rooms.reduce((sum, r) => sum + (r.unreadDoctor || 0), 0);
         setUnreadMessages(totalUnread);
-
-        // Review stats
-        const dp = await store.getDoctorProfile();
-        if (dp) {
-          const reviews: Review[] = await store.getReviewsForDentist(dp.fullName || dp.name || "");
-          const verifiedReviews = reviews.filter((r) => r.verified);
-          const avgRating = reviews.length > 0
-            ? reviews.reduce((s, r) => s + r.rating, 0) / reviews.length : 0;
-          setReviewStats({ total: reviews.length, verified: verifiedReviews.length, avgRating });
-
-          const tier = (dp.tier || "standard") as DoctorTier;
-          const cfg = TIER_CONFIG[tier] || TIER_CONFIG.standard;
-          setTierInfo({
-            tier,
-            label: cfg.label,
-            color: cfg.color,
-            feeRate: dp.platformFeeRate || cfg.feeRate,
-          });
-        }
       };
       load();
     }, [])
@@ -308,52 +286,6 @@ export default function DoctorDashboardScreen() {
           </TouchableOpacity>
         </View>
       </LinearGradient>
-
-      {/* ── Platform Benefits Card ── */}
-      {showBenefits && (
-        <View style={s.benefitsCard}>
-          <View style={s.benefitsHeader}>
-            <Text style={s.benefitsTitle}>📊 Your DentaRoute Profile</Text>
-            <TouchableOpacity onPress={() => setShowBenefits(false)} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
-              <Text style={s.benefitsClose}>✕</Text>
-            </TouchableOpacity>
-          </View>
-          <View style={s.benefitsRow}>
-            <View style={s.benefitItem}>
-              <Text style={s.benefitNum}>⭐ {reviewStats.avgRating > 0 ? reviewStats.avgRating.toFixed(1) : "—"}</Text>
-              <Text style={s.benefitLabel}>Rating</Text>
-            </View>
-            <View style={s.benefitDivider} />
-            <View style={s.benefitItem}>
-              <Text style={s.benefitNum}>✓ {reviewStats.verified}</Text>
-              <Text style={s.benefitLabel}>Verified Reviews</Text>
-            </View>
-            <View style={s.benefitDivider} />
-            <View style={s.benefitItem}>
-              <View style={[s.tierMini, { backgroundColor: tierInfo.color }]}>
-                <Text style={s.tierMiniText}>{tierInfo.label}</Text>
-              </View>
-              <Text style={s.benefitLabel}>{Math.round(tierInfo.feeRate * 100)}% Fee</Text>
-            </View>
-          </View>
-          <View style={s.benefitsFooter}>
-            <Text style={s.benefitsFooterIcon}>🛡️</Text>
-            <Text style={s.benefitsFooterText}>
-              Your patients receive up to 5-year treatment warranty + US aftercare through DentaRoute
-            </Text>
-          </View>
-          {tierInfo.tier !== "gold" && (
-            <View style={s.tierUpgrade}>
-              <Text style={s.tierUpgradeText}>
-                💡 {tierInfo.tier === "standard" ? "Reach Silver tier to lower your fee to 18%" : "Reach Gold tier for the lowest 15% fee"}
-              </Text>
-              <TouchableOpacity onPress={() => router.push("/doctor/earnings" as any)}>
-                <Text style={s.tierUpgradeLink}>View Progress →</Text>
-              </TouchableOpacity>
-            </View>
-          )}
-        </View>
-      )}
 
       {/* ── Treatment Filter Tabs ── */}
       {cases.length > 0 && (
@@ -763,38 +695,4 @@ const s = StyleSheet.create({
     fontWeight: "300",
   },
 
-  // ── Platform Benefits Card ──
-  benefitsCard: {
-    marginHorizontal: 16, marginTop: 12, backgroundColor: T.white,
-    borderRadius: 14, padding: 16, borderWidth: 1, borderColor: T.border,
-    shadowColor: "#000", shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.05, shadowRadius: 4, elevation: 2,
-  },
-  benefitsHeader: {
-    flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 12,
-  },
-  benefitsTitle: { fontSize: 13, fontWeight: "700", color: T.text },
-  benefitsClose: { fontSize: 14, color: T.textMuted, fontWeight: "600" },
-  benefitsRow: {
-    flexDirection: "row", alignItems: "center", justifyContent: "space-around",
-    paddingVertical: 8,
-  },
-  benefitItem: { alignItems: "center", gap: 4 },
-  benefitNum: { fontSize: 16, fontWeight: "700", color: T.teal },
-  benefitLabel: { fontSize: 10, color: T.textMuted },
-  benefitDivider: { width: 1, height: 32, backgroundColor: T.border },
-  tierMini: { borderRadius: 6, paddingHorizontal: 8, paddingVertical: 3 },
-  tierMiniText: { fontSize: 11, fontWeight: "800", color: "#fff" },
-  benefitsFooter: {
-    flexDirection: "row", alignItems: "center", gap: 8,
-    backgroundColor: "#f0fdf4", borderRadius: 10, padding: 10,
-    marginTop: 12, borderWidth: 1, borderColor: "#bbf7d0",
-  },
-  benefitsFooterIcon: { fontSize: 14 },
-  benefitsFooterText: { flex: 1, fontSize: 11, color: "#166534", lineHeight: 16 },
-  tierUpgrade: {
-    flexDirection: "row", alignItems: "center", justifyContent: "space-between",
-    marginTop: 10, paddingTop: 10, borderTopWidth: 1, borderTopColor: T.border,
-  },
-  tierUpgradeText: { fontSize: 11, color: T.textSec, flex: 1 },
-  tierUpgradeLink: { fontSize: 11, fontWeight: "700", color: T.teal },
 });

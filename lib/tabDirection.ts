@@ -1,5 +1,6 @@
-export let tabAnimation: "slide_from_right" | "slide_from_left" = "slide_from_right";
+// Tab direction tracking (used by tab bar indicator)
+export let tabDirection: "right" | "left" = "right";
 
-export function setTabAnimation(dir: "slide_from_right" | "slide_from_left") {
-  tabAnimation = dir;
+export function setTabDirection(dir: "right" | "left") {
+  tabDirection = dir;
 }

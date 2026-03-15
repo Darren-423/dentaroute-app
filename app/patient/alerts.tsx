@@ -71,6 +71,7 @@ export default function PatientAlertsScreen() {
       const load = async () => {
         const notifs = await store.getNotifications("patient");
         setNotifications(notifs);
+        await store.markAllNotificationsRead("patient");
       };
       load();
     }, [])

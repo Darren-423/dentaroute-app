@@ -26,6 +26,10 @@ export default function PatientChatListScreen() {
         // Sort by last message time, newest first
         allRooms.sort((a, b) => new Date(b.lastMessageAt).getTime() - new Date(a.lastMessageAt).getTime());
         setRooms(allRooms);
+        // Mark all chat rooms as read
+        for (const room of allRooms) {
+          if (room.unreadPatient > 0) await store.markAsRead(room.id, "patient");
+        }
       };
       load();
     }, [])

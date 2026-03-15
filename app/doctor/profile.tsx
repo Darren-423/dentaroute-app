@@ -10,7 +10,6 @@ import {
     View,
 } from "react-native";
 import { DoctorProfile as DoctorProfileType, store } from "../../lib/store";
-import { authApi } from "../../lib/api";
 
 const T = {
   teal: "#0f766e",
@@ -195,7 +194,6 @@ export default function DoctorProfileScreen() {
               Alert.alert("Log Out", "Are you sure?", [
                 { text: "Cancel", style: "cancel" },
                 { text: "Log Out", style: "destructive", onPress: async () => {
-                  try { await authApi.logout(); } catch {}
                   await store.clearCurrentUser();
                   router.replace("/auth/role-select" as any);
                 }},
@@ -244,7 +242,7 @@ const s = StyleSheet.create({
   headerTitle: { fontSize: 18, fontWeight: "700", color: T.white },
 
   scrollView: { flex: 1, backgroundColor: T.bg },
-  content: { padding: 20, gap: 20, paddingBottom: 40 },
+  content: { padding: 20, gap: 20, paddingBottom: 120 },
 
   // Avatar
   avatarSection: { alignItems: "center", gap: 6 },

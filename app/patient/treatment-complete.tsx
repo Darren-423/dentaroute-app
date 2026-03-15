@@ -7,8 +7,7 @@ import {
   Text, TouchableOpacity,
   View,
 } from "react-native";
-import { Booking, TreatmentWarranty, store } from "../../lib/store";
-import { warrantyLabel } from "../../constants/warranty";
+import { Booking, store } from "../../lib/store";
 
 const T = {
   teal: "#4A0080", tealLight: "#f0e6f6",
@@ -24,7 +23,6 @@ export default function TreatmentCompleteScreen() {
   const [loading, setLoading] = useState(true);
   const [hasReview, setHasReview] = useState(false);
   const [patientName, setPatientName] = useState("Patient");
-  const [warranties, setWarranties] = useState<TreatmentWarranty[]>([]);
 
   useEffect(() => {
     const load = async () => {
@@ -44,13 +42,6 @@ export default function TreatmentCompleteScreen() {
       if (user?.name) setPatientName(user.name);
       const profile = await store.getPatientProfile();
       if (profile?.fullName) setPatientName(profile.fullName);
-
-      // Auto-create warranties for this booking
-      if (bookingId) {
-        const created = await store.createWarrantiesForBooking(bookingId);
-        setWarranties(created);
-      }
-
       setLoading(false);
     };
     load();
@@ -91,36 +82,6 @@ export default function TreatmentCompleteScreen() {
             <Text style={[s.value, { color: T.green }]}>✅ Fully Paid</Text>
           </View>
         </View>
-
-        {/* Warranty Card */}
-        {warranties.length > 0 && (
-          <View style={s.warrantyCard}>
-            <View style={s.warrantyHeader}>
-              <Text style={s.warrantyIcon}>🛡️</Text>
-              <View style={{ flex: 1 }}>
-                <Text style={s.warrantyTitle}>Warranty Activated!</Text>
-                <Text style={s.warrantySub}>Your treatments are now protected</Text>
-              </View>
-            </View>
-            {warranties.map((w) => (
-              <View key={w.id} style={s.warrantyRow}>
-                <Text style={s.warrantyTreatment}>{w.treatmentName} ×{w.treatmentQty}</Text>
-                <Text style={s.warrantyPeriod}>{warrantyLabel(w.warrantyMonths)}</Text>
-              </View>
-            ))}
-            <View style={s.warrantyAftercare}>
-              <Text style={s.warrantyAftercareText}>
-                🇺🇸 US aftercare available at partner clinics
-              </Text>
-            </View>
-            <TouchableOpacity
-              style={s.warrantyBtn}
-              onPress={() => router.push("/patient/warranty" as any)}
-            >
-              <Text style={s.warrantyBtnText}>View My Warranties →</Text>
-            </TouchableOpacity>
-          </View>
-        )}
 
         {/* Actions */}
         <View style={s.actions}>
@@ -198,30 +159,4 @@ const s = StyleSheet.create({
     borderWidth: 1, borderColor: T.border,
   },
   dashBtnText: { fontSize: 15, fontWeight: "600", color: T.navy },
-
-  // Warranty
-  warrantyCard: {
-    backgroundColor: "#f0fdf4", borderRadius: 16, padding: 16, width: "100%",
-    borderWidth: 1, borderColor: "#bbf7d0",
-  },
-  warrantyHeader: { flexDirection: "row", alignItems: "center", gap: 10, marginBottom: 12 },
-  warrantyIcon: { fontSize: 28 },
-  warrantyTitle: { fontSize: 16, fontWeight: "700", color: "#15803d" },
-  warrantySub: { fontSize: 12, color: "#166534", marginTop: 2 },
-  warrantyRow: {
-    flexDirection: "row", justifyContent: "space-between", alignItems: "center",
-    paddingVertical: 6, borderBottomWidth: 1, borderBottomColor: "rgba(22,163,74,0.1)",
-  },
-  warrantyTreatment: { fontSize: 13, color: "#166534", fontWeight: "600" },
-  warrantyPeriod: { fontSize: 13, color: "#15803d", fontWeight: "700" },
-  warrantyAftercare: {
-    marginTop: 10, paddingVertical: 8, paddingHorizontal: 10,
-    backgroundColor: "rgba(37,99,235,0.08)", borderRadius: 8,
-  },
-  warrantyAftercareText: { fontSize: 12, color: "#1d4ed8", fontWeight: "600" },
-  warrantyBtn: {
-    marginTop: 12, paddingVertical: 12, borderRadius: 10,
-    backgroundColor: "#15803d", alignItems: "center",
-  },
-  warrantyBtnText: { fontSize: 14, fontWeight: "700", color: "#fff" },
 });

@@ -9,18 +9,11 @@ import {
   View,
 } from "react-native";
 import { ChatMessage, store } from "../../lib/store";
-import {
-  filterChatMessage,
-  checkBookingConfirmed,
-  getCaseIdForChatRoom,
-  FilterResult,
-} from "../../lib/chat-filter";
 
 const T = {
   teal: "#4A0080", tealMid: "#5C10A0", tealLight: "#f0e6f6",
   navy: "#0f172a", slate: "#64748b", slateLight: "#94a3b8",
   border: "#e2e8f0", bg: "#f8fafc", white: "#ffffff",
-  coral: "#e05a3a", coralLight: "#fef2ee",
 };
 
 export default function PatientChatScreen() {
@@ -30,22 +23,6 @@ export default function PatientChatScreen() {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState("");
   const flatListRef = useRef<FlatList>(null);
-
-  // Anti-bypass filter state
-  const [isBookingConfirmed, setIsBookingConfirmed] = useState(false);
-  const [filterWarning, setFilterWarning] = useState<FilterResult | null>(null);
-
-  // Check booking status for filter
-  useEffect(() => {
-    (async () => {
-      if (!chatRoomId) return;
-      const caseId = await getCaseIdForChatRoom(chatRoomId);
-      if (caseId) {
-        const confirmed = await checkBookingConfirmed(caseId);
-        setIsBookingConfirmed(confirmed);
-      }
-    })();
-  }, [chatRoomId]);
 
   // Translation state
   const [translateOn, setTranslateOn] = useState(true);
@@ -174,21 +151,6 @@ export default function PatientChatScreen() {
   const handleSend = async () => {
     const text = input.trim();
     if (!text || !chatRoomId) return;
-
-    // Anti-bypass filter
-    const result = filterChatMessage(text, chatRoomId, isBookingConfirmed);
-    if (result.blocked) {
-      setFilterWarning(result);
-      // Send masked version
-      setInput("");
-      await store.sendMessage(chatRoomId, "patient", result.filteredText);
-      await loadMessages();
-      setTimeout(() => flatListRef.current?.scrollToEnd({ animated: true }), 100);
-      // Auto-dismiss warning after 5s
-      setTimeout(() => setFilterWarning(null), 5000);
-      return;
-    }
-
     setInput("");
     if (chatRoomId) store.setTyping(chatRoomId, "patient", false);
     await store.sendMessage(chatRoomId, "patient", text);
@@ -336,30 +298,6 @@ export default function PatientChatScreen() {
           </Text>
         </TouchableOpacity>
       </LinearGradient>
-
-      {/* Filter banner (shown when booking not confirmed) */}
-      {!isBookingConfirmed && (
-        <View style={s.filterBanner}>
-          <Text style={s.filterBannerIcon}>🔒</Text>
-          <Text style={s.filterBannerText}>
-            Contact sharing is restricted until booking confirmation
-          </Text>
-        </View>
-      )}
-
-      {/* Filter warning toast */}
-      {filterWarning && (
-        <View style={s.filterWarning}>
-          <View style={s.filterWarningHeader}>
-            <Text style={s.filterWarningIcon}>⚠️</Text>
-            <Text style={s.filterWarningTitle}>Contact Info Detected</Text>
-            <TouchableOpacity onPress={() => setFilterWarning(null)}>
-              <Text style={s.filterWarningClose}>✕</Text>
-            </TouchableOpacity>
-          </View>
-          <Text style={s.filterWarningText}>{filterWarning.warningMessage}</Text>
-        </View>
-      )}
 
       {/* Messages */}
       <FlatList
@@ -635,26 +573,4 @@ const s = StyleSheet.create({
   },
   sendBtnDisabled: { opacity: 0.4 },
   sendBtnText: { color: T.white, fontSize: 20, fontWeight: "600" },
-
-  // Anti-bypass filter styles
-  filterBanner: {
-    flexDirection: "row", alignItems: "center", gap: 8,
-    paddingHorizontal: 16, paddingVertical: 10,
-    backgroundColor: "#f0e6f6", borderBottomWidth: 1, borderBottomColor: T.border,
-  },
-  filterBannerIcon: { fontSize: 14 },
-  filterBannerText: { flex: 1, fontSize: 12, color: T.slate, lineHeight: 16 },
-
-  filterWarning: {
-    marginHorizontal: 16, marginTop: 8, padding: 12,
-    backgroundColor: T.coralLight, borderRadius: 12,
-    borderWidth: 1, borderColor: "rgba(224,90,58,0.2)",
-  },
-  filterWarningHeader: {
-    flexDirection: "row", alignItems: "center", gap: 6, marginBottom: 6,
-  },
-  filterWarningIcon: { fontSize: 14 },
-  filterWarningTitle: { flex: 1, fontSize: 13, fontWeight: "700", color: T.coral },
-  filterWarningClose: { fontSize: 16, color: T.slate, paddingLeft: 8 },
-  filterWarningText: { fontSize: 12, color: "#7c2d12", lineHeight: 18 },
 });

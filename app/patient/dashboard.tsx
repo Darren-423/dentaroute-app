@@ -13,7 +13,6 @@ import {
   View,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { authApi } from "../../lib/api";
 import { Booking, PatientCase, store } from "../../lib/store";
 
 const T = {
@@ -264,17 +263,6 @@ export default function PatientDashboardScreen() {
             >
               <Text style={s.headerIconText}>❓</Text>
             </TouchableOpacity>
-            <TouchableOpacity
-              style={s.headerIconBtn}
-              onPress={() => router.push("/patient/alerts" as any)}
-            >
-              <Text style={s.headerIconText}>🔔</Text>
-              {unreadCount > 0 && (
-                <View style={s.notifBadge}>
-                  <Text style={s.notifBadgeText}>{unreadCount}</Text>
-                </View>
-              )}
-            </TouchableOpacity>
           </View>
         </View>
 
@@ -450,7 +438,6 @@ export default function PatientDashboardScreen() {
                   text: "Log Out",
                   style: "destructive",
                   onPress: async () => {
-                    try { await authApi.logout(); } catch {}
                     await store.clearCurrentUser();
                     router.replace("/auth/role-select" as any);
                   },

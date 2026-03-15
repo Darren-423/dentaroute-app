@@ -25,7 +25,6 @@ import Animated, {
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { StatusBar } from "expo-status-bar";
 import { store } from "../../lib/store";
-import { authApi, checkServerHealth, ApiError } from "../../lib/api";
 
 const { width } = Dimensions.get('window');
 
@@ -53,42 +52,17 @@ export default function PatientLoginScreen() {
     setError("");
 
     try {
-      // 서버 연결 가능하면 API 로그인, 아니면 로컬 데모 모드
-      const serverUp = await checkServerHealth();
-
-      if (serverUp) {
-        // ── API 로그인 ──
-        const { user } = await authApi.login(email, password);
-        await store.setCurrentUser("patient", user.fullName);
-
-        if (user.profileStatus === "needs_profile_setup") {
-          router.replace("/patient/basic-info" as any);
-        } else {
-          router.replace("/patient/dashboard" as any);
-        }
-      } else {
-        // ── Demo 모드 (서버 미연결) ──
-        const pp = await store.getPatientProfile();
-        const patientName = pp?.fullName || email.split("@")[0] || "Patient";
-        await store.setCurrentUser("patient", patientName);
-        setTimeout(() => {
-          router.replace("/patient/dashboard" as any);
-        }, 800);
-      }
+      // Demo mode: skip API, go to dashboard
+      // Use patient profile name if available, otherwise fallback
+      const pp = await store.getPatientProfile();
+      const patientName = pp?.fullName || email.split("@")[0] || "Patient";
+      await store.setCurrentUser("patient", patientName);
+      setTimeout(() => {
+        setLoading(false);
+        router.replace("/patient/dashboard" as any);
+      }, 800);
     } catch (err) {
-      if (err instanceof ApiError) {
-        if (err.code === "AUTH_INVALID") {
-          setError("Invalid email or password.");
-        } else if (err.code === "VALIDATION_ERROR" && err.details) {
-          const msgs = Object.values(err.details).flat();
-          setError(msgs[0] || "Please check your input.");
-        } else {
-          setError("Login failed. Please try again.");
-        }
-      } else {
-        setError("Something went wrong.");
-      }
-    } finally {
+      setError("Something went wrong.");
       setLoading(false);
     }
   };

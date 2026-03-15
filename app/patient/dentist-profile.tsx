@@ -262,11 +262,6 @@ export default function DentistProfileScreen() {
             </TouchableOpacity>
           </View>
 
-          {/* Trust indicator */}
-          <View style={s.trustNote}>
-            <Text style={s.trustNoteText}>🛡️ Only verified patients who completed treatment can leave reviews</Text>
-          </View>
-
           {reviews.length === 0 ? (
             <View style={s.noReviews}>
               <Text style={s.noReviewsText}>No reviews yet</Text>
@@ -279,14 +274,7 @@ export default function DentistProfileScreen() {
                     <Text style={s.reviewAvatarText}>{r.patientName[0]}</Text>
                   </View>
                   <View style={{ flex: 1 }}>
-                    <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
-                      <Text style={s.reviewName}>{r.patientName}</Text>
-                      {r.verified && (
-                        <View style={s.reviewVerified}>
-                          <Text style={s.reviewVerifiedText}>✓ Verified</Text>
-                        </View>
-                      )}
-                    </View>
+                    <Text style={s.reviewName}>{r.patientName}</Text>
                     <Text style={{ fontSize: 12 }}>{"⭐".repeat(r.rating)}</Text>
                   </View>
                 </View>
@@ -467,18 +455,6 @@ const s = StyleSheet.create({
   reviewName: { fontSize: 13, fontWeight: "600", color: T.navy },
   reviewTitle: { fontSize: 14, fontWeight: "700", color: T.navy },
   reviewComment: { fontSize: 12, color: T.slate, lineHeight: 17 },
-  reviewVerified: {
-    backgroundColor: "#dcfce7", borderRadius: 6,
-    paddingHorizontal: 6, paddingVertical: 2,
-  },
-  reviewVerifiedText: { fontSize: 10, fontWeight: "700", color: "#16a34a" },
-
-  // Trust note
-  trustNote: {
-    backgroundColor: "#f0fdf4", borderRadius: 10, padding: 10,
-    borderWidth: 1, borderColor: "#bbf7d0",
-  },
-  trustNoteText: { fontSize: 11, color: "#166534", textAlign: "center" },
 
   // Actions
   actions: { gap: 10 },

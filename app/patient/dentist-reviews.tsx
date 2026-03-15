@@ -48,8 +48,6 @@ export default function DentistReviewsScreen() {
     load();
   }, [dentistName]);
 
-  const verifiedCount = reviews.filter((r) => r.verified).length;
-
   const avgRating = reviews.length > 0
     ? reviews.reduce((s, r) => s + r.rating, 0) / reviews.length
     : parseFloat(rating || "0");
@@ -88,9 +86,6 @@ export default function DentistReviewsScreen() {
               <Text style={s.summaryRating}>{avgRating.toFixed(1)}</Text>
               <Stars rating={avgRating} size={18} />
               <Text style={s.summaryCount}>{reviews.length || reviewCount} review{reviews.length !== 1 ? "s" : ""}</Text>
-              {verifiedCount > 0 && (
-                <Text style={s.summaryVerified}>✓ {verifiedCount} verified</Text>
-              )}
             </View>
             <View style={s.summaryRight}>
               {ratingDist.map((d) => (
@@ -124,14 +119,6 @@ export default function DentistReviewsScreen() {
           )}
 
           {/* Reviews list */}
-          {/* Trust banner */}
-          <View style={s.trustBanner}>
-            <Text style={s.trustIcon}>🛡️</Text>
-            <Text style={s.trustText}>
-              All reviews are from verified patients who completed treatment through DentaRoute. Reviews cannot be edited or removed by clinics.
-            </Text>
-          </View>
-
           {reviews.length === 0 ? (
             <View style={s.emptyCard}>
               <Text style={{ fontSize: 40, marginBottom: 8 }}>📝</Text>
@@ -146,30 +133,14 @@ export default function DentistReviewsScreen() {
                     <Text style={s.reviewAvatarText}>{r.patientName[0]}</Text>
                   </View>
                   <View style={{ flex: 1 }}>
-                    <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
-                      <Text style={s.reviewName}>{r.patientName}</Text>
-                      {r.verified && (
-                        <View style={s.verifiedBadge}>
-                          <Text style={s.verifiedBadgeText}>✓ Verified</Text>
-                        </View>
-                      )}
-                    </View>
+                    <Text style={s.reviewName}>{r.patientName}</Text>
                     <Text style={s.reviewDate}>{timeAgo(r.createdAt)}</Text>
                   </View>
                   <Stars rating={r.rating} size={14} />
                 </View>
                 <Text style={s.reviewTitle}>{r.title}</Text>
                 <Text style={s.reviewComment}>{r.comment}</Text>
-                {/* Verified treatments from booking (tamper-proof) */}
-                {r.verified && r.verifiedTreatments && r.verifiedTreatments.length > 0 ? (
-                  <View style={s.reviewTags}>
-                    {r.verifiedTreatments.slice(0, 4).map((t, i) => (
-                      <View key={i} style={s.verifiedTag}>
-                        <Text style={s.verifiedTagText}>✓ {t}</Text>
-                      </View>
-                    ))}
-                  </View>
-                ) : r.treatments.length > 0 ? (
+                {r.treatments.length > 0 && (
                   <View style={s.reviewTags}>
                     {r.treatments.slice(0, 3).map((t, i) => (
                       <View key={i} style={s.reviewTag}>
@@ -177,7 +148,7 @@ export default function DentistReviewsScreen() {
                       </View>
                     ))}
                   </View>
-                ) : null}
+                )}
                 {/* Mini category ratings */}
                 <View style={s.miniRatings}>
                   <Text style={s.miniRating}>🦷 {r.treatmentRating}</Text>
@@ -214,7 +185,6 @@ const s = StyleSheet.create({
   summaryLeft: { alignItems: "center", justifyContent: "center", gap: 4 },
   summaryRating: { fontSize: 40, fontWeight: "800", color: T.navy },
   summaryCount: { fontSize: 12, color: T.slate },
-  summaryVerified: { fontSize: 11, fontWeight: "600", color: "#16a34a" },
   summaryRight: { flex: 1, gap: 5, justifyContent: "center" },
   distRow: { flexDirection: "row", alignItems: "center", gap: 6 },
   distLabel: { fontSize: 12, color: T.slate, width: 12, textAlign: "right" },
@@ -262,28 +232,4 @@ const s = StyleSheet.create({
   reviewTagText: { fontSize: 11, fontWeight: "600", color: T.teal },
   miniRatings: { flexDirection: "row", gap: 16 },
   miniRating: { fontSize: 12, color: T.slateLight },
-
-  // Trust banner
-  trustBanner: {
-    flexDirection: "row", alignItems: "center", gap: 10,
-    backgroundColor: "#f0fdf4", borderRadius: 12, padding: 12,
-    borderWidth: 1, borderColor: "#bbf7d0",
-  },
-  trustIcon: { fontSize: 18 },
-  trustText: { flex: 1, fontSize: 11, color: "#166534", lineHeight: 16 },
-
-  // Verified badge
-  verifiedBadge: {
-    backgroundColor: "#dcfce7", borderRadius: 6,
-    paddingHorizontal: 6, paddingVertical: 2,
-  },
-  verifiedBadgeText: { fontSize: 10, fontWeight: "700", color: "#16a34a" },
-
-  // Verified treatment tags
-  verifiedTag: {
-    backgroundColor: "#f0fdf4", borderRadius: 8,
-    paddingHorizontal: 10, paddingVertical: 4,
-    borderWidth: 1, borderColor: "#bbf7d0",
-  },
-  verifiedTagText: { fontSize: 11, fontWeight: "600", color: "#16a34a" },
 });

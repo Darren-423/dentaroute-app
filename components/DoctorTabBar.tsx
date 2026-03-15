@@ -1,15 +1,16 @@
 import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
-import React from "react";
-import { Platform, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import React, { useEffect, useRef, useState } from "react";
+import { Animated, Platform, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { setTabAnimation } from "../lib/tabDirection";
+import { setTabDirection } from "../lib/tabDirection";
 
 export type DoctorTabName = "Home" | "Alerts" | "Chat" | "Profile";
 
 interface DoctorTabBarProps {
   currentTab: DoctorTabName;
-  unreadCount?: number;
+  notifUnread?: number;
+  chatUnread?: number;
 }
 
 const TABS: { icon: string; label: DoctorTabName; route: string; hasBadge?: boolean }[] = [
@@ -19,18 +20,50 @@ const TABS: { icon: string; label: DoctorTabName; route: string; hasBadge?: bool
   { icon: "👤", label: "Profile", route: "/doctor/profile" },
 ];
 
-export function DoctorTabBar({ currentTab, unreadCount = 0 }: DoctorTabBarProps) {
+export function DoctorTabBar({ currentTab, notifUnread = 0, chatUnread = 0 }: DoctorTabBarProps) {
   const insets = useSafeAreaInsets();
+  const activeIndex = TABS.findIndex((t) => t.label === currentTab);
+  const slideAnim = useRef(new Animated.Value(activeIndex)).current;
+  const [barWidth, setBarWidth] = useState(0);
+
+  useEffect(() => {
+    Animated.spring(slideAnim, {
+      toValue: activeIndex,
+      useNativeDriver: true,
+      tension: 68,
+      friction: 12,
+    }).start();
+  }, [activeIndex]);
+
+  const tabWidth = barWidth / TABS.length;
+  const indicatorWidth = 40;
+  const translateX = slideAnim.interpolate({
+    inputRange: TABS.map((_, i) => i),
+    outputRange: TABS.map((_, i) => i * tabWidth + (tabWidth - indicatorWidth) / 2),
+  });
 
   return (
     <View style={[s.bar, { paddingBottom: insets.bottom }]}>
       <LinearGradient
-        colors={["rgba(74,0,128,0.06)", "transparent", "rgba(74,0,128,0.06)"]}
+        colors={["rgba(15,118,110,0.06)", "transparent", "rgba(15,118,110,0.06)"]}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 0 }}
         style={s.barTopLine}
       />
-      <View style={s.barInner}>
+      <View
+        style={s.barInner}
+        onLayout={(e) => setBarWidth(e.nativeEvent.layout.width)}
+      >
+        {/* Sliding indicator */}
+        {barWidth > 0 && (
+          <Animated.View
+            style={[
+              s.indicator,
+              { width: indicatorWidth, transform: [{ translateX }] },
+            ]}
+          />
+        )}
+
         {TABS.map((item, i) => {
           const isActive = item.label === currentTab;
           return (
@@ -40,15 +73,18 @@ export function DoctorTabBar({ currentTab, unreadCount = 0 }: DoctorTabBarProps)
               onPress={() => {
                 if (item.label !== currentTab) {
                   const currentIndex = TABS.findIndex((t) => t.label === currentTab);
-                  setTabAnimation(i > currentIndex ? "slide_from_right" : "slide_from_left");
+                  setTabDirection(i > currentIndex ? "right" : "left");
                   router.replace(item.route as any);
                 }
               }}
               activeOpacity={0.5}
             >
-              <View style={[s.barTabIconWrap, isActive && s.barTabIconWrapActive]}>
+              <View style={s.barTabIconWrap}>
                 <Text style={s.barTabIcon}>{item.icon}</Text>
-                {item.hasBadge && unreadCount > 0 && (
+                {item.label === "Alerts" && notifUnread > 0 && (
+                  <View style={s.barDot} />
+                )}
+                {item.label === "Chat" && chatUnread > 0 && (
                   <View style={s.barDot} />
                 )}
               </View>
@@ -75,27 +111,31 @@ const s = StyleSheet.create({
   },
   barTopLine: { height: 1, borderTopLeftRadius: 20, borderTopRightRadius: 20 },
   barInner: {
-    flexDirection: "row", justifyContent: "space-evenly",
+    flexDirection: "row",
     alignItems: "center", paddingVertical: 10,
+  },
+  indicator: {
+    position: "absolute",
+    top: 10,
+    left: 0,
+    height: 34,
+    borderRadius: 12,
+    backgroundColor: "rgba(15,118,110,0.15)",
   },
   barTab: {
     alignItems: "center", justifyContent: "center",
-    width: 60, height: 52,
+    flex: 1, height: 52,
   },
   barTabIconWrap: {
     width: 40, height: 34, borderRadius: 12,
     alignItems: "center", justifyContent: "center",
-    backgroundColor: "rgba(74,0,128,0.05)",
-  },
-  barTabIconWrapActive: {
-    backgroundColor: "rgba(74,0,128,0.15)",
   },
   barTabIcon: { fontSize: 20 },
   barTabLabel: {
     fontSize: 10, fontWeight: "600", color: "#94a3b8", marginTop: 3,
   },
   barTabLabelActive: {
-    color: "#4A0080",
+    color: "#0f766e",
   },
   barDot: {
     position: "absolute", top: 1, right: 1,
