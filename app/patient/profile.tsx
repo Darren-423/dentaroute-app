@@ -1,5 +1,5 @@
-import { LinearGradient } from "expo-linear-gradient";
 import * as ImagePicker from "expo-image-picker";
+import { LinearGradient } from "expo-linear-gradient";
 import { router, useFocusEffect } from "expo-router";
 import React, { useCallback, useState } from "react";
 import {
@@ -241,7 +241,7 @@ export default function PatientProfileScreen() {
                 { text: "Cancel", style: "cancel" },
                 { text: "Log Out", style: "destructive", onPress: async () => {
                   await store.clearCurrentUser();
-                  router.replace("/" as any);
+                  router.push("/auth/role-select");
                 }},
               ]);
             }}

@@ -9,7 +9,7 @@ import {
     Text, TouchableOpacity,
     View,
 } from "react-native";
-import { DoctorProfile as DoctorProfileType, store } from "../../lib/store";
+import { store } from "../../lib/store";
 
 const T = {
   teal: "#0f766e",
@@ -195,7 +195,7 @@ export default function DoctorProfileScreen() {
                 { text: "Cancel", style: "cancel" },
                 { text: "Log Out", style: "destructive", onPress: async () => {
                   await store.clearCurrentUser();
-                  router.replace("/" as any);
+                  router.push("/auth/role-select");
                 }},
               ]);
             }}

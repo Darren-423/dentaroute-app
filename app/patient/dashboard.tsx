@@ -2,15 +2,14 @@ import { LinearGradient } from "expo-linear-gradient";
 import { router, useFocusEffect } from "expo-router";
 import React, { useCallback, useMemo, useRef, useState } from "react";
 import {
-  Alert,
-  Animated,
-  Image,
-  Modal,
-  Platform,
-  ScrollView,
-  StyleSheet,
-  Text, TouchableOpacity,
-  View,
+    Alert,
+    Animated,
+    Image,
+    Modal,
+    ScrollView,
+    StyleSheet,
+    Text, TouchableOpacity,
+    View
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Booking, PatientCase, store } from "../../lib/store";
@@ -450,7 +449,7 @@ export default function PatientDashboardScreen() {
                   style: "destructive",
                   onPress: async () => {
                     await store.clearCurrentUser();
-                    router.replace("/" as any);
+                    router.push("/auth/role-select");
                   },
                 },
               ],
