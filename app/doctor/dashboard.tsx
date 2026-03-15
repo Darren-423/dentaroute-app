@@ -11,6 +11,7 @@ import {
   View,
 } from "react-native";
 import { Booking, PatientCase, store } from "../../lib/store";
+import { toDoctorTreatmentTerm } from "./treatment-terms";
 
 const T = {
   teal: "#0f766e",
@@ -312,7 +313,7 @@ export default function DoctorDashboardScreen() {
                     <Text style={s.filterIcon}>{getTreatmentIcon(tab)}</Text>
                   )}
                   <Text style={[s.filterTabText, isActive && s.filterTabTextActive]}>
-                    {tab === "All" ? "All" : tab}
+                    {tab === "All" ? "All" : toDoctorTreatmentTerm(tab)}
                   </Text>
                   <View style={[s.filterCount, isActive && s.filterCountActive]}>
                     <Text style={[s.filterCountText, isActive && s.filterCountTextActive]}>
@@ -333,7 +334,7 @@ export default function DoctorDashboardScreen() {
             <Text style={s.sectionTitle}>
               {statusFilter !== "all"
                 ? ({ new: "NEW CASES", quoted: "QUOTED", appointments: "APPOINTMENTS", in_process: "IN PROCESS" }[statusFilter])
-                : activeFilter === "All" ? "ALL CASES" : activeFilter.toUpperCase()}
+                : activeFilter === "All" ? "ALL CASES" : toDoctorTreatmentTerm(activeFilter).toUpperCase()}
             </Text>
             {statusFilter !== "all" && (
               <Text style={s.sectionDesc}>
@@ -359,7 +360,7 @@ export default function DoctorDashboardScreen() {
         ) : totalFiltered === 0 ? (
           <View style={s.empty}>
             <Text style={{ fontSize: 40, marginBottom: 10 }}>{getTreatmentIcon(activeFilter)}</Text>
-            <Text style={s.emptyTitle}>No {activeFilter} cases</Text>
+            <Text style={s.emptyTitle}>No {toDoctorTreatmentTerm(activeFilter)} cases</Text>
             <Text style={s.emptyDesc}>No patients have requested this treatment yet</Text>
           </View>
         ) : (
@@ -389,7 +390,7 @@ export default function DoctorDashboardScreen() {
               {!isCollapsed && section.cases.map((c) => {
                 const badge = getStatusBadge(c.status, c.id);
                 const treatmentSummary = c.treatments
-                  .map((t) => `${t.name}${t.qty > 1 ? ` ×${t.qty}` : ""}`)
+                  .map((t) => `${toDoctorTreatmentTerm(t.name)}${t.qty > 1 ? ` ×${t.qty}` : ""}`)
                   .join(", ");
                 return (
                   <TouchableOpacity
