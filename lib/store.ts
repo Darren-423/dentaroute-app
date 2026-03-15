@@ -24,6 +24,7 @@ const KEYS = {
   DOCTOR_PROFILE: "dr_doctor_profile",
   INQUIRIES: "dr_inquiries",
   TYPING_STATUS: "dr_typing_status",
+  SAVED_TRIPS: "dr_saved_trips",
 };
 
 // ── 티어 설정 ──
@@ -126,6 +127,22 @@ export interface ArrivalInfo {
   passengers?: number;
   notes?: string;
   pickupRequested: boolean;
+}
+
+export interface SavedTrip {
+  id: string;
+  airline: string;
+  flightNumber: string;
+  flightDate: string;
+  flightTime: string;
+  terminal?: string;
+  hotelName?: string;
+  hotelAddress?: string;
+  checkInDate?: string;
+  checkOutDate?: string;
+  confirmationNumber?: string;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface VisitInvoice {
@@ -922,6 +939,32 @@ export const store = {
   getInquiries: async (): Promise<SupportInquiry[]> => {
     const data = await AsyncStorage.getItem(KEYS.INQUIRIES);
     return data ? JSON.parse(data) : [];
+  },
+
+  // ── Saved Trips ──
+  saveTrip: async (trip: SavedTrip): Promise<void> => {
+    const existing = await AsyncStorage.getItem(KEYS.SAVED_TRIPS);
+    const trips: SavedTrip[] = existing ? JSON.parse(existing) : [];
+    const idx = trips.findIndex((t) => t.id === trip.id);
+    if (idx >= 0) { trips[idx] = { ...trip, updatedAt: new Date().toISOString() }; }
+    else { trips.unshift(trip); }
+    await AsyncStorage.setItem(KEYS.SAVED_TRIPS, JSON.stringify(trips));
+  },
+
+  getTrips: async (): Promise<SavedTrip[]> => {
+    const data = await AsyncStorage.getItem(KEYS.SAVED_TRIPS);
+    return data ? JSON.parse(data) : [];
+  },
+
+  getTrip: async (id: string): Promise<SavedTrip | null> => {
+    const trips = await store.getTrips();
+    return trips.find((t) => t.id === id) || null;
+  },
+
+  deleteTrip: async (id: string): Promise<void> => {
+    const existing = await AsyncStorage.getItem(KEYS.SAVED_TRIPS);
+    const trips: SavedTrip[] = existing ? JSON.parse(existing) : [];
+    await AsyncStorage.setItem(KEYS.SAVED_TRIPS, JSON.stringify(trips.filter((t) => t.id !== id)));
   },
 
   // ══════════════════════════

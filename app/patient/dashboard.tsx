@@ -254,6 +254,17 @@ export default function PatientDashboardScreen() {
           <View style={s.headerActions}>
             <TouchableOpacity
               style={s.headerIconBtn}
+              onPress={() => router.push("/patient/alerts" as any)}
+            >
+              <Text style={s.headerIconText}>🔔</Text>
+              {unreadCount > 0 && (
+                <View style={s.notifBadge}>
+                  <Text style={s.notifBadgeText}>{unreadCount > 9 ? "9+" : unreadCount}</Text>
+                </View>
+              )}
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={s.headerIconBtn}
               onPress={() => router.push("/dev-menu" as any)}
             >
               <Text style={s.headerIconText}>⚙</Text>
@@ -427,6 +438,29 @@ export default function PatientDashboardScreen() {
                     </View>
                   )}
                 </View>
+
+                {/* Step progress bar for booked cases */}
+                {progress.isBooking && progress.step > 0 && (
+                  <View style={s.stepProgressWrap}>
+                    {BOOKING_STEPS.slice(0, -1).map((st, i) => {
+                      const stepNum = i + 1;
+                      const isCompleted = stepNum < progress.step;
+                      const isCurrent = stepNum === progress.step;
+                      return (
+                        <React.Fragment key={st.key}>
+                          <View style={[
+                            s.stepDot,
+                            isCompleted && s.stepDotCompleted,
+                            isCurrent && s.stepDotCurrent,
+                          ]} />
+                          {i < BOOKING_STEPS.length - 2 && (
+                            <View style={[s.stepLine, isCompleted && s.stepLineCompleted]} />
+                          )}
+                        </React.Fragment>
+                      );
+                    })}
+                  </View>
+                )}
 
                 {/* Progress section */}
                 <View style={s.progressSection}>
@@ -758,6 +792,25 @@ const s = StyleSheet.create({
   quoteCountText: { fontSize: 12, fontWeight: "600", color: "#3b82f6" },
 
   /* Progress section */
+  stepProgressWrap: {
+    flexDirection: "row", alignItems: "center", paddingVertical: 8, paddingHorizontal: 4,
+  },
+  stepDot: {
+    width: 10, height: 10, borderRadius: 5,
+    backgroundColor: "#e2e8f0", borderWidth: 1.5, borderColor: "#e2e8f0",
+  },
+  stepDotCompleted: {
+    backgroundColor: "#4A0080", borderColor: "#4A0080",
+  },
+  stepDotCurrent: {
+    backgroundColor: "#fff", borderColor: "#4A0080", borderWidth: 2, width: 12, height: 12, borderRadius: 6,
+  },
+  stepLine: {
+    flex: 1, height: 2, backgroundColor: "#e2e8f0",
+  },
+  stepLineCompleted: {
+    backgroundColor: "#4A0080",
+  },
   progressSection: {
     backgroundColor: T.bg, borderRadius: 12, padding: 12, gap: 10,
   },

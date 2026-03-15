@@ -2,7 +2,7 @@ import { LinearGradient } from "expo-linear-gradient";
 import { router, useLocalSearchParams } from "expo-router";
 import React, { useEffect, useState } from "react";
 import {
-  ActivityIndicator, Alert, KeyboardAvoidingView, Platform,
+  ActivityIndicator, Alert, FlatList, KeyboardAvoidingView, Modal, Platform,
   ScrollView,
   StyleSheet,
   Text,
@@ -10,7 +10,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import { ArrivalInfo, Booking, store } from "../../lib/store";
+import { ArrivalInfo, Booking, SavedTrip, store } from "../../lib/store";
 
 /* ── Unified palette ── */
 const C = {
@@ -122,6 +122,12 @@ export default function ArrivalInfoScreen() {
   const [passengers, setPassengers] = useState("1");
   const [notes, setNotes] = useState("");
   const [pickupRequested, setPickupRequested] = useState(true);
+  const [savedTrips, setSavedTrips] = useState<SavedTrip[]>([]);
+  const [showTripPicker, setShowTripPicker] = useState(false);
+
+  useEffect(() => {
+    store.getTrips().then(setSavedTrips);
+  }, []);
 
   useEffect(() => {
     const load = async () => {
@@ -343,6 +349,15 @@ export default function ArrivalInfoScreen() {
               </Text>
             </View>
           </View>
+
+          {/* ── Load from My Trips ── */}
+          {savedTrips.length > 0 && (
+            <TouchableOpacity style={st.loadTripBtn} onPress={() => setShowTripPicker(true)}>
+              <Text style={{ fontSize: 16 }}>✈️</Text>
+              <Text style={st.loadTripText}>Load from My Trips</Text>
+              <Text style={st.loadTripCount}>{savedTrips.length} saved</Text>
+            </TouchableOpacity>
+          )}
 
           {/* ── Flight Number ── */}
           <View style={st.field}>
@@ -645,6 +660,43 @@ export default function ArrivalInfoScreen() {
           )}
         </TouchableOpacity>
       </View>
+
+      {/* ── Trip Picker Modal ── */}
+      <Modal visible={showTripPicker} animationType="slide" transparent>
+        <View style={st.tripModalOverlay}>
+          <View style={st.tripModalContent}>
+            <View style={st.tripModalHeader}>
+              <Text style={st.tripModalTitle}>Select a Trip</Text>
+              <TouchableOpacity onPress={() => setShowTripPicker(false)}>
+                <Text style={st.tripModalClose}>✕</Text>
+              </TouchableOpacity>
+            </View>
+            <FlatList
+              data={savedTrips}
+              keyExtractor={(item) => item.id}
+              renderItem={({ item }) => (
+                <TouchableOpacity
+                  style={st.tripPickerCard}
+                  onPress={() => {
+                    setAirline(item.airline);
+                    setFlightNumber(item.flightNumber);
+                    if (item.flightDate) setArrivalDate(item.flightDate);
+                    if (item.flightTime) setArrivalTime(item.flightTime);
+                    if (item.terminal) setTerminal(item.terminal);
+                    setShowTripPicker(false);
+                  }}
+                >
+                  <Text style={st.tripPickerMain}>{item.airline} - {item.flightNumber}</Text>
+                  <Text style={st.tripPickerSub}>
+                    {item.flightDate ? item.flightDate : ""}{item.flightTime ? ` at ${item.flightTime}` : ""}
+                  </Text>
+                </TouchableOpacity>
+              )}
+              contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 20 }}
+            />
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }
@@ -839,4 +891,32 @@ const st = StyleSheet.create({
     borderWidth: 1, borderColor: "rgba(185,28,28,0.12)",
   },
   cancelLinkText: { fontSize: 13, color: "#b91c1c", fontWeight: "600" },
+
+  /* Load from My Trips */
+  loadTripBtn: {
+    flexDirection: "row", alignItems: "center", gap: 8,
+    backgroundColor: C.purpleSoft, borderRadius: 12, padding: 14,
+    marginBottom: 16, borderWidth: 1, borderColor: "rgba(74,0,128,0.12)",
+  },
+  loadTripText: { flex: 1, fontSize: 14, fontWeight: "600", color: C.purple },
+  loadTripCount: { fontSize: 12, color: C.sub, fontWeight: "500" },
+
+  /* Trip picker modal */
+  tripModalOverlay: { flex: 1, backgroundColor: "rgba(0,0,0,0.5)", justifyContent: "flex-end" },
+  tripModalContent: {
+    backgroundColor: "#fff", borderTopLeftRadius: 24, borderTopRightRadius: 24,
+    maxHeight: "60%", paddingBottom: Platform.OS === "ios" ? 34 : 20,
+  },
+  tripModalHeader: {
+    flexDirection: "row", justifyContent: "space-between", alignItems: "center",
+    padding: 20, borderBottomWidth: 1, borderBottomColor: C.border,
+  },
+  tripModalTitle: { fontSize: 18, fontWeight: "700", color: C.navy },
+  tripModalClose: { fontSize: 20, color: C.sub, padding: 4 },
+  tripPickerCard: {
+    backgroundColor: C.inputBg, borderRadius: 12, padding: 14,
+    marginTop: 10, borderWidth: 1, borderColor: C.border,
+  },
+  tripPickerMain: { fontSize: 15, fontWeight: "600", color: C.navy },
+  tripPickerSub: { fontSize: 13, color: C.sub, marginTop: 2 },
 });
