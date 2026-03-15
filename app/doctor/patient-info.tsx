@@ -10,6 +10,7 @@ import {
     View,
 } from "react-native";
 import { store } from "../../lib/store";
+import { toDoctorTreatmentLabel } from "./treatment-terms";
 
 const T = {
   teal: "#0f766e",
@@ -113,7 +114,7 @@ export default function PatientInfoScreen() {
           <View style={s.caseCard}>
             <Text style={s.caseLabel}>📋 Case #{caseData.id}</Text>
             <Text style={s.caseTreatments}>
-              {caseData.treatments?.map((t: any) => `${t.name} ×${t.qty}`).join(", ") || "—"}
+              {caseData.treatments?.map((t: any) => `${toDoctorTreatmentLabel(t.name)} ×${t.qty}`).join(", ") || "—"}
             </Text>
             <Text style={s.caseSub}>Submitted {formatDate(caseData.date)}</Text>
           </View>

@@ -1,17 +1,19 @@
 import { LinearGradient } from "expo-linear-gradient";
 import * as MediaLibrary from "expo-media-library";
 import { router, useFocusEffect, useLocalSearchParams } from "expo-router";
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator, Alert,
   Dimensions,
-  Image, Modal,
+  Image, Keyboard, Modal,
+  Platform,
   ScrollView,
   StyleSheet,
   Text, TextInput, TouchableOpacity,
   View,
 } from "react-native";
 import { Booking, DentistQuote, PatientCase, store } from "../../lib/store";
+import { toCanonicalTreatmentName, toDoctorTreatmentLabel, toDoctorTreatmentTerm } from "./treatment-terms";
 
 const T = {
   teal: "#0f766e",
@@ -67,6 +69,7 @@ export default function DoctorCaseDetailScreen() {
   const [planItems, setPlanItems] = useState<PlanItem[]>([]);
   const [showTreatmentPicker, setShowTreatmentPicker] = useState(false);
   const [searchTreatment, setSearchTreatment] = useState("");
+  const formScrollRef = useRef<ScrollView>(null);
 
   // Quote details
   const [quoteData, setQuoteData] = useState({
@@ -115,7 +118,7 @@ export default function DoctorCaseDetailScreen() {
             setExistingQuote(myQuote);
             setPlanItems(myQuote.treatments.map((t, i) => ({
               id: String(i),
-              treatment: t.name,
+              treatment: toDoctorTreatmentTerm(t.name),
               qty: t.qty,
               price: String(t.price),
             })));
@@ -151,7 +154,7 @@ export default function DoctorCaseDetailScreen() {
 
   const allPricesFilled = planItems.length > 0 && planItems.every((p) => {
     const price = Number(p.price) || 0;
-    const floor = PRICE_FLOORS[p.treatment] || 0;
+    const floor = PRICE_FLOORS[toCanonicalTreatmentName(p.treatment)] || 0;
     return price > 0 && price >= floor;
   });
 
@@ -159,8 +162,8 @@ export default function DoctorCaseDetailScreen() {
   const treatmentsDiffer = (() => {
     if (!caseData?.treatments || caseData.treatments.length === 0) return false;
     if (planItems.length !== caseData.treatments.length) return true;
-    const patientSet = caseData.treatments.map((t) => `${t.name}:${t.qty}`).sort().join(",");
-    const doctorSet = planItems.map((p) => `${p.treatment}:${p.qty}`).sort().join(",");
+    const patientSet = caseData.treatments.map((t) => `${toCanonicalTreatmentName(t.name)}:${t.qty}`).sort().join(",");
+    const doctorSet = planItems.map((p) => `${toCanonicalTreatmentName(p.treatment)}:${p.qty}`).sort().join(",");
     return patientSet !== doctorSet;
   })();
 
@@ -180,41 +183,42 @@ export default function DoctorCaseDetailScreen() {
     }
   }, [minVisits]);
 
-  const isComplete = allPricesFilled && totalDurationDays > 0 && allVisitsDescribed &&
-    (!treatmentsDiffer || quoteData.treatmentDetails);
+  useEffect(() => {
+    if (!showTreatmentPicker) return;
 
-  const handleSendQuote = async () => {
-    if (!isComplete || !caseData) return;
-    setLoading(true);
-    try {
-      await store.createQuote({
+    const scrollToPicker = () => {
+      requestAnimationFrame(() => {
+        formScrollRef.current?.scrollToEnd({ animated: true });
+      });
+    };
+
+    const timer = setTimeout(scrollToPicker, 150);
+    const keyboardEvent = Platform.OS === "ios" ? "keyboardWillShow" : "keyboardDidShow";
+    const sub = Keyboard.addListener(keyboardEvent, scrollToPicker);
+
+    return () => {
+      clearTimeout(timer);
+      sub.remove();
+    };
+  }, [showTreatmentPicker]);
+
+  const canSchedulePatient = allPricesFilled && planItems.length > 0;
+
+  const handleSchedulePatient = () => {
+    if (!caseData || !canSchedulePatient) return;
+
+    router.push({
+      pathname: "/doctor/schedule-patient" as any,
+      params: {
         caseId: caseData.id,
-        dentistName: doctorProfile?.fullName || doctorProfile?.name || "Doctor",
-        clinicName: doctorProfile?.clinicName || doctorProfile?.clinic || "Clinic",
-        location: doctorProfile?.location || "Gangnam, Seoul",
-        rating: doctorProfile?.rating || 4.9,
-        reviewCount: doctorProfile?.reviewCount || 127,
-        totalPrice,
-        treatments: planItems.map((p) => ({
-          name: p.treatment,
+        treatmentsDiffer: String(treatmentsDiffer),
+        planItemsJson: JSON.stringify(planItems.map((p) => ({
+          treatment: p.treatment,
           qty: p.qty,
           price: Number(p.price || 0),
-        })),
-        treatmentDetails: quoteData.treatmentDetails,
-        duration: [
-          duration.months > 0 ? `${duration.months} Month${duration.months > 1 ? "s" : ""}` : "",
-          duration.weeks > 0 ? `${duration.weeks} Week${duration.weeks > 1 ? "s" : ""}` : "",
-          duration.days > 0 ? `${duration.days} Day${duration.days > 1 ? "s" : ""}` : "",
-        ].filter(Boolean).join(" ") || "1 Day",
-        visits: visits.map((v) => ({ visit: v.id, description: v.description, gapMonths: v.gapMonths, gapDays: v.gapDays + (v.gapWeeks * 7) })),
-        message: quoteData.message,
-      });
-      setSubmitted(true);
-    } catch (err) {
-      console.log("Error sending quote:", err);
-    } finally {
-      setLoading(false);
-    }
+        }))),
+      },
+    });
   };
 
   // ── Quote Sent (only show this screen if case is NOT yet booked) ──
@@ -222,7 +226,7 @@ export default function DoctorCaseDetailScreen() {
   if (submitted && !isBooked) {
     const displayPrice = existingQuote ? existingQuote.totalPrice : totalPrice;
     const displayItems = existingQuote
-      ? existingQuote.treatments.map((t, i) => ({ id: String(i), treatment: t.name, qty: t.qty, price: String(t.price) }))
+      ? existingQuote.treatments.map((t, i) => ({ id: String(i), treatment: toDoctorTreatmentTerm(t.name), qty: t.qty, price: String(t.price) }))
       : planItems;
     return (
       <LinearGradient colors={["#0f766e", "#134e4a"]} style={s.submittedWrap}>
@@ -236,7 +240,7 @@ export default function DoctorCaseDetailScreen() {
         <View style={s.sentSummary}>
           {displayItems.map((p) => (
             <View key={p.id} style={s.sentRow}>
-              <Text style={s.sentName}>{p.treatment} × {p.qty}</Text>
+              <Text style={s.sentName}>{toDoctorTreatmentLabel(p.treatment)} × {p.qty}</Text>
               <Text style={s.sentPrice}>${(Number(p.price || 0) * p.qty).toLocaleString()}</Text>
             </View>
           ))}
@@ -277,8 +281,8 @@ export default function DoctorCaseDetailScreen() {
   // ── Filtered treatment options for picker ──
   const filteredOptions = TREATMENT_OPTIONS.filter(
     (t) =>
-      t.toLowerCase().includes(searchTreatment.toLowerCase()) &&
-      !planItems.some((p) => p.treatment === t)
+      (t.toLowerCase().includes(searchTreatment.toLowerCase()) || toDoctorTreatmentTerm(t).toLowerCase().includes(searchTreatment.toLowerCase())) &&
+      !planItems.some((p) => toCanonicalTreatmentName(p.treatment) === toCanonicalTreatmentName(t))
   );
 
   return (
@@ -300,7 +304,8 @@ export default function DoctorCaseDetailScreen() {
       </LinearGradient>
 
       <ScrollView
-        contentContainerStyle={s.content}
+        ref={formScrollRef}
+        contentContainerStyle={[s.content, showTreatmentPicker && s.contentWithPickerOpen]}
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
       >
@@ -580,7 +585,7 @@ export default function DoctorCaseDetailScreen() {
               <Text style={s.infoLabel}>TREATMENT PLAN</Text>
               {(booking.treatments || []).map((t, i) => (
                 <View key={i} style={s.bookingTreatmentRow}>
-                  <Text style={s.bookingTreatmentName}>🦷 {t.name} × {t.qty}</Text>
+                  <Text style={s.bookingTreatmentName}>{toDoctorTreatmentLabel(t.name)} × {t.qty}</Text>
                   <Text style={s.bookingTreatmentPrice}>${(t.price * t.qty).toLocaleString()}</Text>
                 </View>
               ))}
@@ -631,7 +636,7 @@ export default function DoctorCaseDetailScreen() {
               <Text style={s.infoLabel}>SUGGESTED TREATMENT PLAN</Text>
               {existingQuote.treatments.map((t, i) => (
                 <View key={i} style={s.bookingTreatmentRow}>
-                  <Text style={s.bookingTreatmentName}>🦷 {t.name} × {t.qty}</Text>
+                  <Text style={s.bookingTreatmentName}>{toDoctorTreatmentLabel(t.name)} × {t.qty}</Text>
                   <Text style={s.bookingTreatmentPrice}>${(t.price * t.qty).toLocaleString()}</Text>
                 </View>
               ))}
@@ -700,7 +705,7 @@ export default function DoctorCaseDetailScreen() {
               caseData.treatments.map((t, i) => (
                 <View key={i} style={s.requestedCard}>
                   <View style={s.requestedLeft}>
-                    <Text style={s.requestedName}>🦷 {t.name}</Text>
+                    <Text style={s.requestedName}>{toDoctorTreatmentLabel(t.name)}</Text>
                   </View>
                   <View style={s.requestedQtyBadge}>
                     <Text style={s.requestedQtyText}>× {t.qty}</Text>
@@ -722,7 +727,7 @@ export default function DoctorCaseDetailScreen() {
                 onPress={() => {
                   const items: PlanItem[] = caseData.treatments.map((t, i) => ({
                     id: `copy-${Date.now()}-${i}`,
-                    treatment: t.name,
+                    treatment: toDoctorTreatmentTerm(t.name),
                     qty: t.qty,
                     price: "",
                   }));
@@ -749,7 +754,7 @@ export default function DoctorCaseDetailScreen() {
                 <View key={item.id} style={s.planCard}>
                   {/* Treatment Name + Remove */}
                   <View style={s.planCardHeader}>
-                    <Text style={s.planTreatmentName}>🦷 {item.treatment}</Text>
+                    <Text style={s.planTreatmentName}>{toDoctorTreatmentLabel(item.treatment)}</Text>
                     <TouchableOpacity
                       onPress={() => removePlanItem(item.id)}
                       hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
@@ -800,17 +805,17 @@ export default function DoctorCaseDetailScreen() {
                   </View>
 
                   {/* Price floor warning */}
-                  {PRICE_FLOORS[item.treatment] && Number(item.price) > 0 && Number(item.price) < PRICE_FLOORS[item.treatment] && (
+                  {PRICE_FLOORS[toCanonicalTreatmentName(item.treatment)] && Number(item.price) > 0 && Number(item.price) < PRICE_FLOORS[toCanonicalTreatmentName(item.treatment)] && (
                     <View style={{ backgroundColor: "rgba(239,68,68,0.08)", borderRadius: 8, padding: 8, marginTop: 6, borderWidth: 1, borderColor: "rgba(239,68,68,0.2)" }}>
                       <Text style={{ fontSize: 11, color: "#dc2626", fontWeight: "600" }}>
-                        ⚠️ Minimum price for {item.treatment} is ${PRICE_FLOORS[item.treatment].toLocaleString()}
+                        ⚠️ Minimum price for {toDoctorTreatmentLabel(item.treatment)} is ${PRICE_FLOORS[toCanonicalTreatmentName(item.treatment)].toLocaleString()}
                       </Text>
                     </View>
                   )}
-                  {PRICE_FLOORS[item.treatment] && Number(item.price) === 0 && (
+                  {PRICE_FLOORS[toCanonicalTreatmentName(item.treatment)] && Number(item.price) === 0 && (
                     <View style={{ marginTop: 4 }}>
                       <Text style={{ fontSize: 10, color: T.textMuted }}>
-                        Min. ${PRICE_FLOORS[item.treatment].toLocaleString()} per unit
+                        Min. ${PRICE_FLOORS[toCanonicalTreatmentName(item.treatment)].toLocaleString()} per unit
                       </Text>
                     </View>
                   )}
@@ -860,7 +865,7 @@ export default function DoctorCaseDetailScreen() {
                       onPress={() => addPlanItem(t)}
                       activeOpacity={0.7}
                     >
-                      <Text style={s.pickerOptionText}>🦷 {t}</Text>
+                      <Text style={s.pickerOptionText}>{toDoctorTreatmentLabel(t)}</Text>
                       <Text style={s.pickerOptionAdd}>+</Text>
                     </TouchableOpacity>
                   ))}
@@ -911,278 +916,7 @@ export default function DoctorCaseDetailScreen() {
               </View>
             )}
 
-            {/* Details Section */}
-            {planItems.length > 0 && (
-              <View style={s.detailsSection}>
-                <Text style={s.detailsSectionTitle}>📋 QUOTE DETAILS</Text>
-
-                {/* Treatment Differs Warning */}
-                {treatmentsDiffer && (
-                  <View style={s.differWarning}>
-                    <Text style={s.differWarningIcon}>⚠️</Text>
-                    <Text style={s.differWarningText}>
-                      Your plan differs from the patient's request. Please explain why.
-                    </Text>
-                  </View>
-                )}
-
-                <View style={s.field}>
-                  <Text style={s.label}>
-                    TREATMENT PLAN DESCRIPTION{treatmentsDiffer ? " *" : " (OPTIONAL)"}
-                  </Text>
-                  <TextInput
-                    style={[
-                      s.input,
-                      { minHeight: 80, textAlignVertical: "top" },
-                      treatmentsDiffer && !quoteData.treatmentDetails && s.inputRequired,
-                    ]}
-                    placeholder={
-                      treatmentsDiffer
-                        ? "Explain why your plan differs from the patient's request..."
-                        : "Describe your treatment plan (optional)..."
-                    }
-                    placeholderTextColor="#94a3b8"
-                    value={quoteData.treatmentDetails}
-                    onChangeText={(v) =>
-                      setQuoteData({ ...quoteData, treatmentDetails: v })
-                    }
-                    multiline
-                  />
-                </View>
-
-                <View style={s.field}>
-                  <Text style={s.label}>ESTIMATED DURATION</Text>
-                  <View style={s.durationTripleCol}>
-                    {/* Months */}
-                    <View style={s.durationFieldRow}>
-                      <Text style={s.durationFieldLabelInline}>Months</Text>
-                      <View style={s.durationControlsRow}>
-                        <TouchableOpacity style={s.durationSmallBtn} onPress={() => setDuration((d) => ({ ...d, months: Math.max(0, d.months - 1) }))}>
-                          <Text style={s.durationStepText}>−</Text>
-                        </TouchableOpacity>
-                        <View style={s.durationSmallValueBox}>
-                          <TextInput
-                            style={s.durationSmallInput}
-                            value={duration.months > 0 ? String(duration.months) : ""}
-                            placeholder="0"
-                            placeholderTextColor="#94a3b8"
-                            onChangeText={(v) => setDuration((d) => ({ ...d, months: Math.min(24, parseInt(v.replace(/[^0-9]/g, "")) || 0) }))}
-                            keyboardType="number-pad"
-                            maxLength={2}
-                          />
-                        </View>
-                        <TouchableOpacity style={s.durationSmallBtn} onPress={() => setDuration((d) => ({ ...d, months: Math.min(24, d.months + 1) }))}>
-                          <Text style={s.durationStepText}>+</Text>
-                        </TouchableOpacity>
-                      </View>
-                    </View>
-                    {/* Weeks */}
-                    <View style={s.durationFieldRow}>
-                      <Text style={s.durationFieldLabelInline}>Weeks</Text>
-                      <View style={s.durationControlsRow}>
-                        <TouchableOpacity style={s.durationSmallBtn} onPress={() => setDuration((d) => ({ ...d, weeks: Math.max(0, d.weeks - 1) }))}>
-                          <Text style={s.durationStepText}>−</Text>
-                        </TouchableOpacity>
-                        <View style={s.durationSmallValueBox}>
-                          <TextInput
-                            style={s.durationSmallInput}
-                            value={duration.weeks > 0 ? String(duration.weeks) : ""}
-                            placeholder="0"
-                            placeholderTextColor="#94a3b8"
-                            onChangeText={(v) => setDuration((d) => ({ ...d, weeks: Math.min(52, parseInt(v.replace(/[^0-9]/g, "")) || 0) }))}
-                            keyboardType="number-pad"
-                            maxLength={2}
-                          />
-                        </View>
-                        <TouchableOpacity style={s.durationSmallBtn} onPress={() => setDuration((d) => ({ ...d, weeks: Math.min(52, d.weeks + 1) }))}>
-                          <Text style={s.durationStepText}>+</Text>
-                        </TouchableOpacity>
-                      </View>
-                    </View>
-                    {/* Days */}
-                    <View style={s.durationFieldRow}>
-                      <Text style={s.durationFieldLabelInline}>Days</Text>
-                      <View style={s.durationControlsRow}>
-                        <TouchableOpacity style={s.durationSmallBtn} onPress={() => setDuration((d) => ({ ...d, days: Math.max(0, d.days - 1) }))}>
-                          <Text style={s.durationStepText}>−</Text>
-                        </TouchableOpacity>
-                        <View style={s.durationSmallValueBox}>
-                          <TextInput
-                            style={s.durationSmallInput}
-                            value={duration.days > 0 ? String(duration.days) : ""}
-                            placeholder="0"
-                            placeholderTextColor="#94a3b8"
-                            onChangeText={(v) => setDuration((d) => ({ ...d, days: Math.min(30, parseInt(v.replace(/[^0-9]/g, "")) || 0) }))}
-                            keyboardType="number-pad"
-                            maxLength={2}
-                          />
-                        </View>
-                        <TouchableOpacity style={s.durationSmallBtn} onPress={() => setDuration((d) => ({ ...d, days: Math.min(30, d.days + 1) }))}>
-                          <Text style={s.durationStepText}>+</Text>
-                        </TouchableOpacity>
-                      </View>
-                    </View>
-                  </View>
-                  {totalDurationDays > 0 && (
-                    <Text style={{ fontSize: 11, color: T.textMuted, marginTop: 4 }}>
-                      Total: ~{totalDurationDays} day{totalDurationDays > 1 ? "s" : ""}
-                    </Text>
-                  )}
-                </View>
-
-                {/* ── Visits Section ── */}
-                <View style={s.field}>
-                  <Text style={s.label}>NUMBER OF VISITS</Text>
-                  <Text style={s.labelHint}>How many clinic visits does this treatment require?{minVisits >= 2 ? ` (min ${minVisits} for ${totalDurationDays}+ day treatment)` : ""}</Text>
-                  <View style={s.visitsCountCard}>
-                    <TouchableOpacity
-                      style={[s.visitsStepBtn, visits.length <= minVisits && { opacity: 0.3 }]}
-                      onPress={() => {
-                        if (visits.length > minVisits) setVisits((prev) => prev.slice(0, -1));
-                      }}
-                      disabled={visits.length <= minVisits}
-                    >
-                      <Text style={s.visitsStepText}>−</Text>
-                    </TouchableOpacity>
-                    <View style={s.visitsValueCenter}>
-                      <Text style={s.visitsValueNum}>{visits.length}</Text>
-                      <Text style={s.visitsValueLabel}>{visits.length === 1 ? "visit" : "visits"}</Text>
-                    </View>
-                    <TouchableOpacity
-                      style={[s.visitsStepBtn, visits.length >= 10 && { opacity: 0.3 }]}
-                      onPress={() => {
-                        if (visits.length < 10) {
-                          setVisits((prev) => [
-                            ...prev,
-                            { id: prev.length + 1, description: "", gapMonths: 0, gapWeeks: 0, gapDays: 0 },
-                          ]);
-                        }
-                      }}
-                      disabled={visits.length >= 10}
-                    >
-                      <Text style={s.visitsStepText}>+</Text>
-                    </TouchableOpacity>
-                  </View>
-                </View>
-
-                {/* Visit Details */}
-                {visits.length > 0 && (
-                  <View style={s.field}>
-                    <Text style={s.label}>VISIT DETAILS</Text>
-                    <Text style={s.labelHint}>Describe what happens at each visit</Text>
-                    <View style={{ gap: 10, marginTop: 6 }}>
-                      {visits.map((v, idx) => (
-                        <View key={v.id}>
-                          <View style={s.visitCard}>
-                            <View style={s.visitHeader}>
-                              <View style={s.visitBadge}>
-                                <Text style={s.visitBadgeText}>{v.id}</Text>
-                              </View>
-                              <Text style={s.visitTitle}>Visit {v.id}</Text>
-                            </View>
-                            <TextInput
-                              style={s.visitInput}
-                              placeholder={
-                                idx === 0 ? "e.g. Initial consultation, X-ray, teeth cleaning" :
-                                idx === 1 ? "e.g. Implant placement surgery" :
-                                idx === 2 ? "e.g. Follow-up check, suture removal" :
-                                "Describe this visit..."
-                              }
-                              placeholderTextColor="#94a3b8"
-                              value={v.description}
-                              onChangeText={(text) => {
-                                setVisits((prev) =>
-                                  prev.map((vis) => vis.id === v.id ? { ...vis, description: text } : vis)
-                                );
-                              }}
-                              multiline
-                            />
-                          </View>
-                          {/* Gap between visits */}
-                          {idx < visits.length - 1 && (
-                            <View style={s.gapSection}>
-                              <View style={s.gapLine} />
-                              <View style={s.gapCard}>
-                                <Text style={s.gapTitle}>⏳ Recovery time before Visit {v.id + 1}</Text>
-                                <Text style={s.gapHint}>Minimum wait time after this visit</Text>
-                                <View style={s.gapInputCol}>
-                                  <View style={s.gapInputGroupRow}>
-                                    <Text style={s.gapUnitLabel}>Months</Text>
-                                    <View style={s.gapControlsRow}>
-                                      <TouchableOpacity style={s.gapStepBtn} onPress={() => setVisits((prev) => prev.map((vis) => vis.id === v.id ? { ...vis, gapMonths: Math.max(0, vis.gapMonths - 1) } : vis))}>
-                                        <Text style={s.gapStepText}>−</Text>
-                                      </TouchableOpacity>
-                                      <View style={s.gapValueBox}>
-                                        <Text style={s.gapValue}>{v.gapMonths}</Text>
-                                      </View>
-                                      <TouchableOpacity style={s.gapStepBtn} onPress={() => setVisits((prev) => prev.map((vis) => vis.id === v.id ? { ...vis, gapMonths: Math.min(12, vis.gapMonths + 1) } : vis))}>
-                                        <Text style={s.gapStepText}>+</Text>
-                                      </TouchableOpacity>
-                                    </View>
-                                  </View>
-                                  <View style={s.gapInputGroupRow}>
-                                    <Text style={s.gapUnitLabel}>Weeks</Text>
-                                    <View style={s.gapControlsRow}>
-                                      <TouchableOpacity style={s.gapStepBtn} onPress={() => setVisits((prev) => prev.map((vis) => vis.id === v.id ? { ...vis, gapWeeks: Math.max(0, vis.gapWeeks - 1) } : vis))}>
-                                        <Text style={s.gapStepText}>−</Text>
-                                      </TouchableOpacity>
-                                      <View style={s.gapValueBox}>
-                                        <Text style={s.gapValue}>{v.gapWeeks}</Text>
-                                      </View>
-                                      <TouchableOpacity style={s.gapStepBtn} onPress={() => setVisits((prev) => prev.map((vis) => vis.id === v.id ? { ...vis, gapWeeks: Math.min(52, vis.gapWeeks + 1) } : vis))}>
-                                        <Text style={s.gapStepText}>+</Text>
-                                      </TouchableOpacity>
-                                    </View>
-                                  </View>
-                                  <View style={s.gapInputGroupRow}>
-                                    <Text style={s.gapUnitLabel}>Days</Text>
-                                    <View style={s.gapControlsRow}>
-                                      <TouchableOpacity style={s.gapStepBtn} onPress={() => setVisits((prev) => prev.map((vis) => vis.id === v.id ? { ...vis, gapDays: Math.max(0, vis.gapDays - 1) } : vis))}>
-                                        <Text style={s.gapStepText}>−</Text>
-                                      </TouchableOpacity>
-                                      <View style={s.gapValueBox}>
-                                        <Text style={s.gapValue}>{v.gapDays}</Text>
-                                      </View>
-                                      <TouchableOpacity style={s.gapStepBtn} onPress={() => setVisits((prev) => prev.map((vis) => vis.id === v.id ? { ...vis, gapDays: Math.min(30, vis.gapDays + 1) } : vis))}>
-                                        <Text style={s.gapStepText}>+</Text>
-                                      </TouchableOpacity>
-                                    </View>
-                                  </View>
-                                </View>
-                                {(v.gapMonths > 0 || v.gapWeeks > 0 || v.gapDays > 0) && (
-                                  <Text style={s.gapSummary}>
-                                    Patient must wait {[
-                                      v.gapMonths > 0 ? `${v.gapMonths} month${v.gapMonths > 1 ? "s" : ""}` : "",
-                                      v.gapWeeks > 0 ? `${v.gapWeeks} week${v.gapWeeks > 1 ? "s" : ""}` : "",
-                                      v.gapDays > 0 ? `${v.gapDays} day${v.gapDays > 1 ? "s" : ""}` : "",
-                                    ].filter(Boolean).join(" and ")} before Visit {v.id + 1}
-                                  </Text>
-                                )}
-                              </View>
-                              <View style={s.gapLine} />
-                            </View>
-                          )}
-                        </View>
-                      ))}
-                    </View>
-                  </View>
-                )}
-
-                <View style={s.field}>
-                  <Text style={s.label}>MESSAGE TO PATIENT (OPTIONAL)</Text>
-                  <TextInput
-                    style={[s.input, { minHeight: 70, textAlignVertical: "top" }]}
-                    placeholder="Any notes for the patient..."
-                    placeholderTextColor="#94a3b8"
-                    value={quoteData.message}
-                    onChangeText={(v) =>
-                      setQuoteData({ ...quoteData, message: v })
-                    }
-                    multiline
-                  />
-                </View>
-              </View>
-            )}
+            {/* Details moved to Schedule Patient screen */}
         </>)}
       </ScrollView>
 
@@ -1190,18 +924,14 @@ export default function DoctorCaseDetailScreen() {
       {!isBooked && planItems.length > 0 && (
         <View style={s.bottom}>
           <TouchableOpacity
-            style={[s.sendBtn, !isComplete && s.sendBtnDisabled]}
-            onPress={handleSendQuote}
-            disabled={!isComplete || loading}
+            style={[s.sendBtn, !canSchedulePatient && s.sendBtnDisabled]}
+            onPress={handleSchedulePatient}
+            disabled={!canSchedulePatient}
             activeOpacity={0.85}
           >
-            {loading ? (
-              <ActivityIndicator color={T.white} size="small" />
-            ) : (
-              <Text style={s.sendBtnText}>
-                Send Quote{totalPrice > 0 ? ` · $${totalPrice.toLocaleString()}` : ""} →
-              </Text>
-            )}
+            <Text style={s.sendBtnText}>
+              Schedule Patient{totalPrice > 0 ? ` · $${totalPrice.toLocaleString()}` : ""} →
+            </Text>
           </TouchableOpacity>
         </View>
       )}
@@ -1240,6 +970,7 @@ const s = StyleSheet.create({
   },
 
   content: { padding: 24, gap: 14, paddingBottom: 60, backgroundColor: T.bg },
+  contentWithPickerOpen: { paddingBottom: 320 },
 
   // ── Patient Info Tab ──
   infoCard: {
