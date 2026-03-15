@@ -11,7 +11,7 @@ import {
   View,
 } from "react-native";
 import { Booking, DoctorTier, FinalInvoice, TIER_CONFIG, VisitInvoice, store } from "../../lib/store";
-import { toDoctorTreatmentLabel } from "./treatment-terms";
+import { toDoctorTreatmentTerm } from "./treatment-terms";
 
 const T = {
   teal: "#0f766e",
@@ -501,7 +501,7 @@ export default function DoctorFinalInvoiceScreen() {
               <Text style={s.origPlanTitle}>ORIGINAL TREATMENT PLAN (VISIT 1)</Text>
               {prevInvoices[0].items.map((item, idx) => (
                 <View key={idx} style={s.origPlanRow}>
-                  <Text style={s.origPlanName} numberOfLines={1}>{toDoctorTreatmentLabel(item.treatment)}</Text>
+                  <Text style={s.origPlanName} numberOfLines={1}>{toDoctorTreatmentTerm(item.treatment)}</Text>
                   <Text style={s.origPlanQty}>×{item.qty}</Text>
                   <Text style={s.origPlanPrice}>${(item.qty * item.price).toLocaleString()}</Text>
                 </View>
@@ -615,7 +615,7 @@ export default function DoctorFinalInvoiceScreen() {
                               setShowPicker(null);
                             }}
                           >
-                            <Text style={[s.pickerItemText, item.treatment === t && { color: T.teal, fontWeight: "700" }]}>{toDoctorTreatmentLabel(t)}</Text>
+                            <Text style={[s.pickerItemText, item.treatment === t && { color: T.teal, fontWeight: "700" }]}>{toDoctorTreatmentTerm(t)}</Text>
                           </TouchableOpacity>
                         ))}
                       </ScrollView>
@@ -658,7 +658,7 @@ export default function DoctorFinalInvoiceScreen() {
                 {PRICE_FLOORS[item.treatment] && item.price > 0 && item.price < PRICE_FLOORS[item.treatment] && (
                   <View style={{ backgroundColor: "rgba(239,68,68,0.08)", borderRadius: 8, padding: 8, borderWidth: 1, borderColor: "rgba(239,68,68,0.2)" }}>
                     <Text style={{ fontSize: 11, color: T.red, fontWeight: "600" }}>
-                      ⚠️ Min. price for {toDoctorTreatmentLabel(item.treatment)}: ${PRICE_FLOORS[item.treatment].toLocaleString()}
+                      ⚠️ Min. price for {toDoctorTreatmentTerm(item.treatment)}: ${PRICE_FLOORS[item.treatment].toLocaleString()}
                     </Text>
                   </View>
                 )}

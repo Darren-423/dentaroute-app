@@ -13,7 +13,7 @@ import {
   View,
 } from "react-native";
 import { Booking, DentistQuote, PatientCase, store } from "../../lib/store";
-import { toCanonicalTreatmentName, toDoctorTreatmentLabel, toDoctorTreatmentTerm } from "./treatment-terms";
+import { toDoctorTreatmentTerm } from "./treatment-terms";
 
 const T = {
   teal: "#0f766e",
@@ -240,7 +240,7 @@ export default function DoctorCaseDetailScreen() {
         <View style={s.sentSummary}>
           {displayItems.map((p) => (
             <View key={p.id} style={s.sentRow}>
-              <Text style={s.sentName}>{toDoctorTreatmentLabel(p.treatment)} × {p.qty}</Text>
+              <Text style={s.sentName}>{toDoctorTreatmentTerm(p.treatment)} × {p.qty}</Text>
               <Text style={s.sentPrice}>${(Number(p.price || 0) * p.qty).toLocaleString()}</Text>
             </View>
           ))}
@@ -585,7 +585,7 @@ export default function DoctorCaseDetailScreen() {
               <Text style={s.infoLabel}>TREATMENT PLAN</Text>
               {(booking.treatments || []).map((t, i) => (
                 <View key={i} style={s.bookingTreatmentRow}>
-                  <Text style={s.bookingTreatmentName}>{toDoctorTreatmentLabel(t.name)} × {t.qty}</Text>
+                  <Text style={s.bookingTreatmentName}>🦷 {toDoctorTreatmentTerm(t.name)} × {t.qty}</Text>
                   <Text style={s.bookingTreatmentPrice}>${(t.price * t.qty).toLocaleString()}</Text>
                 </View>
               ))}
@@ -636,7 +636,7 @@ export default function DoctorCaseDetailScreen() {
               <Text style={s.infoLabel}>SUGGESTED TREATMENT PLAN</Text>
               {existingQuote.treatments.map((t, i) => (
                 <View key={i} style={s.bookingTreatmentRow}>
-                  <Text style={s.bookingTreatmentName}>{toDoctorTreatmentLabel(t.name)} × {t.qty}</Text>
+                  <Text style={s.bookingTreatmentName}>🦷 {toDoctorTreatmentTerm(t.name)} × {t.qty}</Text>
                   <Text style={s.bookingTreatmentPrice}>${(t.price * t.qty).toLocaleString()}</Text>
                 </View>
               ))}
@@ -705,7 +705,7 @@ export default function DoctorCaseDetailScreen() {
               caseData.treatments.map((t, i) => (
                 <View key={i} style={s.requestedCard}>
                   <View style={s.requestedLeft}>
-                    <Text style={s.requestedName}>{toDoctorTreatmentLabel(t.name)}</Text>
+                    <Text style={s.requestedName}>🦷 {toDoctorTreatmentTerm(t.name)}</Text>
                   </View>
                   <View style={s.requestedQtyBadge}>
                     <Text style={s.requestedQtyText}>× {t.qty}</Text>
@@ -754,7 +754,7 @@ export default function DoctorCaseDetailScreen() {
                 <View key={item.id} style={s.planCard}>
                   {/* Treatment Name + Remove */}
                   <View style={s.planCardHeader}>
-                    <Text style={s.planTreatmentName}>{toDoctorTreatmentLabel(item.treatment)}</Text>
+                    <Text style={s.planTreatmentName}>🦷 {toDoctorTreatmentTerm(item.treatment)}</Text>
                     <TouchableOpacity
                       onPress={() => removePlanItem(item.id)}
                       hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
@@ -808,7 +808,7 @@ export default function DoctorCaseDetailScreen() {
                   {PRICE_FLOORS[toCanonicalTreatmentName(item.treatment)] && Number(item.price) > 0 && Number(item.price) < PRICE_FLOORS[toCanonicalTreatmentName(item.treatment)] && (
                     <View style={{ backgroundColor: "rgba(239,68,68,0.08)", borderRadius: 8, padding: 8, marginTop: 6, borderWidth: 1, borderColor: "rgba(239,68,68,0.2)" }}>
                       <Text style={{ fontSize: 11, color: "#dc2626", fontWeight: "600" }}>
-                        ⚠️ Minimum price for {toDoctorTreatmentLabel(item.treatment)} is ${PRICE_FLOORS[toCanonicalTreatmentName(item.treatment)].toLocaleString()}
+                        ⚠️ Minimum price for {toDoctorTreatmentTerm(item.treatment)} is ${PRICE_FLOORS[item.treatment].toLocaleString()}
                       </Text>
                     </View>
                   )}
@@ -865,7 +865,7 @@ export default function DoctorCaseDetailScreen() {
                       onPress={() => addPlanItem(t)}
                       activeOpacity={0.7}
                     >
-                      <Text style={s.pickerOptionText}>{toDoctorTreatmentLabel(t)}</Text>
+                      <Text style={s.pickerOptionText}>🦷 {toDoctorTreatmentTerm(t)}</Text>
                       <Text style={s.pickerOptionAdd}>+</Text>
                     </TouchableOpacity>
                   ))}
