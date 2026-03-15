@@ -8,12 +8,13 @@ import { store } from "../../lib/store";
 const TAB_MAP: Record<string, TabName> = {
   dashboard: "Home",
   alerts: "Alerts",
+  reservation: "Reservation",
   "chat-list": "Chat",
   profile: "Profile",
 };
 
-const TAB_SCREENS = ["dashboard", "alerts", "chat-list", "profile"];
-const TAB_ROUTES = ["/patient/dashboard", "/patient/alerts", "/patient/chat-list", "/patient/profile"];
+const TAB_SCREENS = ["dashboard", "chat-list", "reservation", "alerts", "profile"];
+const TAB_ROUTES = ["/patient/dashboard", "/patient/chat-list", "/patient/reservation", "/patient/alerts", "/patient/profile"];
 
 export default function PatientLayout() {
   const segments = useSegments();

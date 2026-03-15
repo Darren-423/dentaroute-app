@@ -5,7 +5,7 @@ import { Animated, Platform, StyleSheet, Text, TouchableOpacity, View } from "re
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { setTabDirection } from "../lib/tabDirection";
 
-export type TabName = "Home" | "Alerts" | "Chat" | "Profile";
+export type TabName = "Home" | "Alerts" | "Reservation" | "Chat" | "Profile";
 
 interface PatientTabBarProps {
   currentTab: TabName;
@@ -15,8 +15,9 @@ interface PatientTabBarProps {
 
 const TABS: { icon: string; label: TabName; route: string; hasBadge?: boolean }[] = [
   { icon: "🏠", label: "Home", route: "/patient/dashboard" },
-  { icon: "🔔", label: "Alerts", route: "/patient/alerts", hasBadge: true },
   { icon: "💬", label: "Chat", route: "/patient/chat-list", hasBadge: true },
+  { icon: "📅", label: "Reservation", route: "/patient/reservation" },
+  { icon: "🔔", label: "Alerts", route: "/patient/alerts", hasBadge: true },
   { icon: "👤", label: "Profile", route: "/patient/profile" },
 ];
 

@@ -60,6 +60,7 @@ export default function PatientDashboardScreen() {
   const [profileImage, setProfileImage] = useState<string | null>(null);
   const [statusFilter, setStatusFilter] = useState<"all" | "with_quotes" | "bookings" | "in_treatment" | "completed">("all");
   const [manageBooking, setManageBooking] = useState<Booking | null>(null);
+  const [menuOpen, setMenuOpen] = useState(false);
 
   // Stats toggle
   const STATS_HEIGHT = 80;
@@ -259,9 +260,9 @@ export default function PatientDashboardScreen() {
             </TouchableOpacity>
             <TouchableOpacity
               style={s.headerIconBtn}
-              onPress={() => router.push("/patient/help-center" as any)}
+              onPress={() => setMenuOpen(!menuOpen)}
             >
-              <Text style={s.headerIconText}>❓</Text>
+              <Text style={s.kebabIcon}>⋮</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -298,6 +299,30 @@ export default function PatientDashboardScreen() {
           </TouchableOpacity>
         </View>
       </LinearGradient>
+
+      {/* Kebab dropdown menu */}
+      {menuOpen && (
+        <>
+          <TouchableOpacity
+            style={s.menuOverlay}
+            activeOpacity={1}
+            onPress={() => setMenuOpen(false)}
+          />
+          <View style={s.menuDropdown}>
+            <TouchableOpacity style={s.menuItem} onPress={() => { setMenuOpen(false); router.push("/patient/help-center" as any); }}>
+              <Text style={s.menuItemText}>Help Center</Text>
+            </TouchableOpacity>
+            <View style={s.menuDivider} />
+            <TouchableOpacity style={s.menuItem} onPress={() => { setMenuOpen(false); router.push("/patient/affiliate-clinics" as any); }}>
+              <Text style={s.menuItemText}>Affiliate Clinics</Text>
+            </TouchableOpacity>
+            <View style={s.menuDivider} />
+            <TouchableOpacity style={s.menuItem} onPress={() => { setMenuOpen(false); }}>
+              <Text style={s.menuItemText}>Menu Item 3</Text>
+            </TouchableOpacity>
+          </View>
+        </>
+      )}
 
       <ScrollView
         ref={scrollRef}
@@ -590,6 +615,21 @@ const s = StyleSheet.create({
     alignItems: "center", justifyContent: "center",
   },
   headerIconText: { fontSize: 18 },
+  kebabIcon: { fontSize: 22, color: "#fff", fontWeight: "800", lineHeight: 22 },
+  menuOverlay: {
+    position: "absolute", top: 0, left: 0, right: 0, bottom: 0, zIndex: 99,
+  },
+  menuDropdown: {
+    position: "absolute", top: 110, right: 16, zIndex: 100,
+    backgroundColor: "#fff", borderRadius: 12, minWidth: 180,
+    ...Platform.select({
+      ios: { shadowColor: "#000", shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.15, shadowRadius: 12 },
+      android: { elevation: 8 },
+    }),
+  },
+  menuItem: { paddingVertical: 14, paddingHorizontal: 16 },
+  menuItemText: { fontSize: 15, fontWeight: "600", color: "#0f172a" },
+  menuDivider: { height: 1, backgroundColor: "#e2e8f0", marginHorizontal: 12 },
   notifBadge: {
     position: "absolute", top: 4, right: 4,
     backgroundColor: "#ef4444", borderRadius: 7,
