@@ -6,6 +6,7 @@ import {
   ActivityIndicator,
   Alert,
   Image,
+  Platform,
   ScrollView,
   StyleSheet,
   Text,
@@ -105,17 +106,19 @@ export default function DoctorProfileSetupScreen() {
       return;
     }
 
-    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (status !== "granted") {
-      Alert.alert(
-        "Permission Required",
-        "Please allow access to your photo library to upload clinic photos."
-      );
-      return;
+    if (Platform.OS !== "web") {
+      const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      if (status !== "granted") {
+        Alert.alert(
+          "Permission Required",
+          "Please allow access to your photo library to upload clinic photos."
+        );
+        return;
+      }
     }
 
     const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ["images"],
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
       allowsMultipleSelection: true,
       selectionLimit: 6 - clinicPhotos.length,
       quality: 0.7,
@@ -156,6 +159,12 @@ export default function DoctorProfileSetupScreen() {
   };
 
   const showPhotoOptions = () => {
+    if (Platform.OS === "web") {
+      // Alert action sheets are inconsistent on web, so open the picker directly.
+      pickPhoto();
+      return;
+    }
+
     Alert.alert("Add Clinic Photo", "Choose how to add a photo", [
       { text: "Take Photo", onPress: takePhoto },
       { text: "Choose from Library", onPress: pickPhoto },

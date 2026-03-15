@@ -418,7 +418,7 @@ export default function PatientDashboardScreen() {
                   style: "destructive",
                   onPress: async () => {
                     await store.clearCurrentUser();
-                    router.replace("/auth/role-select" as any);
+                    router.replace("/" as any);
                   },
                 },
               ],

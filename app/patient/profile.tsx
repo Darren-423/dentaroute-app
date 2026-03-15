@@ -242,7 +242,7 @@ export default function PatientProfileScreen() {
                 { text: "Cancel", style: "cancel" },
                 { text: "Log Out", style: "destructive", onPress: async () => {
                   await store.clearCurrentUser();
-                  router.replace("/auth/role-select" as any);
+                  router.replace("/" as any);
                 }},
               ]);
             }}
