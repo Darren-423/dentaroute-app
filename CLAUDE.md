@@ -806,3 +806,43 @@ lib/
 ## 15. 요약
 
 DentaRoute는 **치과 관광 양면 마켓플레이스 모바일 앱**으로, 환자의 케이스 제출부터 견적 비교, 예약, 치료 진행, 결제, 리뷰까지 전체 여정을 다룬다. Expo/React Native 기반으로 iOS/Android/Web을 동시 지원하며, 파일 기반 라우팅과 AsyncStorage 로컬 저장소로 깔끔한 아키텍처를 갖추고 있다. 현재는 데모/프로토타입 단계이며, 다회 방문 빌링, 티어 수수료, 예약 취소/환불, 채팅 번역 등 고급 기능까지 UI 레벨에서 구현 완료. 백엔드 API와 결제 연동을 추가하면 프로덕션 배포가 가능한 수준의 완성도를 보인다.
+
+---
+
+## 변경 이력 (최신순)
+
+### 2026-03-16 - My Reservations 통합 달력 업그레이드
+- **수정 파일**: `app/patient/reservation.tsx`
+- **변경 내용**:
+  - My Trips 데이터(항공권/호텔)를 달력에 시각적으로 통합 (도착=하늘색 점, 출발=오렌지 점, 숙박=하늘색 바)
+  - 멀티 도트 시스템: 한 날짜에 치료(보라)+도착(하늘)+출발(오렌지) 동시 표시
+  - 호텔 체류 기간 연속 바 렌더링 (주 경계 넘어도 정상 표시)
+  - 범례(Legend) 추가: Treatment, Arrival, Departure, Stay
+  - Trip 카드에 ⋯ 메뉴 → Edit Trip 딥링크 (해당 trip ID로 my-trips 이동 후 수정 모달 자동 오픈)
+  - 선택 날짜 상세에서 Booking 카드가 Trip 카드보다 우선(위에) 표시
+  - 달력 크기 확대: 셀 높이 48→56, 날짜 폰트 15→17, 점 크기 6→7, 월 제목 18→20
+- **영향 범위**: My Reservations 화면 전체, My Trips 화면 (딥링크 수신)
+- **작업자**: Darren
+
+### 2026-03-16 - My Trips 딥링크 수정 모달 자동 오픈
+- **수정 파일**: `app/patient/my-trips.tsx`
+- **변경 내용**:
+  - `useLocalSearchParams`로 `editTripId` query param 수신
+  - 해당 trip ID의 수정 모달을 화면 진입 시 자동 오픈
+- **영향 범위**: My Trips 화면 (reservation에서 Edit Trip 시 연동)
+- **작업자**: Darren
+
+### 2026-03-16 - 시드 데모 데이터에 여행 정보 추가
+- **수정 파일**: `lib/store.ts`
+- **변경 내용**:
+  - `seedDemoData()`에 SavedTrip 2건 추가
+  - Trip 1: Korean Air KE082, 3/15 도착, Lotte Hotel Seoul (3/15~3/22)
+  - Trip 2: Asiana Airlines OZ201, 6/20 도착, Grand Hyatt Seoul (6/20~6/25)
+- **영향 범위**: 시드 데이터 로드 시 달력에 trip 정보 시각화
+- **작업자**: Darren
+
+### 2026-03-16 - 팀 워크플로우 가이드 문서 추가
+- **수정 파일**: `docs/team-workflow-guide.md`, `docs/development-plan.md`
+- **변경 내용**: 팀 개발 규칙 문서화 (브랜치 전략, AI 행동 규칙, 커밋 규칙)
+- **영향 범위**: 문서만 (코드 변경 없음)
+- **작업자**: Darren
