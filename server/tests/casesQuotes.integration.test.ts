@@ -4,11 +4,11 @@ import request from "supertest";
 import { createApp } from "../src/app";
 import { AppError } from "../src/errors/appError";
 import type {
-  CasesQuotesRepository,
-  CreateDentistQuoteRecordInput,
-  CreatePatientCaseRecordInput,
-  DentistQuoteRecord,
-  PatientCaseRecord,
+    CasesQuotesRepository,
+    CreateDentistQuoteRecordInput,
+    CreatePatientCaseRecordInput,
+    DentistQuoteRecord,
+    PatientCaseRecord,
 } from "../src/repositories/casesQuotesRepository";
 import { CasesQuotesService } from "../src/services/casesQuotesService";
 import type { CaseStatus, UpdatePatientCaseInput } from "../src/types/casesQuotes";
@@ -203,6 +203,8 @@ describe("Cases + Quotes routes", () => {
         treatments: [
           { name: "Implant: Whole (Root + Crown)", qty: 2 },
           { name: "Crowns", qty: 1 },
+          { name: "Fillings", qty: 3 },
+          { name: "Tongue Tie Surgery", qty: 1 },
         ],
         medicalNotes: "No known allergies.",
         dentalIssues: ["Missing Teeth"],
@@ -216,6 +218,12 @@ describe("Cases + Quotes routes", () => {
       id: "1001",
       status: "pending",
       date: "2026-03-15",
+      treatments: [
+        { name: "Implant: Whole (Root + Crown)", qty: 2 },
+        { name: "Crowns", qty: 1 },
+        { name: "Fillings", qty: 3 },
+        { name: "Tongue Tie Surgery", qty: 1 },
+      ],
     });
 
     const createQuoteResponse = await request(app)
@@ -230,8 +238,18 @@ describe("Cases + Quotes routes", () => {
         reviewCount: 127,
         totalPrice: 4150,
         treatments: [
-          { name: "Implant: Whole (Root + Crown)", qty: 2, price: 1500 },
+          {
+            name: "Implant: Fixture Placement + Crown Restoration",
+            qty: 2,
+            price: 1500,
+          },
           { name: "Crowns", qty: 1, price: 350 },
+          {
+            name: "Direct/Indirect Fillings (Composites, Inlays, Onlays)",
+            qty: 3,
+            price: 120,
+          },
+          { name: "Lingual Frenectomy", qty: 1, price: 500 },
         ],
         treatmentDetails: "Premium implants with zirconia crowns.",
         duration: "6 Days",
@@ -243,6 +261,16 @@ describe("Cases + Quotes routes", () => {
       id: "q1742010000",
       caseId: "1001",
       dentistName: "Dr. Kim Minjun",
+      treatments: [
+        { name: "Implant: Fixture Placement + Crown Restoration", qty: 2, price: 1500 },
+        { name: "Crowns", qty: 1, price: 350 },
+        {
+          name: "Direct/Indirect Fillings (Composites, Inlays, Onlays)",
+          qty: 3,
+          price: 120,
+        },
+        { name: "Lingual Frenectomy", qty: 1, price: 500 },
+      ],
     });
 
     const patientCaseResponse = await request(app)
@@ -251,6 +279,24 @@ describe("Cases + Quotes routes", () => {
 
     expect(patientCaseResponse.status).toBe(200);
     expect(patientCaseResponse.body.data.case.status).toBe("quotes_received");
+    expect(patientCaseResponse.body.data.case.treatments).toEqual([
+      { name: "Implant: Whole (Root + Crown)", qty: 2 },
+      { name: "Crowns", qty: 1 },
+      { name: "Fillings", qty: 3 },
+      { name: "Tongue Tie Surgery", qty: 1 },
+    ]);
+
+    const doctorCaseResponse = await request(app)
+      .get("/api/cases/1001")
+      .set("Content-Type", "application/json").set(doctorHeaders);
+
+    expect(doctorCaseResponse.status).toBe(200);
+    expect(doctorCaseResponse.body.data.case.treatments).toEqual([
+      { name: "Implant: Fixture Placement + Crown Restoration", qty: 2 },
+      { name: "Crowns", qty: 1 },
+      { name: "Direct/Indirect Fillings (Composites, Inlays, Onlays)", qty: 3 },
+      { name: "Lingual Frenectomy", qty: 1 },
+    ]);
 
     const patientQuotesResponse = await request(app)
       .get("/api/cases/1001/quotes")
@@ -258,6 +304,24 @@ describe("Cases + Quotes routes", () => {
 
     expect(patientQuotesResponse.status).toBe(200);
     expect(patientQuotesResponse.body.data.quotes).toHaveLength(1);
+    expect(patientQuotesResponse.body.data.quotes[0].treatments).toEqual([
+      { name: "Implant: Whole (Root + Crown)", qty: 2, price: 1500 },
+      { name: "Crowns", qty: 1, price: 350 },
+      { name: "Fillings", qty: 3, price: 120 },
+      { name: "Tongue Tie Surgery", qty: 1, price: 500 },
+    ]);
+
+    const doctorQuotesResponse = await request(app)
+      .get("/api/cases/1001/quotes")
+      .set("Content-Type", "application/json").set(doctorHeaders);
+
+    expect(doctorQuotesResponse.status).toBe(200);
+    expect(doctorQuotesResponse.body.data.quotes[0].treatments).toEqual([
+      { name: "Implant: Fixture Placement + Crown Restoration", qty: 2, price: 1500 },
+      { name: "Crowns", qty: 1, price: 350 },
+      { name: "Direct/Indirect Fillings (Composites, Inlays, Onlays)", qty: 3, price: 120 },
+      { name: "Lingual Frenectomy", qty: 1, price: 500 },
+    ]);
 
     const duplicateQuoteResponse = await request(app)
       .post("/api/quotes")
@@ -270,7 +334,9 @@ describe("Cases + Quotes routes", () => {
         rating: 4.9,
         reviewCount: 127,
         totalPrice: 4150,
-        treatments: [{ name: "Implant: Whole (Root + Crown)", qty: 2, price: 1500 }],
+        treatments: [
+          { name: "Implant: Fixture Placement + Crown Restoration", qty: 2, price: 1500 },
+        ],
         treatmentDetails: "Duplicate quote attempt.",
         duration: "6 Days",
         message: "Duplicate quote attempt.",

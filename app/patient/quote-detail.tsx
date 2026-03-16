@@ -2,15 +2,16 @@ import { LinearGradient } from "expo-linear-gradient";
 import { router, useLocalSearchParams } from "expo-router";
 import React, { useEffect, useState } from "react";
 import {
-  ActivityIndicator,
-  Dimensions,
-  Image,
-  ScrollView,
-  StyleSheet,
-  Text, TouchableOpacity,
-  View,
+    ActivityIndicator,
+    Dimensions,
+    Image,
+    ScrollView,
+    StyleSheet,
+    Text, TouchableOpacity,
+    View,
 } from "react-native";
 import { DentistQuote, store } from "../../lib/store";
+import { toPatientLabel } from "../../lib/treatmentTerminology";
 
 const T = {
   teal: "#4A0080", tealMid: "#5C10A0", tealLight: "#f0e6f6",
@@ -224,7 +225,7 @@ export default function QuoteDetailScreen() {
               {quote.treatments?.map((t, i) => (
                 <View key={i} style={s.treatmentRow}>
                   <View style={s.treatmentDot} />
-                  <Text style={s.treatmentName}>{t.name}</Text>
+                  <Text style={s.treatmentName}>{toPatientLabel(t.name)}</Text>
                   <Text style={s.treatmentQty}>×{t.qty}</Text>
                   <Text style={s.treatmentPrice}>${(t.price * t.qty).toLocaleString()}</Text>
                 </View>

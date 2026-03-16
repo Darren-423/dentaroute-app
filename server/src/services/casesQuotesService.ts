@@ -2,19 +2,20 @@ import { randomInt } from "crypto";
 
 import { AppError } from "../errors/appError";
 import type {
-  CasesQuotesRepository,
-  DentistQuoteRecord,
-  PatientCaseRecord,
+    CasesQuotesRepository,
+    DentistQuoteRecord,
+    PatientCaseRecord,
 } from "../repositories/casesQuotesRepository";
 import type {
-  AuthContext,
-  CaseStatus,
-  CreateDentistQuoteInput,
-  CreatePatientCaseInput,
-  DentistQuote,
-  PatientCase,
-  UpdatePatientCaseInput,
+    AuthContext,
+    CaseStatus,
+    CreateDentistQuoteInput,
+    CreatePatientCaseInput,
+    DentistQuote,
+    PatientCase,
+    UpdatePatientCaseInput,
 } from "../types/casesQuotes";
+import { translateTreatmentItems } from "./treatmentTerminology";
 
 export interface CasesQuotesServiceOptions {
   casesQuotesRepository: CasesQuotesRepository;
@@ -38,14 +39,25 @@ const createValidationError = (
   });
 };
 
-const toPatientCase = (record: PatientCaseRecord): PatientCase => {
+const toPatientCase = (record: PatientCaseRecord, viewerRole: AuthContext["role"]): PatientCase => {
   const { patientUserId: _patientUserId, ...patientCase } = record;
-  return patientCase;
+
+  return {
+    ...patientCase,
+    treatments: translateTreatmentItems(patientCase.treatments, viewerRole),
+  };
 };
 
-const toDentistQuote = (record: DentistQuoteRecord): DentistQuote => {
+const toDentistQuote = (
+  record: DentistQuoteRecord,
+  viewerRole: AuthContext["role"]
+): DentistQuote => {
   const { doctorUserId: _doctorUserId, ...quote } = record;
-  return quote;
+
+  return {
+    ...quote,
+    treatments: translateTreatmentItems(quote.treatments, viewerRole),
+  };
 };
 
 const defaultQuoteIdFactory = (): string => {
@@ -70,7 +82,7 @@ export class CasesQuotesService {
 
     // TODO(notification): trigger doctor-side "new_case" notifications for newly submitted patient cases.
 
-    return toPatientCase(record);
+    return toPatientCase(record, auth.role);
   }
 
   async listCases(auth: AuthContext): Promise<PatientCase[]> {
@@ -79,12 +91,12 @@ export class CasesQuotesService {
         ? await this.options.casesQuotesRepository.listCasesForPatient(auth.userId)
         : await this.options.casesQuotesRepository.listCasesForDoctor();
 
-    return records.map(toPatientCase);
+    return records.map((record) => toPatientCase(record, auth.role));
   }
 
   async getCase(auth: AuthContext, caseId: string): Promise<PatientCase> {
     const record = await this.getAccessibleCase(auth, caseId);
-    return toPatientCase(record);
+    return toPatientCase(record, auth.role);
   }
 
   async updateCase(
@@ -107,7 +119,7 @@ export class CasesQuotesService {
 
     // TODO(notification): trigger doctor-side "case_updated" notifications when active case details change.
 
-    return toPatientCase(updated);
+    return toPatientCase(updated, auth.role);
   }
 
   async updateCaseStatus(auth: AuthContext, caseId: string, status: CaseStatus): Promise<PatientCase> {
@@ -126,7 +138,7 @@ export class CasesQuotesService {
     }
 
     if (currentCase.status === "booked") {
-      return toPatientCase(currentCase);
+      return toPatientCase(currentCase, auth.role);
     }
 
     const updated = await this.options.casesQuotesRepository.updateCaseStatus(caseId, "booked");
@@ -134,7 +146,7 @@ export class CasesQuotesService {
       throw CASE_NOT_FOUND_ERROR;
     }
 
-    return toPatientCase(updated);
+    return toPatientCase(updated, auth.role);
   }
 
   async createQuote(auth: AuthContext, input: CreateDentistQuoteInput): Promise<DentistQuote> {
@@ -173,7 +185,7 @@ export class CasesQuotesService {
 
     // TODO(notification): trigger patient-side "new_quote" notification for the case owner.
 
-    return toDentistQuote(record);
+    return toDentistQuote(record, auth.role);
   }
 
   async listQuotesForCase(auth: AuthContext, caseId: string): Promise<DentistQuote[]> {
@@ -184,7 +196,7 @@ export class CasesQuotesService {
         ? await this.options.casesQuotesRepository.listQuotesForCase(caseId)
         : await this.options.casesQuotesRepository.listQuotesForCaseAndDoctor(caseId, auth.userId);
 
-    return records.map(toDentistQuote);
+    return records.map((record) => toDentistQuote(record, auth.role));
   }
 
   async listQuotes(auth: AuthContext): Promise<DentistQuote[]> {
@@ -193,7 +205,7 @@ export class CasesQuotesService {
         ? await this.options.casesQuotesRepository.listQuotesForPatient(auth.userId)
         : await this.options.casesQuotesRepository.listQuotesForDoctor(auth.userId);
 
-    return records.map(toDentistQuote);
+    return records.map((record) => toDentistQuote(record, auth.role));
   }
 
   private async getAccessibleCase(auth: AuthContext, caseId: string): Promise<PatientCaseRecord> {

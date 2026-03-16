@@ -65,7 +65,15 @@ export interface DentistQuote {
   treatments: { name: string; qty: number; price: number }[];
   treatmentDetails: string;
   duration: string;
-  visits?: { visit: number; description: string; gapMonths?: number; gapDays?: number; paymentAmount?: number; paymentPercent?: number }[];
+  visits?: {
+    visit: number;
+    description: string;
+    gapMonths?: number;
+    gapDays?: number;
+    paymentAmount?: number;
+    paymentPercent?: number;
+    availabilitySlots?: { date: string; time: string }[];
+  }[];
   message: string;
   createdAt: string;
   clinicPhotos?: string[];

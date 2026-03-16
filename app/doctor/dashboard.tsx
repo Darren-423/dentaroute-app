@@ -2,15 +2,15 @@ import { LinearGradient } from "expo-linear-gradient";
 import { router, useFocusEffect } from "expo-router";
 import React, { useCallback, useMemo, useRef, useState } from "react";
 import {
-  Animated,
-  Image,
-  Platform,
-  ScrollView,
-  StyleSheet,
-  Text, TouchableOpacity,
-  View,
+    Animated,
+    Image,
+    ScrollView,
+    StyleSheet,
+    Text, TouchableOpacity,
+    View
 } from "react-native";
 import { Booking, PatientCase, store } from "../../lib/store";
+import { toDoctorLabel } from "../../lib/treatmentTerminology";
 
 const T = {
   teal: "#0f766e",
@@ -111,7 +111,7 @@ export default function DoctorDashboardScreen() {
   // ── 치료별 필터 탭 목록 (동적) ──
   const filterTabs = useMemo(() => {
     const treatmentSet = new Set<string>();
-    cases.forEach((c) => c.treatments.forEach((t) => treatmentSet.add(t.name)));
+    cases.forEach((c) => c.treatments.forEach((t) => treatmentSet.add(toDoctorLabel(t.name))));
     return ["All", ...Array.from(treatmentSet).sort()];
   }, [cases]);
 
@@ -149,7 +149,7 @@ export default function DoctorDashboardScreen() {
   const groupedSections = useMemo(() => {
     let filtered = activeFilter === "All"
       ? cases
-      : cases.filter((c) => c.treatments.some((t) => t.name === activeFilter));
+      : cases.filter((c) => c.treatments.some((t) => toDoctorLabel(t.name) === activeFilter));
 
     // 상태 필터 적용
     if (statusFilter !== "all") {
@@ -300,7 +300,7 @@ export default function DoctorDashboardScreen() {
               const count =
                 tab === "All"
                   ? cases.length
-                  : cases.filter((c) => c.treatments.some((t) => t.name === tab)).length;
+                  : cases.filter((c) => c.treatments.some((t) => toDoctorLabel(t.name) === tab)).length;
               return (
                 <TouchableOpacity
                   key={tab}
@@ -389,7 +389,7 @@ export default function DoctorDashboardScreen() {
               {!isCollapsed && section.cases.map((c) => {
                 const badge = getStatusBadge(c.status, c.id);
                 const treatmentSummary = c.treatments
-                  .map((t) => `${t.name}${t.qty > 1 ? ` ×${t.qty}` : ""}`)
+                  .map((t) => `${toDoctorLabel(t.name)}${t.qty > 1 ? ` ×${t.qty}` : ""}`)
                   .join(", ");
                 return (
                   <TouchableOpacity

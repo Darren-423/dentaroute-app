@@ -45,3 +45,10 @@ Use this file for every Codex <-> Claude Code backend handoff.
 - Frontend expects: Bearer auth on all routes, patient-only case creation/editing/booking, doctor-only quote creation, sequential case ids (`1001+`), automatic `quotes_received` after the first quote, and doctor quote visibility scoped to the authenticated doctor for case-level quote reads.
 - Tested: `npm run prisma:generate`, `npm run build`, and `npx jest --runInBand --detectOpenHandles --verbose tests/casesQuotes.integration.test.ts --forceExit` passed.
 - Status: Ready for integration
+
+## [2026-03-16] Slice: Cases + Quotes
+- Changed: Added role-aware treatment terminology translation in `server/src/services/treatmentTerminology.ts` and wired it into case/quote responses so patient-facing and doctor-facing treatment-plan labels stay aligned without changing payload shape.
+- Contract: `docs/api-contract-cases-quotes.md` and `AGENTS.md` now define the patient-term <-> doctor-term bridge for `treatments[].name` while keeping the existing `PatientCase` and `DentistQuote` schemas unchanged.
+- Frontend expects: Patients continue to send and read patient-friendly treatment names; doctors can submit/read professional treatment-plan labels; shared labels such as `Crowns` and `Veneers` remain unchanged.
+- Tested: `npm test -- --runInBand tests/treatmentTerminology.test.ts tests/casesQuotes.integration.test.ts`
+- Status: Ready for integration
