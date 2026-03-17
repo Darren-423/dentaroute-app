@@ -9,7 +9,8 @@ import {
     Text, TouchableOpacity,
     View,
 } from "react-native";
-import { DoctorProfile as DoctorProfileType, store } from "../../lib/store";
+import { getDoctorProfileCache, loadDoctorProfileData } from "../../lib/doctorTabDataCache";
+import { store } from "../../lib/store";
 
 const T = {
   teal: "#0f766e",
@@ -24,26 +25,16 @@ const T = {
 };
 
 export default function DoctorProfileScreen() {
-  const [profile, setProfile] = useState<any>(null);
-  const [stats, setStats] = useState({ cases: 0, quoted: 0, booked: 0, reviews: 0, avgRating: 0 });
+  const initialProfileData = getDoctorProfileCache();
+  const [profile, setProfile] = useState<any>(initialProfileData.profile);
+  const [stats, setStats] = useState(initialProfileData.stats);
 
   useFocusEffect(
     useCallback(() => {
       const load = async () => {
-        const p = await store.getDoctorProfile();
-        setProfile(p);
-
-        const cases = await store.getCases();
-        const myReviews = p?.fullName ? await store.getReviewsForDentist(p.fullName) : [];
-        const bookings = await store.getBookings();
-        const avgR = myReviews.length > 0 ? myReviews.reduce((s, r) => s + r.rating, 0) / myReviews.length : 0;
-        setStats({
-          cases: cases.length,
-          quoted: cases.filter((c) => c.status === "quotes_received").length,
-          booked: cases.filter((c) => c.status === "booked").length,
-          reviews: myReviews.length,
-          avgRating: avgR,
-        });
+        const data = await loadDoctorProfileData();
+        setProfile(data.profile);
+        setStats(data.stats);
       };
       load();
     }, [])

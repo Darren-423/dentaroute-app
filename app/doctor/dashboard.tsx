@@ -9,7 +9,8 @@ import {
     Text, TouchableOpacity,
     View
 } from "react-native";
-import { Booking, PatientCase, store } from "../../lib/store";
+import { getDoctorDashboardCache, loadDoctorDashboardData } from "../../lib/doctorTabDataCache";
+import { Booking, PatientCase } from "../../lib/store";
 import { toDoctorLabel } from "../../lib/treatmentTerminology";
 
 const T = {
@@ -66,13 +67,14 @@ const getResolvedStatus = (c: PatientCase, bks: Booking[]): string => {
 };
 
 export default function DoctorDashboardScreen() {
-  const [cases, setCases] = useState<PatientCase[]>([]);
-  const [bookings, setBookings] = useState<Booking[]>([]);
-  const [unreadCount, setUnreadCount] = useState(0);
+  const initialDashboardData = getDoctorDashboardCache();
+  const [cases, setCases] = useState<PatientCase[]>(initialDashboardData.cases);
+  const [bookings, setBookings] = useState<Booking[]>(initialDashboardData.bookings);
+  const [unreadCount, setUnreadCount] = useState(initialDashboardData.unreadCount);
   const [activeFilter, setActiveFilter] = useState("All");
   const [statusFilter, setStatusFilter] = useState<"all" | "new" | "quoted" | "appointments" | "in_process">("all");
-  const [patientProfileImage, setPatientProfileImage] = useState<string | null>(null);
-  const [unreadMessages, setUnreadMessages] = useState(0);
+  const [patientProfileImage, setPatientProfileImage] = useState<string | null>(initialDashboardData.patientProfileImage);
+  const [unreadMessages, setUnreadMessages] = useState(initialDashboardData.unreadMessages);
   const [collapsedSections, setCollapsedSections] = useState<Record<string, boolean>>({});
 
   // Stats toggle
@@ -90,19 +92,12 @@ export default function DoctorDashboardScreen() {
   useFocusEffect(
     useCallback(() => {
       const load = async () => {
-        const c = await store.getCases();
-        c.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
-        setCases(c);
-        const b = await store.getBookings();
-        setBookings(b);
-        const uc = await store.getUnreadCount("doctor");
-        setUnreadCount(uc);
-        const pp = await store.getPatientProfile();
-        if (pp?.profileImage) setPatientProfileImage(pp.profileImage);
-        // Unread messages count
-        const rooms = await store.getChatRooms();
-        const totalUnread = rooms.reduce((sum, r) => sum + (r.unreadDoctor || 0), 0);
-        setUnreadMessages(totalUnread);
+        const data = await loadDoctorDashboardData();
+        setCases(data.cases);
+        setBookings(data.bookings);
+        setUnreadCount(data.unreadCount);
+        setPatientProfileImage(data.patientProfileImage);
+        setUnreadMessages(data.unreadMessages);
       };
       load();
     }, [])
