@@ -1390,6 +1390,41 @@ export const store = {
     ];
     await AsyncStorage.setItem(KEYS.NOTIFICATIONS, JSON.stringify(demoNotifs));
 
+    // 13. Demo Saved Trips (for calendar integration)
+    const demoTrips: SavedTrip[] = [
+      {
+        id: "trip_demo_001",
+        airline: "Korean Air",
+        flightNumber: "KE082",
+        flightDate: "2026-03-15",
+        flightTime: "14:30",
+        terminal: "Terminal 1",
+        hotelName: "Lotte Hotel Seoul",
+        hotelAddress: "30 Eulji-ro, Jung-gu, Seoul",
+        checkInDate: "2026-03-15",
+        checkOutDate: "2026-03-22",
+        confirmationNumber: "LH-829461",
+        createdAt: "2026-03-01T10:00:00Z",
+        updatedAt: "2026-03-01T10:00:00Z",
+      },
+      {
+        id: "trip_demo_002",
+        airline: "Asiana Airlines",
+        flightNumber: "OZ201",
+        flightDate: "2026-06-20",
+        flightTime: "09:15",
+        terminal: "Terminal 1",
+        hotelName: "Grand Hyatt Seoul",
+        hotelAddress: "322 Sowol-ro, Yongsan-gu, Seoul",
+        checkInDate: "2026-06-20",
+        checkOutDate: "2026-06-25",
+        confirmationNumber: "GH-174052",
+        createdAt: "2026-06-01T10:00:00Z",
+        updatedAt: "2026-06-01T10:00:00Z",
+      },
+    ];
+    await AsyncStorage.setItem(KEYS.SAVED_TRIPS, JSON.stringify(demoTrips));
+
     // Set current user as patient
     await AsyncStorage.setItem(KEYS.CURRENT_USER, JSON.stringify({
       role: "patient",

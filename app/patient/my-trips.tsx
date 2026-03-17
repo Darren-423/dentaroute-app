@@ -1,6 +1,6 @@
 import { useFocusEffect } from "@react-navigation/native";
 import { LinearGradient } from "expo-linear-gradient";
-import { router } from "expo-router";
+import { router, useLocalSearchParams } from "expo-router";
 import React, { useCallback, useState } from "react";
 import {
   Alert,
@@ -141,12 +141,14 @@ function MiniCalendar({ value, onSelect, onClose }: { value: string; onSelect: (
 }
 
 export default function MyTripsScreen() {
+  const { editTripId } = useLocalSearchParams<{ editTripId?: string }>();
   const [trips, setTrips] = useState<SavedTrip[]>([]);
   const [modalVisible, setModalVisible] = useState(false);
   const [editingTrip, setEditingTrip] = useState<SavedTrip | null>(null);
   const [form, setForm] = useState(EMPTY_TRIP);
   const [showCalendarFor, setShowCalendarFor] = useState<string | null>(null);
   const [attempted, setAttempted] = useState(false);
+  const [deepLinkHandled, setDeepLinkHandled] = useState<string | null>(null);
 
   useFocusEffect(
     useCallback(() => {
@@ -157,6 +159,30 @@ export default function MyTripsScreen() {
   const loadTrips = async () => {
     const data = await store.getTrips();
     setTrips(data);
+
+    // Auto-open edit modal if navigated with editTripId
+    if (editTripId && editTripId !== deepLinkHandled) {
+      const target = data.find((t) => t.id === editTripId);
+      if (target) {
+        setDeepLinkHandled(editTripId);
+        setEditingTrip(target);
+        setForm({
+          airline: target.airline,
+          flightNumber: target.flightNumber,
+          flightDate: target.flightDate,
+          flightTime: target.flightTime,
+          terminal: target.terminal || "",
+          hotelName: target.hotelName || "",
+          hotelAddress: target.hotelAddress || "",
+          checkInDate: target.checkInDate || "",
+          checkOutDate: target.checkOutDate || "",
+          confirmationNumber: target.confirmationNumber || "",
+        });
+        setAttempted(false);
+        setShowCalendarFor(null);
+        setModalVisible(true);
+      }
+    }
   };
 
   const openAdd = () => {

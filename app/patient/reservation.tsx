@@ -2,7 +2,6 @@ import { LinearGradient } from "expo-linear-gradient";
 import { router, useFocusEffect } from "expo-router";
 import React, { useCallback, useState } from "react";
 import {
-  Alert,
   Platform,
   ScrollView,
   StyleSheet,
@@ -11,13 +10,18 @@ import {
   View,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { Booking, PatientCase, store } from "../../lib/store";
+import { Booking, PatientCase, SavedTrip, store } from "../../lib/store";
 
 const T = {
   purple: "#4A0080", purpleMid: "#5C10A0", purpleLight: "#f0e6f6",
   navy: "#0f172a", slate: "#64748b", slateLight: "#94a3b8",
   border: "#e2e8f0", bg: "#f8fafc", white: "#fff",
   red: "#ef4444", redLight: "#fef2f2",
+  // Trip colors
+  arrival: "#0EA5E9",       // sky blue — flight arrival / check-in
+  departure: "#F97316",     // orange  — check-out / departure
+  stayBg: "rgba(14,165,233,0.12)", // light sky blue — hotel stay bar
+  stayBgDark: "rgba(14,165,233,0.22)",
 };
 
 const BOOKING_STEPS: { key: string; label: string; next: string; emoji: string }[] = [
@@ -53,15 +57,15 @@ function getStepInfo(booking: Booking) {
 }
 
 function navigateToBookingStep(booking: Booking, caseId: string) {
-  const s = booking.status;
-  if (s === "confirmed") router.push(`/patient/arrival-info?bookingId=${booking.id}` as any);
-  else if (s === "flight_submitted") router.push(`/patient/hotel-arrived?bookingId=${booking.id}` as any);
-  else if (s === "arrived_korea" || s === "checked_in_clinic") router.push(`/patient/clinic-checkin?bookingId=${booking.id}` as any);
-  else if (s === "treatment_done") router.push(`/patient/final-payment?bookingId=${booking.id}` as any);
-  else if (s === "between_visits") router.push(`/patient/stay-or-return?bookingId=${booking.id}` as any);
-  else if (s === "returning_home" || s === "payment_complete") router.push(`/patient/departure-pickup?bookingId=${booking.id}` as any);
-  else if (s === "departure_set") router.push(`/patient/treatment-complete?bookingId=${booking.id}` as any);
-  else if (s === "cancelled") router.push(`/patient/quotes?caseId=${caseId}` as any);
+  const st = booking.status;
+  if (st === "confirmed") router.push(`/patient/arrival-info?bookingId=${booking.id}` as any);
+  else if (st === "flight_submitted") router.push(`/patient/hotel-arrived?bookingId=${booking.id}` as any);
+  else if (st === "arrived_korea" || st === "checked_in_clinic") router.push(`/patient/clinic-checkin?bookingId=${booking.id}` as any);
+  else if (st === "treatment_done") router.push(`/patient/final-payment?bookingId=${booking.id}` as any);
+  else if (st === "between_visits") router.push(`/patient/stay-or-return?bookingId=${booking.id}` as any);
+  else if (st === "returning_home" || st === "payment_complete") router.push(`/patient/departure-pickup?bookingId=${booking.id}` as any);
+  else if (st === "departure_set") router.push(`/patient/treatment-complete?bookingId=${booking.id}` as any);
+  else if (st === "cancelled") router.push(`/patient/quotes?caseId=${caseId}` as any);
   else router.push(`/patient/quotes?caseId=${caseId}` as any);
 }
 
@@ -69,14 +73,45 @@ function formatDateKey(year: number, month: number, day: number) {
   return `${year}-${String(month + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
 }
 
+/** Returns all dates between start and end inclusive as "YYYY-MM-DD" strings */
+function getDateRange(startStr: string, endStr: string): string[] {
+  const dates: string[] = [];
+  const start = new Date(startStr + "T00:00:00");
+  const end = new Date(endStr + "T00:00:00");
+  if (isNaN(start.getTime()) || isNaN(end.getTime())) return dates;
+  const cur = new Date(start);
+  while (cur <= end) {
+    const y = cur.getFullYear();
+    const m = String(cur.getMonth() + 1).padStart(2, "0");
+    const d = String(cur.getDate()).padStart(2, "0");
+    dates.push(`${y}-${m}-${d}`);
+    cur.setDate(cur.getDate() + 1);
+  }
+  return dates;
+}
+
+// Types of dots that can appear on a date
+type DotType = "booking" | "arrival" | "departure";
+
+interface DayInfo {
+  dots: DotType[];
+  isStayRange: boolean;     // part of hotel stay range
+  isStayStart: boolean;     // check-in date (left rounded)
+  isStayEnd: boolean;       // check-out date (right rounded)
+  bookings: Booking[];
+  trips: SavedTrip[];
+}
+
 export default function ReservationScreen() {
   const insets = useSafeAreaInsets();
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [cases, setCases] = useState<PatientCase[]>([]);
+  const [trips, setTrips] = useState<SavedTrip[]>([]);
   const [year, setYear] = useState(new Date().getFullYear());
   const [month, setMonth] = useState(new Date().getMonth());
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
   const [menuBookingId, setMenuBookingId] = useState<string | null>(null);
+  const [menuTripId, setMenuTripId] = useState<string | null>(null);
 
   useFocusEffect(
     useCallback(() => {
@@ -86,23 +121,62 @@ export default function ReservationScreen() {
         active.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
         setBookings(active);
         setCases(await store.getCases());
+        setTrips(await store.getTrips());
       };
       load();
     }, [])
   );
 
-  // Build date → bookings map
-  const dateMap = new Map<string, Booking[]>();
+  // Build date → DayInfo map
+  const dayInfoMap = new Map<string, DayInfo>();
+
+  const getOrCreate = (dateKey: string): DayInfo => {
+    let info = dayInfoMap.get(dateKey);
+    if (!info) {
+      info = { dots: [], isStayRange: false, isStayStart: false, isStayEnd: false, bookings: [], trips: [] };
+      dayInfoMap.set(dateKey, info);
+    }
+    return info;
+  };
+
+  // Map booking visit dates
   bookings.forEach((bk) => {
     bk.visitDates?.forEach((v) => {
       if (v.date) {
-        const existing = dateMap.get(v.date) || [];
-        if (!existing.find((b) => b.id === bk.id)) {
-          existing.push(bk);
-          dateMap.set(v.date, existing);
-        }
+        const info = getOrCreate(v.date);
+        if (!info.dots.includes("booking")) info.dots.push("booking");
+        if (!info.bookings.find((b) => b.id === bk.id)) info.bookings.push(bk);
       }
     });
+  });
+
+  // Map trip dates
+  trips.forEach((trip) => {
+    // Flight arrival date → arrival dot
+    if (trip.flightDate) {
+      const info = getOrCreate(trip.flightDate);
+      if (!info.dots.includes("arrival")) info.dots.push("arrival");
+      if (!info.trips.find((t) => t.id === trip.id)) info.trips.push(trip);
+    }
+
+    // Check-out date → departure dot
+    if (trip.checkOutDate) {
+      const info = getOrCreate(trip.checkOutDate);
+      if (!info.dots.includes("departure")) info.dots.push("departure");
+      if (!info.trips.find((t) => t.id === trip.id)) info.trips.push(trip);
+    }
+
+    // Hotel stay range
+    if (trip.checkInDate && trip.checkOutDate) {
+      const range = getDateRange(trip.checkInDate, trip.checkOutDate);
+      range.forEach((dateKey, idx) => {
+        const info = getOrCreate(dateKey);
+        info.isStayRange = true;
+        if (idx === 0) info.isStayStart = true;
+        if (idx === range.length - 1) info.isStayEnd = true;
+        if (!info.trips.find((t) => t.id === trip.id)) info.trips.push(trip);
+      });
+    }
   });
 
   // Calendar grid
@@ -132,7 +206,9 @@ export default function ReservationScreen() {
     setSelectedDate(null);
   };
 
-  const selectedBookings = selectedDate ? (dateMap.get(selectedDate) || []) : [];
+  const selectedDayInfo = selectedDate ? dayInfoMap.get(selectedDate) : null;
+  const selectedBookings = selectedDayInfo?.bookings || [];
+  const selectedTrips = selectedDayInfo?.trips || [];
 
   const handleReschedule = (bk: Booking) => {
     setMenuBookingId(null);
@@ -144,6 +220,18 @@ export default function ReservationScreen() {
     router.push(`/patient/cancel-booking?bookingId=${bk.id}` as any);
   };
 
+  const handleEditTrip = (tripId: string) => {
+    setMenuTripId(null);
+    router.push(`/patient/my-trips?editTripId=${tripId}` as any);
+  };
+
+  const dotColor = (type: DotType, isSelected: boolean) => {
+    if (isSelected) return T.white;
+    if (type === "booking") return "#7C3AED";
+    if (type === "arrival") return T.arrival;
+    return T.departure;
+  };
+
   return (
     <View style={s.container}>
       <LinearGradient
@@ -152,8 +240,8 @@ export default function ReservationScreen() {
       >
         <Text style={s.headerTitle}>My Reservations</Text>
         <Text style={s.headerSub}>
-          {bookings.length > 0
-            ? `${bookings.length} active reservation${bookings.length > 1 ? "s" : ""}`
+          {bookings.length > 0 || trips.length > 0
+            ? `${bookings.length} reservation${bookings.length !== 1 ? "s" : ""}${trips.length > 0 ? ` · ${trips.length} trip${trips.length !== 1 ? "s" : ""}` : ""}`
             : "No reservations yet"}
         </Text>
       </LinearGradient>
@@ -193,51 +281,106 @@ export default function ReservationScreen() {
                   return <View key={di} style={s.dayCell} />;
                 }
                 const dateKey = formatDateKey(year, month, day);
-                const hasBooking = dateMap.has(dateKey);
+                const info = dayInfoMap.get(dateKey);
+                const hasDots = info && info.dots.length > 0;
+                const hasContent = !!info && (info.dots.length > 0 || info.isStayRange);
                 const isSelected = selectedDate === dateKey;
                 const isToday =
                   day === new Date().getDate() &&
                   month === new Date().getMonth() &&
                   year === new Date().getFullYear();
 
+                // Stay range background styles
+                const stayStyle: any = {};
+                if (info?.isStayRange && !isSelected) {
+                  stayStyle.backgroundColor = T.stayBg;
+                  if (info.isStayStart && info.isStayEnd) {
+                    stayStyle.borderRadius = 12;
+                  } else if (info.isStayStart) {
+                    stayStyle.borderTopLeftRadius = 12;
+                    stayStyle.borderBottomLeftRadius = 12;
+                    stayStyle.borderTopRightRadius = 0;
+                    stayStyle.borderBottomRightRadius = 0;
+                  } else if (info.isStayEnd) {
+                    stayStyle.borderTopRightRadius = 12;
+                    stayStyle.borderBottomRightRadius = 12;
+                    stayStyle.borderTopLeftRadius = 0;
+                    stayStyle.borderBottomLeftRadius = 0;
+                  } else {
+                    stayStyle.borderRadius = 0;
+                  }
+                }
+
                 return (
                   <TouchableOpacity
                     key={di}
                     style={[
                       s.dayCell,
+                      stayStyle,
                       isSelected && s.dayCellSelected,
-                      isToday && !isSelected && s.dayCellToday,
+                      isToday && !isSelected && !info?.isStayRange && s.dayCellToday,
                     ]}
-                    onPress={() => hasBooking ? setSelectedDate(dateKey) : setSelectedDate(null)}
-                    activeOpacity={hasBooking ? 0.6 : 1}
+                    onPress={() => hasContent ? setSelectedDate(dateKey) : setSelectedDate(null)}
+                    activeOpacity={hasContent ? 0.6 : 1}
                   >
                     <Text
                       style={[
                         s.dayText,
                         isSelected && s.dayTextSelected,
                         isToday && !isSelected && s.dayTextToday,
-                        !hasBooking && !isToday && s.dayTextDim,
+                        !hasContent && !isToday && s.dayTextDim,
                       ]}
                     >
                       {day}
                     </Text>
-                    {hasBooking && (
-                      <View style={[s.bookingDot, isSelected && s.bookingDotSelected]} />
+                    {hasDots && (
+                      <View style={s.dotsRow}>
+                        {info!.dots.map((dotType, i) => (
+                          <View
+                            key={i}
+                            style={[
+                              s.dot,
+                              { backgroundColor: dotColor(dotType, isSelected) },
+                            ]}
+                          />
+                        ))}
+                      </View>
                     )}
                   </TouchableOpacity>
                 );
               })}
             </View>
           ))}
+
+          {/* Legend */}
+          <View style={s.legendRow}>
+            <View style={s.legendItem}>
+              <View style={[s.legendDot, { backgroundColor: "#7C3AED" }]} />
+              <Text style={s.legendText}>Treatment</Text>
+            </View>
+            <View style={s.legendItem}>
+              <View style={[s.legendDot, { backgroundColor: T.arrival }]} />
+              <Text style={s.legendText}>Arrival</Text>
+            </View>
+            <View style={s.legendItem}>
+              <View style={[s.legendDot, { backgroundColor: T.departure }]} />
+              <Text style={s.legendText}>Departure</Text>
+            </View>
+            <View style={s.legendItem}>
+              <View style={[s.legendBar, { backgroundColor: T.stayBgDark }]} />
+              <Text style={s.legendText}>Stay</Text>
+            </View>
+          </View>
         </View>
 
-        {/* Selected date bookings */}
-        {selectedDate && selectedBookings.length > 0 && (
+        {/* Selected date details */}
+        {selectedDate && (selectedBookings.length > 0 || selectedTrips.length > 0) && (
           <View style={s.selectedSection}>
             <Text style={s.selectedDateTitle}>
               {new Date(selectedDate + "T00:00:00").toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" })}
             </Text>
 
+            {/* Booking cards (priority — shown first) */}
             {selectedBookings.map((bk) => {
               const patientCase = cases.find((c) => c.id === bk.caseId);
               const info = getStepInfo(bk);
@@ -340,11 +483,83 @@ export default function ReservationScreen() {
                 </View>
               );
             })}
+
+            {/* Trip cards */}
+            {selectedTrips.map((trip) => {
+              const isArrival = trip.flightDate === selectedDate;
+              const isDeparture = trip.checkOutDate === selectedDate;
+              const isStayOnly = !isArrival && !isDeparture && trip.checkInDate && trip.checkOutDate;
+
+              return (
+                <View key={trip.id} style={s.tripCard}>
+                  <View style={s.tripCardHeader}>
+                    <View style={s.tripBadgeRow}>
+                      {isArrival && (
+                        <View style={[s.tripBadge, { backgroundColor: "rgba(14,165,233,0.12)" }]}>
+                          <Text style={[s.tripBadgeText, { color: T.arrival }]}>✈️ Arrival</Text>
+                        </View>
+                      )}
+                      {isDeparture && (
+                        <View style={[s.tripBadge, { backgroundColor: "rgba(249,115,22,0.12)" }]}>
+                          <Text style={[s.tripBadgeText, { color: T.departure }]}>🛫 Departure</Text>
+                        </View>
+                      )}
+                      {isStayOnly && (
+                        <View style={[s.tripBadge, { backgroundColor: T.stayBg }]}>
+                          <Text style={[s.tripBadgeText, { color: T.arrival }]}>🏨 Hotel Stay</Text>
+                        </View>
+                      )}
+                    </View>
+                    <TouchableOpacity
+                      style={s.menuBtn}
+                      onPress={() => setMenuTripId(menuTripId === trip.id ? null : trip.id)}
+                    >
+                      <Text style={s.menuBtnText}>⋯</Text>
+                    </TouchableOpacity>
+                  </View>
+
+                  {/* Trip menu dropdown */}
+                  {menuTripId === trip.id && (
+                    <View style={s.dropdown}>
+                      <TouchableOpacity style={s.dropdownItem} onPress={() => handleEditTrip(trip.id)}>
+                        <Text style={s.dropdownText}>✏️ Edit Trip</Text>
+                      </TouchableOpacity>
+                    </View>
+                  )}
+
+                  <View style={s.tripBody}>
+                    <Text style={s.tripFlightInfo}>
+                      ✈️ {trip.airline} {trip.flightNumber}
+                    </Text>
+                    {trip.flightDate && (
+                      <Text style={s.tripDetailText}>
+                        Date: {trip.flightDate}{trip.flightTime ? `  ·  Time: ${trip.flightTime}` : ""}
+                      </Text>
+                    )}
+                    {trip.terminal ? <Text style={s.tripDetailText}>Terminal: {trip.terminal}</Text> : null}
+
+                    {(trip.hotelName || trip.checkInDate) && (
+                      <View style={s.tripHotelSection}>
+                        {trip.hotelName && <Text style={s.tripHotelName}>🏨 {trip.hotelName}</Text>}
+                        {trip.checkInDate && trip.checkOutDate && (
+                          <Text style={s.tripDetailText}>
+                            {trip.checkInDate} → {trip.checkOutDate}
+                          </Text>
+                        )}
+                        {trip.confirmationNumber ? (
+                          <Text style={s.tripDetailText}>Confirmation: #{trip.confirmationNumber}</Text>
+                        ) : null}
+                      </View>
+                    )}
+                  </View>
+                </View>
+              );
+            })}
           </View>
         )}
 
         {/* Empty state */}
-        {bookings.length === 0 && (
+        {bookings.length === 0 && trips.length === 0 && (
           <View style={s.emptyWrap}>
             <Text style={s.emptyEmoji}>📅</Text>
             <Text style={s.emptyTitle}>No Reservations</Text>
@@ -368,7 +583,7 @@ const s = StyleSheet.create({
 
   // Calendar
   calendarCard: {
-    backgroundColor: T.white, borderRadius: 16, padding: 16,
+    backgroundColor: T.white, borderRadius: 16, padding: 20,
     ...Platform.select({
       ios: { shadowColor: "#000", shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.08, shadowRadius: 8 },
       android: { elevation: 4 },
@@ -376,34 +591,66 @@ const s = StyleSheet.create({
   },
   monthRow: {
     flexDirection: "row", alignItems: "center", justifyContent: "space-between",
-    marginBottom: 16,
+    marginBottom: 20,
   },
-  monthArrow: { width: 36, height: 36, borderRadius: 18, backgroundColor: T.purpleLight, alignItems: "center", justifyContent: "center" },
-  monthArrowText: { fontSize: 22, color: T.purple, fontWeight: "600" },
-  monthTitle: { fontSize: 18, fontWeight: "700", color: T.navy },
+  monthArrow: { width: 40, height: 40, borderRadius: 20, backgroundColor: T.purpleLight, alignItems: "center", justifyContent: "center" },
+  monthArrowText: { fontSize: 26, color: T.purple, fontWeight: "600" },
+  monthTitle: { fontSize: 20, fontWeight: "700", color: T.navy },
 
   weekdayRow: { flexDirection: "row", marginBottom: 8 },
-  weekdayCell: { flex: 1, alignItems: "center", paddingVertical: 4 },
-  weekdayText: { fontSize: 12, fontWeight: "600", color: T.slateLight },
+  weekdayCell: { flex: 1, alignItems: "center", paddingVertical: 6 },
+  weekdayText: { fontSize: 13, fontWeight: "600", color: T.slateLight },
 
   weekRow: { flexDirection: "row" },
-  dayCell: { flex: 1, alignItems: "center", paddingVertical: 8, minHeight: 44 },
+  dayCell: { flex: 1, alignItems: "center", paddingVertical: 10, minHeight: 56 },
   dayCellSelected: { backgroundColor: T.purple, borderRadius: 12 },
   dayCellToday: { backgroundColor: T.purpleLight, borderRadius: 12 },
-  dayText: { fontSize: 15, fontWeight: "500", color: T.navy },
+  dayText: { fontSize: 17, fontWeight: "500", color: T.navy },
   dayTextSelected: { color: T.white, fontWeight: "700" },
   dayTextToday: { color: T.purple, fontWeight: "700" },
   dayTextDim: { color: T.slateLight },
-  bookingDot: {
-    width: 6, height: 6, borderRadius: 3, backgroundColor: T.purple,
-    marginTop: 2,
+
+  // Multi-dot row
+  dotsRow: { flexDirection: "row", gap: 3, marginTop: 3 },
+  dot: { width: 7, height: 7, borderRadius: 3.5 },
+
+  // Legend
+  legendRow: {
+    flexDirection: "row", justifyContent: "center", gap: 16,
+    marginTop: 14, paddingTop: 12, borderTopWidth: 1, borderTopColor: T.border,
   },
-  bookingDotSelected: { backgroundColor: T.white },
+  legendItem: { flexDirection: "row", alignItems: "center", gap: 4 },
+  legendDot: { width: 9, height: 9, borderRadius: 4.5 },
+  legendBar: { width: 18, height: 9, borderRadius: 3.5 },
+  legendText: { fontSize: 12, color: T.slateLight, fontWeight: "500" },
 
   // Selected date
   selectedSection: { marginTop: 16 },
   selectedDateTitle: { fontSize: 16, fontWeight: "700", color: T.navy, marginBottom: 12 },
 
+  // Trip card
+  tripCard: {
+    backgroundColor: T.white, borderRadius: 16, marginBottom: 12,
+    borderWidth: 1, borderColor: T.border,
+    ...Platform.select({
+      ios: { shadowColor: "#000", shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.06, shadowRadius: 6 },
+      android: { elevation: 3 },
+    }),
+  },
+  tripCardHeader: {
+    flexDirection: "row", justifyContent: "space-between", alignItems: "center",
+    padding: 14,
+  },
+  tripBadgeRow: { flexDirection: "row", gap: 6 },
+  tripBadge: { flexDirection: "row", alignItems: "center", paddingHorizontal: 10, paddingVertical: 5, borderRadius: 8 },
+  tripBadgeText: { fontSize: 13, fontWeight: "700" },
+  tripBody: { paddingHorizontal: 14, paddingBottom: 14 },
+  tripFlightInfo: { fontSize: 16, fontWeight: "700", color: T.navy, marginBottom: 4 },
+  tripDetailText: { fontSize: 13, color: T.slate, marginTop: 2 },
+  tripHotelSection: { marginTop: 10, paddingTop: 10, borderTopWidth: 1, borderTopColor: T.border },
+  tripHotelName: { fontSize: 15, fontWeight: "600", color: T.navy, marginBottom: 2 },
+
+  // Booking card
   bookingCard: {
     backgroundColor: T.white, borderRadius: 16, marginBottom: 12,
     borderWidth: 1, borderColor: T.border,
