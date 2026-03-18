@@ -40,11 +40,6 @@ const EMPTY_TRIP: Omit<SavedTrip, "id" | "createdAt" | "updatedAt"> = {
   flightDate: "",
   flightTime: "",
   terminal: "",
-  depAirline: "",
-  depFlightNumber: "",
-  depFlightDate: "",
-  depFlightTime: "",
-  depTerminal: "",
   hotelName: "",
   hotelAddress: "",
   checkInDate: "",
@@ -177,11 +172,6 @@ export default function MyTripsScreen() {
           flightDate: target.flightDate,
           flightTime: target.flightTime,
           terminal: target.terminal || "",
-          depAirline: target.depAirline || "",
-          depFlightNumber: target.depFlightNumber || "",
-          depFlightDate: target.depFlightDate || "",
-          depFlightTime: target.depFlightTime || "",
-          depTerminal: target.depTerminal || "",
           hotelName: target.hotelName || "",
           hotelAddress: target.hotelAddress || "",
           checkInDate: target.checkInDate || "",
@@ -211,11 +201,6 @@ export default function MyTripsScreen() {
       flightDate: trip.flightDate,
       flightTime: trip.flightTime,
       terminal: trip.terminal || "",
-      depAirline: trip.depAirline || "",
-      depFlightNumber: trip.depFlightNumber || "",
-      depFlightDate: trip.depFlightDate || "",
-      depFlightTime: trip.depFlightTime || "",
-      depTerminal: trip.depTerminal || "",
       hotelName: trip.hotelName || "",
       hotelAddress: trip.hotelAddress || "",
       checkInDate: trip.checkInDate || "",
@@ -233,8 +218,7 @@ export default function MyTripsScreen() {
       form.flightNumber.trim() !== "" &&
       form.flightDate.trim() !== "" &&
       form.flightTime.trim() !== "" &&
-      isTimeValid(form.flightTime) &&
-      isTimeValid(form.depFlightTime || "")
+      isTimeValid(form.flightTime)
     );
   };
 
@@ -281,35 +265,14 @@ export default function MyTripsScreen() {
     return !val || val.trim() === "";
   };
 
-  const hasDeparture = (item: SavedTrip) =>
-    !!(item.depAirline || item.depFlightNumber || item.depFlightDate || item.depFlightTime);
-
   const renderTrip = ({ item }: { item: SavedTrip }) => (
     <View style={s.card}>
-      <View style={s.flightRow}>
-        <View style={s.flightCol}>
-          <Text style={s.sectionLabel}>✈️ Arrival</Text>
-          <Text style={s.infoMain}>{item.airline}</Text>
-          <Text style={s.infoSub}>{item.flightNumber}</Text>
-          {item.flightDate ? <Text style={s.infoSub}>{item.flightDate}</Text> : null}
-          {item.flightTime ? <Text style={s.infoSub}>{item.flightTime}</Text> : null}
-          {item.terminal ? <Text style={s.infoSub}>{item.terminal}</Text> : null}
-        </View>
-        <View style={s.flightDivider} />
-        <View style={s.flightCol}>
-          <Text style={s.sectionLabel}>✈️ Departure</Text>
-          {hasDeparture(item) ? (
-            <>
-              <Text style={s.infoMain}>{item.depAirline || ""}</Text>
-              {item.depFlightNumber ? <Text style={s.infoSub}>{item.depFlightNumber}</Text> : null}
-              {item.depFlightDate ? <Text style={s.infoSub}>{item.depFlightDate}</Text> : null}
-              {item.depFlightTime ? <Text style={s.infoSub}>{item.depFlightTime}</Text> : null}
-              {item.depTerminal ? <Text style={s.infoSub}>{item.depTerminal}</Text> : null}
-            </>
-          ) : (
-            <Text style={s.infoPlaceholder}>Not set</Text>
-          )}
-        </View>
+      <View style={s.cardSection}>
+        <Text style={s.sectionLabel}>✈️ Flight</Text>
+        <Text style={s.infoMain}>{item.airline} - {item.flightNumber}</Text>
+        {item.flightDate ? <Text style={s.infoSub}>Date: {item.flightDate}</Text> : null}
+        {item.flightTime ? <Text style={s.infoSub}>Time: {item.flightTime}</Text> : null}
+        {item.terminal ? <Text style={s.infoSub}>Terminal: {item.terminal}</Text> : null}
       </View>
 
       {(item.hotelName || item.hotelAddress) && (
@@ -384,8 +347,8 @@ export default function MyTripsScreen() {
             </View>
 
             <ScrollView showsVerticalScrollIndicator={false} style={s.modalScroll} keyboardShouldPersistTaps="handled">
-              {/* ── Arrival Flight (Required) ── */}
-              <Text style={s.formSectionLabel}>✈️ Arrival Flight</Text>
+              {/* ── Flight Information (Required) ── */}
+              <Text style={s.formSectionLabel}>✈️ Flight Information</Text>
 
               <View style={s.formField}>
                 <Text style={s.formLabel}>Airline <Text style={s.req}>*</Text></Text>
@@ -451,79 +414,6 @@ export default function MyTripsScreen() {
                   value={form.terminal}
                   onChangeText={(v) => updateField("terminal", v)}
                   placeholder="e.g. Terminal 1"
-                  placeholderTextColor={T.slateLight}
-                />
-              </View>
-
-              {/* ── Departure Flight (Optional) ── */}
-              <Text style={[s.formSectionLabel, { marginTop: 20 }]}>
-                ✈️ Departure Flight <Text style={s.optionalTag}>(Optional)</Text>
-              </Text>
-
-              <View style={s.formField}>
-                <Text style={s.formLabel}>Airline</Text>
-                <TextInput
-                  style={s.formInput}
-                  value={form.depAirline}
-                  onChangeText={(v) => updateField("depAirline", v)}
-                  placeholder="e.g. Korean Air"
-                  placeholderTextColor={T.slateLight}
-                />
-              </View>
-
-              <View style={s.formField}>
-                <Text style={s.formLabel}>Flight Number</Text>
-                <TextInput
-                  style={s.formInput}
-                  value={form.depFlightNumber}
-                  onChangeText={(v) => updateField("depFlightNumber", v.toUpperCase())}
-                  placeholder="e.g. KE002"
-                  placeholderTextColor={T.slateLight}
-                  autoCapitalize="characters"
-                />
-              </View>
-
-              <View style={s.formRow}>
-                <View style={[s.formField, { flex: 1, zIndex: showCalendarFor === "depFlightDate" ? 10 : 1 }]}>
-                  <Text style={s.formLabel}>Date</Text>
-                  <TouchableOpacity
-                    style={[s.formInput, s.datePickerBtn]}
-                    onPress={() => toggleCalendar("depFlightDate")}
-                  >
-                    <Text style={form.depFlightDate ? s.datePickerText : s.datePickerPlaceholder}>
-                      {form.depFlightDate || "Select date"}
-                    </Text>
-                    <Text style={s.datePickerIcon}>📅</Text>
-                  </TouchableOpacity>
-                  {showCalendarFor === "depFlightDate" && (
-                    <MiniCalendar
-                      value={form.depFlightDate || ""}
-                      onSelect={(d) => updateField("depFlightDate", d)}
-                      onClose={() => setShowCalendarFor(null)}
-                    />
-                  )}
-                </View>
-                <View style={[s.formField, { flex: 1 }]}>
-                  <Text style={s.formLabel}>Time</Text>
-                  <TextInput
-                    style={[s.formInput, (attempted && form.depFlightTime && !isTimeValid(form.depFlightTime)) ? s.formInputError : null]}
-                    value={form.depFlightTime}
-                    onChangeText={(v) => updateField("depFlightTime", formatTimeInput(v))}
-                    placeholder="HH:MM"
-                    placeholderTextColor={T.slateLight}
-                    keyboardType="number-pad"
-                    maxLength={5}
-                  />
-                </View>
-              </View>
-
-              <View style={s.formField}>
-                <Text style={s.formLabel}>Terminal</Text>
-                <TextInput
-                  style={s.formInput}
-                  value={form.depTerminal}
-                  onChangeText={(v) => updateField("depTerminal", v)}
-                  placeholder="e.g. Terminal 2"
                   placeholderTextColor={T.slateLight}
                 />
               </View>
@@ -644,10 +534,6 @@ const s = StyleSheet.create({
     shadowColor: "#000", shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.06, shadowRadius: 8, elevation: 3,
   },
-  flightRow: { flexDirection: "row", marginBottom: 12 },
-  flightCol: { flex: 1 },
-  flightDivider: { width: 1, backgroundColor: T.border, marginHorizontal: 12 },
-  infoPlaceholder: { fontSize: 13, color: T.slateLight, fontStyle: "italic", marginTop: 2 },
   cardSection: { marginBottom: 12 },
   cardSectionBorder: { borderTopWidth: 1, borderTopColor: T.border, paddingTop: 12 },
   sectionLabel: { fontSize: 13, fontWeight: "700", color: T.purple, marginBottom: 6 },

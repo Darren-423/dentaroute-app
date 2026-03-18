@@ -115,21 +115,19 @@ export default function PatientDashboardScreen() {
   const completedCount = bookings.filter((b) => COMPLETED_STATUSES.includes(b.status)).length;
 
   const filteredCases = useMemo(() => {
-    let result: PatientCase[];
     switch (statusFilter) {
-      case "with_quotes": result = cases.filter((c) => c.status === "quotes_received"); break;
-      case "bookings": result = cases.filter((c) => c.status === "booked"); break;
-      case "in_treatment": result = cases.filter((c) => {
+      case "with_quotes": return cases.filter((c) => c.status === "quotes_received");
+      case "bookings": return cases.filter((c) => c.status === "booked");
+      case "in_treatment": return cases.filter((c) => {
         const bk = bookings.find((b) => b.caseId === c.id);
         return bk && IN_TREATMENT_STATUSES.includes(bk.status);
-      }); break;
-      case "completed": result = cases.filter((c) => {
+      });
+      case "completed": return cases.filter((c) => {
         const bk = bookings.find((b) => b.caseId === c.id);
         return bk && COMPLETED_STATUSES.includes(bk.status);
-      }); break;
-      default: result = [...cases];
+      });
+      default: return cases; // "all"
     }
-    return result;
   }, [cases, bookings, statusFilter]);
 
   const filterSectionTitle = statusFilter === "all"
@@ -148,21 +146,6 @@ export default function PatientDashboardScreen() {
     { key: "departure_set", label: "Complete", next: "Leave a review!", emoji: "⭐" },
     { key: "cancelled", label: "Cancelled", next: "View quotes to rebook", emoji: "❌" },
   ];
-
-  const sortedCases = useMemo(() => {
-    const getPriority = (c: PatientCase): number => {
-      if (c.status === "booked") {
-        const bk = bookings.find((b) => b.caseId === c.id);
-        if (bk?.status === "cancelled") return -1;
-        const stepIdx = BOOKING_STEPS.findIndex((st) => st.key === bk?.status);
-        return stepIdx >= 0 ? 100 + stepIdx : 100;
-      }
-      if (c.status === "quotes_received") return 10;
-      if (c.status === "pending") return 5;
-      return 0;
-    };
-    return [...filteredCases].sort((a, b) => getPriority(b) - getPriority(a));
-  }, [filteredCases, bookings]);
 
   const getCaseProgress = (status: string, caseId?: string) => {
     if (status === "booked" && caseId) {
@@ -388,7 +371,7 @@ export default function PatientDashboardScreen() {
               <Text style={s.createBtnText}>Create First Case</Text>
             </TouchableOpacity>
           </View>
-        ) : sortedCases.length === 0 ? (
+        ) : filteredCases.length === 0 ? (
           <View style={s.emptyCard}>
             <View style={s.emptyIconWrap}>
               <Text style={s.emptyIcon}>🔍</Text>
@@ -400,7 +383,7 @@ export default function PatientDashboardScreen() {
           </View>
         ) : (
           /* Case cards */
-          sortedCases.map((c) => {
+          filteredCases.map((c) => {
             const progress = getCaseProgress(c.status, c.id);
             const qCount = quoteCounts[c.id] || 0;
 
@@ -411,12 +394,6 @@ export default function PatientDashboardScreen() {
                 onPress={() => handleCasePress(c)}
                 activeOpacity={0.7}
               >
-                {/* Status banner */}
-                <View style={[s.statusBanner, { backgroundColor: progress.bg }]}>
-                  <Text style={s.statusBannerEmoji}>{progress.emoji}</Text>
-                  <Text style={[s.statusBannerText, { color: progress.color }]}>{progress.label}</Text>
-                </View>
-
                 {/* Top row */}
                 <View style={s.caseTop}>
                   <View style={s.caseIconWrap}>
@@ -484,8 +461,14 @@ export default function PatientDashboardScreen() {
                   </View>
                 )}
 
-                {/* Next action */}
+                {/* Progress section */}
                 <View style={s.progressSection}>
+                  <View style={s.statusRow}>
+                    <View style={[s.statusBadge, { backgroundColor: progress.bg }]}>
+                      <Text style={s.statusEmoji}>{progress.emoji}</Text>
+                      <Text style={[s.statusText, { color: progress.color }]}>{progress.label}</Text>
+                    </View>
+                  </View>
                   <View style={s.nextRow}>
                     <Text style={s.nextLabel}>Next:</Text>
                     <Text style={s.nextAction}>{progress.next}</Text>
@@ -769,20 +752,13 @@ const s = StyleSheet.create({
 
   /* Case card */
   caseCard: {
-    backgroundColor: T.white, borderRadius: 18, overflow: "hidden",
+    backgroundColor: T.white, borderRadius: 18, padding: 16, gap: 14,
     borderWidth: 1, borderColor: T.border, marginBottom: 12,
     shadowColor: "#0f172a", shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.04, shadowRadius: 12, elevation: 2,
   },
-  statusBanner: {
-    flexDirection: "row", alignItems: "center", gap: 8,
-    paddingHorizontal: 16, paddingVertical: 10,
-  },
-  statusBannerEmoji: { fontSize: 16 },
-  statusBannerText: { fontSize: 14, fontWeight: "800" },
   caseTop: {
     flexDirection: "row", alignItems: "center", gap: 12,
-    paddingHorizontal: 16, paddingTop: 14,
   },
   caseIconWrap: {
     width: 44, height: 44, borderRadius: 14,
@@ -792,7 +768,7 @@ const s = StyleSheet.create({
   caseTitle: { fontSize: 15, fontWeight: "700", color: T.navy },
   caseMeta: { fontSize: 12, color: T.slateLight, marginTop: 2 },
   /* Tags */
-  tagRow: { flexDirection: "row", flexWrap: "wrap", gap: 6, paddingHorizontal: 16, marginTop: 12 },
+  tagRow: { flexDirection: "row", flexWrap: "wrap", gap: 6 },
   tag: {
     flexDirection: "row", alignItems: "center", gap: 4,
     backgroundColor: T.bg, borderRadius: 8,
@@ -810,7 +786,7 @@ const s = StyleSheet.create({
 
   /* Progress section */
   stepProgressWrap: {
-    flexDirection: "row", alignItems: "center", paddingVertical: 8, paddingHorizontal: 16,
+    flexDirection: "row", alignItems: "center", paddingVertical: 8, paddingHorizontal: 4,
   },
   stepDot: {
     width: 10, height: 10, borderRadius: 5,
@@ -829,7 +805,7 @@ const s = StyleSheet.create({
     backgroundColor: "#4A0080",
   },
   progressSection: {
-    backgroundColor: T.bg, padding: 12, marginTop: 12, gap: 10,
+    backgroundColor: T.bg, borderRadius: 12, padding: 12, gap: 10,
   },
   statusRow: {
     flexDirection: "row", alignItems: "center",

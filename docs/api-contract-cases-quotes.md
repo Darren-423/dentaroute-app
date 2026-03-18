@@ -106,6 +106,16 @@ interface DentistQuote {
 - Case IDs remain sequential numeric-looking strings so the current UI can keep displaying `Case #1001` style labels.
 - One doctor can have at most one active quote per case in slice 2. Duplicate submissions return `VALIDATION_ERROR`.
 - Doctor identity and profile-backed fields may be backfilled by the server even if the frontend sends them.
+- Treatment-item `name` stays a single string field, but the server translates it by viewer role for cases and quotes.
+
+### Treatment Terminology Bridge
+
+The API keeps the existing `treatments[].name` shape and applies a role-aware label mapping:
+
+- Patient viewers see: `Implant: Whole (Root + Crown)`, `Implant: Root (Titanium Post) Only`, `Implant: Crown Only`, `Fillings`, `Gum Treatment`, `Invisalign`, `Tongue Tie Surgery`
+- Doctor viewers see: `Implant: Fixture Placement + Crown Restoration`, `Implant: Fixture Placement Only`, `Implant: Crown Restoration Only`, `Direct/Indirect Fillings (Composites, Inlays, Onlays)`, `Perio Surgery`, `Clear Aligner Orthodontics`, `Lingual Frenectomy`
+- Shared labels remain unchanged for both roles: `Veneers`, `Smile Makeover`, `Crowns`, `Root Canals`, `Oral Sleep Appliance`, `Wisdom Teeth Extractions`
+- Legacy aliases such as `Implant: whole implant(Root+crown)` and `Direct/Indirect fillings(Composites, Inlays, Onlays)` are normalized to the canonical labels above.
 
 ## Endpoints
 
@@ -455,6 +465,7 @@ Notes:
 
 - On success, the server updates the linked case to `quotes_received`.
 - The server may source profile-backed fields such as `dentistName`, `clinicName`, `rating`, `reviewCount`, `specialties`, and `licenseVerified` from the authenticated doctor's profile even when the frontend sends them.
+- The response keeps doctor-facing treatment labels for doctor viewers; patient reads of the same quote are translated back to patient-facing labels.
 
 ### GET /api/cases/:caseId/quotes
 
@@ -498,6 +509,7 @@ Visibility behavior:
 
 - For `patient`: return all quotes for that patient's case.
 - For `doctor`: return only the authenticated doctor's own quote for that case.
+- Treatment names are translated to patient-facing or doctor-facing terminology based on the authenticated viewer role.
 
 ### GET /api/quotes
 
@@ -541,6 +553,7 @@ Filtering behavior:
 
 - For `patient`: return quotes belonging to the authenticated patient's cases.
 - For `doctor`: return quotes created by the authenticated doctor.
+- Treatment names are translated to patient-facing or doctor-facing terminology based on the authenticated viewer role.
 
 ## Error Handling
 

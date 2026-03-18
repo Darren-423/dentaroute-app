@@ -3,12 +3,13 @@ import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
 import React, { useCallback, useState } from "react";
 import {
-  FlatList,
-  StyleSheet,
-  Text, TouchableOpacity,
-  View,
+    FlatList,
+    StyleSheet,
+    Text, TouchableOpacity,
+    View,
 } from "react-native";
-import { ChatRoom, store } from "../../lib/store";
+import { getDoctorChatRoomsCache, loadDoctorChatRooms } from "../../lib/doctorTabDataCache";
+import { ChatRoom } from "../../lib/store";
 
 const T = {
   teal: "#0f766e",
@@ -23,20 +24,13 @@ const T = {
 };
 
 export default function DoctorChatListScreen() {
-  const [rooms, setRooms] = useState<ChatRoom[]>([]);
+  const [rooms, setRooms] = useState<ChatRoom[]>(getDoctorChatRoomsCache());
 
   useFocusEffect(
     useCallback(() => {
       const load = async () => {
-        const user = await store.getCurrentUser();
-        const name = user?.name || "Doctor";
-        const allRooms = await store.getChatRoomsForUser("doctor", name);
-        allRooms.sort((a, b) => new Date(b.lastMessageAt).getTime() - new Date(a.lastMessageAt).getTime());
+        const allRooms = await loadDoctorChatRooms(true);
         setRooms(allRooms);
-        // Mark all chat rooms as read
-        for (const room of allRooms) {
-          if (room.unreadDoctor > 0) await store.markAsRead(room.id, "doctor");
-        }
       };
       load();
     }, [])

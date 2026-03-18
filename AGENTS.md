@@ -446,6 +446,13 @@ Standard: rest               → 20% platform fee
 - Platform absorbs the 5% from its fee margin
 - This is an anti-bypass incentive ("pay through app = 5% off")
 
+### Treatment Terminology Bridge
+- Cases and quotes keep `treatments[].name` as a single string field
+- Patient-facing labels: `Implant: Whole (Root + Crown)`, `Implant: Root (Titanium Post) Only`, `Implant: Crown Only`, `Fillings`, `Gum Treatment`, `Invisalign`, `Tongue Tie Surgery`
+- Doctor-facing labels: `Implant: Fixture Placement + Crown Restoration`, `Implant: Fixture Placement Only`, `Implant: Crown Restoration Only`, `Direct/Indirect Fillings (Composites, Inlays, Onlays)`, `Perio Surgery`, `Clear Aligner Orthodontics`, `Lingual Frenectomy`
+- Shared labels remain unchanged across both roles: `Veneers`, `Smile Makeover`, `Crowns`, `Root Canals`, `Oral Sleep Appliance`, `Wisdom Teeth Extractions`
+- The backend must normalize legacy aliases such as `Implant: whole implant(Root+crown)` to the canonical role-specific labels above
+
 ### Chat Contact Filter (Anti-Bypass)
 - Before booking is confirmed: block phone numbers, emails, messenger IDs, URLs
 - After booking confirmed: filter is OFF

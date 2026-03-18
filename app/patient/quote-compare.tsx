@@ -1,13 +1,14 @@
 import { router, useLocalSearchParams } from "expo-router";
 import React, { useEffect, useState } from "react";
 import {
-  ActivityIndicator,
-  ScrollView,
-  StyleSheet,
-  Text, TouchableOpacity,
-  View,
+    ActivityIndicator,
+    ScrollView,
+    StyleSheet,
+    Text, TouchableOpacity,
+    View,
 } from "react-native";
 import { DentistQuote, store } from "../../lib/store";
+import { toPatientLabel } from "../../lib/treatmentTerminology";
 
 const T = {
   teal: "#4A0080", tealMid: "#5C10A0", tealLight: "#f0e6f6",
@@ -148,7 +149,7 @@ export default function QuoteCompareScreen() {
                 <View key={q.id} style={[s.valueCol, { width: colWidth }]}>
                   {(q.treatments || []).map((t, ti) => (
                     <View key={ti} style={s.treatmentItem}>
-                      <Text style={s.treatmentName} numberOfLines={1}>{t.name}</Text>
+                      <Text style={s.treatmentName} numberOfLines={1}>{toPatientLabel(t.name)}</Text>
                       <Text style={s.treatmentPrice}>${t.price.toLocaleString()} × {t.qty}</Text>
                     </View>
                   ))}

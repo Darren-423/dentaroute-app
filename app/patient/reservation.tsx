@@ -10,7 +10,7 @@ import {
   View,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { Booking, PatientCase, store } from "../../lib/store";
+import { Booking, PatientCase, SavedTrip, store } from "../../lib/store";
 
 const T = {
   purple: "#4A0080", purpleMid: "#5C10A0", purpleLight: "#f0e6f6",
@@ -95,20 +95,23 @@ type DotType = "booking" | "arrival" | "departure";
 
 interface DayInfo {
   dots: DotType[];
-  isStayRange: boolean;
-  isStayStart: boolean;
-  isStayEnd: boolean;
+  isStayRange: boolean;     // part of hotel stay range
+  isStayStart: boolean;     // check-in date (left rounded)
+  isStayEnd: boolean;       // check-out date (right rounded)
   bookings: Booking[];
+  trips: SavedTrip[];
 }
 
 export default function ReservationScreen() {
   const insets = useSafeAreaInsets();
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [cases, setCases] = useState<PatientCase[]>([]);
+  const [trips, setTrips] = useState<SavedTrip[]>([]);
   const [year, setYear] = useState(new Date().getFullYear());
   const [month, setMonth] = useState(new Date().getMonth());
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
   const [menuBookingId, setMenuBookingId] = useState<string | null>(null);
+  const [menuTripId, setMenuTripId] = useState<string | null>(null);
 
   useFocusEffect(
     useCallback(() => {
@@ -118,6 +121,7 @@ export default function ReservationScreen() {
         active.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
         setBookings(active);
         setCases(await store.getCases());
+        setTrips(await store.getTrips());
       };
       load();
     }, [])
@@ -129,7 +133,7 @@ export default function ReservationScreen() {
   const getOrCreate = (dateKey: string): DayInfo => {
     let info = dayInfoMap.get(dateKey);
     if (!info) {
-      info = { dots: [], isStayRange: false, isStayStart: false, isStayEnd: false, bookings: [] };
+      info = { dots: [], isStayRange: false, isStayStart: false, isStayEnd: false, bookings: [], trips: [] };
       dayInfoMap.set(dateKey, info);
     }
     return info;
@@ -146,34 +150,31 @@ export default function ReservationScreen() {
     });
   });
 
-  // Map booking arrival info (only after flight is submitted)
-  bookings.forEach((bk) => {
-    if (!bk.arrivalInfo || bk.status === "confirmed") return;
-    const ai = bk.arrivalInfo;
-
-    // Arrival dot
-    if (ai.arrivalDate) {
-      const info = getOrCreate(ai.arrivalDate);
+  // Map trip dates
+  trips.forEach((trip) => {
+    // Flight arrival date → arrival dot
+    if (trip.flightDate) {
+      const info = getOrCreate(trip.flightDate);
       if (!info.dots.includes("arrival")) info.dots.push("arrival");
-      if (!info.bookings.find((b) => b.id === bk.id)) info.bookings.push(bk);
+      if (!info.trips.find((t) => t.id === trip.id)) info.trips.push(trip);
     }
 
-    // Departure dot
-    if (ai.depFlightDate) {
-      const info = getOrCreate(ai.depFlightDate);
+    // Check-out date → departure dot
+    if (trip.checkOutDate) {
+      const info = getOrCreate(trip.checkOutDate);
       if (!info.dots.includes("departure")) info.dots.push("departure");
-      if (!info.bookings.find((b) => b.id === bk.id)) info.bookings.push(bk);
+      if (!info.trips.find((t) => t.id === trip.id)) info.trips.push(trip);
     }
 
     // Hotel stay range
-    if (ai.checkInDate && ai.checkOutDate) {
-      const range = getDateRange(ai.checkInDate, ai.checkOutDate);
+    if (trip.checkInDate && trip.checkOutDate) {
+      const range = getDateRange(trip.checkInDate, trip.checkOutDate);
       range.forEach((dateKey, idx) => {
         const info = getOrCreate(dateKey);
         info.isStayRange = true;
         if (idx === 0) info.isStayStart = true;
         if (idx === range.length - 1) info.isStayEnd = true;
-        if (!info.bookings.find((b) => b.id === bk.id)) info.bookings.push(bk);
+        if (!info.trips.find((t) => t.id === trip.id)) info.trips.push(trip);
       });
     }
   });
@@ -207,6 +208,7 @@ export default function ReservationScreen() {
 
   const selectedDayInfo = selectedDate ? dayInfoMap.get(selectedDate) : null;
   const selectedBookings = selectedDayInfo?.bookings || [];
+  const selectedTrips = selectedDayInfo?.trips || [];
 
   const handleReschedule = (bk: Booking) => {
     setMenuBookingId(null);
@@ -218,6 +220,10 @@ export default function ReservationScreen() {
     router.push(`/patient/cancel-booking?bookingId=${bk.id}` as any);
   };
 
+  const handleEditTrip = (tripId: string) => {
+    setMenuTripId(null);
+    router.push(`/patient/my-trips?editTripId=${tripId}` as any);
+  };
 
   const dotColor = (type: DotType, isSelected: boolean) => {
     if (isSelected) return T.white;
@@ -234,8 +240,8 @@ export default function ReservationScreen() {
       >
         <Text style={s.headerTitle}>My Reservations</Text>
         <Text style={s.headerSub}>
-          {bookings.length > 0
-            ? `${bookings.length} reservation${bookings.length !== 1 ? "s" : ""}`
+          {bookings.length > 0 || trips.length > 0
+            ? `${bookings.length} reservation${bookings.length !== 1 ? "s" : ""}${trips.length > 0 ? ` · ${trips.length} trip${trips.length !== 1 ? "s" : ""}` : ""}`
             : "No reservations yet"}
         </Text>
       </LinearGradient>
@@ -368,170 +374,192 @@ export default function ReservationScreen() {
         </View>
 
         {/* Selected date details */}
-        {selectedDate && selectedBookings.length > 0 && (
+        {selectedDate && (selectedBookings.length > 0 || selectedTrips.length > 0) && (
           <View style={s.selectedSection}>
             <Text style={s.selectedDateTitle}>
               {new Date(selectedDate + "T00:00:00").toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" })}
             </Text>
 
+            {/* Booking cards (priority — shown first) */}
             {selectedBookings.map((bk) => {
               const patientCase = cases.find((c) => c.id === bk.caseId);
               const info = getStepInfo(bk);
               const treatments = bk.treatments || patientCase?.treatments || [];
               const visit = bk.visitDates?.find((v) => v.date === selectedDate);
-              const ai = bk.arrivalInfo;
-              const isArrivalDay = ai && selectedDate === ai.arrivalDate;
-              const isDepartureDay = ai?.depFlightDate && selectedDate === ai.depFlightDate;
-              const isStayDay = selectedDayInfo?.isStayRange && !isArrivalDay && !isDepartureDay;
 
               return (
-                <React.Fragment key={bk.id}>
-                  {/* ── Arrival Flight card (arrival day) ── */}
-                  {isArrivalDay && (
-                    <View style={s.tripInfoCard}>
-                      <View style={[s.tripInfoBadge, { backgroundColor: "rgba(14,165,233,0.12)" }]}>
-                        <Text style={[s.tripInfoBadgeText, { color: T.arrival }]}>✈️ Arrival Flight</Text>
-                      </View>
-                      <View style={s.tripInfoBody}>
-                        <Text style={s.tripInfoMain}>{ai!.airline ? `${ai!.airline} ` : ""}{ai!.flightNumber}</Text>
-                        <Text style={s.tripInfoSub}>{ai!.arrivalDate}{ai!.arrivalTime ? `  ·  ${ai!.arrivalTime}` : ""}</Text>
-                        {ai!.terminal ? <Text style={s.tripInfoSub}>Terminal: {ai!.terminal}</Text> : null}
-                      </View>
+                <View key={bk.id} style={s.bookingCard}>
+                  {/* Header with menu */}
+                  <View style={s.bookingCardHeader}>
+                    <View style={[s.statusBadge, { backgroundColor: info.bg }]}>
+                      <Text style={s.statusEmoji}>{info.emoji}</Text>
+                      <Text style={[s.statusLabel, { color: info.color }]}>{info.label}</Text>
                     </View>
-                  )}
+                    <TouchableOpacity
+                      style={s.menuBtn}
+                      onPress={() => setMenuBookingId(menuBookingId === bk.id ? null : bk.id)}
+                    >
+                      <Text style={s.menuBtnText}>⋯</Text>
+                    </TouchableOpacity>
+                  </View>
 
-                  {/* ── Departure Flight card (departure day) ── */}
-                  {isDepartureDay && !isArrivalDay && (
-                    <View style={s.tripInfoCard}>
-                      <View style={[s.tripInfoBadge, { backgroundColor: "rgba(249,115,22,0.12)" }]}>
-                        <Text style={[s.tripInfoBadgeText, { color: T.departure }]}>🛫 Departure Flight</Text>
-                      </View>
-                      <View style={s.tripInfoBody}>
-                        <Text style={s.tripInfoMain}>{ai!.depAirline ? `${ai!.depAirline} ` : ""}{ai!.depFlightNumber || ""}</Text>
-                        <Text style={s.tripInfoSub}>{ai!.depFlightDate}{ai!.depFlightTime ? `  ·  ${ai!.depFlightTime}` : ""}</Text>
-                        {ai!.depTerminal ? <Text style={s.tripInfoSub}>Terminal: {ai!.depTerminal}</Text> : null}
-                      </View>
-                    </View>
-                  )}
-
-                  {/* ── Booking card (visit day) ── */}
-                  {visit && (
-                    <View style={s.bookingCard}>
-                      <View style={s.bookingCardHeader}>
-                        <View style={[s.statusBadge, { backgroundColor: info.bg }]}>
-                          <Text style={s.statusEmoji}>{info.emoji}</Text>
-                          <Text style={[s.statusLabel, { color: info.color }]}>{info.label}</Text>
-                        </View>
-                        <TouchableOpacity
-                          style={s.menuBtn}
-                          onPress={() => setMenuBookingId(menuBookingId === bk.id ? null : bk.id)}
-                        >
-                          <Text style={s.menuBtnText}>⋯</Text>
-                        </TouchableOpacity>
-                      </View>
-
-                      {menuBookingId === bk.id && (
-                        <View style={s.dropdown}>
-                          <TouchableOpacity style={s.dropdownItem} onPress={() => handleReschedule(bk)}>
-                            <Text style={s.dropdownText}>📅 Reschedule</Text>
-                          </TouchableOpacity>
-                          <View style={s.dropdownDivider} />
-                          <TouchableOpacity style={s.dropdownItem} onPress={() => handleCancel(bk)}>
-                            <Text style={[s.dropdownText, { color: T.red }]}>❌ Cancel Booking</Text>
-                          </TouchableOpacity>
-                        </View>
-                      )}
-
-                      <View style={s.stepProgressWrap}>
-                        {BOOKING_STEPS.map((step, i) => {
-                          const stepNum = i + 1;
-                          const isCompleted = stepNum < info.step;
-                          const isCurrent = stepNum === info.step;
-                          const isLast = i === BOOKING_STEPS.length - 1;
-                          return (
-                            <React.Fragment key={i}>
-                              <View
-                                style={[
-                                  s.stepDot,
-                                  isCompleted && { backgroundColor: info.color, borderColor: info.color },
-                                  isCurrent && { backgroundColor: info.color, borderColor: info.color, width: 14, height: 14, borderRadius: 7, borderWidth: 3 },
-                                  !isCompleted && !isCurrent && { backgroundColor: T.white, borderColor: T.border },
-                                ]}
-                              />
-                              {!isLast && (
-                                <View style={[s.stepLine, { backgroundColor: isCompleted ? info.color : T.border }]} />
-                              )}
-                            </React.Fragment>
-                          );
-                        })}
-                      </View>
-
-                      <View style={s.bookingBody}>
-                        <Text style={s.clinicName}>{bk.clinicName}</Text>
-                        <Text style={s.dentistName}>Dr. {bk.dentistName}</Text>
-
-                        {treatments.length > 0 && (
-                          <View style={s.treatmentRow}>
-                            {treatments.slice(0, 3).map((t, i) => (
-                              <View key={i} style={s.treatmentChip}>
-                                <Text style={s.treatmentChipText}>{t.name}{t.qty > 1 ? ` x${t.qty}` : ""}</Text>
-                              </View>
-                            ))}
-                            {treatments.length > 3 && (
-                              <Text style={s.moreText}>+{treatments.length - 3} more</Text>
-                            )}
-                          </View>
-                        )}
-
-                        <View style={s.visitInfo}>
-                          <Text style={s.visitText}>
-                            Visit {visit.visit}: {visit.description}
-                            {visit.confirmedTime ? ` at ${visit.confirmedTime}` : ""}
-                          </Text>
-                        </View>
-
-                        <View style={s.priceRow}>
-                          <Text style={s.priceLabel}>Total</Text>
-                          <Text style={s.priceValue}>${bk.totalPrice.toLocaleString()}</Text>
-                        </View>
-                      </View>
-
-                      <TouchableOpacity
-                        style={s.continueBtn}
-                        onPress={() => navigateToBookingStep(bk, bk.caseId)}
-                      >
-                        <Text style={s.continueBtnText}>Continue →</Text>
+                  {/* Dropdown menu */}
+                  {menuBookingId === bk.id && (
+                    <View style={s.dropdown}>
+                      <TouchableOpacity style={s.dropdownItem} onPress={() => handleReschedule(bk)}>
+                        <Text style={s.dropdownText}>📅 Reschedule</Text>
+                      </TouchableOpacity>
+                      <View style={s.dropdownDivider} />
+                      <TouchableOpacity style={s.dropdownItem} onPress={() => handleCancel(bk)}>
+                        <Text style={[s.dropdownText, { color: T.red }]}>❌ Cancel Booking</Text>
                       </TouchableOpacity>
                     </View>
                   )}
 
-                  {/* ── Hotel card (arrival day, stay day, or departure day) ── */}
-                  {ai?.hotelName && (isArrivalDay || isStayDay || isDepartureDay) && (
-                    <View style={s.tripInfoCard}>
-                      <View style={[s.tripInfoBadge, { backgroundColor: T.stayBg }]}>
-                        <Text style={[s.tripInfoBadgeText, { color: T.arrival }]}>
-                          {isDepartureDay && !isArrivalDay ? "🏨 Hotel Check-out" : "🏨 Hotel"}
+                  {/* Step progress */}
+                  <View style={s.stepProgressWrap}>
+                    {BOOKING_STEPS.map((step, i) => {
+                      const stepNum = i + 1;
+                      const isCompleted = stepNum < info.step;
+                      const isCurrent = stepNum === info.step;
+                      const isLast = i === BOOKING_STEPS.length - 1;
+                      return (
+                        <React.Fragment key={i}>
+                          <View
+                            style={[
+                              s.stepDot,
+                              isCompleted && { backgroundColor: info.color, borderColor: info.color },
+                              isCurrent && { backgroundColor: info.color, borderColor: info.color, width: 14, height: 14, borderRadius: 7, borderWidth: 3 },
+                              !isCompleted && !isCurrent && { backgroundColor: T.white, borderColor: T.border },
+                            ]}
+                          />
+                          {!isLast && (
+                            <View style={[s.stepLine, { backgroundColor: isCompleted ? info.color : T.border }]} />
+                          )}
+                        </React.Fragment>
+                      );
+                    })}
+                  </View>
+
+                  {/* Body */}
+                  <View style={s.bookingBody}>
+                    <Text style={s.clinicName}>{bk.clinicName}</Text>
+                    <Text style={s.dentistName}>Dr. {bk.dentistName}</Text>
+
+                    {treatments.length > 0 && (
+                      <View style={s.treatmentRow}>
+                        {treatments.slice(0, 3).map((t, i) => (
+                          <View key={i} style={s.treatmentChip}>
+                            <Text style={s.treatmentChipText}>{t.name}{t.qty > 1 ? ` x${t.qty}` : ""}</Text>
+                          </View>
+                        ))}
+                        {treatments.length > 3 && (
+                          <Text style={s.moreText}>+{treatments.length - 3} more</Text>
+                        )}
+                      </View>
+                    )}
+
+                    {visit && (
+                      <View style={s.visitInfo}>
+                        <Text style={s.visitText}>
+                          Visit {visit.visit}: {visit.description}
+                          {visit.confirmedTime ? ` at ${visit.confirmedTime}` : ""}
                         </Text>
                       </View>
-                      <View style={s.tripInfoBody}>
-                        <Text style={s.tripInfoMain}>{ai.hotelName}</Text>
-                        {ai.hotelAddress ? <Text style={s.tripInfoSub}>{ai.hotelAddress}</Text> : null}
-                        {ai.checkInDate && ai.checkOutDate && (
-                          <Text style={s.tripInfoSub}>{ai.checkInDate} → {ai.checkOutDate}</Text>
-                        )}
-                        {ai.confirmationNumber ? <Text style={s.tripInfoSub}>Confirmation: #{ai.confirmationNumber}</Text> : null}
-                      </View>
+                    )}
+
+                    <View style={s.priceRow}>
+                      <Text style={s.priceLabel}>Total</Text>
+                      <Text style={s.priceValue}>${bk.totalPrice.toLocaleString()}</Text>
                     </View>
-                  )}
-                </React.Fragment>
+                  </View>
+
+                  <TouchableOpacity
+                    style={s.continueBtn}
+                    onPress={() => navigateToBookingStep(bk, bk.caseId)}
+                  >
+                    <Text style={s.continueBtnText}>Continue →</Text>
+                  </TouchableOpacity>
+                </View>
               );
             })}
 
+            {/* Trip cards */}
+            {selectedTrips.map((trip) => {
+              const isArrival = trip.flightDate === selectedDate;
+              const isDeparture = trip.checkOutDate === selectedDate;
+              const isStayOnly = !isArrival && !isDeparture && trip.checkInDate && trip.checkOutDate;
+
+              return (
+                <View key={trip.id} style={s.tripCard}>
+                  <View style={s.tripCardHeader}>
+                    <View style={s.tripBadgeRow}>
+                      {isArrival && (
+                        <View style={[s.tripBadge, { backgroundColor: "rgba(14,165,233,0.12)" }]}>
+                          <Text style={[s.tripBadgeText, { color: T.arrival }]}>✈️ Arrival</Text>
+                        </View>
+                      )}
+                      {isDeparture && (
+                        <View style={[s.tripBadge, { backgroundColor: "rgba(249,115,22,0.12)" }]}>
+                          <Text style={[s.tripBadgeText, { color: T.departure }]}>🛫 Departure</Text>
+                        </View>
+                      )}
+                      {isStayOnly && (
+                        <View style={[s.tripBadge, { backgroundColor: T.stayBg }]}>
+                          <Text style={[s.tripBadgeText, { color: T.arrival }]}>🏨 Hotel Stay</Text>
+                        </View>
+                      )}
+                    </View>
+                    <TouchableOpacity
+                      style={s.menuBtn}
+                      onPress={() => setMenuTripId(menuTripId === trip.id ? null : trip.id)}
+                    >
+                      <Text style={s.menuBtnText}>⋯</Text>
+                    </TouchableOpacity>
+                  </View>
+
+                  {/* Trip menu dropdown */}
+                  {menuTripId === trip.id && (
+                    <View style={s.dropdown}>
+                      <TouchableOpacity style={s.dropdownItem} onPress={() => handleEditTrip(trip.id)}>
+                        <Text style={s.dropdownText}>✏️ Edit Trip</Text>
+                      </TouchableOpacity>
+                    </View>
+                  )}
+
+                  <View style={s.tripBody}>
+                    <Text style={s.tripFlightInfo}>
+                      ✈️ {trip.airline} {trip.flightNumber}
+                    </Text>
+                    {trip.flightDate && (
+                      <Text style={s.tripDetailText}>
+                        Date: {trip.flightDate}{trip.flightTime ? `  ·  Time: ${trip.flightTime}` : ""}
+                      </Text>
+                    )}
+                    {trip.terminal ? <Text style={s.tripDetailText}>Terminal: {trip.terminal}</Text> : null}
+
+                    {(trip.hotelName || trip.checkInDate) && (
+                      <View style={s.tripHotelSection}>
+                        {trip.hotelName && <Text style={s.tripHotelName}>🏨 {trip.hotelName}</Text>}
+                        {trip.checkInDate && trip.checkOutDate && (
+                          <Text style={s.tripDetailText}>
+                            {trip.checkInDate} → {trip.checkOutDate}
+                          </Text>
+                        )}
+                        {trip.confirmationNumber ? (
+                          <Text style={s.tripDetailText}>Confirmation: #{trip.confirmationNumber}</Text>
+                        ) : null}
+                      </View>
+                    )}
+                  </View>
+                </View>
+              );
+            })}
           </View>
         )}
 
         {/* Empty state */}
-        {bookings.length === 0 && (
+        {bookings.length === 0 && trips.length === 0 && (
           <View style={s.emptyWrap}>
             <Text style={s.emptyEmoji}>📅</Text>
             <Text style={s.emptyTitle}>No Reservations</Text>
@@ -600,6 +628,28 @@ const s = StyleSheet.create({
   selectedSection: { marginTop: 16 },
   selectedDateTitle: { fontSize: 16, fontWeight: "700", color: T.navy, marginBottom: 12 },
 
+  // Trip card
+  tripCard: {
+    backgroundColor: T.white, borderRadius: 16, marginBottom: 12,
+    borderWidth: 1, borderColor: T.border,
+    ...Platform.select({
+      ios: { shadowColor: "#000", shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.06, shadowRadius: 6 },
+      android: { elevation: 3 },
+    }),
+  },
+  tripCardHeader: {
+    flexDirection: "row", justifyContent: "space-between", alignItems: "center",
+    padding: 14,
+  },
+  tripBadgeRow: { flexDirection: "row", gap: 6 },
+  tripBadge: { flexDirection: "row", alignItems: "center", paddingHorizontal: 10, paddingVertical: 5, borderRadius: 8 },
+  tripBadgeText: { fontSize: 13, fontWeight: "700" },
+  tripBody: { paddingHorizontal: 14, paddingBottom: 14 },
+  tripFlightInfo: { fontSize: 16, fontWeight: "700", color: T.navy, marginBottom: 4 },
+  tripDetailText: { fontSize: 13, color: T.slate, marginTop: 2 },
+  tripHotelSection: { marginTop: 10, paddingTop: 10, borderTopWidth: 1, borderTopColor: T.border },
+  tripHotelName: { fontSize: 15, fontWeight: "600", color: T.navy, marginBottom: 2 },
+
   // Booking card
   bookingCard: {
     backgroundColor: T.white, borderRadius: 16, marginBottom: 12,
@@ -656,21 +706,6 @@ const s = StyleSheet.create({
 
   visitInfo: { marginTop: 8, backgroundColor: T.bg, borderRadius: 8, padding: 8 },
   visitText: { fontSize: 13, color: T.slate },
-
-  // Trip info card (separate card for flight/hotel)
-  tripInfoCard: {
-    backgroundColor: T.white, borderRadius: 16, marginBottom: 12,
-    borderWidth: 1, borderColor: T.border,
-    ...Platform.select({
-      ios: { shadowColor: "#000", shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.06, shadowRadius: 6 },
-      android: { elevation: 3 },
-    }),
-  },
-  tripInfoBadge: { flexDirection: "row", alignItems: "center", paddingHorizontal: 14, paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: T.border },
-  tripInfoBadgeText: { fontSize: 14, fontWeight: "700" },
-  tripInfoBody: { padding: 14 },
-  tripInfoMain: { fontSize: 16, fontWeight: "700", color: T.navy, marginBottom: 4 },
-  tripInfoSub: { fontSize: 13, color: T.slate, marginTop: 2 },
 
   priceRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginTop: 12 },
   priceLabel: { fontSize: 13, color: T.slate },
