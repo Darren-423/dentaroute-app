@@ -257,7 +257,7 @@ export default function ArrivalInfoScreen() {
       type: "reminder",
       title: "Patient Arrival Info",
       body: `Your patient has submitted arrival details. Flight ${flightNumber} arriving ${formatDateDisplay(arrivalDate)} at ${arrivalTime}.`,
-      icon: "✈️",
+      icon: "🛬",
       route: `/doctor/case-detail?caseId=${booking.caseId}`,
     });
 
@@ -311,7 +311,7 @@ export default function ArrivalInfoScreen() {
 
         <View style={st.successWrap}>
           <View style={st.successIcon}>
-            <Text style={{ fontSize: 36 }}>✈️</Text>
+            <Text style={{ fontSize: 36 }}>🛬</Text>
           </View>
           <Text style={st.successTitle}>Arrival Info Submitted</Text>
           <Text style={st.successDesc}>
@@ -375,7 +375,7 @@ export default function ArrivalInfoScreen() {
 
           {/* ── Info banner ── */}
           <View style={st.banner}>
-            <Text style={{ fontSize: 22 }}>✈️</Text>
+            <Text style={{ fontSize: 22 }}>🛬</Text>
             <View style={{ flex: 1 }}>
               <Text style={st.bannerTitle}>
                 {isReturnVisit ? `Returning for Visit ${booking?.currentVisit}` : "Plan your trip"}
@@ -408,14 +408,14 @@ export default function ArrivalInfoScreen() {
           {/* ── Load from My Trips ── */}
           {savedTrips.length > 0 && (
             <TouchableOpacity style={st.loadTripBtn} onPress={() => setShowTripPicker(true)}>
-              <Text style={{ fontSize: 16 }}>✈️</Text>
+              <Text style={{ fontSize: 16 }}>🛬</Text>
               <Text style={st.loadTripText}>Load from My Trips</Text>
               <Text style={st.loadTripCount}>{savedTrips.length} saved</Text>
             </TouchableOpacity>
           )}
 
           {/* ── Arrival Flight Section ── */}
-          <Text style={st.sectionTitle}>✈️ Arrival Flight</Text>
+          <Text style={st.sectionTitle}>🛬 Arrival Flight</Text>
 
           {/* ── Flight Number ── */}
           <View style={st.field}>
@@ -559,7 +559,7 @@ export default function ArrivalInfoScreen() {
           )}
 
           {/* ── Departure Flight Section (Optional) ── */}
-          <Text style={[st.sectionTitle, { marginTop: 12 }]}>✈️ Departure Flight <Text style={st.optionalTag}>(Optional)</Text></Text>
+          <Text style={[st.sectionTitle, { marginTop: 12 }]}>🛫 Departure Flight <Text style={st.optionalTag}>(Optional)</Text></Text>
 
           <View style={st.field}>
             <Text style={st.fieldLabel}>Airline</Text>
@@ -849,7 +849,7 @@ export default function ArrivalInfoScreen() {
       <View style={st.bottomBar}>
         <View style={{ flex: 1 }}>
           <Text style={st.bottomFlight}>
-            {flightNumber ? `✈️ ${airline ? airline + " " : ""}${flightNumber}` : "Enter flight details"}
+            {flightNumber ? `🛬 ${airline ? airline + " " : ""}${flightNumber}` : "Enter flight details"}
           </Text>
           {arrivalDate && arrivalTime && arrivalTime.includes(":") ? (
             <Text style={st.bottomEta}>{formatDateDisplay(arrivalDate)} at {formatTimeSlot(arrivalTime)}</Text>

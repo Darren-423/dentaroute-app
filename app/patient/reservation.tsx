@@ -390,7 +390,7 @@ export default function ReservationScreen() {
                   {isArrivalDay && (
                     <View style={s.tripInfoCard}>
                       <View style={[s.tripInfoBadge, { backgroundColor: "rgba(14,165,233,0.12)" }]}>
-                        <Text style={[s.tripInfoBadgeText, { color: T.arrival }]}>✈️ Arrival Flight</Text>
+                        <Text style={[s.tripInfoBadgeText, { color: T.arrival }]}>🛬 Arrival Flight</Text>
                       </View>
                       <View style={s.tripInfoBody}>
                         <Text style={s.tripInfoMain}>{ai!.airline ? `${ai!.airline} ` : ""}{ai!.flightNumber}</Text>

@@ -254,7 +254,7 @@ export default function MyTripsScreen() {
   };
 
   const handleDelete = (trip: SavedTrip) => {
-    Alert.alert("Delete Trip", `Delete ${trip.airline} ${trip.flightNumber}?`, [
+    Alert.alert("Delete Trip", "Are you sure you want to delete this trip information?", [
       { text: "Cancel", style: "cancel" },
       {
         text: "Delete",
@@ -284,52 +284,72 @@ export default function MyTripsScreen() {
   const hasDeparture = (item: SavedTrip) =>
     !!(item.depAirline || item.depFlightNumber || item.depFlightDate || item.depFlightTime);
 
-  const renderTrip = ({ item }: { item: SavedTrip }) => (
+  const renderTrip = ({ item, index }: { item: SavedTrip; index: number }) => (
     <View style={s.card}>
-      <View style={s.flightRow}>
-        <View style={s.flightCol}>
-          <Text style={s.sectionLabel}>✈️ Arrival</Text>
-          <Text style={s.infoMain}>{item.airline}</Text>
-          <Text style={s.infoSub}>{item.flightNumber}</Text>
-          {item.flightDate ? <Text style={s.infoSub}>{item.flightDate}</Text> : null}
-          {item.flightTime ? <Text style={s.infoSub}>{item.flightTime}</Text> : null}
-          {item.terminal ? <Text style={s.infoSub}>{item.terminal}</Text> : null}
-        </View>
-        <View style={s.flightDivider} />
-        <View style={s.flightCol}>
-          <Text style={s.sectionLabel}>✈️ Departure</Text>
-          {hasDeparture(item) ? (
-            <>
-              <Text style={s.infoMain}>{item.depAirline || ""}</Text>
-              {item.depFlightNumber ? <Text style={s.infoSub}>{item.depFlightNumber}</Text> : null}
-              {item.depFlightDate ? <Text style={s.infoSub}>{item.depFlightDate}</Text> : null}
-              {item.depFlightTime ? <Text style={s.infoSub}>{item.depFlightTime}</Text> : null}
-              {item.depTerminal ? <Text style={s.infoSub}>{item.depTerminal}</Text> : null}
-            </>
-          ) : (
-            <Text style={s.infoPlaceholder}>Not set</Text>
-          )}
-        </View>
-      </View>
+      {/* 카드 상단 헤더 */}
+      <LinearGradient colors={[T.purple, T.purpleMid]} style={s.cardHeader}>
+        <Text style={s.cardHeaderText}>Trip #{index + 1}</Text>
+        {item.flightDate ? (
+          <Text style={s.cardHeaderDate}>{item.flightDate}</Text>
+        ) : null}
+      </LinearGradient>
 
-      {(item.hotelName || item.hotelAddress) && (
-        <View style={[s.cardSection, s.cardSectionBorder]}>
-          <Text style={s.sectionLabel}>🏨 Hotel</Text>
-          {item.hotelName ? <Text style={s.infoMain}>{item.hotelName}</Text> : null}
-          {item.hotelAddress ? <Text style={s.infoSub}>{item.hotelAddress}</Text> : null}
-          {item.checkInDate ? <Text style={s.infoSub}>Check-in: {item.checkInDate}</Text> : null}
-          {item.checkOutDate ? <Text style={s.infoSub}>Check-out: {item.checkOutDate}</Text> : null}
-          {item.confirmationNumber ? <Text style={s.infoSub}>Confirmation: {item.confirmationNumber}</Text> : null}
+      <View style={s.cardBody}>
+        {/* Flight Row */}
+        <View style={s.flightRow}>
+          <View style={s.flightCol}>
+            <View style={s.sectionBadge}>
+              <Text style={s.sectionBadgeIcon}>🛬</Text>
+              <Text style={s.sectionBadgeText}>Arrival</Text>
+            </View>
+            <Text style={s.infoMain}>{item.airline}</Text>
+            <Text style={s.infoSub}>{item.flightNumber}</Text>
+            {item.flightDate ? <Text style={s.infoSub}>{item.flightDate}</Text> : null}
+            {item.flightTime ? <Text style={s.infoSub}>{item.flightTime}</Text> : null}
+            {item.terminal ? <Text style={s.infoSub}>{item.terminal}</Text> : null}
+          </View>
+          <View style={s.flightDivider} />
+          <View style={s.flightCol}>
+            <View style={s.sectionBadge}>
+              <Text style={s.sectionBadgeIcon}>🛫</Text>
+              <Text style={s.sectionBadgeText}>Departure</Text>
+            </View>
+            {hasDeparture(item) ? (
+              <>
+                <Text style={s.infoMain}>{item.depAirline || ""}</Text>
+                {item.depFlightNumber ? <Text style={s.infoSub}>{item.depFlightNumber}</Text> : null}
+                {item.depFlightDate ? <Text style={s.infoSub}>{item.depFlightDate}</Text> : null}
+                {item.depFlightTime ? <Text style={s.infoSub}>{item.depFlightTime}</Text> : null}
+                {item.depTerminal ? <Text style={s.infoSub}>{item.depTerminal}</Text> : null}
+              </>
+            ) : (
+              <Text style={s.infoPlaceholder}>Not set</Text>
+            )}
+          </View>
         </View>
-      )}
 
-      <View style={s.cardActions}>
-        <TouchableOpacity style={s.editBtn} onPress={() => openEdit(item)}>
-          <Text style={s.editBtnText}>Edit</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={s.deleteBtn} onPress={() => handleDelete(item)}>
-          <Text style={s.deleteBtnText}>Delete</Text>
-        </TouchableOpacity>
+        {(item.hotelName || item.hotelAddress) && (
+          <View style={s.hotelSection}>
+            <View style={s.sectionBadge}>
+              <Text style={s.sectionBadgeIcon}>🏨</Text>
+              <Text style={s.sectionBadgeText}>Hotel</Text>
+            </View>
+            {item.hotelName ? <Text style={s.infoMain}>{item.hotelName}</Text> : null}
+            {item.hotelAddress ? <Text style={s.infoSub}>{item.hotelAddress}</Text> : null}
+            {item.checkInDate ? <Text style={s.infoSub}>Check-in: {item.checkInDate}</Text> : null}
+            {item.checkOutDate ? <Text style={s.infoSub}>Check-out: {item.checkOutDate}</Text> : null}
+            {item.confirmationNumber ? <Text style={s.infoSub}>Confirmation: {item.confirmationNumber}</Text> : null}
+          </View>
+        )}
+
+        <View style={s.cardActions}>
+          <TouchableOpacity style={s.editBtn} onPress={() => openEdit(item)}>
+            <Text style={s.editBtnText}>Edit</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={s.deleteBtn} onPress={() => handleDelete(item)}>
+            <Text style={s.deleteBtnText}>Delete</Text>
+          </TouchableOpacity>
+        </View>
       </View>
     </View>
   );
@@ -359,7 +379,7 @@ export default function MyTripsScreen() {
         showsVerticalScrollIndicator={false}
         ListEmptyComponent={
           <View style={s.empty}>
-            <Text style={s.emptyIcon}>✈️</Text>
+            <Text style={s.emptyIcon}>🛬</Text>
             <Text style={s.emptyTitle}>No Trips Saved</Text>
             <Text style={s.emptySub}>Tap + to add your flight and hotel details</Text>
             <TouchableOpacity style={s.emptyBtn} onPress={openAdd}>
@@ -385,7 +405,7 @@ export default function MyTripsScreen() {
 
             <ScrollView showsVerticalScrollIndicator={false} style={s.modalScroll} keyboardShouldPersistTaps="handled">
               {/* ── Arrival Flight (Required) ── */}
-              <Text style={s.formSectionLabel}>✈️ Arrival Flight</Text>
+              <Text style={s.formSectionLabel}>🛬 Arrival Flight</Text>
 
               <View style={s.formField}>
                 <Text style={s.formLabel}>Airline <Text style={s.req}>*</Text></Text>
@@ -457,7 +477,7 @@ export default function MyTripsScreen() {
 
               {/* ── Departure Flight (Optional) ── */}
               <Text style={[s.formSectionLabel, { marginTop: 20 }]}>
-                ✈️ Departure Flight <Text style={s.optionalTag}>(Optional)</Text>
+                🛫 Departure Flight <Text style={s.optionalTag}>(Optional)</Text>
               </Text>
 
               <View style={s.formField}>
@@ -639,18 +659,33 @@ const s = StyleSheet.create({
   list: { padding: 16, paddingBottom: 100 },
 
   card: {
-    backgroundColor: T.white, borderRadius: 16, padding: 18,
-    marginBottom: 14, borderWidth: 1, borderColor: T.border,
-    shadowColor: "#000", shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.06, shadowRadius: 8, elevation: 3,
+    backgroundColor: T.white, borderRadius: 16, overflow: "hidden",
+    marginBottom: 16, borderWidth: 1, borderColor: T.border,
+    shadowColor: "#000", shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1, shadowRadius: 12, elevation: 5,
   },
+  cardHeader: {
+    flexDirection: "row", justifyContent: "space-between", alignItems: "center",
+    paddingHorizontal: 18, paddingVertical: 12,
+  },
+  cardHeaderText: { color: T.white, fontSize: 15, fontWeight: "700" },
+  cardHeaderDate: { color: "rgba(255,255,255,0.8)", fontSize: 13, fontWeight: "500" },
+  cardBody: { padding: 18 },
   flightRow: { flexDirection: "row", marginBottom: 12 },
   flightCol: { flex: 1 },
   flightDivider: { width: 1, backgroundColor: T.border, marginHorizontal: 12 },
-  infoPlaceholder: { fontSize: 13, color: T.slateLight, fontStyle: "italic", marginTop: 2 },
-  cardSection: { marginBottom: 12 },
-  cardSectionBorder: { borderTopWidth: 1, borderTopColor: T.border, paddingTop: 12 },
-  sectionLabel: { fontSize: 13, fontWeight: "700", color: T.purple, marginBottom: 6 },
+  infoPlaceholder: { fontSize: 13, color: T.slateLight, fontStyle: "italic", marginTop: 4 },
+  hotelSection: {
+    borderTopWidth: 1, borderTopColor: T.border, paddingTop: 14, marginBottom: 12,
+    backgroundColor: "#faf5ff", marginHorizontal: -18, paddingHorizontal: 18, paddingBottom: 14,
+  },
+  sectionBadge: {
+    flexDirection: "row", alignItems: "center", backgroundColor: T.purpleLight,
+    alignSelf: "flex-start", borderRadius: 8, paddingHorizontal: 8, paddingVertical: 3,
+    marginBottom: 8,
+  },
+  sectionBadgeIcon: { fontSize: 12, marginRight: 4 },
+  sectionBadgeText: { fontSize: 12, fontWeight: "700", color: T.purple },
   infoMain: { fontSize: 16, fontWeight: "600", color: T.navy, marginBottom: 2 },
   infoSub: { fontSize: 13, color: T.slate, marginBottom: 1 },
 

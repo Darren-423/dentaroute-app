@@ -22,6 +22,7 @@ const T = {
   border: "#e2e8f0", bg: "#f8fafc", white: "#fff",
   amber: "#f59e0b", amberLight: "#fffbeb",
   green: "#16a34a", greenLight: "#f0fdf4",
+  yellow: "#a16207", yellowLight: "#fef9c3",
   red: "#ef4444", redLight: "#fef2f2",
 };
 
@@ -198,7 +199,7 @@ export default function PatientDashboardScreen() {
       return { label: "Awaiting Quotes", next: "Dentists are reviewing your case", emoji: "⏳", step: 1, total: 3, bg: T.amberLight, color: T.amber, isBooking: false };
     }
     if (status === "quotes_received") {
-      return { label: "Quotes Ready", next: "Review & accept a quote", emoji: "📋", step: 2, total: 3, bg: T.greenLight, color: T.green, isBooking: false };
+      return { label: "Quotes Ready", next: "Review & accept a quote", emoji: "📋", step: 2, total: 3, bg: T.yellowLight, color: T.yellow, isBooking: false };
     }
     return { label: "Submitted", next: "Waiting for processing", emoji: "📄", step: 0, total: 3, bg: T.bg, color: T.slate, isBooking: false };
   };
@@ -803,10 +804,10 @@ const s = StyleSheet.create({
 
   /* Quote count (moved to top row) */
   quoteCount: {
-    backgroundColor: "#eff6ff", borderRadius: 8,
+    backgroundColor: "#fef9c3", borderRadius: 8,
     paddingHorizontal: 10, paddingVertical: 5,
   },
-  quoteCountText: { fontSize: 12, fontWeight: "600", color: "#3b82f6" },
+  quoteCountText: { fontSize: 12, fontWeight: "600", color: "#a16207" },
 
   /* Progress section */
   stepProgressWrap: {
