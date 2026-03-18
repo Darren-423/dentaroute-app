@@ -127,6 +127,16 @@ export interface ArrivalInfo {
   passengers?: number;
   notes?: string;
   pickupRequested: boolean;
+  depAirline?: string;
+  depFlightNumber?: string;
+  depFlightDate?: string;
+  depFlightTime?: string;
+  depTerminal?: string;
+  hotelName?: string;
+  hotelAddress?: string;
+  checkInDate?: string;
+  checkOutDate?: string;
+  confirmationNumber?: string;
 }
 
 export interface SavedTrip {
@@ -141,6 +151,11 @@ export interface SavedTrip {
   checkInDate?: string;
   checkOutDate?: string;
   confirmationNumber?: string;
+  depAirline?: string;
+  depFlightNumber?: string;
+  depFlightDate?: string;
+  depFlightTime?: string;
+  depTerminal?: string;
   createdAt: string;
   updatedAt: string;
 }
@@ -1391,6 +1406,11 @@ export const store = {
         flightDate: "2026-03-15",
         flightTime: "14:30",
         terminal: "Terminal 1",
+        depAirline: "Korean Air",
+        depFlightNumber: "KE081",
+        depFlightDate: "2026-03-22",
+        depFlightTime: "10:00",
+        depTerminal: "Terminal 1",
         hotelName: "Lotte Hotel Seoul",
         hotelAddress: "30 Eulji-ro, Jung-gu, Seoul",
         checkInDate: "2026-03-15",
@@ -1406,6 +1426,11 @@ export const store = {
         flightDate: "2026-06-20",
         flightTime: "09:15",
         terminal: "Terminal 1",
+        depAirline: "Asiana Airlines",
+        depFlightNumber: "OZ202",
+        depFlightDate: "2026-06-25",
+        depFlightTime: "18:30",
+        depTerminal: "Terminal 1",
         hotelName: "Grand Hyatt Seoul",
         hotelAddress: "322 Sowol-ro, Yongsan-gu, Seoul",
         checkInDate: "2026-06-20",

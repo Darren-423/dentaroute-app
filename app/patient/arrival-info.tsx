@@ -122,6 +122,16 @@ export default function ArrivalInfoScreen() {
   const [passengers, setPassengers] = useState("1");
   const [notes, setNotes] = useState("");
   const [pickupRequested, setPickupRequested] = useState(true);
+  const [depAirline, setDepAirline] = useState("");
+  const [depFlightNumber, setDepFlightNumber] = useState("");
+  const [depFlightDate, setDepFlightDate] = useState("");
+  const [depFlightTime, setDepFlightTime] = useState("");
+  const [depTerminal, setDepTerminal] = useState("");
+  const [hotelName, setHotelName] = useState("");
+  const [hotelAddress, setHotelAddress] = useState("");
+  const [checkInDate, setCheckInDate] = useState("");
+  const [checkOutDate, setCheckOutDate] = useState("");
+  const [confirmationNumber, setConfirmationNumber] = useState("");
   const [savedTrips, setSavedTrips] = useState<SavedTrip[]>([]);
   const [showTripPicker, setShowTripPicker] = useState(false);
 
@@ -145,6 +155,16 @@ export default function ArrivalInfoScreen() {
           setPassengers(String(bk.arrivalInfo.passengers || 1));
           setNotes(bk.arrivalInfo.notes || "");
           setPickupRequested(bk.arrivalInfo.pickupRequested);
+          setDepAirline(bk.arrivalInfo.depAirline || "");
+          setDepFlightNumber(bk.arrivalInfo.depFlightNumber || "");
+          setDepFlightDate(bk.arrivalInfo.depFlightDate || "");
+          setDepFlightTime(bk.arrivalInfo.depFlightTime || "");
+          setDepTerminal(bk.arrivalInfo.depTerminal || "");
+          setHotelName(bk.arrivalInfo.hotelName || "");
+          setHotelAddress(bk.arrivalInfo.hotelAddress || "");
+          setCheckInDate(bk.arrivalInfo.checkInDate || "");
+          setCheckOutDate(bk.arrivalInfo.checkOutDate || "");
+          setConfirmationNumber(bk.arrivalInfo.confirmationNumber || "");
         } else if (bk.visitDates?.length > 0) {
           const currentVisitNum = bk.currentVisit || 1;
           const currentVD = bk.visitDates.find((v) => v.visit === currentVisitNum);
@@ -186,6 +206,16 @@ export default function ArrivalInfoScreen() {
       flightNumber, airline, arrivalDate, arrivalTime,
       terminal, passengers: parseInt(passengers) || 1,
       notes, pickupRequested,
+      depAirline: depAirline || undefined,
+      depFlightNumber: depFlightNumber || undefined,
+      depFlightDate: depFlightDate || undefined,
+      depFlightTime: depFlightTime || undefined,
+      depTerminal: depTerminal || undefined,
+      hotelName: hotelName || undefined,
+      hotelAddress: hotelAddress || undefined,
+      checkInDate: checkInDate || undefined,
+      checkOutDate: checkOutDate || undefined,
+      confirmationNumber: confirmationNumber || undefined,
     };
 
     const updated = { ...booking, arrivalInfo };
@@ -196,6 +226,31 @@ export default function ArrivalInfoScreen() {
       const AsyncStorage = (await import("@react-native-async-storage/async-storage")).default;
       await AsyncStorage.setItem("dr_bookings", JSON.stringify(bookings));
     }
+
+    // Auto-save to My Trips
+    const tripId = `trip_bk_${booking.id}`;
+    const now2 = new Date().toISOString();
+    const savedTrip: SavedTrip = {
+      id: tripId,
+      airline: airline || flightNumber,
+      flightNumber,
+      flightDate: arrivalDate,
+      flightTime: arrivalTime,
+      terminal: terminal || undefined,
+      depAirline: depAirline || undefined,
+      depFlightNumber: depFlightNumber || undefined,
+      depFlightDate: depFlightDate || undefined,
+      depFlightTime: depFlightTime || undefined,
+      depTerminal: depTerminal || undefined,
+      hotelName: hotelName || undefined,
+      hotelAddress: hotelAddress || undefined,
+      checkInDate: checkInDate || undefined,
+      checkOutDate: checkOutDate || undefined,
+      confirmationNumber: confirmationNumber || undefined,
+      createdAt: now2,
+      updatedAt: now2,
+    };
+    await store.saveTrip(savedTrip);
 
     await store.addNotification({
       role: "doctor",
@@ -308,7 +363,7 @@ export default function ArrivalInfoScreen() {
             <Text style={st.backArrow}>{"<"}</Text>
           </TouchableOpacity>
           <View style={st.headerCenter}>
-            <Text style={st.headerTitle}>{isReturnVisit ? "Return Flight" : "Arrival Details"}</Text>
+            <Text style={st.headerTitle}>{isReturnVisit ? "Return Flight" : "Trip Info"}</Text>
             <Text style={st.headerSub}>{booking?.clinicName}</Text>
           </View>
           <View style={{ width: 36 }} />
@@ -323,10 +378,10 @@ export default function ArrivalInfoScreen() {
             <Text style={{ fontSize: 22 }}>✈️</Text>
             <View style={{ flex: 1 }}>
               <Text style={st.bannerTitle}>
-                {isReturnVisit ? `Returning for Visit ${booking?.currentVisit}` : "Flying to Korea?"}
+                {isReturnVisit ? `Returning for Visit ${booking?.currentVisit}` : "Plan your trip"}
               </Text>
               <Text style={st.bannerSub}>
-                Enter your flight details for a free airport pickup
+                Enter your flight and hotel details
               </Text>
             </View>
           </View>
@@ -358,6 +413,9 @@ export default function ArrivalInfoScreen() {
               <Text style={st.loadTripCount}>{savedTrips.length} saved</Text>
             </TouchableOpacity>
           )}
+
+          {/* ── Arrival Flight Section ── */}
+          <Text style={st.sectionTitle}>✈️ Arrival Flight</Text>
 
           {/* ── Flight Number ── */}
           <View style={st.field}>
@@ -499,6 +557,157 @@ export default function ArrivalInfoScreen() {
               </View>
             </View>
           )}
+
+          {/* ── Departure Flight Section (Optional) ── */}
+          <Text style={[st.sectionTitle, { marginTop: 12 }]}>✈️ Departure Flight <Text style={st.optionalTag}>(Optional)</Text></Text>
+
+          <View style={st.field}>
+            <Text style={st.fieldLabel}>Airline</Text>
+            <TextInput
+              style={st.input}
+              value={depAirline}
+              onChangeText={setDepAirline}
+              placeholder="e.g. Korean Air"
+              placeholderTextColor={C.faint}
+            />
+          </View>
+
+          <View style={st.field}>
+            <Text style={st.fieldLabel}>Flight Number</Text>
+            <View style={st.flightInputRow}>
+              <Text style={st.flightIcon}>🛫</Text>
+              <TextInput
+                style={st.flightInput}
+                value={depFlightNumber}
+                onChangeText={(t) => setDepFlightNumber(formatFlightNumber(t))}
+                placeholder="e.g. KE002"
+                placeholderTextColor={C.faint}
+                autoCapitalize="characters"
+                maxLength={8}
+              />
+            </View>
+          </View>
+
+          <View style={st.field}>
+            <Text style={st.fieldLabel}>Date</Text>
+            <TextInput
+              style={st.input}
+              value={depFlightDate}
+              onChangeText={(t) => {
+                const digits = t.replace(/\D/g, "");
+                if (digits.length <= 4) setDepFlightDate(digits);
+                else if (digits.length <= 6) setDepFlightDate(digits.slice(0,4) + "-" + digits.slice(4));
+                else setDepFlightDate(digits.slice(0,4) + "-" + digits.slice(4,6) + "-" + digits.slice(6,8));
+              }}
+              placeholder="YYYY-MM-DD"
+              placeholderTextColor={C.faint}
+              keyboardType="number-pad"
+              maxLength={10}
+            />
+          </View>
+
+          <View style={st.field}>
+            <Text style={st.fieldLabel}>Time</Text>
+            <TextInput
+              style={st.input}
+              value={depFlightTime}
+              onChangeText={(t) => {
+                const digits = t.replace(/\D/g, "");
+                if (digits.length <= 2) setDepFlightTime(digits);
+                else setDepFlightTime(digits.slice(0, 2) + ":" + digits.slice(2, 4));
+              }}
+              placeholder="HH:MM"
+              placeholderTextColor={C.faint}
+              keyboardType="number-pad"
+              maxLength={5}
+            />
+          </View>
+
+          <View style={st.field}>
+            <Text style={st.fieldLabel}>Terminal</Text>
+            <TextInput
+              style={st.input}
+              value={depTerminal}
+              onChangeText={setDepTerminal}
+              placeholder="e.g. Terminal 2"
+              placeholderTextColor={C.faint}
+            />
+          </View>
+
+          {/* ── Hotel Section (Optional) ── */}
+          <Text style={[st.sectionTitle, { marginTop: 12 }]}>🏨 Hotel Information <Text style={st.optionalTag}>(Optional)</Text></Text>
+
+          <View style={st.field}>
+            <Text style={st.fieldLabel}>Hotel Name</Text>
+            <TextInput
+              style={st.input}
+              value={hotelName}
+              onChangeText={setHotelName}
+              placeholder="e.g. Lotte Hotel Seoul"
+              placeholderTextColor={C.faint}
+            />
+          </View>
+
+          <View style={st.field}>
+            <Text style={st.fieldLabel}>Address</Text>
+            <TextInput
+              style={st.input}
+              value={hotelAddress}
+              onChangeText={setHotelAddress}
+              placeholder="Hotel address"
+              placeholderTextColor={C.faint}
+            />
+          </View>
+
+          <View style={st.field}>
+            <Text style={st.fieldLabel}>Check-in Date</Text>
+            <TextInput
+              style={st.input}
+              value={checkInDate}
+              onChangeText={(t) => {
+                const digits = t.replace(/\D/g, "");
+                if (digits.length <= 4) setCheckInDate(digits);
+                else if (digits.length <= 6) setCheckInDate(digits.slice(0,4) + "-" + digits.slice(4));
+                else setCheckInDate(digits.slice(0,4) + "-" + digits.slice(4,6) + "-" + digits.slice(6,8));
+              }}
+              placeholder="YYYY-MM-DD"
+              placeholderTextColor={C.faint}
+              keyboardType="number-pad"
+              maxLength={10}
+            />
+          </View>
+
+          <View style={st.field}>
+            <Text style={st.fieldLabel}>Check-out Date</Text>
+            <TextInput
+              style={st.input}
+              value={checkOutDate}
+              onChangeText={(t) => {
+                const digits = t.replace(/\D/g, "");
+                if (digits.length <= 4) setCheckOutDate(digits);
+                else if (digits.length <= 6) setCheckOutDate(digits.slice(0,4) + "-" + digits.slice(4));
+                else setCheckOutDate(digits.slice(0,4) + "-" + digits.slice(4,6) + "-" + digits.slice(6,8));
+              }}
+              placeholder="YYYY-MM-DD"
+              placeholderTextColor={C.faint}
+              keyboardType="number-pad"
+              maxLength={10}
+            />
+          </View>
+
+          <View style={st.field}>
+            <Text style={st.fieldLabel}>Confirmation Number</Text>
+            <TextInput
+              style={st.input}
+              value={confirmationNumber}
+              onChangeText={setConfirmationNumber}
+              placeholder="Booking confirmation #"
+              placeholderTextColor={C.faint}
+            />
+          </View>
+
+          {/* ── Pickup & Other ── */}
+          <Text style={[st.sectionTitle, { marginTop: 12 }]}>🚗 Pickup & Other</Text>
 
           {/* ── Passengers ── */}
           <View style={st.field}>
@@ -683,6 +892,16 @@ export default function ArrivalInfoScreen() {
                     if (item.flightDate) setArrivalDate(item.flightDate);
                     if (item.flightTime) setArrivalTime(item.flightTime);
                     if (item.terminal) setTerminal(item.terminal);
+                    if (item.depAirline) setDepAirline(item.depAirline);
+                    if (item.depFlightNumber) setDepFlightNumber(item.depFlightNumber);
+                    if (item.depFlightDate) setDepFlightDate(item.depFlightDate);
+                    if (item.depFlightTime) setDepFlightTime(item.depFlightTime);
+                    if (item.depTerminal) setDepTerminal(item.depTerminal);
+                    if (item.hotelName) setHotelName(item.hotelName);
+                    if (item.hotelAddress) setHotelAddress(item.hotelAddress);
+                    if (item.checkInDate) setCheckInDate(item.checkInDate);
+                    if (item.checkOutDate) setCheckOutDate(item.checkOutDate);
+                    if (item.confirmationNumber) setConfirmationNumber(item.confirmationNumber);
                     setShowTripPicker(false);
                   }}
                 >
@@ -755,6 +974,8 @@ const st = StyleSheet.create({
     paddingHorizontal: 16, paddingVertical: 14, fontSize: 15, color: C.navy,
   },
   charCount: { fontSize: 11, color: C.muted, textAlign: "right" },
+  sectionTitle: { fontSize: 15, fontWeight: "700", color: C.navy, marginBottom: 4 },
+  optionalTag: { fontSize: 12, fontWeight: "400", color: C.muted },
 
   /* Flight input */
   flightInputRow: {
