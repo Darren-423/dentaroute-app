@@ -60,6 +60,7 @@ export default function DoctorLayout() {
           currentTab={currentTab}
           chatUnread={chatUnread}
           onTabPress={(tab) => {
+            const route = TAB_ROUTES[tab];
             if (
               currentScreen === "schedule-patient" &&
               tab !== "Schedule" &&
@@ -67,12 +68,22 @@ export default function DoctorLayout() {
             ) {
               Alert.alert(
                 "Unsaved Changes",
-                "Please save availability first. This applies your clinic hours and open slots to patient schedule visits."
+                "You have unsaved changes. Save now, or choose Save later to leave this page without saving.",
+                [
+                  { text: "Stay", style: "cancel" },
+                  {
+                    text: "Save later",
+                    style: "destructive",
+                    onPress: () => {
+                      setDoctorTabSwipeBlocked(false);
+                      if (route) router.replace(route as any);
+                    },
+                  },
+                ]
               );
               return;
             }
 
-            const route = TAB_ROUTES[tab];
             if (route) {
               router.replace(route as any);
             }

@@ -105,7 +105,7 @@ const buildSlotsForHours = (hours: WeekdayHours): string[] => {
 
   const slots: string[] = [];
   for (let min = hours.openMin; min + HALF_HOUR <= hours.closeMin; min += HALF_HOUR) {
-    const inLunch = hours.lunchEnabled && min >= hours.lunchStartMin && min < hours.lunchEndMin;
+    const inLunch = min >= hours.lunchStartMin && min < hours.lunchEndMin;
     if (!inLunch) slots.push(formatTime(min));
   }
   return slots;
@@ -237,37 +237,6 @@ export default function SchedulePatientScreen() {
   const canSave = selectedDateCount > 0;
   const bottomBarOffset = Math.max(insets.bottom, 4) + 64;
 
-  const selectedByMonth = useMemo(() => {
-    const map: Record<string, Record<number, number>> = {};
-
-    for (const date of selectedDates) {
-      const count = (schedules[date] || []).length;
-      if (count <= 0) continue;
-      const d = parseIsoDate(date);
-      const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
-      if (!map[key]) map[key] = {};
-      map[key][d.getDate()] = count;
-    }
-
-    return Object.keys(map)
-      .sort()
-      .map((key) => {
-        const [yearStr, monthStr] = key.split("-");
-        const year = Number(yearStr);
-        const month = Number(monthStr) - 1;
-        const firstWeekday = new Date(year, month, 1).getDay();
-        const daysInMonth = new Date(year, month + 1, 0).getDate();
-        return {
-          key,
-          year,
-          month,
-          firstWeekday,
-          daysInMonth,
-          countsByDay: map[key],
-        };
-      });
-  }, [selectedDates, schedules]);
-
   const calendarDays = useMemo<CalendarDay[]>(() => {
     const days: CalendarDay[] = [];
     const firstOfMonth = new Date(viewYear, viewMonth, 1);
@@ -310,15 +279,13 @@ export default function SchedulePatientScreen() {
       if (field === "openMin" && next.openMin >= next.closeMin) next.openMin = next.closeMin - HALF_HOUR;
       if (field === "closeMin" && next.closeMin <= next.openMin) next.closeMin = next.openMin + HALF_HOUR;
 
-      if (next.lunchEnabled) {
-        if (next.lunchStartMin < next.openMin) next.lunchStartMin = next.openMin;
-        if (next.lunchEndMin > next.closeMin) next.lunchEndMin = next.closeMin;
-        if (next.lunchStartMin >= next.lunchEndMin) {
+      if (next.lunchStartMin < next.openMin) next.lunchStartMin = next.openMin;
+      if (next.lunchEndMin > next.closeMin) next.lunchEndMin = next.closeMin;
+      if (next.lunchStartMin >= next.lunchEndMin) {
+        next.lunchEndMin = Math.min(next.closeMin, next.lunchStartMin + HALF_HOUR);
+        if (next.lunchEndMin <= next.lunchStartMin) {
+          next.lunchStartMin = Math.max(next.openMin, next.closeMin - HALF_HOUR * 2);
           next.lunchEndMin = Math.min(next.closeMin, next.lunchStartMin + HALF_HOUR);
-          if (next.lunchEndMin <= next.lunchStartMin) {
-            next.lunchStartMin = Math.max(next.openMin, next.closeMin - HALF_HOUR * 2);
-            next.lunchEndMin = Math.min(next.closeMin, next.lunchStartMin + HALF_HOUR);
-          }
         }
       }
 
@@ -339,13 +306,6 @@ export default function SchedulePatientScreen() {
     setWeekdayHours((prev) => ({
       ...prev,
       [weekday]: { ...prev[weekday], enabled: !prev[weekday].enabled },
-    }));
-  };
-
-  const toggleLunch = (weekday: number) => {
-    setWeekdayHours((prev) => ({
-      ...prev,
-      [weekday]: { ...prev[weekday], lunchEnabled: !prev[weekday].lunchEnabled },
     }));
   };
 
@@ -379,7 +339,7 @@ export default function SchedulePatientScreen() {
                 next[day] = {
                   ...next[day],
                   enabled: false,
-                  lunchEnabled: false,
+                  lunchEnabled: true,
                 };
               }
               return next;
@@ -562,13 +522,12 @@ export default function SchedulePatientScreen() {
     <View style={s.container}>
       <LinearGradient colors={[T.teal, T.tealDark]} style={s.header}>
         <Text style={s.title}>Set Available Slots</Text>
-        <Text style={s.subtitle}>Set hospital hours by weekday, then open only the slots you want for DentaRoute patients.</Text>
       </LinearGradient>
 
       <ScrollView contentContainerStyle={[s.content, { paddingBottom: bottomBarOffset + 156 }]} showsVerticalScrollIndicator={false}>
-        <View style={s.card}>
+        <View style={s.sectionBlock}>
           <Text style={s.sectionTitle}>Clinic Hours</Text>
-          <Text style={s.sectionHint}>Use +/- to set open, lunch, and close hours.</Text>
+          <Text style={s.sectionHint}>Set morning/evening hours.</Text>
 
           <View style={s.hoursActionRow}>
             <TouchableOpacity style={s.copyMonBtn} onPress={copyMondayToWeekdays} activeOpacity={0.85}>
@@ -585,7 +544,9 @@ export default function SchedulePatientScreen() {
               return (
                 <View key={weekday} style={s.hoursRow}>
                   <View style={s.hoursTopRow}>
-                    <Text style={s.weekdayLabel}>{WEEKDAYS[weekday]}</Text>
+                    <View style={s.hoursHeaderLeft}>
+                      <Text style={s.weekdayLabel}>{WEEKDAYS[weekday]}</Text>
+                    </View>
                     <TouchableOpacity
                       style={[s.toggleChip, hours.enabled && s.toggleChipActive]}
                       onPress={() => toggleOpenDay(weekday)}
@@ -599,72 +560,67 @@ export default function SchedulePatientScreen() {
 
                   {hours.enabled && (
                     <>
-                      <View style={s.timeRow}>
-                        <Text style={s.timeLabel}>Open</Text>
-                        <View style={s.timeAdjustWrap}>
-                          <TouchableOpacity style={s.timeAdjustBtn} onPress={() => shiftTime(weekday, "openMin", -1)} activeOpacity={0.8}>
-                            <Text style={s.timeAdjustBtnText}>-</Text>
-                          </TouchableOpacity>
-                          <Text style={s.timeValue}>{formatTime(hours.openMin)}</Text>
-                          <TouchableOpacity style={s.timeAdjustBtn} onPress={() => shiftTime(weekday, "openMin", 1)} activeOpacity={0.8}>
-                            <Text style={s.timeAdjustBtnText}>+</Text>
-                          </TouchableOpacity>
+                      <View style={s.periodCard}>
+                        <View style={s.periodHead}>
+                          <Text style={s.periodTitle}>Morning</Text>
                         </View>
-                      </View>
-
-                      <View style={s.timeRow}>
-                        <Text style={s.timeLabel}>Lunch</Text>
-                        <TouchableOpacity
-                          style={[s.toggleChipSmall, hours.lunchEnabled && s.toggleChipActive]}
-                          onPress={() => toggleLunch(weekday)}
-                          activeOpacity={0.8}
-                        >
-                          <Text style={[s.toggleChipText, hours.lunchEnabled && s.toggleChipTextActive]}>
-                            {hours.lunchEnabled ? "On" : "Off"}
-                          </Text>
-                        </TouchableOpacity>
-                      </View>
-
-                      {hours.lunchEnabled && (
-                        <View style={s.lunchRangeRow}>
-                          <View style={s.timeControlBlock}>
-                            <Text style={s.timeBlockLabel}>Start</Text>
+                        <View style={s.periodFieldsRow}>
+                          <View style={s.periodField}>
+                            <Text style={s.periodFieldLabel}>Start</Text>
                             <View style={s.timeAdjustWrapInline}>
-                              <TouchableOpacity style={s.timeAdjustBtn} onPress={() => shiftTime(weekday, "lunchStartMin", -1)} activeOpacity={0.8}>
+                              <TouchableOpacity style={s.timeAdjustBtnSm} onPress={() => shiftTime(weekday, "openMin", -1)} activeOpacity={0.8}>
                                 <Text style={s.timeAdjustBtnText}>-</Text>
                               </TouchableOpacity>
-                              <Text style={s.timeValueSmall}>{formatTime(hours.lunchStartMin)}</Text>
-                              <TouchableOpacity style={s.timeAdjustBtn} onPress={() => shiftTime(weekday, "lunchStartMin", 1)} activeOpacity={0.8}>
+                              <Text style={s.timeValueTiny}>{formatTime(hours.openMin)}</Text>
+                              <TouchableOpacity style={s.timeAdjustBtnSm} onPress={() => shiftTime(weekday, "openMin", 1)} activeOpacity={0.8}>
                                 <Text style={s.timeAdjustBtnText}>+</Text>
                               </TouchableOpacity>
                             </View>
                           </View>
-
-                          <View style={s.timeControlBlock}>
-                            <Text style={s.timeBlockLabel}>End</Text>
+                          <View style={s.periodField}>
+                            <Text style={s.periodFieldLabel}>End</Text>
                             <View style={s.timeAdjustWrapInline}>
-                              <TouchableOpacity style={s.timeAdjustBtn} onPress={() => shiftTime(weekday, "lunchEndMin", -1)} activeOpacity={0.8}>
+                              <TouchableOpacity style={s.timeAdjustBtnSm} onPress={() => shiftTime(weekday, "lunchStartMin", -1)} activeOpacity={0.8}>
                                 <Text style={s.timeAdjustBtnText}>-</Text>
                               </TouchableOpacity>
-                              <Text style={s.timeValueSmall}>{formatTime(hours.lunchEndMin)}</Text>
-                              <TouchableOpacity style={s.timeAdjustBtn} onPress={() => shiftTime(weekday, "lunchEndMin", 1)} activeOpacity={0.8}>
+                              <Text style={s.timeValueTiny}>{formatTime(hours.lunchStartMin)}</Text>
+                              <TouchableOpacity style={s.timeAdjustBtnSm} onPress={() => shiftTime(weekday, "lunchStartMin", 1)} activeOpacity={0.8}>
                                 <Text style={s.timeAdjustBtnText}>+</Text>
                               </TouchableOpacity>
                             </View>
                           </View>
                         </View>
-                      )}
+                      </View>
 
-                      <View style={s.timeRowNoBorder}>
-                        <Text style={s.timeLabel}>Close</Text>
-                        <View style={s.timeAdjustWrap}>
-                          <TouchableOpacity style={s.timeAdjustBtn} onPress={() => shiftTime(weekday, "closeMin", -1)} activeOpacity={0.8}>
-                            <Text style={s.timeAdjustBtnText}>-</Text>
-                          </TouchableOpacity>
-                          <Text style={s.timeValue}>{formatTime(hours.closeMin)}</Text>
-                          <TouchableOpacity style={s.timeAdjustBtn} onPress={() => shiftTime(weekday, "closeMin", 1)} activeOpacity={0.8}>
-                            <Text style={s.timeAdjustBtnText}>+</Text>
-                          </TouchableOpacity>
+                      <View style={s.periodCard}>
+                        <View style={s.periodHead}>
+                          <Text style={s.periodTitle}>Evening</Text>
+                        </View>
+                        <View style={s.periodFieldsRow}>
+                          <View style={s.periodField}>
+                            <Text style={s.periodFieldLabel}>Start</Text>
+                            <View style={s.timeAdjustWrapInline}>
+                              <TouchableOpacity style={s.timeAdjustBtnSm} onPress={() => shiftTime(weekday, "lunchEndMin", -1)} activeOpacity={0.8}>
+                                <Text style={s.timeAdjustBtnText}>-</Text>
+                              </TouchableOpacity>
+                              <Text style={s.timeValueTiny}>{formatTime(hours.lunchEndMin)}</Text>
+                              <TouchableOpacity style={s.timeAdjustBtnSm} onPress={() => shiftTime(weekday, "lunchEndMin", 1)} activeOpacity={0.8}>
+                                <Text style={s.timeAdjustBtnText}>+</Text>
+                              </TouchableOpacity>
+                            </View>
+                          </View>
+                          <View style={s.periodField}>
+                            <Text style={s.periodFieldLabel}>End</Text>
+                            <View style={s.timeAdjustWrapInline}>
+                              <TouchableOpacity style={s.timeAdjustBtnSm} onPress={() => shiftTime(weekday, "closeMin", -1)} activeOpacity={0.8}>
+                                <Text style={s.timeAdjustBtnText}>-</Text>
+                              </TouchableOpacity>
+                              <Text style={s.timeValueTiny}>{formatTime(hours.closeMin)}</Text>
+                              <TouchableOpacity style={s.timeAdjustBtnSm} onPress={() => shiftTime(weekday, "closeMin", 1)} activeOpacity={0.8}>
+                                <Text style={s.timeAdjustBtnText}>+</Text>
+                              </TouchableOpacity>
+                            </View>
+                          </View>
                         </View>
                       </View>
                     </>
@@ -675,7 +631,7 @@ export default function SchedulePatientScreen() {
           </View>
         </View>
 
-        <View style={s.card}>
+        <View style={s.sectionBlock}>
           <Text style={s.sectionTitle}>Calendar</Text>
           <Text style={s.sectionHint}>Tap a date, then select which 30-minute slots you want to open for DentaRoute patients.</Text>
 
@@ -776,67 +732,7 @@ export default function SchedulePatientScreen() {
           </View>
         </View>
 
-        <View style={s.card}>
-          <Text style={s.sectionTitle}>Selected Availability</Text>
-          {selectedDates.length === 0 ? (
-            <Text style={s.emptyText}>No available dates selected yet.</Text>
-          ) : (
-            <View style={s.monthlyWrap}>
-              {selectedByMonth.map((monthData) => (
-                <View key={monthData.key} style={s.monthMiniCard}>
-                  <View style={s.monthMiniHeader}>
-                    <Text style={s.monthMiniTitle}>{MONTHS[monthData.month]} {monthData.year}</Text>
-                    <Text style={s.monthMiniMeta}>
-                      {Object.keys(monthData.countsByDay).length} days selected
-                    </Text>
-                  </View>
-
-                  <View style={s.miniWeekRow}>
-                    {WEEKDAYS.map((w) => (
-                      <View key={`${monthData.key}-${w}`} style={s.miniWeekCell}>
-                        <Text style={s.miniWeekText}>{w[0]}</Text>
-                      </View>
-                    ))}
-                  </View>
-
-                  <View style={s.miniDaysGrid}>
-                    {Array.from({ length: monthData.firstWeekday }).map((_, idx) => (
-                      <View key={`${monthData.key}-blank-${idx}`} style={s.miniDayCell} />
-                    ))}
-                    {Array.from({ length: monthData.daysInMonth }, (_, idx) => {
-                      const day = idx + 1;
-                      const count = monthData.countsByDay[day] || 0;
-                      const isSelected = count > 0;
-
-                      return (
-                        <View key={`${monthData.key}-day-${day}`} style={s.miniDayCell}>
-                          <View style={[s.miniDayInner, isSelected && s.miniDayInnerSelected]}>
-                            <Text style={[s.miniDayText, isSelected && s.miniDayTextSelected]}>{day}</Text>
-                            {isSelected && (
-                              <View style={s.miniCountBadge}>
-                                <Text style={s.miniCountText}>{count}</Text>
-                              </View>
-                            )}
-                          </View>
-                        </View>
-                      );
-                    })}
-                  </View>
-
-                  <View style={s.monthLegendRow}>
-                    <View style={s.legendItem}>
-                      <View style={s.legendDot} />
-                      <Text style={s.legendText}>Selected day</Text>
-                    </View>
-                    <Text style={s.legendHint}>Badge number = opened slots</Text>
-                  </View>
-                </View>
-              ))}
-            </View>
-          )}
-        </View>
-
-        <View style={s.card}>
+        <View style={s.sectionBlock}>
           <Text style={s.sectionTitle}>Dentweb</Text>
           <Text style={s.sectionHint}>This button is prepared for possible future Dentweb integration.</Text>
           <TouchableOpacity style={s.dentwebBtn} onPress={handleDentwebConnect} activeOpacity={0.85}>
@@ -941,10 +837,13 @@ const s = StyleSheet.create({
   container: { flex: 1, backgroundColor: T.bg },
 
   header: { paddingHorizontal: 24, paddingTop: 60, paddingBottom: 16 },
-  title: { fontSize: 24, fontWeight: "700", color: T.white, marginBottom: 4 },
-  subtitle: { fontSize: 13, color: "rgba(255,255,255,0.78)" },
+  title: { fontSize: 28, fontWeight: "700", color: T.white, marginBottom: 4 },
 
-  content: { padding: 24, gap: 14 },
+  content: { paddingHorizontal: 12, paddingTop: 12, gap: 20 },
+
+  sectionBlock: {
+    gap: 12,
+  },
 
   card: {
     backgroundColor: T.white,
@@ -954,8 +853,8 @@ const s = StyleSheet.create({
     padding: 16,
     gap: 10,
   },
-  sectionTitle: { fontSize: 16, fontWeight: "700", color: T.text },
-  sectionHint: { fontSize: 12, color: T.textSec, lineHeight: 18 },
+  sectionTitle: { fontSize: 23, fontWeight: "800", color: T.text },
+  sectionHint: { fontSize: 15, color: T.textSec, lineHeight: 21 },
 
   hoursActionRow: { flexDirection: "row", gap: 8, flexWrap: "wrap" },
 
@@ -968,7 +867,7 @@ const s = StyleSheet.create({
     paddingHorizontal: 12,
     paddingVertical: 8,
   },
-  copyMonBtnText: { fontSize: 12, fontWeight: "700", color: T.teal },
+  copyMonBtnText: { fontSize: 14, fontWeight: "700", color: T.teal },
   clearHoursBtn: {
     alignSelf: "flex-start",
     backgroundColor: T.redSoft,
@@ -978,41 +877,42 @@ const s = StyleSheet.create({
     paddingHorizontal: 12,
     paddingVertical: 8,
   },
-  clearHoursBtnText: { fontSize: 12, fontWeight: "700", color: T.redText },
+  clearHoursBtnText: { fontSize: 14, fontWeight: "700", color: T.redText },
 
   monthActionRow: { flexDirection: "row", gap: 8, marginTop: 2 },
   monthActionBtn: {
     flex: 1,
     backgroundColor: T.teal,
-    borderRadius: 10,
+    borderRadius: 12,
     alignItems: "center",
     justifyContent: "center",
-    paddingVertical: 10,
+    paddingVertical: 12,
   },
-  monthActionBtnText: { color: T.white, fontSize: 12, fontWeight: "700" },
+  monthActionBtnText: { color: T.white, fontSize: 15, fontWeight: "700" },
   monthActionBtnOutline: {
     flex: 1,
     backgroundColor: T.white,
-    borderRadius: 10,
+    borderRadius: 12,
     borderWidth: 1,
     borderColor: T.border,
     alignItems: "center",
     justifyContent: "center",
-    paddingVertical: 10,
+    paddingVertical: 12,
   },
-  monthActionBtnOutlineText: { color: T.textSec, fontSize: 12, fontWeight: "700" },
+  monthActionBtnOutlineText: { color: T.textSec, fontSize: 15, fontWeight: "700" },
 
   hoursList: { gap: 10 },
   hoursRow: {
     borderWidth: 1,
     borderColor: T.border,
-    borderRadius: 12,
-    padding: 12,
+    borderRadius: 14,
+    padding: 14,
     gap: 10,
     backgroundColor: "#fbfdff",
   },
   hoursTopRow: { flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
-  weekdayLabel: { fontSize: 14, fontWeight: "700", color: T.text },
+  hoursHeaderLeft: { flex: 1, paddingRight: 8, gap: 3 },
+  weekdayLabel: { fontSize: 18, fontWeight: "700", color: T.text },
   toggleChip: {
     paddingHorizontal: 12,
     paddingVertical: 7,
@@ -1021,16 +921,8 @@ const s = StyleSheet.create({
     borderColor: T.border,
     backgroundColor: T.white,
   },
-  toggleChipSmall: {
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    borderRadius: 14,
-    borderWidth: 1,
-    borderColor: T.border,
-    backgroundColor: T.white,
-  },
   toggleChipActive: { backgroundColor: T.tealSoft, borderColor: "rgba(15,118,110,0.28)" },
-  toggleChipText: { fontSize: 12, fontWeight: "700", color: T.textSec },
+  toggleChipText: { fontSize: 14, fontWeight: "700", color: T.textSec },
   toggleChipTextActive: { color: T.teal },
 
   timeRow: {
@@ -1041,14 +933,25 @@ const s = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: T.border,
   },
-  timeRowNoBorder: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-  },
   timeLabel: { fontSize: 12, color: T.textSec, fontWeight: "700" },
   timeAdjustWrap: { flexDirection: "row", alignItems: "center", gap: 10, marginLeft: 10 },
-  timeAdjustWrapInline: { flexDirection: "row", alignItems: "center", gap: 8 },
+  timeAdjustWrapInline: { flexDirection: "row", alignItems: "center", gap: 4 },
+  periodAdjustWrap: { flexDirection: "row", alignItems: "center", gap: 8 },
+  periodCard: {
+    borderWidth: 1,
+    borderColor: T.border,
+    borderRadius: 10,
+    backgroundColor: T.white,
+    paddingHorizontal: 10,
+    paddingVertical: 8,
+    gap: 7,
+  },
+  periodHead: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 8 },
+  periodTitle: { fontSize: 15, fontWeight: "800", color: T.text },
+  periodFieldsRow: { flexDirection: "row", alignItems: "flex-end", justifyContent: "space-between", gap: 6 },
+  periodField: { flex: 1, minWidth: 0, gap: 5 },
+  periodFieldLabel: { fontSize: 12, fontWeight: "700", color: T.textMuted, textAlign: "center" },
+  periodDivider: { fontSize: 11, color: T.textMuted, fontWeight: "700", marginTop: 14 },
   timeAdjustBtn: {
     width: 30,
     height: 30,
@@ -1062,16 +965,20 @@ const s = StyleSheet.create({
   timeAdjustBtnText: { fontSize: 18, fontWeight: "700", color: T.teal, marginTop: -1 },
   timeValue: { minWidth: 88, textAlign: "center", fontSize: 12, fontWeight: "700", color: T.text },
   timeValueSmall: { minWidth: 76, textAlign: "center", fontSize: 11, fontWeight: "700", color: T.text },
-  lunchRangeRow: { flexDirection: "row", gap: 10 },
-  timeControlBlock: { flex: 1, gap: 6 },
-  timeBlockLabel: { fontSize: 11, color: T.textMuted, fontWeight: "700" },
-
-  calendarWrap: {
-    borderRadius: 12,
+  timeValueTiny: { minWidth: 84, textAlign: "center", fontSize: 15, fontWeight: "700", color: T.text },
+  timeAdjustBtnSm: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
     borderWidth: 1,
     borderColor: T.border,
-    padding: 12,
-    backgroundColor: T.bg,
+    backgroundColor: T.white,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+
+  calendarWrap: {
+    paddingTop: 4,
     marginTop: 2,
   },
   monthNav: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: 10 },
@@ -1086,17 +993,17 @@ const s = StyleSheet.create({
     justifyContent: "center",
   },
   navBtnDisabled: { opacity: 0.35 },
-  navBtnText: { fontSize: 20, fontWeight: "700", color: T.text, marginTop: -2 },
-  monthTitle: { fontSize: 15, fontWeight: "700", color: T.text },
+  navBtnText: { fontSize: 22, fontWeight: "700", color: T.text, marginTop: -2 },
+  monthTitle: { fontSize: 18, fontWeight: "700", color: T.text },
   weekRow: { flexDirection: "row", marginBottom: 6 },
   weekCell: { width: "14.28%", alignItems: "center" },
-  weekText: { fontSize: 11, fontWeight: "700", color: T.textMuted },
+  weekText: { fontSize: 13, fontWeight: "700", color: T.textMuted },
   daysGrid: { flexDirection: "row", flexWrap: "wrap" },
   dayCell: { width: "14.28%", alignItems: "center", paddingVertical: 3 },
   dayInner: {
-    width: 38,
-    height: 38,
-    borderRadius: 19,
+    width: 42,
+    height: 42,
+    borderRadius: 21,
     borderWidth: 1,
     borderColor: "transparent",
     alignItems: "center",
@@ -1106,7 +1013,7 @@ const s = StyleSheet.create({
   dayInnerDisabled: { backgroundColor: "#f1f5f9", borderColor: "#e5e7eb" },
   dayInnerClosed: { backgroundColor: T.redSoft, borderColor: "#fecdd3" },
   dayInnerSelected: { backgroundColor: T.teal, borderColor: T.teal },
-  dayText: { fontSize: 14, fontWeight: "600", color: T.text },
+  dayText: { fontSize: 16, fontWeight: "600", color: T.text },
   dayTextOtherMonth: { color: "#94a3b8" },
   dayTextDisabled: { color: "#cbd5e1" },
   dayTextClosed: { color: T.redText },
@@ -1123,7 +1030,7 @@ const s = StyleSheet.create({
     justifyContent: "center",
     paddingHorizontal: 2,
   },
-  timeBadgeText: { fontSize: 8, color: T.white, fontWeight: "800" },
+  timeBadgeText: { fontSize: 9, color: T.white, fontWeight: "800" },
 
   emptyText: { fontSize: 12, color: T.textMuted, fontStyle: "italic" },
   monthlyWrap: { gap: 12 },
@@ -1219,12 +1126,12 @@ const s = StyleSheet.create({
 
   dentwebBtn: {
     backgroundColor: T.blue,
-    borderRadius: 12,
-    paddingVertical: 13,
+    borderRadius: 14,
+    paddingVertical: 16,
     alignItems: "center",
     justifyContent: "center",
   },
-  dentwebBtnText: { color: T.white, fontSize: 14, fontWeight: "700" },
+  dentwebBtnText: { color: T.white, fontSize: 18, fontWeight: "700" },
 
   bottomBar: {
     position: "absolute",
@@ -1240,7 +1147,7 @@ const s = StyleSheet.create({
     zIndex: 20,
     elevation: 10,
   },
-  bottomMeta: { fontSize: 12, color: T.textSec, fontWeight: "600" },
+  bottomMeta: { fontSize: 13, color: T.textSec, fontWeight: "600" },
   saveBtn: {
     backgroundColor: T.teal,
     borderRadius: 14,
@@ -1249,7 +1156,7 @@ const s = StyleSheet.create({
     minHeight: 52,
   },
   saveBtnDisabled: { opacity: 0.45 },
-  saveBtnText: { fontSize: 15, fontWeight: "700", color: T.white },
+  saveBtnText: { fontSize: 17, fontWeight: "700", color: T.white },
 
   overlay: { flex: 1, backgroundColor: "rgba(0,0,0,0.45)", justifyContent: "flex-end" },
   sheet: {
