@@ -1,4 +1,5 @@
 import { LinearGradient } from "expo-linear-gradient";
+import { useLocalSearchParams } from "expo-router";
 import React, { useEffect, useMemo, useState } from "react";
 import {
     ActivityIndicator,
@@ -10,6 +11,7 @@ import {
     TouchableOpacity,
     View,
 } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { setDoctorTabSwipeBlocked } from "../../lib/doctorTabSwipeGuard";
 import { store } from "../../lib/store";
 
@@ -119,10 +121,44 @@ const getHourFromLabel = (label: string): number => {
   return h;
 };
 
+const buildStateKey = (
+  hours: Record<number, WeekdayHours>,
+  schedules: Record<string, string[]>
+): string => {
+  const normalizedHours: Record<number, WeekdayHours> = {
+    0: hours[0] || DEFAULT_WEEKDAY_HOURS[0],
+    1: hours[1] || DEFAULT_WEEKDAY_HOURS[1],
+    2: hours[2] || DEFAULT_WEEKDAY_HOURS[2],
+    3: hours[3] || DEFAULT_WEEKDAY_HOURS[3],
+    4: hours[4] || DEFAULT_WEEKDAY_HOURS[4],
+    5: hours[5] || DEFAULT_WEEKDAY_HOURS[5],
+    6: hours[6] || DEFAULT_WEEKDAY_HOURS[6],
+  };
+
+  const normalizedSchedules: Record<string, string[]> = {};
+  for (const date of Object.keys(schedules).sort()) {
+    const times = Array.isArray(schedules[date]) ? [...schedules[date]].sort() : [];
+    if (times.length > 0) normalizedSchedules[date] = times;
+  }
+
+  return JSON.stringify({ normalizedHours, normalizedSchedules });
+};
+
 export default function SchedulePatientScreen() {
+  const insets = useSafeAreaInsets();
+  const rawParams = useLocalSearchParams<{
+    caseId: string; planItemsJson: string; totalPrice: string;
+  }>();
+  
+  const params = Object.fromEntries(
+    Object.entries(rawParams).map(([k, v]) => [k, Array.isArray(v) ? v[0] || "" : v || ""])
+  ) as { caseId: string; planItemsJson: string; totalPrice: string };
+
   const [loading, setLoading] = useState(false);
   const [weekdayHours, setWeekdayHours] = useState<Record<number, WeekdayHours>>(DEFAULT_WEEKDAY_HOURS);
   const [schedules, setSchedules] = useState<Record<string, string[]>>({});
+  const [savedStateKey, setSavedStateKey] = useState("");
+  const [profileLoaded, setProfileLoaded] = useState(false);
 
   const today = useMemo(() => toDateOnly(new Date()), []);
   const maxMonthDate = useMemo(
@@ -159,9 +195,8 @@ export default function SchedulePatientScreen() {
         if (!fromProfile[slot.date]) fromProfile[slot.date] = [];
         fromProfile[slot.date].push(slot.time);
       }
-      if (Object.keys(fromProfile).length > 0) {
-        setSchedules(fromProfile);
-      }
+
+      let loadedHours: Record<number, WeekdayHours> = { ...DEFAULT_WEEKDAY_HOURS };
 
       if (profile.weekdayBusinessHours && typeof profile.weekdayBusinessHours === "object") {
         const merged = { ...DEFAULT_WEEKDAY_HOURS };
@@ -178,14 +213,60 @@ export default function SchedulePatientScreen() {
             closeMin: typeof value.closeMin === "number" ? value.closeMin : merged[idx].closeMin,
           };
         }
-        setWeekdayHours(merged);
+        loadedHours = merged;
       }
+
+      setSchedules(fromProfile);
+      setWeekdayHours(loadedHours);
+      setSavedStateKey(buildStateKey(loadedHours, fromProfile));
+      setProfileLoaded(true);
     })();
   }, []);
+
+  const isDirty = useMemo(() => {
+    if (!profileLoaded) return false;
+    return buildStateKey(weekdayHours, schedules) !== savedStateKey;
+  }, [profileLoaded, weekdayHours, schedules, savedStateKey]);
+
+  useEffect(() => {
+    setDoctorTabSwipeBlocked(isDirty);
+  }, [isDirty]);
 
   const selectedDates = useMemo(() => Object.keys(schedules).sort(), [schedules]);
   const selectedDateCount = selectedDates.filter((date) => (schedules[date] || []).length > 0).length;
   const canSave = selectedDateCount > 0;
+  const bottomBarOffset = Math.max(insets.bottom, 4) + 64;
+
+  const selectedByMonth = useMemo(() => {
+    const map: Record<string, Record<number, number>> = {};
+
+    for (const date of selectedDates) {
+      const count = (schedules[date] || []).length;
+      if (count <= 0) continue;
+      const d = parseIsoDate(date);
+      const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+      if (!map[key]) map[key] = {};
+      map[key][d.getDate()] = count;
+    }
+
+    return Object.keys(map)
+      .sort()
+      .map((key) => {
+        const [yearStr, monthStr] = key.split("-");
+        const year = Number(yearStr);
+        const month = Number(monthStr) - 1;
+        const firstWeekday = new Date(year, month, 1).getDay();
+        const daysInMonth = new Date(year, month + 1, 0).getDate();
+        return {
+          key,
+          year,
+          month,
+          firstWeekday,
+          daysInMonth,
+          countsByDay: map[key],
+        };
+      });
+  }, [selectedDates, schedules]);
 
   const calendarDays = useMemo<CalendarDay[]>(() => {
     const days: CalendarDay[] = [];
@@ -423,6 +504,47 @@ export default function SchedulePatientScreen() {
         availableSlotsByVisit,
         weekdayBusinessHours: weekdayHours,
       });
+
+      // Create quote with available slots if caseId and planItems provided
+      if (params.caseId && params.planItemsJson) {
+        try {
+          const planItems = JSON.parse(params.planItemsJson || "[]");
+          const totalPrice = Number(params.totalPrice || 0);
+
+          const visits = [
+            {
+              visit: 1,
+              description: "Visit 1",
+              availabilitySlots: availableSlots,
+            },
+          ];
+
+          await store.createQuote({
+            caseId: params.caseId,
+            dentistName: profile?.fullName || profile?.name || "Doctor",
+            clinicName: profile?.clinicName || profile?.clinic || "Clinic",
+            location: profile?.location || "Gangnam, Seoul",
+            rating: profile?.rating || 4.9,
+            reviewCount: profile?.reviewCount || 127,
+            totalPrice,
+            treatments: planItems.map((p: any) => ({
+              name: p.treatment,
+              qty: p.qty,
+              price: Number(p.price || 0),
+            })),
+            treatmentDetails: "",
+            duration: "1 Visit",
+            visits,
+            message: "",
+          });
+        } catch (quoteErr) {
+          console.error("Error creating quote:", quoteErr);
+        }
+      }
+
+      setSavedStateKey(buildStateKey(weekdayHours, schedules));
+      setDoctorTabSwipeBlocked(false);
+
       Alert.alert("Saved", "Your available slots have been updated.");
     } catch (err) {
       console.error("Error saving availability:", err);
@@ -443,7 +565,7 @@ export default function SchedulePatientScreen() {
         <Text style={s.subtitle}>Set hospital hours by weekday, then open only the slots you want for DentaRoute patients.</Text>
       </LinearGradient>
 
-      <ScrollView contentContainerStyle={s.content} showsVerticalScrollIndicator={false}>
+      <ScrollView contentContainerStyle={[s.content, { paddingBottom: bottomBarOffset + 156 }]} showsVerticalScrollIndicator={false}>
         <View style={s.card}>
           <Text style={s.sectionTitle}>Clinic Hours</Text>
           <Text style={s.sectionHint}>Use +/- to set open, lunch, and close hours.</Text>
@@ -659,12 +781,58 @@ export default function SchedulePatientScreen() {
           {selectedDates.length === 0 ? (
             <Text style={s.emptyText}>No available dates selected yet.</Text>
           ) : (
-            selectedDates.map((date) => (
-              <View key={date} style={s.summaryRow}>
-                <Text style={s.summaryDate}>{formatFullDate(date)}</Text>
-                <Text style={s.summaryTimes}>{(schedules[date] || []).join("  ·  ")}</Text>
-              </View>
-            ))
+            <View style={s.monthlyWrap}>
+              {selectedByMonth.map((monthData) => (
+                <View key={monthData.key} style={s.monthMiniCard}>
+                  <View style={s.monthMiniHeader}>
+                    <Text style={s.monthMiniTitle}>{MONTHS[monthData.month]} {monthData.year}</Text>
+                    <Text style={s.monthMiniMeta}>
+                      {Object.keys(monthData.countsByDay).length} days selected
+                    </Text>
+                  </View>
+
+                  <View style={s.miniWeekRow}>
+                    {WEEKDAYS.map((w) => (
+                      <View key={`${monthData.key}-${w}`} style={s.miniWeekCell}>
+                        <Text style={s.miniWeekText}>{w[0]}</Text>
+                      </View>
+                    ))}
+                  </View>
+
+                  <View style={s.miniDaysGrid}>
+                    {Array.from({ length: monthData.firstWeekday }).map((_, idx) => (
+                      <View key={`${monthData.key}-blank-${idx}`} style={s.miniDayCell} />
+                    ))}
+                    {Array.from({ length: monthData.daysInMonth }, (_, idx) => {
+                      const day = idx + 1;
+                      const count = monthData.countsByDay[day] || 0;
+                      const isSelected = count > 0;
+
+                      return (
+                        <View key={`${monthData.key}-day-${day}`} style={s.miniDayCell}>
+                          <View style={[s.miniDayInner, isSelected && s.miniDayInnerSelected]}>
+                            <Text style={[s.miniDayText, isSelected && s.miniDayTextSelected]}>{day}</Text>
+                            {isSelected && (
+                              <View style={s.miniCountBadge}>
+                                <Text style={s.miniCountText}>{count}</Text>
+                              </View>
+                            )}
+                          </View>
+                        </View>
+                      );
+                    })}
+                  </View>
+
+                  <View style={s.monthLegendRow}>
+                    <View style={s.legendItem}>
+                      <View style={s.legendDot} />
+                      <Text style={s.legendText}>Selected day</Text>
+                    </View>
+                    <Text style={s.legendHint}>Badge number = opened slots</Text>
+                  </View>
+                </View>
+              ))}
+            </View>
           )}
         </View>
 
@@ -677,8 +845,12 @@ export default function SchedulePatientScreen() {
         </View>
       </ScrollView>
 
-      <View style={s.bottomBar}>
-        <Text style={s.bottomMeta}>{selectedDateCount} date(s) selected</Text>
+      <View style={[s.bottomBar, { bottom: bottomBarOffset }]}>
+        <Text style={s.bottomMeta}>
+          {isDirty
+            ? "Unsaved changes. Save to apply slots to patient schedule visits."
+            : `${selectedDateCount} date(s) selected`}
+        </Text>
         <TouchableOpacity
           style={[s.saveBtn, !canSave && s.saveBtnDisabled]}
           onPress={handleSaveAvailability}
@@ -688,7 +860,9 @@ export default function SchedulePatientScreen() {
           {loading ? (
             <ActivityIndicator color={T.white} size="small" />
           ) : (
-            <Text style={s.saveBtnText}>Save Availability →</Text>
+            <Text style={s.saveBtnText}>
+              {params.caseId ? "Save Availability & Send Quote →" : "Save Availability →"}
+            </Text>
           )}
         </TouchableOpacity>
       </View>
@@ -705,7 +879,7 @@ export default function SchedulePatientScreen() {
             <View style={s.sheetHeader}>
               <View>
                 <Text style={s.sheetTitle}>Open Slots for DentaRoute</Text>
-                {slotModal && <Text style={s.sheetSubtitle}>{formatFullDate(slotModal.date)}</Text>}
+                {slotModal ? <Text style={s.sheetSubtitle}>{formatFullDate(slotModal.date)}</Text> : null}
               </View>
               <TouchableOpacity style={s.sheetCloseBtn} onPress={() => setSlotModal(null)}>
                 <Text style={s.sheetCloseBtnText}>✕</Text>
@@ -730,8 +904,8 @@ export default function SchedulePatientScreen() {
             </View>
 
             <ScrollView style={s.slotScroll} showsVerticalScrollIndicator={false}>
-              {slotModal?.options.map((time) => {
-                const selected = slotModal.draft[time] ?? false;
+              {(slotModal?.options || []).map((time) => {
+                const selected = slotModal?.draft?.[time] ?? false;
                 return (
                   <TouchableOpacity
                     key={time}
@@ -770,7 +944,7 @@ const s = StyleSheet.create({
   title: { fontSize: 24, fontWeight: "700", color: T.white, marginBottom: 4 },
   subtitle: { fontSize: 13, color: "rgba(255,255,255,0.78)" },
 
-  content: { padding: 24, gap: 14, paddingBottom: 130 },
+  content: { padding: 24, gap: 14 },
 
   card: {
     backgroundColor: T.white,
@@ -952,15 +1126,96 @@ const s = StyleSheet.create({
   timeBadgeText: { fontSize: 8, color: T.white, fontWeight: "800" },
 
   emptyText: { fontSize: 12, color: T.textMuted, fontStyle: "italic" },
-  summaryRow: {
-    borderBottomWidth: 1,
-    borderBottomColor: T.border,
-    paddingBottom: 8,
-    marginBottom: 8,
-    gap: 3,
+  monthlyWrap: { gap: 12 },
+  monthMiniCard: {
+    borderWidth: 1,
+    borderColor: T.border,
+    borderRadius: 12,
+    backgroundColor: "#fbfdff",
+    padding: 10,
+    gap: 8,
   },
+  monthMiniHeader: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 8 },
+  monthMiniTitle: { fontSize: 14, fontWeight: "700", color: T.text },
+  monthMiniMeta: { fontSize: 11, color: T.textSec, fontWeight: "600" },
+  miniWeekRow: { flexDirection: "row" },
+  miniWeekCell: { width: "14.28%", alignItems: "center" },
+  miniWeekText: { fontSize: 10, color: T.textMuted, fontWeight: "700" },
+  miniDaysGrid: { flexDirection: "row", flexWrap: "wrap" },
+  miniDayCell: { width: "14.28%", alignItems: "center", paddingVertical: 2 },
+  miniDayInner: {
+    width: 30,
+    height: 30,
+    borderRadius: 15,
+    alignItems: "center",
+    justifyContent: "center",
+    borderWidth: 1,
+    borderColor: "transparent",
+  },
+  miniDayInnerSelected: { backgroundColor: T.teal, borderColor: T.teal },
+  miniDayText: { fontSize: 11, color: T.text, fontWeight: "600" },
+  miniDayTextSelected: { color: T.white, fontWeight: "800" },
+  miniCountBadge: {
+    position: "absolute",
+    top: -2,
+    right: -2,
+    minWidth: 12,
+    height: 12,
+    borderRadius: 6,
+    backgroundColor: "rgba(0,0,0,0.28)",
+    alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal: 1,
+  },
+  miniCountText: { fontSize: 7, color: T.white, fontWeight: "800" },
+  monthLegendRow: {
+    marginTop: 2,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: 8,
+  },
+  legendItem: { flexDirection: "row", alignItems: "center", gap: 6 },
+  legendDot: { width: 10, height: 10, borderRadius: 5, backgroundColor: T.teal },
+  legendText: { fontSize: 10, color: T.textSec, fontWeight: "600" },
+  legendHint: { fontSize: 10, color: T.textMuted },
+  summaryRow: {
+    borderWidth: 1,
+    borderColor: T.border,
+    borderRadius: 12,
+    padding: 10,
+    gap: 8,
+    backgroundColor: "#fbfdff",
+  },
+  summaryHeaderRow: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 8 },
   summaryDate: { fontSize: 13, fontWeight: "600", color: T.text },
-  summaryTimes: { fontSize: 11, color: T.textSec },
+  summaryCountBadge: {
+    backgroundColor: T.tealSoft,
+    borderWidth: 1,
+    borderColor: "rgba(15,118,110,0.25)",
+    borderRadius: 999,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+  },
+  summaryCountText: { fontSize: 10, color: T.teal, fontWeight: "700" },
+  summaryRange: { fontSize: 11, color: T.textSec, fontWeight: "600" },
+  summaryChipWrap: { flexDirection: "row", flexWrap: "wrap", gap: 6 },
+  summaryTimeChip: {
+    backgroundColor: "#f1f5f9",
+    borderWidth: 1,
+    borderColor: T.border,
+    borderRadius: 8,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+  },
+  summaryTimeChipText: { fontSize: 10, color: T.textSec, fontWeight: "700" },
+  summaryMoreChip: {
+    backgroundColor: "#e2e8f0",
+    borderRadius: 8,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+  },
+  summaryMoreChipText: { fontSize: 10, color: T.text, fontWeight: "700" },
 
   dentwebBtn: {
     backgroundColor: T.blue,
@@ -975,14 +1230,15 @@ const s = StyleSheet.create({
     position: "absolute",
     left: 0,
     right: 0,
-    bottom: 0,
     paddingHorizontal: 24,
     paddingTop: 10,
-    paddingBottom: 24,
+    paddingBottom: 16,
     borderTopWidth: 1,
     borderTopColor: T.border,
     backgroundColor: T.white,
     gap: 8,
+    zIndex: 20,
+    elevation: 10,
   },
   bottomMeta: { fontSize: 12, color: T.textSec, fontWeight: "600" },
   saveBtn: {

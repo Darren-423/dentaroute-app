@@ -1,9 +1,9 @@
 import { router, Stack, useFocusEffect, useSegments } from "expo-router";
 import React, { useCallback, useEffect, useState } from "react";
-import { StyleSheet, View } from "react-native";
+import { Alert, StyleSheet, View } from "react-native";
 import { DoctorTabBar, DoctorTabName } from "../../components/DoctorTabBar";
 import { warmDoctorTabData } from "../../lib/doctorTabDataCache";
-import { setDoctorTabSwipeBlocked } from "../../lib/doctorTabSwipeGuard";
+import { isDoctorTabSwipeBlocked, setDoctorTabSwipeBlocked } from "../../lib/doctorTabSwipeGuard";
 import { store } from "../../lib/store";
 
 const TAB_MAP: Record<string, DoctorTabName> = {
@@ -60,6 +60,18 @@ export default function DoctorLayout() {
           currentTab={currentTab}
           chatUnread={chatUnread}
           onTabPress={(tab) => {
+            if (
+              currentScreen === "schedule-patient" &&
+              tab !== "Schedule" &&
+              isDoctorTabSwipeBlocked()
+            ) {
+              Alert.alert(
+                "Unsaved Changes",
+                "Please save availability first. This applies your clinic hours and open slots to patient schedule visits."
+              );
+              return;
+            }
+
             const route = TAB_ROUTES[tab];
             if (route) {
               router.replace(route as any);

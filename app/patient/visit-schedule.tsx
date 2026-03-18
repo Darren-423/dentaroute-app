@@ -1,6 +1,6 @@
 import { LinearGradient } from "expo-linear-gradient";
 import { router, useLocalSearchParams } from "expo-router";
-import React, { useMemo, useRef, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import {
     ActivityIndicator, Alert,
     ScrollView,
@@ -51,6 +51,8 @@ interface Visit {
   availabilitySlots?: { date: string; time: string }[];
 }
 
+type AvailabilitySlot = { date: string; time: string };
+
 const formatGap = (months?: number, days?: number) => {
   const parts: string[] = [];
   if (months) parts.push(`${months}mo`);
@@ -61,6 +63,37 @@ const formatGap = (months?: number, days?: number) => {
     if (d > 0) parts.push(`${d}d`);
   }
   return parts.join(" ");
+};
+
+const normalizeVisits = (raw: unknown): Visit[] => {
+  if (!Array.isArray(raw)) return [];
+
+  return raw
+    .map((item, index) => {
+      const rawVisit = Number((item as any)?.visit);
+      const visitNum = Number.isFinite(rawVisit) && rawVisit > 0 ? rawVisit : index + 1;
+      const description = String((item as any)?.description || `Visit ${visitNum}`);
+
+      const gapMonthsRaw = Number((item as any)?.gapMonths);
+      const gapDaysRaw = Number((item as any)?.gapDays);
+      const gapMonths = Number.isFinite(gapMonthsRaw) && gapMonthsRaw > 0 ? gapMonthsRaw : 0;
+      const gapDays = Number.isFinite(gapDaysRaw) && gapDaysRaw > 0 ? gapDaysRaw : 0;
+
+      const availabilitySlots = Array.isArray((item as any)?.availabilitySlots)
+        ? (item as any).availabilitySlots
+            .filter((slot: any) => slot?.date && slot?.time)
+            .map((slot: any) => ({ date: String(slot.date), time: String(slot.time) }))
+        : undefined;
+
+      return {
+        visit: visitNum,
+        description,
+        ...(gapMonths > 0 ? { gapMonths } : {}),
+        ...(gapDays > 0 ? { gapDays } : {}),
+        ...(availabilitySlots && availabilitySlots.length > 0 ? { availabilitySlots } : {}),
+      };
+    })
+    .sort((a, b) => a.visit - b.visit);
 };
 
 export default function VisitScheduleScreen() {
@@ -77,8 +110,12 @@ export default function VisitScheduleScreen() {
   const isReschedule = params.mode === "reschedule";
 
   const visits: Visit[] = useMemo(() => {
-    try { return JSON.parse(params.visitsJson || "[]"); }
-    catch { return []; }
+    try {
+      const parsed = JSON.parse(params.visitsJson || "[]");
+      return normalizeVisits(parsed);
+    } catch {
+      return [];
+    }
   }, [params.visitsJson]);
 
   const today = new Date();
@@ -88,27 +125,99 @@ export default function VisitScheduleScreen() {
   const [selectedTimes, setSelectedTimes] = useState<Record<number, string>>({});
   const [activeVisit, setActiveVisit] = useState(1);
   const [loading, setLoading] = useState(false);
+  const [doctorAvailabilityByVisit, setDoctorAvailabilityByVisit] = useState<Record<number, AvailabilitySlot[]>>({});
+
+  useEffect(() => {
+    if (visits.length === 0) return;
+    const hasActiveVisit = visits.some((v) => v.visit === activeVisit);
+    if (!hasActiveVisit) {
+      setActiveVisit(visits[0].visit);
+    }
+  }, [visits, activeVisit]);
+
+  useEffect(() => {
+    let mounted = true;
+
+    const loadDoctorAvailability = async () => {
+      const doctorProfile: any = await store.getDoctorProfile();
+      if (!mounted || !doctorProfile) return;
+
+      const profileName = doctorProfile.fullName || doctorProfile.name;
+      if (params.dentistName && profileName && profileName !== params.dentistName) {
+        setDoctorAvailabilityByVisit({});
+        return;
+      }
+
+      const normalizeSlots = (value: any): AvailabilitySlot[] => {
+        if (!Array.isArray(value)) return [];
+        return value
+          .filter((slot) => slot?.date && slot?.time)
+          .map((slot) => ({ date: String(slot.date), time: String(slot.time) }));
+      };
+
+      const byVisitRaw = Array.isArray(doctorProfile.availableSlotsByVisit)
+        ? doctorProfile.availableSlotsByVisit
+        : [];
+      const sharedSlots = normalizeSlots(doctorProfile.availableSlots);
+
+      const nextMap: Record<number, AvailabilitySlot[]> = {};
+      for (const v of visits) {
+        const visitSpecific = byVisitRaw.find((item: any) => Number(item?.visit) === v.visit);
+        const specificSlots = normalizeSlots(visitSpecific?.availabilitySlots);
+        if (specificSlots.length > 0) {
+          nextMap[v.visit] = specificSlots;
+        } else if (sharedSlots.length > 0) {
+          nextMap[v.visit] = sharedSlots;
+        }
+      }
+
+      setDoctorAvailabilityByVisit(nextMap);
+    };
+
+    loadDoctorAvailability();
+
+    return () => {
+      mounted = false;
+    };
+  }, [params.dentistName, visits]);
+
+  const mergedVisitAvailability = useMemo(() => {
+    const map: Record<number, AvailabilitySlot[]> = {};
+    for (const v of visits) {
+      const quoteSlots = Array.isArray(v.availabilitySlots) ? v.availabilitySlots : [];
+      map[v.visit] = quoteSlots.length > 0 ? quoteSlots : doctorAvailabilityByVisit[v.visit] || [];
+    }
+    return map;
+  }, [doctorAvailabilityByVisit, visits]);
 
   const availabilityDateSetByVisit = useMemo(() => {
     const map: Record<number, Set<string>> = {};
     for (const v of visits) {
-      map[v.visit] = new Set((v.availabilitySlots || []).map((slot) => slot.date));
+      map[v.visit] = new Set((mergedVisitAvailability[v.visit] || []).map((slot) => slot.date));
     }
     return map;
-  }, [visits]);
+  }, [mergedVisitAvailability, visits]);
 
   const availabilityTimeSetByVisitDate = useMemo(() => {
     const map: Record<number, Record<string, Set<string>>> = {};
     for (const v of visits) {
       const dateMap: Record<string, Set<string>> = {};
-      for (const slot of v.availabilitySlots || []) {
+      for (const slot of mergedVisitAvailability[v.visit] || []) {
         if (!dateMap[slot.date]) dateMap[slot.date] = new Set();
         dateMap[slot.date].add(slot.time);
       }
       map[v.visit] = dateMap;
     }
     return map;
-  }, [visits]);
+  }, [mergedVisitAvailability, visits]);
+
+  // Mock time slots — will be replaced with Google Calendar availability
+  const AVAILABLE_SLOTS = [
+    "9:00 AM", "9:30 AM", "10:00 AM", "10:30 AM",
+    "11:00 AM", "11:30 AM", "1:00 PM", "1:30 PM",
+    "2:00 PM", "2:30 PM", "3:00 PM", "3:30 PM",
+    "4:00 PM", "4:30 PM",
+  ];
 
   const hasAvailabilityForActiveVisit =
     (availabilityDateSetByVisit[activeVisit] && availabilityDateSetByVisit[activeVisit].size > 0) || false;
@@ -129,19 +238,12 @@ export default function VisitScheduleScreen() {
     hasAvailabilityForActiveVisit,
     selectedDates,
     availabilityTimeSetByVisitDate,
+    AVAILABLE_SLOTS,
   ]);
 
   const scrollRef = useRef<ScrollView>(null);
   const calendarY = useRef(0);
   const timeSectionY = useRef(0);
-
-  // Mock time slots — will be replaced with Google Calendar availability
-  const AVAILABLE_SLOTS = [
-    "9:00 AM", "9:30 AM", "10:00 AM", "10:30 AM",
-    "11:00 AM", "11:30 AM", "1:00 PM", "1:30 PM",
-    "2:00 PM", "2:30 PM", "3:00 PM", "3:30 PM",
-    "4:00 PM", "4:30 PM",
-  ];
 
   // Calculate blocked date ranges based on selected visits + gaps
   const blockedRanges = useMemo(() => {
@@ -225,6 +327,15 @@ export default function VisitScheduleScreen() {
 
   const handleDatePress = (dateStr: string, isPast: boolean, unavailableByDoctor: boolean) => {
     if (isPast) return;
+
+    const activeVisitExists = visits.some((v) => v.visit === activeVisit);
+    if (!activeVisitExists) {
+      if (visits.length > 0) {
+        setActiveVisit(visits[0].visit);
+      }
+      Alert.alert("Visit data error", "Please re-open this quote and try selecting dates again.");
+      return;
+    }
 
     const existingVisit = getVisitForDate(dateStr);
     if (existingVisit) {
@@ -570,14 +681,14 @@ export default function VisitScheduleScreen() {
         </View>
 
         {/* Time slot picker */}
-        {selectedDates[activeVisit] && (
+        {selectedDates[activeVisit] && activeVisit > 0 && (
           <View style={s.timeSection} onLayout={(e) => { timeSectionY.current = e.nativeEvent.layout.y; }}>
             <View style={s.timeSectionHeader}>
               <Text style={s.timeSectionTitle}>Select Time for Visit {activeVisit}</Text>
               <Text style={s.timeSectionDate}>{formatFull(selectedDates[activeVisit])}</Text>
             </View>
             <View style={s.slotsGrid}>
-              {availableTimesForActiveVisit.map((slot) => {
+              {(availableTimesForActiveVisit || []).map((slot) => {
                 const isSelected = selectedTimes[activeVisit] === slot;
                 const visitColor = VISIT_COLORS[(activeVisit - 1) % VISIT_COLORS.length];
                 return (
@@ -604,7 +715,7 @@ export default function VisitScheduleScreen() {
                 );
               })}
             </View>
-            {availableTimesForActiveVisit.length === 0 && hasAvailabilityForActiveVisit && (
+            {(availableTimesForActiveVisit || []).length === 0 && hasAvailabilityForActiveVisit && (
               <Text style={s.noTimeOptionText}>
                 No available time options for this date. Please choose another date.
               </Text>

@@ -12,6 +12,7 @@ import {
 } from "react-native";
 import { DentistQuote, store } from "../../lib/store";
 import { toPatientLabel } from "../../lib/treatmentTerminology";
+import { buildQuoteVisitsForTreatments } from "../../lib/treatmentVisitRules";
 
 const T = {
   teal: "#4A0080", tealMid: "#5C10A0", tealLight: "#f0e6f6",
@@ -20,18 +21,6 @@ const T = {
   green: "#16a34a", greenLight: "#f0fdf4",
   amber: "#f59e0b", amberLight: "#fffbeb",
   blue: "#3b82f6", blueLight: "#eff6ff",
-};
-
-const formatGap = (months?: number, days?: number) => {
-  const parts: string[] = [];
-  if (months) parts.push(`${months}mo`);
-  if (days) {
-    const w = Math.floor(days / 7);
-    const d = days % 7;
-    if (w > 0) parts.push(`${w}w`);
-    if (d > 0) parts.push(`${d}d`);
-  }
-  return parts.join(" ");
 };
 
 const screenWidth = Dimensions.get("window").width;
@@ -248,63 +237,6 @@ export default function QuoteDetailScreen() {
             </View>
           )}
 
-          {/* Duration */}
-          {quote.duration && (
-            <View style={s.durationCard}>
-              <View style={s.durationLeft}>
-                <Text style={s.durationLabel}>Treatment Duration</Text>
-                <Text style={s.durationValue}>{quote.duration}</Text>
-              </View>
-              <View style={s.durationBadge}>
-                <Text style={s.durationBadgeText}>in Korea</Text>
-              </View>
-            </View>
-          )}
-
-          {/* Visit Schedule */}
-          {quote.visits && quote.visits.length > 0 && (
-            <View style={s.section}>
-              <View style={s.sectionHeaderRow}>
-                <Text style={s.sectionTitle}>Visit Schedule</Text>
-                <View style={s.visitCountBadge}>
-                  <Text style={s.visitCountText}>{quote.visits.length} visit{quote.visits.length !== 1 ? "s" : ""}</Text>
-                </View>
-              </View>
-              <View style={s.visitsTimeline}>
-                {quote.visits!.map((v, idx) => (
-                  <View key={idx}>
-                    <View style={s.visitRow}>
-                      <View style={s.visitTimelineCol}>
-                        <View style={s.visitDot} />
-                        {idx < quote.visits!.length - 1 && <View style={s.visitLine} />}
-                      </View>
-                      <View style={s.visitContent}>
-                        <View style={s.visitHeader}>
-                          <Text style={s.visitLabel}>Visit {v.visit}</Text>
-                          {(v.paymentPercent ?? 0) > 0 && (
-                            <View style={s.visitPayBadge}>
-                              <Text style={s.visitPayText}>{v.paymentPercent}% · ${Math.round((totalPrice * (v.paymentPercent ?? 0)) / 100)}</Text>
-                            </View>
-                          )}
-                        </View>
-                        <Text style={s.visitDesc}>{v.description}</Text>
-                      </View>
-                    </View>
-                    {((v.gapMonths ?? 0) > 0 || (v.gapDays ?? 0) > 0) && idx < quote.visits!.length - 1 && (
-                      <View style={s.gapRow}>
-                        <View style={s.gapLine} />
-                        <Text style={s.gapText}>
-                          {formatGap(v.gapMonths, v.gapDays)} recovery
-                        </Text>
-                        <View style={s.gapLine} />
-                      </View>
-                    )}
-                  </View>
-                ))}
-              </View>
-            </View>
-          )}
-
           {/* Message from dentist */}
           {quote.message && (
             <View style={s.messageCard}>
@@ -312,24 +244,6 @@ export default function QuoteDetailScreen() {
               <Text style={s.messageText}>{quote.message}</Text>
             </View>
           )}
-
-          {/* Chat button */}
-          <TouchableOpacity
-            style={s.chatBtn}
-            onPress={async () => {
-              const room = await store.getOrCreateChatRoom(
-                caseId || "", "Patient",
-                quote.dentistName, quote.clinicName,
-              );
-              router.push({
-                pathname: "/patient/chat" as any,
-                params: { chatRoomId: room.id, dentistName: quote.dentistName, clinicName: quote.clinicName },
-              });
-            }}
-            activeOpacity={0.7}
-          >
-            <Text style={s.chatBtnText}>Message {quote.dentistName?.split(" ")[0] || "Doctor"}</Text>
-          </TouchableOpacity>
 
           {/* Payment info */}
           <View style={s.paymentSection}>
@@ -372,26 +286,30 @@ export default function QuoteDetailScreen() {
         <TouchableOpacity
           style={s.selectBtn}
           onPress={() => {
-            const hasVisits = quote.visits && quote.visits.length > 0;
+            const effectiveVisits = quote.visits && quote.visits.length > 0
+              ? quote.visits
+              : buildQuoteVisitsForTreatments(quote.treatments || []).visits;
+            const durationLabel = quote.duration || (effectiveVisits.length > 0
+              ? `${effectiveVisits.length} visit${effectiveVisits.length !== 1 ? "s" : ""}`
+              : "");
+
             router.push({
-              pathname: hasVisits ? "/patient/visit-schedule" as any : "/patient/payment" as any,
+              pathname: "/patient/visit-schedule" as any,
               params: {
                 quoteId: quote.id, caseId,
                 amount: String(depositAmount),
                 totalPrice: String(totalPrice),
                 dentistName: quote.dentistName,
                 clinicName: quote.clinicName,
-                ...(hasVisits
-                  ? { duration: quote.duration, visitsJson: JSON.stringify(quote.visits || []) }
-                  : { visitDatesJson: "[]" }
-                ),
+                duration: durationLabel,
+                visitsJson: JSON.stringify(effectiveVisits),
               },
             });
           }}
           activeOpacity={0.85}
         >
           <Text style={s.selectBtnText}>
-            {quote.visits?.length ? "Schedule Visits" : "Pay Deposit"} →
+            Schedule Visits →
           </Text>
         </TouchableOpacity>
       </View>

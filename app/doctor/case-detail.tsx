@@ -76,6 +76,8 @@ export default function DoctorCaseDetailScreen() {
   const [loading, setLoading] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [existingQuote, setExistingQuote] = useState<DentistQuote | null>(null);
+  const [visitsCount, setVisitsCount] = useState(1);
+  const [gapConfigs, setGapConfigs] = useState<{ gapMonths: number; gapDays: number }[]>([]);
 
   // Patient uploaded files & travel
   const [patientFiles, setPatientFiles] = useState<{
@@ -117,6 +119,18 @@ export default function DoctorCaseDetailScreen() {
               qty: t.qty,
               price: String(t.price),
             })));
+            const quoteVisits = Array.isArray(myQuote.visits) ? myQuote.visits : [];
+            if (quoteVisits.length > 0) {
+              setVisitsCount(quoteVisits.length);
+              const gaps: { gapMonths: number; gapDays: number }[] = [];
+              for (let i = 0; i < quoteVisits.length - 1; i++) {
+                gaps.push({
+                  gapMonths: quoteVisits[i]?.gapMonths || 0,
+                  gapDays: quoteVisits[i]?.gapDays || 0,
+                });
+              }
+              setGapConfigs(gaps);
+            }
             setSubmitted(true);
           }
         }
@@ -164,28 +178,46 @@ export default function DoctorCaseDetailScreen() {
 
   const isComplete = allPricesFilled;
 
-  const handleSchedulePatient = () => {
+  const handleSendQuote = async () => {
     if (!isComplete || !caseData) return;
-    router.push({
-      pathname: "/doctor/schedule-patient" as any,
-      params: {
-        caseId: caseData.id,
-        planItemsJson: JSON.stringify(planItems.map((p) => ({
-          id: p.id,
-          treatment: p.treatment,
-          qty: p.qty,
-          price: Number(p.price || 0),
-        }))),
-        totalPrice: String(totalPrice),
-      },
-    });
-  };
-
-  // Kept for unused reference suppression
-  const _handleSendQuote = async () => {
-    if (!caseData) return;
     setLoading(true);
     try {
+      const normalizeSlots = (value: any): { date: string; time: string }[] => {
+        if (!Array.isArray(value)) return [];
+        return value
+          .filter((slot) => slot?.date && slot?.time)
+          .map((slot) => ({ date: String(slot.date), time: String(slot.time) }));
+      };
+
+      const availabilityByVisit: Record<number, { date: string; time: string }[]> = {};
+      const byVisitRaw = Array.isArray(doctorProfile?.availableSlotsByVisit)
+        ? doctorProfile.availableSlotsByVisit
+        : [];
+      for (const item of byVisitRaw) {
+        const visitNum = Number(item?.visit);
+        if (!visitNum) continue;
+        availabilityByVisit[visitNum] = normalizeSlots(item?.availabilitySlots);
+      }
+
+      const sharedSlots = normalizeSlots(doctorProfile?.availableSlots);
+      const safeVisitsCount = Math.max(1, visitsCount);
+      const visits = Array.from({ length: safeVisitsCount }, (_, index) => {
+        const visitNum = index + 1;
+        const visitSpecific = availabilityByVisit[visitNum] || [];
+        const availabilitySlots = visitSpecific.length > 0 ? visitSpecific : sharedSlots;
+        const isLast = visitNum === safeVisitsCount;
+        const gapIndex = visitNum - 1;
+        const gapConfig = gapIndex < gapConfigs.length ? gapConfigs[gapIndex] : { gapMonths: 0, gapDays: 0 };
+
+        return {
+          visit: visitNum,
+          description: `Visit ${visitNum}`,
+          ...(!isLast && gapConfig.gapMonths > 0 ? { gapMonths: gapConfig.gapMonths } : {}),
+          ...(!isLast && gapConfig.gapDays > 0 ? { gapDays: gapConfig.gapDays } : {}),
+          ...(availabilitySlots.length > 0 ? { availabilitySlots } : {}),
+        };
+      });
+
       await store.createQuote({
         caseId: caseData.id,
         dentistName: doctorProfile?.fullName || doctorProfile?.name || "Doctor",
@@ -200,8 +232,8 @@ export default function DoctorCaseDetailScreen() {
           price: Number(p.price || 0),
         })),
         treatmentDetails: "",
-        duration: "1 Day",
-        visits: [],
+        duration: visits.length > 1 ? `${visits.length} Visits` : "1 Visit",
+        visits,
         message: "",
       });
       setSubmitted(true);
@@ -891,6 +923,131 @@ export default function DoctorCaseDetailScreen() {
               </TouchableOpacity>
             )}
 
+            {/* Visit settings */}
+            <View style={s.infoCard}>
+              <Text style={s.infoLabel}>VISIT SETTINGS</Text>
+
+              <View style={s.visitsCountCard}>
+                <TouchableOpacity
+                  style={s.visitsStepBtn}
+                  onPress={() => {
+                    const newCount = Math.max(1, visitsCount - 1);
+                    setVisitsCount(newCount);
+                    // Remove last gap if decreasing
+                    if (newCount < visitsCount && gapConfigs.length > 0) {
+                      setGapConfigs((prev) => prev.slice(0, -1));
+                    }
+                  }}
+                  activeOpacity={0.7}
+                >
+                  <Text style={s.visitsStepText}>−</Text>
+                </TouchableOpacity>
+
+                <View style={s.visitsValueCenter}>
+                  <Text style={s.visitsValueNum}>{visitsCount}</Text>
+                  <Text style={s.visitsValueLabel}>visits</Text>
+                </View>
+
+                <TouchableOpacity
+                  style={s.visitsStepBtn}
+                  onPress={() => {
+                    const newCount = Math.min(10, visitsCount + 1);
+                    setVisitsCount(newCount);
+                    // Add new gap if increasing
+                    if (newCount > visitsCount) {
+                      setGapConfigs((prev) => [...prev, { gapMonths: 0, gapDays: 0 }]);
+                    }
+                  }}
+                  activeOpacity={0.7}
+                >
+                  <Text style={s.visitsStepText}>+</Text>
+                </TouchableOpacity>
+              </View>
+
+              {visitsCount > 1 && (
+                <View style={s.gapCard}>
+                  <Text style={s.gapTitle}>Healing time between visits</Text>
+                  <Text style={s.gapHint}>Set different healing time for each gap.</Text>
+
+                  <View style={s.gapInputCol}>
+                    {Array.from({ length: visitsCount - 1 }).map((_, gapIndex) => {
+                      const visitANum = gapIndex + 1;
+                      const visitBNum = gapIndex + 2;
+                      const gap = gapConfigs[gapIndex] || { gapMonths: 0, gapDays: 0 };
+
+                      return (
+                        <View key={`gap-${gapIndex}`} style={s.gapBlockWrap}>
+                          <Text style={s.gapBlockTitle}>Visit {visitANum} → Visit {visitBNum}</Text>
+                          
+                          <View style={s.gapInputGroupRow}>
+                            <Text style={s.gapUnitLabel}>Months</Text>
+                            <View style={s.gapControlsRow}>
+                              <TouchableOpacity
+                                style={s.gapStepBtn}
+                                onPress={() => {
+                                  const newGaps = [...gapConfigs];
+                                  newGaps[gapIndex] = { ...gap, gapMonths: Math.max(0, gap.gapMonths - 1) };
+                                  setGapConfigs(newGaps);
+                                }}
+                                activeOpacity={0.7}
+                              >
+                                <Text style={s.gapStepText}>−</Text>
+                              </TouchableOpacity>
+                              <View style={s.gapValueBox}>
+                                <Text style={s.infoRowValue}>{gap.gapMonths}</Text>
+                              </View>
+                              <TouchableOpacity
+                                style={s.gapStepBtn}
+                                onPress={() => {
+                                  const newGaps = [...gapConfigs];
+                                  newGaps[gapIndex] = { ...gap, gapMonths: Math.min(12, gap.gapMonths + 1) };
+                                  setGapConfigs(newGaps);
+                                }}
+                                activeOpacity={0.7}
+                              >
+                                <Text style={s.gapStepText}>+</Text>
+                              </TouchableOpacity>
+                            </View>
+                          </View>
+
+                          <View style={[s.gapInputGroupRow, { borderBottomWidth: 0 }]}>
+                            <Text style={s.gapUnitLabel}>Days</Text>
+                            <View style={s.gapControlsRow}>
+                              <TouchableOpacity
+                                style={s.gapStepBtn}
+                                onPress={() => {
+                                  const newGaps = [...gapConfigs];
+                                  newGaps[gapIndex] = { ...gap, gapDays: Math.max(0, gap.gapDays - 1) };
+                                  setGapConfigs(newGaps);
+                                }}
+                                activeOpacity={0.7}
+                              >
+                                <Text style={s.gapStepText}>−</Text>
+                              </TouchableOpacity>
+                              <View style={s.gapValueBox}>
+                                <Text style={s.infoRowValue}>{gap.gapDays}</Text>
+                              </View>
+                              <TouchableOpacity
+                                style={s.gapStepBtn}
+                                onPress={() => {
+                                  const newGaps = [...gapConfigs];
+                                  newGaps[gapIndex] = { ...gap, gapDays: Math.min(90, gap.gapDays + 1) };
+                                  setGapConfigs(newGaps);
+                                }}
+                                activeOpacity={0.7}
+                              >
+                                <Text style={s.gapStepText}>+</Text>
+                              </TouchableOpacity>
+                            </View>
+                          </View>
+                        </View>
+                      );
+                    })}
+                  </View>
+                </View>
+              )}
+            </View>
+
             {/* Total */}
             {planItems.length > 0 && (
               <View style={s.totalCard}>
@@ -909,12 +1066,12 @@ export default function DoctorCaseDetailScreen() {
         </>)}
       </ScrollView>
 
-      {/* Bottom — Schedule Patient (hidden when booked) */}
+      {/* Bottom — Send Quote (hidden when booked) */}
       {!isBooked && planItems.length > 0 && (
         <View style={s.bottom}>
           <TouchableOpacity
             style={[s.sendBtn, !isComplete && s.sendBtnDisabled]}
-            onPress={handleSchedulePatient}
+            onPress={handleSendQuote}
             disabled={!isComplete || loading}
             activeOpacity={0.85}
           >
@@ -922,7 +1079,7 @@ export default function DoctorCaseDetailScreen() {
               <ActivityIndicator color={T.white} size="small" />
             ) : (
               <Text style={s.sendBtnText}>
-                Schedule Patient{totalPrice > 0 ? ` · $${totalPrice.toLocaleString()}` : ""} →
+                Send Quote{totalPrice > 0 ? ` · $${totalPrice.toLocaleString()}` : ""} →
               </Text>
             )}
           </TouchableOpacity>
@@ -1176,6 +1333,18 @@ const s = StyleSheet.create({
   gapSummary: {
     fontSize: 11, color: "#d97706", fontWeight: "500", marginTop: 8,
     fontStyle: "italic",
+  },
+
+  // Per-gap blocks (for individual gap config)
+  gapBlockWrap: {
+    backgroundColor: "#fefce8", borderRadius: 10,
+    borderWidth: 1, borderColor: "rgba(217,119,6,0.2)",
+    paddingHorizontal: 12, paddingVertical: 12,
+    marginBottom: 10,
+  },
+  gapBlockTitle: {
+    fontSize: 12, fontWeight: "700", color: "#b45309",
+    marginBottom: 10,
   },
 
   issueTagWrap: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
