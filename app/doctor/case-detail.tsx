@@ -1594,9 +1594,9 @@ const s = StyleSheet.create({
     width: "100%", backgroundColor: "rgba(255,255,255,0.08)", borderRadius: 14,
     padding: 16, gap: 8, borderWidth: 1, borderColor: T.border, marginBottom: 24,
   },
-  sentRow: { flexDirection: "row", justifyContent: "space-between" },
-  sentName: { fontSize: 13, color: "rgba(255,255,255,0.6)" },
-  sentPrice: { fontSize: 13, fontWeight: "600", color: T.white },
+  sentRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "flex-end" },
+  sentName: { fontSize: 13, color: "rgba(255,255,255,0.6)", flex: 1, marginRight: 12 },
+  sentPrice: { fontSize: 13, fontWeight: "600", color: T.white, flexShrink: 0 },
   sentTotalRow: {
     flexDirection: "row", justifyContent: "space-between",
     borderTopWidth: 1, borderTopColor: "rgba(255,255,255,0.15)",
