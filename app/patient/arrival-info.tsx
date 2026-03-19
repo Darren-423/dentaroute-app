@@ -106,7 +106,8 @@ const AIRLINES = [
 ];
 
 export default function ArrivalInfoScreen() {
-  const { bookingId } = useLocalSearchParams<{ bookingId: string }>();
+  const { bookingId, tripIndex: tripIndexStr } = useLocalSearchParams<{ bookingId: string; tripIndex?: string }>();
+  const tripIndex = tripIndexStr !== undefined ? parseInt(tripIndexStr, 10) : -1;
   const [booking, setBooking] = useState<Booking | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -145,26 +146,30 @@ export default function ArrivalInfoScreen() {
       const bk = await store.getBooking(bookingId);
       if (bk) {
         setBooking(bk);
+        // Load trip data based on tripIndex (from tripInfos array) or fallback to arrivalInfo
+        const tripData = tripIndex >= 0 && bk.tripInfos && bk.tripInfos[tripIndex]
+          ? bk.tripInfos[tripIndex]
+          : bk.arrivalInfo;
         const isReturnVisit = (bk.currentVisit || 1) > 1;
-        if (bk.arrivalInfo && !isReturnVisit) {
-          setFlightNumber(bk.arrivalInfo.flightNumber);
-          setAirline(bk.arrivalInfo.airline || "");
-          setArrivalDate(bk.arrivalInfo.arrivalDate);
-          setArrivalTime(bk.arrivalInfo.arrivalTime);
-          setTerminal(bk.arrivalInfo.terminal || "");
-          setPassengers(String(bk.arrivalInfo.passengers || 1));
-          setNotes(bk.arrivalInfo.notes || "");
-          setPickupRequested(bk.arrivalInfo.pickupRequested);
-          setDepAirline(bk.arrivalInfo.depAirline || "");
-          setDepFlightNumber(bk.arrivalInfo.depFlightNumber || "");
-          setDepFlightDate(bk.arrivalInfo.depFlightDate || "");
-          setDepFlightTime(bk.arrivalInfo.depFlightTime || "");
-          setDepTerminal(bk.arrivalInfo.depTerminal || "");
-          setHotelName(bk.arrivalInfo.hotelName || "");
-          setHotelAddress(bk.arrivalInfo.hotelAddress || "");
-          setCheckInDate(bk.arrivalInfo.checkInDate || "");
-          setCheckOutDate(bk.arrivalInfo.checkOutDate || "");
-          setConfirmationNumber(bk.arrivalInfo.confirmationNumber || "");
+        if (tripData && (!isReturnVisit || tripIndex >= 0)) {
+          setFlightNumber(tripData.flightNumber);
+          setAirline(tripData.airline || "");
+          setArrivalDate(tripData.flightDate || tripData.arrivalDate || "");
+          setArrivalTime(tripData.flightTime || tripData.arrivalTime || "");
+          setTerminal(tripData.terminal || "");
+          setPassengers(String(tripData.passengers || 1));
+          setNotes(tripData.notes || "");
+          setPickupRequested(tripData.pickupRequested);
+          setDepAirline(tripData.depAirline || "");
+          setDepFlightNumber(tripData.depFlightNumber || "");
+          setDepFlightDate(tripData.depFlightDate || "");
+          setDepFlightTime(tripData.depFlightTime || "");
+          setDepTerminal(tripData.depTerminal || "");
+          setHotelName(tripData.hotelName || "");
+          setHotelAddress(tripData.hotelAddress || "");
+          setCheckInDate(tripData.checkInDate || "");
+          setCheckOutDate(tripData.checkOutDate || "");
+          setConfirmationNumber(tripData.confirmationNumber || "");
         } else if (bk.visitDates?.length > 0) {
           const currentVisitNum = bk.currentVisit || 1;
           const currentVD = bk.visitDates.find((v) => v.visit === currentVisitNum);
@@ -218,7 +223,20 @@ export default function ArrivalInfoScreen() {
       confirmationNumber: confirmationNumber || undefined,
     };
 
-    const updated = { ...booking, arrivalInfo };
+    // Save to tripInfos array if tripIndex is provided, otherwise fallback to arrivalInfo
+    const updatedTripInfos = [...(booking.tripInfos || [])];
+    if (tripIndex >= 0) {
+      // Extend array if needed
+      while (updatedTripInfos.length <= tripIndex) {
+        updatedTripInfos.push({} as ArrivalInfo);
+      }
+      updatedTripInfos[tripIndex] = arrivalInfo;
+    }
+    const updated = {
+      ...booking,
+      arrivalInfo: tripIndex === 0 ? arrivalInfo : booking.arrivalInfo || arrivalInfo,
+      ...(tripIndex >= 0 ? { tripInfos: updatedTripInfos } : {}),
+    };
     const bookings = await store.getBookings();
     const idx = bookings.findIndex((b) => b.id === booking.id);
     if (idx >= 0) {
@@ -227,11 +245,13 @@ export default function ArrivalInfoScreen() {
       await AsyncStorage.setItem("dr_bookings", JSON.stringify(bookings));
     }
 
-    // Auto-save to My Trips
-    const tripId = `trip_bk_${booking.id}`;
+    // Auto-save to My Trips (with tripIndex suffix)
+    const tripId = tripIndex >= 0 ? `trip_bk_${booking.id}_${tripIndex}` : `trip_bk_${booking.id}`;
     const now2 = new Date().toISOString();
     const savedTrip: SavedTrip = {
       id: tripId,
+      caseId: booking.caseId,
+      tripIndex: tripIndex >= 0 ? tripIndex : 0,
       airline: airline || flightNumber,
       flightNumber,
       flightDate: arrivalDate,
@@ -261,12 +281,17 @@ export default function ArrivalInfoScreen() {
       route: `/doctor/case-detail?caseId=${booking.caseId}`,
     });
 
-    const allBookings = await store.getBookings();
-    const bIdx = allBookings.findIndex((b) => b.id === booking.id);
+    const allBookings2 = await store.getBookings();
+    const bIdx = allBookings2.findIndex((b) => b.id === booking.id);
     if (bIdx >= 0) {
-      allBookings[bIdx] = { ...allBookings[bIdx], arrivalInfo, status: "flight_submitted" as any };
+      allBookings2[bIdx] = {
+        ...allBookings2[bIdx],
+        arrivalInfo: tripIndex === 0 ? arrivalInfo : allBookings2[bIdx].arrivalInfo || arrivalInfo,
+        ...(tripIndex >= 0 ? { tripInfos: updatedTripInfos } : {}),
+        status: "flight_submitted" as any,
+      };
       const AS = (await import("@react-native-async-storage/async-storage")).default;
-      await AS.setItem("dr_bookings", JSON.stringify(allBookings));
+      await AS.setItem("dr_bookings", JSON.stringify(allBookings2));
     }
 
     setSaving(false);
@@ -404,15 +429,6 @@ export default function ArrivalInfoScreen() {
               </Text>
             </View>
           </View>
-
-          {/* ── Load from My Trips ── */}
-          {savedTrips.length > 0 && (
-            <TouchableOpacity style={st.loadTripBtn} onPress={() => setShowTripPicker(true)}>
-              <Text style={{ fontSize: 16 }}>🛬</Text>
-              <Text style={st.loadTripText}>Load from My Trips</Text>
-              <Text style={st.loadTripCount}>{savedTrips.length} saved</Text>
-            </TouchableOpacity>
-          )}
 
           {/* ── Arrival Flight Section ── */}
           <Text style={st.sectionTitle}>🛬 Arrival Flight</Text>
@@ -847,16 +863,8 @@ export default function ArrivalInfoScreen() {
 
       {/* ── Bottom bar ── */}
       <View style={st.bottomBar}>
-        <View style={{ flex: 1 }}>
-          <Text style={st.bottomFlight}>
-            {flightNumber ? `🛬 ${airline ? airline + " " : ""}${flightNumber}` : "Enter flight details"}
-          </Text>
-          {arrivalDate && arrivalTime && arrivalTime.includes(":") ? (
-            <Text style={st.bottomEta}>{formatDateDisplay(arrivalDate)} at {formatTimeSlot(arrivalTime)}</Text>
-          ) : null}
-        </View>
         <TouchableOpacity
-          style={[st.submitBtn, !isValid() && { opacity: 0.35 }]}
+          style={[st.submitBtn, { flex: 1 }, !isValid() && { opacity: 0.35 }]}
           onPress={handleSave}
           disabled={!isValid() || saving}
         >
@@ -1060,8 +1068,9 @@ const st = StyleSheet.create({
   submitBtn: {
     backgroundColor: C.purple, borderRadius: 14,
     paddingHorizontal: 24, paddingVertical: 15,
+    alignItems: "center" as const,
   },
-  submitBtnText: { color: "#fff", fontSize: 15, fontWeight: "700" },
+  submitBtnText: { color: "#fff", fontSize: 15, fontWeight: "700", textAlign: "center" as const },
 
   /* Success */
   successWrap: {

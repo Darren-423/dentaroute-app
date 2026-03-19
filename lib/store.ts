@@ -65,7 +65,15 @@ export interface DentistQuote {
   treatments: { name: string; qty: number; price: number }[];
   treatmentDetails: string;
   duration: string;
-  visits?: { visit: number; description: string; gapMonths?: number; gapDays?: number; paymentAmount?: number; paymentPercent?: number }[];
+  visits?: {
+    visit: number;
+    description: string;
+    gapMonths?: number;
+    gapDays?: number;
+    paymentAmount?: number;
+    paymentPercent?: number;
+    availabilitySlots?: { date: string; time: string }[];
+  }[];
   message: string;
   createdAt: string;
   clinicPhotos?: string[];
@@ -120,18 +128,22 @@ export interface VisitDate {
 
 export interface ArrivalInfo {
   flightNumber: string;
-  arrivalDate: string;
+  arrivalDate?: string;
   arrivalTime: string;
+  flightTime?: string;    // alias for arrivalTime (Plan B compatibility)
   airline?: string;
   terminal?: string;
   passengers?: number;
   notes?: string;
   pickupRequested: boolean;
+  // Plan B: 출국편
+  flightDate?: string;
   depAirline?: string;
   depFlightNumber?: string;
   depFlightDate?: string;
   depFlightTime?: string;
   depTerminal?: string;
+  // Plan B: 호텔
   hotelName?: string;
   hotelAddress?: string;
   checkInDate?: string;
@@ -146,16 +158,21 @@ export interface SavedTrip {
   flightDate: string;
   flightTime: string;
   terminal?: string;
-  hotelName?: string;
-  hotelAddress?: string;
-  checkInDate?: string;
-  checkOutDate?: string;
-  confirmationNumber?: string;
+  // Plan B: 출국편
   depAirline?: string;
   depFlightNumber?: string;
   depFlightDate?: string;
   depFlightTime?: string;
   depTerminal?: string;
+  // 호텔
+  hotelName?: string;
+  hotelAddress?: string;
+  checkInDate?: string;
+  checkOutDate?: string;
+  confirmationNumber?: string;
+  // Plan B: Case 연결
+  caseId?: string;
+  tripIndex?: number;
   createdAt: string;
   updatedAt: string;
 }
@@ -222,6 +239,7 @@ export interface Booking {
   treatments?: { name: string; qty: number; price: number }[];  // doctor can modify
   visitDates: VisitDate[];
   arrivalInfo?: ArrivalInfo;
+  tripInfos?: ArrivalInfo[];   // Plan B: 멀티 Trip 지원
   finalInvoice?: FinalInvoice;
   departurePickup?: DeparturePickup;
   pickupReview?: PickupReview;
@@ -1093,8 +1111,8 @@ export const store = {
         medicalNotes: "",
         dentalIssues: ["Discoloration", "Chipped Teeth"],
         filesCount: { xrays: 1, treatmentPlans: 0, photos: 4 },
-        status: "quotes_received",
-        visitDate: "TBD",
+        status: "booked",
+        visitDate: "Jun 18 – Jun 27, 2026",
         birthDate: "1990-05-15",
       },
     ];
@@ -1347,13 +1365,95 @@ export const store = {
         { visit: 3, description: "Follow-up check, suture inspection", date: "2026-06-19", confirmedTime: "11:00 AM", gapMonths: 0, gapDays: 7, paymentPercent: 0 },
         { visit: 4, description: "Final crown fitting and veneer adjustment", date: "2026-06-26", confirmedTime: "10:00 AM", paymentPercent: 30 },
       ],
+      arrivalInfo: {
+        airline: "Korean Air",
+        flightNumber: "KE082",
+        flightDate: "2026-03-15",
+        arrivalDate: "2026-03-15",
+        arrivalTime: "14:30",
+        terminal: "Terminal 1",
+        depAirline: "Korean Air",
+        depFlightNumber: "KE081",
+        depFlightDate: "2026-03-22",
+        depFlightTime: "10:00",
+        depTerminal: "Terminal 1",
+        hotelName: "Lotte Hotel Seoul",
+        hotelAddress: "30 Eulji-ro, Jung-gu, Seoul",
+        checkInDate: "2026-03-15",
+        checkOutDate: "2026-03-22",
+        confirmationNumber: "LH-829461",
+        pickupRequested: true,
+      },
       currentVisit: 1,
-      status: "confirmed",
+      status: "flight_submitted",
       platformFeeRate: 0.20,
       savedCard: { last4: "4242", brand: "Visa", name: "Sarah Johnson", expiry: "12/28" },
       createdAt: "2026-02-25T15:00:00Z",
     };
-    await AsyncStorage.setItem(KEYS.BOOKINGS, JSON.stringify([demoBooking]));
+
+    // Demo Booking 2 (case 1002, Dr. Park's quote, multi-trip)
+    const demoBooking2: Booking = {
+      id: "bk_demo_002",
+      caseId: "1002",
+      quoteId: "q005",
+      dentistName: "Dr. Park Soojin",
+      clinicName: "Apgujeong Dental Care",
+      depositPaid: 270,
+      totalPrice: 2700,
+      treatments: [
+        { name: "Veneer", qty: 6, price: 450 },
+      ],
+      visitDates: [
+        { visit: 1, description: "Consultation and teeth preparation", date: "2026-06-19", confirmedTime: "10:00 AM", gapMonths: 0, gapDays: 7, paymentPercent: 50 },
+        { visit: 2, description: "Veneer fitting and bonding", date: "2026-06-26", confirmedTime: "10:00 AM", paymentPercent: 50 },
+      ],
+      tripInfos: [
+        {
+          airline: "Asiana Airlines",
+          flightNumber: "OZ201",
+          flightDate: "2026-06-18",
+          arrivalDate: "2026-06-18",
+          arrivalTime: "09:15",
+          terminal: "Terminal 1",
+          depAirline: "Asiana Airlines",
+          depFlightNumber: "OZ202",
+          depFlightDate: "2026-06-21",
+          depFlightTime: "18:30",
+          depTerminal: "Terminal 1",
+          hotelName: "Grand Hyatt Seoul",
+          hotelAddress: "322 Sowol-ro, Yongsan-gu, Seoul",
+          checkInDate: "2026-06-18",
+          checkOutDate: "2026-06-21",
+          confirmationNumber: "GH-174052",
+          pickupRequested: true,
+        },
+        {
+          airline: "Asiana Airlines",
+          flightNumber: "OZ203",
+          flightDate: "2026-06-25",
+          arrivalDate: "2026-06-25",
+          arrivalTime: "10:00",
+          terminal: "Terminal 1",
+          depAirline: "Asiana Airlines",
+          depFlightNumber: "OZ204",
+          depFlightDate: "2026-06-27",
+          depFlightTime: "17:00",
+          depTerminal: "Terminal 1",
+          hotelName: "Grand Hyatt Seoul",
+          hotelAddress: "322 Sowol-ro, Yongsan-gu, Seoul",
+          checkInDate: "2026-06-25",
+          checkOutDate: "2026-06-27",
+          confirmationNumber: "GH-174053",
+          pickupRequested: false,
+        },
+      ],
+      currentVisit: 1,
+      status: "flight_submitted",
+      platformFeeRate: 0.20,
+      savedCard: { last4: "4242", brand: "Visa", name: "Sarah Johnson", expiry: "12/28" },
+      createdAt: "2026-02-26T15:00:00Z",
+    };
+    await AsyncStorage.setItem(KEYS.BOOKINGS, JSON.stringify([demoBooking, demoBooking2]));
 
     // 11. Demo Reviews (for Dr. Kim — from previous patients)
     const demoReviews: Review[] = [
@@ -1397,10 +1497,10 @@ export const store = {
     ];
     await AsyncStorage.setItem(KEYS.NOTIFICATIONS, JSON.stringify(demoNotifs));
 
-    // 13. Demo Saved Trips (for calendar integration)
+    // 13. Demo Saved Trips (auto-saved from bookings)
     const demoTrips: SavedTrip[] = [
       {
-        id: "trip_demo_001",
+        id: "trip_bk_bk_demo_001",
         airline: "Korean Air",
         flightNumber: "KE082",
         flightDate: "2026-03-15",
@@ -1416,26 +1516,52 @@ export const store = {
         checkInDate: "2026-03-15",
         checkOutDate: "2026-03-22",
         confirmationNumber: "LH-829461",
+        caseId: "1001",
+        tripIndex: 0,
         createdAt: "2026-03-01T10:00:00Z",
         updatedAt: "2026-03-01T10:00:00Z",
       },
       {
-        id: "trip_demo_002",
+        id: "trip_bk_bk_demo_002_0",
         airline: "Asiana Airlines",
         flightNumber: "OZ201",
-        flightDate: "2026-06-20",
+        flightDate: "2026-06-18",
         flightTime: "09:15",
         terminal: "Terminal 1",
         depAirline: "Asiana Airlines",
         depFlightNumber: "OZ202",
-        depFlightDate: "2026-06-25",
+        depFlightDate: "2026-06-21",
         depFlightTime: "18:30",
         depTerminal: "Terminal 1",
         hotelName: "Grand Hyatt Seoul",
         hotelAddress: "322 Sowol-ro, Yongsan-gu, Seoul",
-        checkInDate: "2026-06-20",
-        checkOutDate: "2026-06-25",
+        checkInDate: "2026-06-18",
+        checkOutDate: "2026-06-21",
         confirmationNumber: "GH-174052",
+        caseId: "1002",
+        tripIndex: 0,
+        createdAt: "2026-06-01T10:00:00Z",
+        updatedAt: "2026-06-01T10:00:00Z",
+      },
+      {
+        id: "trip_bk_bk_demo_002_1",
+        airline: "Asiana Airlines",
+        flightNumber: "OZ203",
+        flightDate: "2026-06-25",
+        flightTime: "10:00",
+        terminal: "Terminal 1",
+        depAirline: "Asiana Airlines",
+        depFlightNumber: "OZ204",
+        depFlightDate: "2026-06-27",
+        depFlightTime: "17:00",
+        depTerminal: "Terminal 1",
+        hotelName: "Grand Hyatt Seoul",
+        hotelAddress: "322 Sowol-ro, Yongsan-gu, Seoul",
+        checkInDate: "2026-06-25",
+        checkOutDate: "2026-06-27",
+        confirmationNumber: "GH-174053",
+        caseId: "1002",
+        tripIndex: 1,
         createdAt: "2026-06-01T10:00:00Z",
         updatedAt: "2026-06-01T10:00:00Z",
       },

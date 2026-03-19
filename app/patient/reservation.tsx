@@ -146,36 +146,41 @@ export default function ReservationScreen() {
     });
   });
 
-  // Map booking arrival info (only after flight is submitted)
+  // Map booking trip infos (only after flight is submitted)
   bookings.forEach((bk) => {
-    if (!bk.arrivalInfo || bk.status === "confirmed") return;
-    const ai = bk.arrivalInfo;
+    if (bk.status === "confirmed") return;
+    const tripList = bk.tripInfos && bk.tripInfos.length > 0
+      ? bk.tripInfos
+      : bk.arrivalInfo ? [bk.arrivalInfo] : [];
 
-    // Arrival dot
-    if (ai.arrivalDate) {
-      const info = getOrCreate(ai.arrivalDate);
-      if (!info.dots.includes("arrival")) info.dots.push("arrival");
-      if (!info.bookings.find((b) => b.id === bk.id)) info.bookings.push(bk);
-    }
-
-    // Departure dot
-    if (ai.depFlightDate) {
-      const info = getOrCreate(ai.depFlightDate);
-      if (!info.dots.includes("departure")) info.dots.push("departure");
-      if (!info.bookings.find((b) => b.id === bk.id)) info.bookings.push(bk);
-    }
-
-    // Hotel stay range
-    if (ai.checkInDate && ai.checkOutDate) {
-      const range = getDateRange(ai.checkInDate, ai.checkOutDate);
-      range.forEach((dateKey, idx) => {
-        const info = getOrCreate(dateKey);
-        info.isStayRange = true;
-        if (idx === 0) info.isStayStart = true;
-        if (idx === range.length - 1) info.isStayEnd = true;
+    tripList.forEach((ai) => {
+      // Arrival dot
+      const arrDate = ai.flightDate || ai.arrivalDate;
+      if (arrDate) {
+        const info = getOrCreate(arrDate);
+        if (!info.dots.includes("arrival")) info.dots.push("arrival");
         if (!info.bookings.find((b) => b.id === bk.id)) info.bookings.push(bk);
-      });
-    }
+      }
+
+      // Departure dot
+      if (ai.depFlightDate) {
+        const info = getOrCreate(ai.depFlightDate);
+        if (!info.dots.includes("departure")) info.dots.push("departure");
+        if (!info.bookings.find((b) => b.id === bk.id)) info.bookings.push(bk);
+      }
+
+      // Hotel stay range
+      if (ai.checkInDate && ai.checkOutDate) {
+        const range = getDateRange(ai.checkInDate, ai.checkOutDate);
+        range.forEach((dateKey, idx) => {
+          const info = getOrCreate(dateKey);
+          info.isStayRange = true;
+          if (idx === 0) info.isStayStart = true;
+          if (idx === range.length - 1) info.isStayEnd = true;
+          if (!info.bookings.find((b) => b.id === bk.id)) info.bookings.push(bk);
+        });
+      }
+    });
   });
 
   // Calendar grid
@@ -379,40 +384,51 @@ export default function ReservationScreen() {
               const info = getStepInfo(bk);
               const treatments = bk.treatments || patientCase?.treatments || [];
               const visit = bk.visitDates?.find((v) => v.date === selectedDate);
-              const ai = bk.arrivalInfo;
-              const isArrivalDay = ai && selectedDate === ai.arrivalDate;
-              const isDepartureDay = ai?.depFlightDate && selectedDate === ai.depFlightDate;
-              const isStayDay = selectedDayInfo?.isStayRange && !isArrivalDay && !isDepartureDay;
+
+              // Multi-trip support: iterate over tripInfos or fallback to arrivalInfo
+              const tripList = bk.tripInfos && bk.tripInfos.length > 0
+                ? bk.tripInfos
+                : bk.arrivalInfo ? [bk.arrivalInfo] : [];
+
+              // Find which trips are relevant for the selected date
+              const arrivalTrips = tripList.filter((ai) => selectedDate === (ai.flightDate || ai.arrivalDate));
+              const departureTrips = tripList.filter((ai) => ai.depFlightDate && selectedDate === ai.depFlightDate && selectedDate !== (ai.flightDate || ai.arrivalDate));
+              const stayTrips = tripList.filter((ai) => {
+                if (!ai.checkInDate || !ai.checkOutDate) return false;
+                const arrDate = ai.flightDate || ai.arrivalDate;
+                if (selectedDate === arrDate || selectedDate === ai.depFlightDate) return false;
+                return selectedDate! >= ai.checkInDate && selectedDate! <= ai.checkOutDate;
+              });
 
               return (
                 <React.Fragment key={bk.id}>
-                  {/* ── Arrival Flight card (arrival day) ── */}
-                  {isArrivalDay && (
-                    <View style={s.tripInfoCard}>
+                  {/* ── Arrival Flight cards ── */}
+                  {arrivalTrips.map((ai, idx) => (
+                    <View key={`arr-${idx}`} style={s.tripInfoCard}>
                       <View style={[s.tripInfoBadge, { backgroundColor: "rgba(14,165,233,0.12)" }]}>
-                        <Text style={[s.tripInfoBadgeText, { color: T.arrival }]}>🛬 Arrival Flight</Text>
+                        <Text style={[s.tripInfoBadgeText, { color: T.arrival }]}>🛬 Arrival Flight{tripList.length > 1 ? ` (Trip ${tripList.indexOf(ai) + 1})` : ""}</Text>
                       </View>
                       <View style={s.tripInfoBody}>
-                        <Text style={s.tripInfoMain}>{ai!.airline ? `${ai!.airline} ` : ""}{ai!.flightNumber}</Text>
-                        <Text style={s.tripInfoSub}>{ai!.arrivalDate}{ai!.arrivalTime ? `  ·  ${ai!.arrivalTime}` : ""}</Text>
-                        {ai!.terminal ? <Text style={s.tripInfoSub}>Terminal: {ai!.terminal}</Text> : null}
+                        <Text style={s.tripInfoMain}>{ai.airline ? `${ai.airline} ` : ""}{ai.flightNumber}</Text>
+                        <Text style={s.tripInfoSub}>{ai.flightDate || ai.arrivalDate}{(ai.flightTime || ai.arrivalTime) ? `  ·  ${ai.flightTime || ai.arrivalTime}` : ""}</Text>
+                        {ai.terminal ? <Text style={s.tripInfoSub}>Terminal: {ai.terminal}</Text> : null}
                       </View>
                     </View>
-                  )}
+                  ))}
 
-                  {/* ── Departure Flight card (departure day) ── */}
-                  {isDepartureDay && !isArrivalDay && (
-                    <View style={s.tripInfoCard}>
+                  {/* ── Departure Flight cards ── */}
+                  {departureTrips.map((ai, idx) => (
+                    <View key={`dep-${idx}`} style={s.tripInfoCard}>
                       <View style={[s.tripInfoBadge, { backgroundColor: "rgba(249,115,22,0.12)" }]}>
-                        <Text style={[s.tripInfoBadgeText, { color: T.departure }]}>🛫 Departure Flight</Text>
+                        <Text style={[s.tripInfoBadgeText, { color: T.departure }]}>🛫 Departure Flight{tripList.length > 1 ? ` (Trip ${tripList.indexOf(ai) + 1})` : ""}</Text>
                       </View>
                       <View style={s.tripInfoBody}>
-                        <Text style={s.tripInfoMain}>{ai!.depAirline ? `${ai!.depAirline} ` : ""}{ai!.depFlightNumber || ""}</Text>
-                        <Text style={s.tripInfoSub}>{ai!.depFlightDate}{ai!.depFlightTime ? `  ·  ${ai!.depFlightTime}` : ""}</Text>
-                        {ai!.depTerminal ? <Text style={s.tripInfoSub}>Terminal: {ai!.depTerminal}</Text> : null}
+                        <Text style={s.tripInfoMain}>{ai.depAirline ? `${ai.depAirline} ` : ""}{ai.depFlightNumber || ""}</Text>
+                        <Text style={s.tripInfoSub}>{ai.depFlightDate}{ai.depFlightTime ? `  ·  ${ai.depFlightTime}` : ""}</Text>
+                        {ai.depTerminal ? <Text style={s.tripInfoSub}>Terminal: {ai.depTerminal}</Text> : null}
                       </View>
                     </View>
-                  )}
+                  ))}
 
                   {/* ── Booking card (visit day) ── */}
                   {visit && (
@@ -505,24 +521,29 @@ export default function ReservationScreen() {
                     </View>
                   )}
 
-                  {/* ── Hotel card (arrival day, stay day, or departure day) ── */}
-                  {ai?.hotelName && (isArrivalDay || isStayDay || isDepartureDay) && (
-                    <View style={s.tripInfoCard}>
-                      <View style={[s.tripInfoBadge, { backgroundColor: T.stayBg }]}>
-                        <Text style={[s.tripInfoBadgeText, { color: T.arrival }]}>
-                          {isDepartureDay && !isArrivalDay ? "🏨 Hotel Check-out" : "🏨 Hotel"}
-                        </Text>
-                      </View>
-                      <View style={s.tripInfoBody}>
-                        <Text style={s.tripInfoMain}>{ai.hotelName}</Text>
-                        {ai.hotelAddress ? <Text style={s.tripInfoSub}>{ai.hotelAddress}</Text> : null}
-                        {ai.checkInDate && ai.checkOutDate && (
-                          <Text style={s.tripInfoSub}>{ai.checkInDate} → {ai.checkOutDate}</Text>
-                        )}
-                        {ai.confirmationNumber ? <Text style={s.tripInfoSub}>Confirmation: #{ai.confirmationNumber}</Text> : null}
-                      </View>
-                    </View>
-                  )}
+                  {/* ── Hotel cards (from all relevant trips) ── */}
+                  {[...arrivalTrips, ...stayTrips, ...departureTrips]
+                    .filter((ai, idx, arr) => ai.hotelName && arr.findIndex((a) => a.hotelName === ai.hotelName && a.checkInDate === ai.checkInDate) === idx)
+                    .map((ai, idx) => {
+                      const isDep = departureTrips.includes(ai) && !arrivalTrips.includes(ai);
+                      return (
+                        <View key={`hotel-${idx}`} style={s.tripInfoCard}>
+                          <View style={[s.tripInfoBadge, { backgroundColor: T.stayBg }]}>
+                            <Text style={[s.tripInfoBadgeText, { color: T.arrival }]}>
+                              {isDep ? "🏨 Hotel Check-out" : "🏨 Hotel"}{tripList.length > 1 ? ` (Trip ${tripList.indexOf(ai) + 1})` : ""}
+                            </Text>
+                          </View>
+                          <View style={s.tripInfoBody}>
+                            <Text style={s.tripInfoMain}>{ai.hotelName}</Text>
+                            {ai.hotelAddress ? <Text style={s.tripInfoSub}>{ai.hotelAddress}</Text> : null}
+                            {ai.checkInDate && ai.checkOutDate && (
+                              <Text style={s.tripInfoSub}>{ai.checkInDate} → {ai.checkOutDate}</Text>
+                            )}
+                            {ai.confirmationNumber ? <Text style={s.tripInfoSub}>Confirmation: #{ai.confirmationNumber}</Text> : null}
+                          </View>
+                        </View>
+                      );
+                    })}
                 </React.Fragment>
               );
             })}

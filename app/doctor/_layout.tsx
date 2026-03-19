@@ -1,59 +1,45 @@
-import { Stack, useSegments, router } from "expo-router";
-import React, { useCallback, useEffect, useRef, useState } from "react";
-import { View, PanResponder } from "react-native";
-import { useFocusEffect } from "expo-router";
+import { router, Stack, useFocusEffect, useSegments } from "expo-router";
+import React, { useCallback, useEffect, useState } from "react";
+import { Alert, StyleSheet, View } from "react-native";
 import { DoctorTabBar, DoctorTabName } from "../../components/DoctorTabBar";
+import { warmDoctorTabData } from "../../lib/doctorTabDataCache";
+import { isDoctorTabSwipeBlocked, setDoctorTabSwipeBlocked } from "../../lib/doctorTabSwipeGuard";
 import { store } from "../../lib/store";
 
 const TAB_MAP: Record<string, DoctorTabName> = {
   dashboard: "Home",
-  alerts: "Alerts",
   "chat-list": "Chat",
+  "schedule-patient": "Hours",
+  availability: "Schedule",
   profile: "Profile",
 };
 
-const TAB_SCREENS = ["dashboard", "alerts", "chat-list", "profile"];
-const TAB_ROUTES = ["/doctor/dashboard", "/doctor/alerts", "/doctor/chat-list", "/doctor/profile"];
+const TAB_ROUTES: Record<DoctorTabName, string> = {
+  Home: "/doctor/dashboard",
+  Chat: "/doctor/chat-list",
+  Hours: "/doctor/schedule-patient",
+  Schedule: "/doctor/availability",
+  Profile: "/doctor/profile",
+};
 
 export default function DoctorLayout() {
   const segments = useSegments();
   const currentScreen = segments[1] as string | undefined;
-  const [notifUnread, setNotifUnread] = useState(0);
   const [chatUnread, setChatUnread] = useState(0);
-  const screenRef = useRef(currentScreen);
 
   useEffect(() => {
-    screenRef.current = currentScreen;
+    if (currentScreen !== "schedule-patient" && currentScreen !== "availability") {
+      setDoctorTabSwipeBlocked(false);
+    }
   }, [currentScreen]);
 
-  const showTabBar = !!currentScreen && currentScreen in TAB_MAP;
-  const currentTab = currentScreen ? TAB_MAP[currentScreen] : undefined;
-
-  const panResponder = useRef(
-    PanResponder.create({
-      onMoveShouldSetPanResponder: (_, gestureState) => {
-        return Math.abs(gestureState.dx) > 20 && Math.abs(gestureState.dy) < Math.abs(gestureState.dx);
-      },
-      onPanResponderRelease: (_, gestureState) => {
-        if (Math.abs(gestureState.dx) < 50) return;
-
-        const screen = screenRef.current || "";
-        const currentIndex = TAB_SCREENS.indexOf(screen);
-        if (currentIndex === -1) return;
-
-        if (gestureState.dx < -50 && currentIndex < TAB_SCREENS.length - 1) {
-          router.replace(TAB_ROUTES[currentIndex + 1] as any);
-        } else if (gestureState.dx > 50 && currentIndex > 0) {
-          router.replace(TAB_ROUTES[currentIndex - 1] as any);
-        }
-      },
-    })
-  ).current;
+  useEffect(() => {
+    warmDoctorTabData().catch(() => undefined);
+  }, []);
 
   useFocusEffect(
     useCallback(() => {
       const load = async () => {
-        setNotifUnread(await store.getUnreadCount("doctor"));
         setChatUnread(await store.getChatUnreadCount("doctor"));
       };
       load();
@@ -62,12 +48,56 @@ export default function DoctorLayout() {
     }, [])
   );
 
+  const showTabBar = !!currentScreen && currentScreen in TAB_MAP;
+  const currentTab = currentScreen ? TAB_MAP[currentScreen] : undefined;
+
   return (
-    <View style={{ flex: 1 }} {...(showTabBar ? panResponder.panHandlers : {})}>
-      <Stack screenOptions={() => ({ headerShown: false, animation: "none" })} />
+    <View style={styles.container}>
+      <View style={styles.stackLayer}>
+        <Stack screenOptions={() => ({ headerShown: false, animation: "none" })} />
+      </View>
+
       {showTabBar && currentTab && (
-        <DoctorTabBar currentTab={currentTab} notifUnread={notifUnread} chatUnread={chatUnread} />
+        <DoctorTabBar
+          currentTab={currentTab}
+          chatUnread={chatUnread}
+          onTabPress={(tab) => {
+            const route = TAB_ROUTES[tab];
+            if (
+              (currentScreen === "schedule-patient" || currentScreen === "availability") &&
+              tab !== "Hours" &&
+              tab !== "Schedule" &&
+              isDoctorTabSwipeBlocked()
+            ) {
+              Alert.alert(
+                "Unsaved Changes",
+                "You have unsaved changes. Save now, or choose Save later to leave this page without saving.",
+                [
+                  { text: "Stay", style: "cancel" },
+                  {
+                    text: "Save later",
+                    style: "destructive",
+                    onPress: () => {
+                      setDoctorTabSwipeBlocked(false);
+                      if (route) router.replace(route as any);
+                    },
+                  },
+                ]
+              );
+              return;
+            }
+
+            if (route) {
+              router.replace(route as any);
+            }
+          }}
+        />
       )}
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  container: { flex: 1, overflow: "hidden" },
+  stackLayer: { flex: 1 },
+});

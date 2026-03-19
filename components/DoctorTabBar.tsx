@@ -1,48 +1,34 @@
 import { Feather } from "@expo/vector-icons";
-import { router } from "expo-router";
-import React, { useEffect, useRef, useState } from "react";
-import { Animated, Platform, StyleSheet, TouchableOpacity, View } from "react-native";
+import React, { useState } from "react";
+import { Platform, StyleSheet, TouchableOpacity, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { setTabDirection } from "../lib/tabDirection";
 
-export type DoctorTabName = "Home" | "Alerts" | "Chat" | "Profile";
+export type DoctorTabName = "Home" | "Chat" | "Hours" | "Schedule" | "Profile";
 
 interface DoctorTabBarProps {
   currentTab: DoctorTabName;
-  notifUnread?: number;
   chatUnread?: number;
+  onTabPress?: (tab: DoctorTabName) => void;
 }
 
 type FeatherIconName = React.ComponentProps<typeof Feather>["name"];
 
 const TABS: { icon: FeatherIconName; label: DoctorTabName; route: string }[] = [
   { icon: "home", label: "Home", route: "/doctor/dashboard" },
-  { icon: "bell", label: "Alerts", route: "/doctor/alerts" },
   { icon: "message-circle", label: "Chat", route: "/doctor/chat-list" },
+  { icon: "calendar", label: "Schedule", route: "/doctor/availability" },
+  { icon: "clock", label: "Hours", route: "/doctor/schedule-patient" },
   { icon: "user", label: "Profile", route: "/doctor/profile" },
 ];
 
-export function DoctorTabBar({ currentTab, notifUnread = 0, chatUnread = 0 }: DoctorTabBarProps) {
+export function DoctorTabBar({ currentTab, chatUnread = 0, onTabPress }: DoctorTabBarProps) {
   const insets = useSafeAreaInsets();
   const activeIndex = TABS.findIndex((t) => t.label === currentTab);
-  const slideAnim = useRef(new Animated.Value(activeIndex)).current;
   const [barWidth, setBarWidth] = useState(0);
-
-  useEffect(() => {
-    Animated.spring(slideAnim, {
-      toValue: activeIndex,
-      useNativeDriver: true,
-      tension: 100,
-      friction: 15,
-    }).start();
-  }, [activeIndex]);
 
   const tabWidth = barWidth / TABS.length;
   const dotSize = 4;
-  const translateX = slideAnim.interpolate({
-    inputRange: TABS.map((_, i) => i),
-    outputRange: TABS.map((_, i) => i * tabWidth + tabWidth / 2 - dotSize / 2),
-  });
+  const dotLeft = tabWidth * activeIndex + tabWidth / 2 - dotSize / 2;
 
   return (
     <View style={[s.bar, { paddingBottom: Math.max(insets.bottom, 4) }]}>
@@ -59,9 +45,7 @@ export function DoctorTabBar({ currentTab, notifUnread = 0, chatUnread = 0 }: Do
               style={s.barTab}
               onPress={() => {
                 if (item.label !== currentTab) {
-                  const currentIndex = TABS.findIndex((t) => t.label === currentTab);
-                  setTabDirection(i > currentIndex ? "right" : "left");
-                  router.replace(item.route as any);
+                  onTabPress?.(item.label);
                 }
               }}
               activeOpacity={0.6}
@@ -73,9 +57,6 @@ export function DoctorTabBar({ currentTab, notifUnread = 0, chatUnread = 0 }: Do
                   color={isActive ? "#0f766e" : "#b0b0b0"}
                   style={{ strokeWidth: 1.5 } as any}
                 />
-                {item.label === "Alerts" && notifUnread > 0 && (
-                  <View style={s.badge} />
-                )}
                 {item.label === "Chat" && chatUnread > 0 && (
                   <View style={s.badge} />
                 )}
@@ -86,9 +67,7 @@ export function DoctorTabBar({ currentTab, notifUnread = 0, chatUnread = 0 }: Do
 
         {/* Active dot indicator */}
         {barWidth > 0 && (
-          <Animated.View
-            style={[s.activeDot, { transform: [{ translateX }] }]}
-          />
+          <View style={[s.activeDot, { left: dotLeft }]} />
         )}
       </View>
     </View>

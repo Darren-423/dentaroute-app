@@ -1,12 +1,12 @@
 import { LinearGradient } from "expo-linear-gradient";
 import { router, useLocalSearchParams } from "expo-router";
-import React, { useRef, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import {
-  ActivityIndicator, Alert,
-  ScrollView,
-  StyleSheet,
-  Text, TouchableOpacity,
-  View,
+    ActivityIndicator, Alert,
+    ScrollView,
+    StyleSheet,
+    Text, TouchableOpacity,
+    View,
 } from "react-native";
 import { store } from "../../lib/store";
 const T = {
@@ -48,7 +48,10 @@ interface Visit {
   description: string;
   gapMonths?: number;
   gapDays?: number;
+  availabilitySlots?: { date: string; time: string }[];
 }
+
+type AvailabilitySlot = { date: string; time: string };
 
 const formatGap = (months?: number, days?: number) => {
   const parts: string[] = [];
@@ -60,6 +63,37 @@ const formatGap = (months?: number, days?: number) => {
     if (d > 0) parts.push(`${d}d`);
   }
   return parts.join(" ");
+};
+
+const normalizeVisits = (raw: unknown): Visit[] => {
+  if (!Array.isArray(raw)) return [];
+
+  return raw
+    .map((item, index) => {
+      const rawVisit = Number((item as any)?.visit);
+      const visitNum = Number.isFinite(rawVisit) && rawVisit > 0 ? rawVisit : index + 1;
+      const description = String((item as any)?.description || `Visit ${visitNum}`);
+
+      const gapMonthsRaw = Number((item as any)?.gapMonths);
+      const gapDaysRaw = Number((item as any)?.gapDays);
+      const gapMonths = Number.isFinite(gapMonthsRaw) && gapMonthsRaw > 0 ? gapMonthsRaw : 0;
+      const gapDays = Number.isFinite(gapDaysRaw) && gapDaysRaw > 0 ? gapDaysRaw : 0;
+
+      const availabilitySlots = Array.isArray((item as any)?.availabilitySlots)
+        ? (item as any).availabilitySlots
+            .filter((slot: any) => slot?.date && slot?.time)
+            .map((slot: any) => ({ date: String(slot.date), time: String(slot.time) }))
+        : undefined;
+
+      return {
+        visit: visitNum,
+        description,
+        ...(gapMonths > 0 ? { gapMonths } : {}),
+        ...(gapDays > 0 ? { gapDays } : {}),
+        ...(availabilitySlots && availabilitySlots.length > 0 ? { availabilitySlots } : {}),
+      };
+    })
+    .sort((a, b) => a.visit - b.visit);
 };
 
 export default function VisitScheduleScreen() {
@@ -76,8 +110,12 @@ export default function VisitScheduleScreen() {
   const isReschedule = params.mode === "reschedule";
 
   const visits: Visit[] = useMemo(() => {
-    try { return JSON.parse(params.visitsJson || "[]"); }
-    catch { return []; }
+    try {
+      const parsed = JSON.parse(params.visitsJson || "[]");
+      return normalizeVisits(parsed);
+    } catch {
+      return [];
+    }
   }, [params.visitsJson]);
 
   const today = new Date();
@@ -87,10 +125,91 @@ export default function VisitScheduleScreen() {
   const [selectedTimes, setSelectedTimes] = useState<Record<number, string>>({});
   const [activeVisit, setActiveVisit] = useState(1);
   const [loading, setLoading] = useState(false);
+  const [doctorAvailabilityByVisit, setDoctorAvailabilityByVisit] = useState<Record<number, AvailabilitySlot[]>>({});
 
-  const scrollRef = useRef<ScrollView>(null);
-  const calendarY = useRef(0);
-  const timeSectionY = useRef(0);
+  useEffect(() => {
+    if (visits.length === 0) return;
+    const hasActiveVisit = visits.some((v) => v.visit === activeVisit);
+    if (!hasActiveVisit) {
+      setActiveVisit(visits[0].visit);
+    }
+  }, [visits, activeVisit]);
+
+  useEffect(() => {
+    let mounted = true;
+
+    const loadDoctorAvailability = async () => {
+      const doctorProfile: any = await store.getDoctorProfile();
+      if (!mounted || !doctorProfile) return;
+
+      const profileName = doctorProfile.fullName || doctorProfile.name;
+      if (params.dentistName && profileName && profileName !== params.dentistName) {
+        setDoctorAvailabilityByVisit({});
+        return;
+      }
+
+      const normalizeSlots = (value: any): AvailabilitySlot[] => {
+        if (!Array.isArray(value)) return [];
+        return value
+          .filter((slot) => slot?.date && slot?.time)
+          .map((slot) => ({ date: String(slot.date), time: String(slot.time) }));
+      };
+
+      const byVisitRaw = Array.isArray(doctorProfile.availableSlotsByVisit)
+        ? doctorProfile.availableSlotsByVisit
+        : [];
+      const sharedSlots = normalizeSlots(doctorProfile.availableSlots);
+
+      const nextMap: Record<number, AvailabilitySlot[]> = {};
+      for (const v of visits) {
+        const visitSpecific = byVisitRaw.find((item: any) => Number(item?.visit) === v.visit);
+        const specificSlots = normalizeSlots(visitSpecific?.availabilitySlots);
+        if (specificSlots.length > 0) {
+          nextMap[v.visit] = specificSlots;
+        } else if (sharedSlots.length > 0) {
+          nextMap[v.visit] = sharedSlots;
+        }
+      }
+
+      setDoctorAvailabilityByVisit(nextMap);
+    };
+
+    loadDoctorAvailability();
+
+    return () => {
+      mounted = false;
+    };
+  }, [params.dentistName, visits]);
+
+  const mergedVisitAvailability = useMemo(() => {
+    const map: Record<number, AvailabilitySlot[]> = {};
+    for (const v of visits) {
+      const quoteSlots = Array.isArray(v.availabilitySlots) ? v.availabilitySlots : [];
+      map[v.visit] = quoteSlots.length > 0 ? quoteSlots : doctorAvailabilityByVisit[v.visit] || [];
+    }
+    return map;
+  }, [doctorAvailabilityByVisit, visits]);
+
+  const availabilityDateSetByVisit = useMemo(() => {
+    const map: Record<number, Set<string>> = {};
+    for (const v of visits) {
+      map[v.visit] = new Set((mergedVisitAvailability[v.visit] || []).map((slot) => slot.date));
+    }
+    return map;
+  }, [mergedVisitAvailability, visits]);
+
+  const availabilityTimeSetByVisitDate = useMemo(() => {
+    const map: Record<number, Record<string, Set<string>>> = {};
+    for (const v of visits) {
+      const dateMap: Record<string, Set<string>> = {};
+      for (const slot of mergedVisitAvailability[v.visit] || []) {
+        if (!dateMap[slot.date]) dateMap[slot.date] = new Set();
+        dateMap[slot.date].add(slot.time);
+      }
+      map[v.visit] = dateMap;
+    }
+    return map;
+  }, [mergedVisitAvailability, visits]);
 
   // Mock time slots — will be replaced with Google Calendar availability
   const AVAILABLE_SLOTS = [
@@ -99,6 +218,32 @@ export default function VisitScheduleScreen() {
     "2:00 PM", "2:30 PM", "3:00 PM", "3:30 PM",
     "4:00 PM", "4:30 PM",
   ];
+
+  const hasAvailabilityForActiveVisit =
+    (availabilityDateSetByVisit[activeVisit] && availabilityDateSetByVisit[activeVisit].size > 0) || false;
+
+  const availableTimesForActiveVisit = useMemo(() => {
+    if (!hasAvailabilityForActiveVisit) {
+      return AVAILABLE_SLOTS;
+    }
+
+    const selectedDate = selectedDates[activeVisit];
+    if (!selectedDate) {
+      return [] as string[];
+    }
+
+    return Array.from(availabilityTimeSetByVisitDate[activeVisit]?.[selectedDate] || new Set<string>());
+  }, [
+    activeVisit,
+    hasAvailabilityForActiveVisit,
+    selectedDates,
+    availabilityTimeSetByVisitDate,
+    AVAILABLE_SLOTS,
+  ]);
+
+  const scrollRef = useRef<ScrollView>(null);
+  const calendarY = useRef(0);
+  const timeSectionY = useRef(0);
 
   // Calculate blocked date ranges based on selected visits + gaps
   const blockedRanges = useMemo(() => {
@@ -180,8 +325,17 @@ export default function VisitScheduleScreen() {
     return addDaysToDate(prevDate, gapMonths, gapDays);
   };
 
-  const handleDatePress = (dateStr: string, isPast: boolean) => {
+  const handleDatePress = (dateStr: string, isPast: boolean, unavailableByDoctor: boolean) => {
     if (isPast) return;
+
+    const activeVisitExists = visits.some((v) => v.visit === activeVisit);
+    if (!activeVisitExists) {
+      if (visits.length > 0) {
+        setActiveVisit(visits[0].visit);
+      }
+      Alert.alert("Visit data error", "Please re-open this quote and try selecting dates again.");
+      return;
+    }
 
     const existingVisit = getVisitForDate(dateStr);
     if (existingVisit) {
@@ -200,6 +354,14 @@ export default function VisitScheduleScreen() {
         return next;
       });
       setActiveVisit(existingVisit);
+      return;
+    }
+
+    if (unavailableByDoctor) {
+      Alert.alert(
+        "Date unavailable",
+        "Please choose a date from the options provided by your doctor for this visit."
+      );
       return;
     }
 
@@ -230,6 +392,19 @@ export default function VisitScheduleScreen() {
     }
 
     setSelectedDates((prev) => ({ ...prev, [activeVisit]: dateStr }));
+
+    // If doctor has fixed time options for the selected date, clear previously selected time when invalid.
+    if (hasAvailabilityForActiveVisit) {
+      const allowedTimes = availabilityTimeSetByVisitDate[activeVisit]?.[dateStr] || new Set<string>();
+      setSelectedTimes((prev) => {
+        const current = prev[activeVisit];
+        if (!current || allowedTimes.has(current)) return prev;
+        const next = { ...prev };
+        delete next[activeVisit];
+        return next;
+      });
+    }
+
     // Scroll to time section after date is selected
     setTimeout(() => scrollRef.current?.scrollTo({ y: timeSectionY.current || calendarY.current + 300, animated: true }), 150);
   };
@@ -451,6 +626,10 @@ export default function VisitScheduleScreen() {
               const visitNum = getVisitForDate(d.date);
               const blockInfo = isDateBlocked(d.date);
               const isBlocked = blockInfo.blocked;
+              const unavailableByDoctor =
+                hasAvailabilityForActiveVisit &&
+                !availabilityDateSetByVisit[activeVisit]?.has(d.date) &&
+                visitNum == null;
               const visitColor = visitNum ? VISIT_COLORS[(visitNum - 1) % VISIT_COLORS.length] : null;
               const dimmed = !d.isCurrentMonth;
 
@@ -460,9 +639,10 @@ export default function VisitScheduleScreen() {
                   style={[
                     s.dayCell,
                     isBlocked && s.dayCellBlocked,
+                    unavailableByDoctor && !isBlocked && s.dayCellUnavailable,
                     isBlocked && dimmed && { backgroundColor: "rgba(254,226,226,0.4)" },
                   ]}
-                  onPress={() => handleDatePress(d.date, d.isPast)}
+                  onPress={() => handleDatePress(d.date, d.isPast, unavailableByDoctor)}
                   disabled={false}
                   activeOpacity={0.6}
                 >
@@ -470,6 +650,7 @@ export default function VisitScheduleScreen() {
                     s.dayInner,
                     visitNum != null && { backgroundColor: visitColor || T.teal },
                     isBlocked && s.dayInnerBlocked,
+                    unavailableByDoctor && !isBlocked && s.dayInnerUnavailable,
                     isBlocked && dimmed && { borderColor: "rgba(239,68,68,0.1)", backgroundColor: "rgba(239,68,68,0.04)" },
                   ]}>
                     <Text style={[
@@ -478,6 +659,7 @@ export default function VisitScheduleScreen() {
                       d.isPast && s.dayTextPast,
                       visitNum != null && { color: "#fff", fontWeight: "700" as const },
                       isBlocked && !dimmed && { color: "#fca5a5" },
+                      unavailableByDoctor && !isBlocked && { color: "#cbd5e1" },
                       isBlocked && dimmed && { color: "#e5c8c8" },
                     ]}>
                       {d.day}
@@ -488,6 +670,9 @@ export default function VisitScheduleScreen() {
                     {isBlocked && !visitNum && (
                       <View style={[s.dayBlockedMark, dimmed && { backgroundColor: "rgba(252,165,165,0.3)" }]} />
                     )}
+                    {unavailableByDoctor && !visitNum && !isBlocked && (
+                      <View style={s.dayUnavailableMark} />
+                    )}
                   </View>
                 </TouchableOpacity>
               );
@@ -496,14 +681,14 @@ export default function VisitScheduleScreen() {
         </View>
 
         {/* Time slot picker */}
-        {selectedDates[activeVisit] && (
+        {selectedDates[activeVisit] && activeVisit > 0 && (
           <View style={s.timeSection} onLayout={(e) => { timeSectionY.current = e.nativeEvent.layout.y; }}>
             <View style={s.timeSectionHeader}>
               <Text style={s.timeSectionTitle}>Select Time for Visit {activeVisit}</Text>
               <Text style={s.timeSectionDate}>{formatFull(selectedDates[activeVisit])}</Text>
             </View>
             <View style={s.slotsGrid}>
-              {AVAILABLE_SLOTS.map((slot) => {
+              {(availableTimesForActiveVisit || []).map((slot) => {
                 const isSelected = selectedTimes[activeVisit] === slot;
                 const visitColor = VISIT_COLORS[(activeVisit - 1) % VISIT_COLORS.length];
                 return (
@@ -530,8 +715,15 @@ export default function VisitScheduleScreen() {
                 );
               })}
             </View>
+            {(availableTimesForActiveVisit || []).length === 0 && hasAvailabilityForActiveVisit && (
+              <Text style={s.noTimeOptionText}>
+                No available time options for this date. Please choose another date.
+              </Text>
+            )}
             <Text style={s.timeSectionNote}>
-              Slots shown are estimates. Actual availability will be confirmed by the clinic.
+              {hasAvailabilityForActiveVisit
+                ? "Time options are provided by your clinic."
+                : "Slots shown are estimates. Actual availability will be confirmed by the clinic."}
             </Text>
           </View>
         )}
@@ -725,6 +917,7 @@ const s = StyleSheet.create({
     paddingVertical: 2,
   },
   dayCellBlocked: { backgroundColor: T.redLight },
+  dayCellUnavailable: { backgroundColor: "rgba(241,245,249,0.5)" },
 
   dayInner: {
     width: 38, height: 38, borderRadius: 19,
@@ -733,6 +926,12 @@ const s = StyleSheet.create({
   dayInnerBlocked: {
     backgroundColor: "rgba(239,68,68,0.06)",
     borderWidth: 1, borderColor: "rgba(239,68,68,0.15)", borderStyle: "dashed",
+  },
+  dayInnerUnavailable: {
+    backgroundColor: "rgba(241,245,249,0.6)",
+    borderWidth: 1,
+    borderColor: "rgba(203,213,225,0.8)",
+    borderStyle: "dashed",
   },
   dayText: { fontSize: 14, fontWeight: "500", color: T.navy },
   dayTextOther: { color: "#c8cdd3" },
@@ -745,6 +944,14 @@ const s = StyleSheet.create({
     position: "absolute", bottom: 5,
     width: 4, height: 4, borderRadius: 2,
     backgroundColor: "#fca5a5",
+  },
+  dayUnavailableMark: {
+    position: "absolute",
+    bottom: 5,
+    width: 4,
+    height: 4,
+    borderRadius: 2,
+    backgroundColor: "#cbd5e1",
   },
 
   /* Time slot picker */
@@ -764,6 +971,11 @@ const s = StyleSheet.create({
     minWidth: 72, alignItems: "center",
   },
   slotBtnText: { fontSize: 13, fontWeight: "600", color: T.navy },
+  noTimeOptionText: {
+    fontSize: 12,
+    color: T.red,
+    fontWeight: "600",
+  },
   timeSectionNote: {
     fontSize: 11, color: T.slateLight, fontStyle: "italic",
   },

@@ -207,11 +207,9 @@ export default function PatientDashboardScreen() {
   const handleCasePress = (c: PatientCase) => {
     if (c.status === "booked") {
       const bk = bookings.find((b) => b.caseId === c.id);
-      if (bk?.status === "confirmed") {
-        router.push(`/patient/arrival-info?bookingId=${bk.id}` as any);
-        return;
-      } else if (bk?.status === "flight_submitted") {
-        router.push(`/patient/hotel-arrived?bookingId=${bk.id}` as any);
+      // Case Hub: confirmed or flight_submitted → show integrated case hub
+      if (bk?.status === "confirmed" || bk?.status === "flight_submitted") {
+        router.push(`/patient/case-hub?bookingId=${bk.id}&caseId=${c.id}` as any);
         return;
       } else if (bk?.status === "arrived_korea") {
         router.push(`/patient/clinic-checkin?bookingId=${bk.id}` as any);

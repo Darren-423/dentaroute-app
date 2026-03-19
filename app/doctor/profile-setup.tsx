@@ -1,7 +1,7 @@
 import * as ImagePicker from "expo-image-picker";
 import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
@@ -50,6 +50,8 @@ export default function DoctorProfileSetupScreen() {
   const [formData, setFormData] = useState({
     clinicName: "",
     location: "",
+    email: "",
+    phone: "",
     specialties: [] as string[],
     yearsExperience: "",
     bio: "",
@@ -65,6 +67,36 @@ export default function DoctorProfileSetupScreen() {
   const [showSpecialtyInput, setShowSpecialtyInput] = useState(false);
 
   const [loading, setLoading] = useState(false);
+
+  // Load existing profile data on mount
+  useEffect(() => {
+    (async () => {
+      try {
+        const profile = await store.getDoctorProfile();
+        if (profile) {
+          const specArr = profile.specialty ? profile.specialty.split(", ").filter(Boolean) : [];
+          const defaultSpecs = specArr.filter((s: string) => DEFAULT_SPECIALTIES.includes(s));
+          const customSpecs = specArr.filter((s: string) => !DEFAULT_SPECIALTIES.includes(s));
+          setFormData({
+            clinicName: profile.clinicName || profile.clinic || "",
+            location: profile.location || "",
+            email: profile.email || "",
+            phone: profile.phone || "",
+            specialties: defaultSpecs,
+            yearsExperience: profile.experience ? String(profile.experience) : "",
+            bio: profile.bio || "",
+            website: profile.website || "",
+          });
+          setCustomSpecialties(customSpecs);
+          if (profile.clinicPhotos && profile.clinicPhotos.length > 0) {
+            setClinicPhotos(profile.clinicPhotos);
+          }
+        }
+      } catch (e) {
+        console.log("Error loading profile:", e);
+      }
+    })();
+  }, []);
 
   const isComplete =
     formData.clinicName.trim() &&
@@ -179,8 +211,8 @@ export default function DoctorProfileSetupScreen() {
         specialty: allSpecialties.join(", ") || "General",
         experience: parseInt(formData.yearsExperience) || 0,
         bio: formData.bio,
-        email: "",
-        phone: "",
+        email: formData.email,
+        phone: formData.phone,
         website: formData.website,
         license: "",
         rating: 4.9,
@@ -205,8 +237,8 @@ export default function DoctorProfileSetupScreen() {
         >
           <Text style={styles.backArrow}>‹</Text>
         </TouchableOpacity>
-        <Text style={styles.title}>Setup Profile</Text>
-        <Text style={styles.subtitle}>Tell patients about your practice</Text>
+        <Text style={styles.title}>{formData.clinicName ? "Edit Profile" : "Setup Profile"}</Text>
+        <Text style={styles.subtitle}>{formData.clinicName ? "Update your practice info" : "Tell patients about your practice"}</Text>
       </LinearGradient>
 
       {/* Content */}
@@ -237,6 +269,33 @@ export default function DoctorProfileSetupScreen() {
             placeholderTextColor="#94a3b8"
             value={formData.location}
             onChangeText={(v) => setFormData({ ...formData, location: v })}
+          />
+        </View>
+
+        {/* Email */}
+        <View style={styles.fieldGroup}>
+          <Text style={styles.label}>EMAIL</Text>
+          <TextInput
+            style={styles.input}
+            placeholder="e.g. clinic@example.com"
+            placeholderTextColor="#94a3b8"
+            value={formData.email}
+            onChangeText={(v) => setFormData({ ...formData, email: v })}
+            keyboardType="email-address"
+            autoCapitalize="none"
+          />
+        </View>
+
+        {/* Phone */}
+        <View style={styles.fieldGroup}>
+          <Text style={styles.label}>PHONE NUMBER</Text>
+          <TextInput
+            style={styles.input}
+            placeholder="e.g. +82-2-1234-5678"
+            placeholderTextColor="#94a3b8"
+            value={formData.phone}
+            onChangeText={(v) => setFormData({ ...formData, phone: v })}
+            keyboardType="phone-pad"
           />
         </View>
 
