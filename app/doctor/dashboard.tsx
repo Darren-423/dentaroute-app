@@ -1,3 +1,4 @@
+import { Feather } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { router, useFocusEffect } from "expo-router";
 import React, { useCallback, useMemo, useRef, useState } from "react";
@@ -214,37 +215,20 @@ export default function DoctorDashboardScreen() {
           <View style={s.headerIcons}>
             <TouchableOpacity
               style={s.iconBtn}
-              onPress={() => router.push("/doctor/chat-list" as any)}
+              onPress={() => router.push("/doctor/earnings" as any)}
               activeOpacity={0.7}
             >
-              <Text style={s.iconBtnEmoji}>💬</Text>
-              {unreadMessages > 0 && (
-                <View style={s.iconBadge}><Text style={s.iconBadgeText}>{unreadMessages}</Text></View>
-              )}
+              <Feather name="dollar-sign" size={18} color="rgba(255,255,255,0.85)" />
             </TouchableOpacity>
             <TouchableOpacity
               style={s.iconBtn}
               onPress={() => router.push("/notifications?role=doctor" as any)}
               activeOpacity={0.7}
             >
-              <Text style={s.iconBtnEmoji}>🔔</Text>
+              <Feather name="bell" size={18} color="rgba(255,255,255,0.85)" />
               {unreadCount > 0 && (
-                <View style={s.iconBadge}><Text style={s.iconBadgeText}>{unreadCount}</Text></View>
+                <View style={s.notifDot} />
               )}
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={s.iconBtn}
-              onPress={() => router.push("/doctor/earnings" as any)}
-              activeOpacity={0.7}
-            >
-              <Text style={s.iconBtnEmoji}>💰</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={s.iconBtn}
-              onPress={() => router.push("/doctor/profile" as any)}
-              activeOpacity={0.7}
-            >
-              <Text style={s.iconBtnEmoji}>⚙️</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -400,35 +384,40 @@ export default function DoctorDashboardScreen() {
                       }
                       router.push(`/doctor/case-detail?caseId=${c.id}` as any);
                     }}
-                    activeOpacity={0.7}
+                    activeOpacity={0.75}
                   >
-                    <View style={s.cardRow}>
-                      {patientProfileImage ? (
-                        <Image source={{ uri: patientProfileImage }} style={s.avatarImg} />
-                      ) : (
-                        <View style={s.avatar}>
-                          <Text style={s.avatarText}>
-                            {c.patientName.charAt(0).toUpperCase()}
+                    <View style={[s.statusStrip, { backgroundColor: badge.color }]} />
+                    <View style={s.cardInner}>
+                      <View style={s.cardRow}>
+                        {patientProfileImage ? (
+                          <Image source={{ uri: patientProfileImage }} style={s.avatarImg} />
+                        ) : (
+                          <View style={s.avatar}>
+                            <Text style={s.avatarText}>
+                              {c.patientName.charAt(0).toUpperCase()}
+                            </Text>
+                          </View>
+                        )}
+                        <View style={s.cardContent}>
+                          <View style={s.cardTopRow}>
+                            <Text style={s.patientName} numberOfLines={1}>
+                              {c.patientName}
+                            </Text>
+                            <Text style={s.cardMeta}>
+                              {countryMap[c.country]?.flag || "🌍"} #{c.id}
+                            </Text>
+                          </View>
+                          <Text style={s.treatmentLine} numberOfLines={1}>
+                            {treatmentSummary}
                           </Text>
-                        </View>
-                      )}
-                      <View style={s.cardContent}>
-                        <View style={s.cardTopRow}>
-                          <Text style={s.patientName} numberOfLines={1}>
-                            {c.patientName}
-                          </Text>
-                          <Text style={s.cardMeta}>
-                            {countryMap[c.country]?.flag || "🌍"} #{c.id}
-                          </Text>
-                        </View>
-                        <Text style={s.treatmentLine} numberOfLines={1}>
-                          {treatmentSummary}
-                        </Text>
-                        <View style={[s.statusBadge, { backgroundColor: badge.bg, borderColor: badge.border }]}>
-                          <Text style={[s.statusBadgeText, { color: badge.color }]}>{badge.label}</Text>
                         </View>
                       </View>
-                      <Text style={s.chevron}>›</Text>
+                      <View style={s.cardBottom}>
+                        <View style={[s.statusPill, { backgroundColor: badge.bg }]}>
+                          <Text style={[s.statusPillText, { color: badge.color }]}>{badge.label}</Text>
+                        </View>
+                        <Text style={s.cardArrow}>›</Text>
+                      </View>
                     </View>
                   </TouchableOpacity>
                 );
@@ -454,10 +443,11 @@ const s = StyleSheet.create({
   welcome: { fontSize: 12, color: "rgba(255,255,255,0.6)", marginBottom: 2 },
   userName: { fontSize: 24, fontWeight: "700", color: T.white },
   headerIcons: { flexDirection: "row", alignItems: "center", gap: 4 },
-  iconBtn: { position: "relative", width: 40, height: 40, alignItems: "center", justifyContent: "center", borderRadius: 12, backgroundColor: "rgba(255,255,255,0.1)" },
+  iconBtn: { position: "relative", width: 36, height: 36, alignItems: "center", justifyContent: "center", borderRadius: 18 },
   iconBtnEmoji: { fontSize: 18 },
   iconBadge: { position: "absolute", top: 2, right: 2, backgroundColor: "#ef4444", borderRadius: 8, minWidth: 16, height: 16, alignItems: "center", justifyContent: "center", paddingHorizontal: 4 },
   iconBadgeText: { color: "#fff", fontSize: 9, fontWeight: "800" },
+  notifDot: { position: "absolute", top: 6, right: 6, width: 7, height: 7, borderRadius: 3.5, backgroundColor: "#ef4444", borderWidth: 1.5, borderColor: "rgba(15,118,110,0.8)" },
   statsToggleWrapper: { overflow: "hidden" },
   statsClip: {},
   statsRow: { flexDirection: "row", gap: 8 },
@@ -608,19 +598,26 @@ const s = StyleSheet.create({
   emptyTitle: { fontSize: 16, fontWeight: "600", color: T.textSec, marginBottom: 4 },
   emptyDesc: { fontSize: 13, color: T.textMuted, textAlign: "center", paddingHorizontal: 20 },
 
-  // ── Case Card ──
+  // ── Case Card — Clean Floating ──
   caseCard: {
     backgroundColor: T.white,
-    borderRadius: 14,
+    borderRadius: 16,
+    overflow: "hidden",
+    borderWidth: 1.5,
+    borderColor: "#cddbd9",
+    marginBottom: 10,
+    shadowColor: "#0a3d38",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.10,
+    shadowRadius: 14,
+    elevation: 4,
+  },
+  statusStrip: {
+    height: 4,
+    width: "100%",
+  },
+  cardInner: {
     padding: 14,
-    borderWidth: 1,
-    borderColor: T.border,
-    marginBottom: 8,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 4,
-    elevation: 2,
   },
   cardRow: {
     flexDirection: "row",
@@ -631,7 +628,7 @@ const s = StyleSheet.create({
     width: 38,
     height: 38,
     borderRadius: 12,
-    backgroundColor: "rgba(15,118,110,0.1)",
+    backgroundColor: "#ecf5f4",
     alignItems: "center",
     justifyContent: "center",
   },
@@ -639,8 +636,6 @@ const s = StyleSheet.create({
     width: 38,
     height: 38,
     borderRadius: 12,
-    borderWidth: 1,
-    borderColor: "rgba(15,118,110,0.15)",
   },
   avatarText: {
     fontSize: 16,
@@ -670,22 +665,28 @@ const s = StyleSheet.create({
   treatmentLine: {
     fontSize: 12,
     color: T.textSec,
-    fontWeight: "400",
+    fontWeight: "500",
   },
-  statusBadge: {
-    borderRadius: 6,
-    borderWidth: 1,
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    alignSelf: "flex-start",
-    marginTop: 2,
+  cardBottom: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    marginTop: 12,
+    paddingTop: 10,
+    borderTopWidth: 1,
+    borderTopColor: "#dce8e6",
   },
-  statusBadgeText: {
-    fontSize: 10,
-    fontWeight: "600",
+  statusPill: {
+    borderRadius: 20,
+    paddingHorizontal: 12,
+    paddingVertical: 5,
   },
-  chevron: {
-    fontSize: 20,
+  statusPillText: {
+    fontSize: 11,
+    fontWeight: "700",
+  },
+  cardArrow: {
+    fontSize: 22,
     color: T.textMuted,
     fontWeight: "300",
   },

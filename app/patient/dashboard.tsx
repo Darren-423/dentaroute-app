@@ -271,18 +271,18 @@ export default function PatientDashboardScreen() {
           <View style={s.headerActions}>
             <TouchableOpacity
               style={s.headerIconBtn}
+              onPress={() => router.push("/dev-menu" as any)}
+            >
+              <Feather name="settings" size={18} color="rgba(255,255,255,0.85)" />
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={s.headerIconBtn}
               onPress={() => router.push("/patient/alerts" as any)}
             >
               <Feather name="bell" size={18} color="rgba(255,255,255,0.85)" />
               {unreadCount > 0 && (
                 <View style={s.notifDot} />
               )}
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={s.headerIconBtn}
-              onPress={() => router.push("/dev-menu" as any)}
-            >
-              <Feather name="settings" size={18} color="rgba(255,255,255,0.85)" />
             </TouchableOpacity>
             <TouchableOpacity
               style={s.headerIconBtn}
@@ -341,10 +341,6 @@ export default function PatientDashboardScreen() {
             <View style={s.menuDivider} />
             <TouchableOpacity style={s.menuItem} onPress={() => { setMenuOpen(false); router.push("/patient/affiliate-clinics" as any); }}>
               <Text style={s.menuItemText}>Affiliate Clinics</Text>
-            </TouchableOpacity>
-            <View style={s.menuDivider} />
-            <TouchableOpacity style={s.menuItem} onPress={() => { setMenuOpen(false); }}>
-              <Text style={s.menuItemText}>Menu Item 3</Text>
             </TouchableOpacity>
           </View>
         </>
@@ -408,89 +404,77 @@ export default function PatientDashboardScreen() {
                 key={c.id}
                 style={s.caseCard}
                 onPress={() => handleCasePress(c)}
-                activeOpacity={0.7}
+                activeOpacity={0.75}
               >
-                {/* Status banner */}
-                <View style={[s.statusBanner, { backgroundColor: progress.bg }]}>
-                  <Text style={s.statusBannerEmoji}>{progress.emoji}</Text>
-                  <Text style={[s.statusBannerText, { color: progress.color }]}>{progress.label}</Text>
-                </View>
+                {/* Status strip + badge */}
+                <View style={[s.statusStrip, { backgroundColor: progress.color }]} />
+                <View style={s.cardInner}>
+                  <View style={s.statusRow2}>
+                    <View style={[s.statusPill, { backgroundColor: progress.bg }]}>
+                      <Text style={s.statusPillEmoji}>{progress.emoji}</Text>
+                      <Text style={[s.statusPillText, { color: progress.color }]}>{progress.label}</Text>
+                    </View>
+                    {qCount > 0 && c.status !== "booked" && (
+                      <View style={s.quoteCount}>
+                        <Text style={s.quoteCountText}>{qCount} quote{qCount > 1 ? "s" : ""}</Text>
+                      </View>
+                    )}
+                    {c.status === "booked" && (() => {
+                      const bk = bookings.find((b) => b.caseId === c.id);
+                      return bk && bk.status !== "cancelled" && bk.status !== "treatment_done" && bk.status !== "payment_complete" && bk.status !== "departure_set" ? (
+                        <TouchableOpacity
+                          style={s.manageBtn}
+                          onPress={(e) => { e.stopPropagation(); setManageBooking(bk); }}
+                          activeOpacity={0.6}
+                          hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                        >
+                          <Text style={s.manageBtnText}>⋯</Text>
+                        </TouchableOpacity>
+                      ) : null;
+                    })()}
+                  </View>
 
-                {/* Top row */}
-                <View style={s.caseTop}>
-                  <View style={s.caseIconWrap}>
-                    <Text style={s.caseIconText}>{getCaseEmoji(c.treatments)}</Text>
+                  {/* Case info */}
+                  <View style={s.caseTop}>
+                    <View style={s.caseIconWrap}>
+                      <Text style={s.caseIconText}>{getCaseEmoji(c.treatments)}</Text>
+                    </View>
+                    <View style={{ flex: 1 }}>
+                      <Text style={s.caseTitle}>Case #{c.id}</Text>
+                      <Text style={s.caseMeta}>{c.date} · {c.country}</Text>
+                    </View>
                   </View>
-                  <View style={{ flex: 1 }}>
-                    <Text style={s.caseTitle}>Case #{c.id}</Text>
-                    <Text style={s.caseMeta}>{c.date} · {c.country}</Text>
+
+                  {/* Treatment tags */}
+                  <View style={s.tagRow}>
+                    {c.treatments.slice(0, 3).map((t) => (
+                      <View key={t.name} style={s.tag}>
+                        <Text style={s.tagText}>{t.name}</Text>
+                        <Text style={s.tagQty}>x{t.qty}</Text>
+                      </View>
+                    ))}
+                    {c.treatments.length > 3 && (
+                      <View style={[s.tag, s.tagMore]}>
+                        <Text style={s.tagMoreText}>+{c.treatments.length - 3}</Text>
+                      </View>
+                    )}
                   </View>
-                  {qCount > 0 && c.status !== "booked" && (
-                    <View style={s.quoteCount}>
-                      <Text style={s.quoteCountText}>{qCount} quote{qCount > 1 ? "s" : ""}</Text>
+
+                  {/* Step progress bar for booked cases */}
+                  {progress.isBooking && progress.step > 0 && (
+                    <View style={s.stepProgressWrap}>
+                      <View style={s.stepTrack}>
+                        <View style={[s.stepFill, { width: `${((progress.step - 1) / (BOOKING_STEPS.length - 2)) * 100}%`, backgroundColor: progress.color }]} />
+                      </View>
+                      <Text style={[s.stepText, { color: progress.color }]}>{progress.step}/{BOOKING_STEPS.length - 1}</Text>
                     </View>
                   )}
-                  {c.status === "booked" && (() => {
-                    const bk = bookings.find((b) => b.caseId === c.id);
-                    return bk && bk.status !== "cancelled" && bk.status !== "treatment_done" && bk.status !== "payment_complete" && bk.status !== "departure_set" ? (
-                      <TouchableOpacity
-                        style={s.manageBtn}
-                        onPress={(e) => { e.stopPropagation(); setManageBooking(bk); }}
-                        activeOpacity={0.6}
-                        hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-                      >
-                        <Text style={s.manageBtnText}>⋯</Text>
-                      </TouchableOpacity>
-                    ) : null;
-                  })()}
-                </View>
 
-                {/* Treatment tags */}
-                <View style={s.tagRow}>
-                  {c.treatments.slice(0, 3).map((t) => (
-                    <View key={t.name} style={s.tag}>
-                      <Text style={s.tagText}>{t.name}</Text>
-                      <Text style={s.tagQty}>×{t.qty}</Text>
-                    </View>
-                  ))}
-                  {c.treatments.length > 3 && (
-                    <View style={[s.tag, { backgroundColor: "rgba(100,116,139,0.08)" }]}>
-                      <Text style={[s.tagText, { color: T.slate }]}>+{c.treatments.length - 3}</Text>
-                    </View>
-                  )}
-                </View>
-
-                {/* Step progress bar for booked cases */}
-                {progress.isBooking && progress.step > 0 && (
-                  <View style={s.stepProgressWrap}>
-                    {BOOKING_STEPS.slice(0, -1).map((st, i) => {
-                      const stepNum = i + 1;
-                      const isCompleted = stepNum < progress.step;
-                      const isCurrent = stepNum === progress.step;
-                      return (
-                        <React.Fragment key={st.key}>
-                          <View style={[
-                            s.stepDot,
-                            isCompleted && s.stepDotCompleted,
-                            isCurrent && s.stepDotCurrent,
-                          ]} />
-                          {i < BOOKING_STEPS.length - 2 && (
-                            <View style={[s.stepLine, isCompleted && s.stepLineCompleted]} />
-                          )}
-                        </React.Fragment>
-                      );
-                    })}
-                  </View>
-                )}
-
-                {/* Next action */}
-                <View style={s.progressSection}>
-                  <View style={s.nextRow}>
+                  {/* Next action */}
+                  <View style={s.nextSection}>
                     <Text style={s.nextLabel}>Next:</Text>
                     <Text style={s.nextAction}>{progress.next}</Text>
-                    <View style={s.nextArrowCircle}>
-                      <View style={s.chevron} />
-                    </View>
+                    <Text style={s.nextArrow}>›</Text>
                   </View>
                 </View>
               </TouchableOpacity>
@@ -766,101 +750,87 @@ const s = StyleSheet.create({
   },
   createBtnText: { color: T.white, fontSize: 14, fontWeight: "600" },
 
-  /* Case card */
+  /* Case card — Clean Floating */
   caseCard: {
-    backgroundColor: T.white, borderRadius: 18, overflow: "hidden",
-    borderWidth: 1, borderColor: T.border, marginBottom: 12,
-    shadowColor: "#0f172a", shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.04, shadowRadius: 12, elevation: 2,
+    backgroundColor: T.white, borderRadius: 16, overflow: "hidden",
+    marginBottom: 14,
+    borderWidth: 1.5, borderColor: "#ddd6e8",
+    shadowColor: "#1e0a3c", shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.10, shadowRadius: 14, elevation: 4,
   },
-  statusBanner: {
-    flexDirection: "row", alignItems: "center", gap: 8,
-    paddingHorizontal: 16, paddingVertical: 10,
+  statusStrip: {
+    height: 4, width: "100%",
   },
-  statusBannerEmoji: { fontSize: 16 },
-  statusBannerText: { fontSize: 14, fontWeight: "800" },
+  cardInner: {
+    padding: 16,
+  },
+  statusRow2: {
+    flexDirection: "row", alignItems: "center", marginBottom: 14,
+  },
+  statusPill: {
+    flexDirection: "row", alignItems: "center", gap: 6,
+    paddingHorizontal: 12, paddingVertical: 6, borderRadius: 20,
+  },
+  statusPillEmoji: { fontSize: 14 },
+  statusPillText: { fontSize: 13, fontWeight: "700" },
   caseTop: {
     flexDirection: "row", alignItems: "center", gap: 12,
-    paddingHorizontal: 16, paddingTop: 14,
   },
   caseIconWrap: {
-    width: 44, height: 44, borderRadius: 14,
-    backgroundColor: T.tealLight, alignItems: "center", justifyContent: "center",
+    width: 42, height: 42, borderRadius: 12,
+    backgroundColor: "#f1ecf7",
+    alignItems: "center", justifyContent: "center",
   },
-  caseIconText: { fontSize: 20 },
+  caseIconText: { fontSize: 19 },
   caseTitle: { fontSize: 15, fontWeight: "700", color: T.navy },
   caseMeta: { fontSize: 12, color: T.slateLight, marginTop: 2 },
   /* Tags */
-  tagRow: { flexDirection: "row", flexWrap: "wrap", gap: 6, paddingHorizontal: 16, marginTop: 12 },
+  tagRow: { flexDirection: "row", flexWrap: "wrap", gap: 6, marginTop: 14 },
   tag: {
-    flexDirection: "row", alignItems: "center", gap: 4,
-    backgroundColor: T.bg, borderRadius: 8,
+    flexDirection: "row", alignItems: "center", gap: 3,
+    backgroundColor: "#f4f1f8", borderRadius: 6,
     paddingHorizontal: 10, paddingVertical: 5,
   },
-  tagText: { fontSize: 12, fontWeight: "500", color: T.navyMid },
+  tagText: { fontSize: 12, fontWeight: "500", color: "#3d2060" },
   tagQty: { fontSize: 11, fontWeight: "600", color: T.slateLight },
+  tagMore: { backgroundColor: "#f0edf4" },
+  tagMoreText: { fontSize: 12, fontWeight: "500", color: T.slate },
 
-  /* Quote count (moved to top row) */
+  /* Quote count */
   quoteCount: {
-    backgroundColor: "#fef9c3", borderRadius: 8,
-    paddingHorizontal: 10, paddingVertical: 5,
+    backgroundColor: "#fef9c3", borderRadius: 12,
+    paddingHorizontal: 10, paddingVertical: 4, marginLeft: "auto",
   },
-  quoteCountText: { fontSize: 12, fontWeight: "600", color: "#a16207" },
+  quoteCountText: { fontSize: 12, fontWeight: "700", color: "#92400e" },
 
-  /* Progress section */
+  /* Progress bar (single track) */
   stepProgressWrap: {
-    flexDirection: "row", alignItems: "center", paddingVertical: 8, paddingHorizontal: 16,
+    flexDirection: "row", alignItems: "center", gap: 10, marginTop: 14,
   },
-  stepDot: {
-    width: 10, height: 10, borderRadius: 5,
-    backgroundColor: "#e2e8f0", borderWidth: 1.5, borderColor: "#e2e8f0",
+  stepTrack: {
+    flex: 1, height: 5, backgroundColor: "#ede9f3", borderRadius: 3, overflow: "hidden",
   },
-  stepDotCompleted: {
-    backgroundColor: "#4A0080", borderColor: "#4A0080",
+  stepFill: {
+    height: "100%", borderRadius: 3,
   },
-  stepDotCurrent: {
-    backgroundColor: "#fff", borderColor: "#4A0080", borderWidth: 2, width: 12, height: 12, borderRadius: 6,
+  stepText: {
+    fontSize: 11, fontWeight: "700",
   },
-  stepLine: {
-    flex: 1, height: 2, backgroundColor: "#e2e8f0",
-  },
-  stepLineCompleted: {
-    backgroundColor: "#4A0080",
-  },
-  progressSection: {
-    backgroundColor: T.bg, padding: 12, marginTop: 12, gap: 10,
-  },
-  statusRow: {
-    flexDirection: "row", alignItems: "center",
-  },
-  statusBadge: {
+
+  /* Next action */
+  nextSection: {
     flexDirection: "row", alignItems: "center", gap: 6,
-    borderRadius: 8, paddingHorizontal: 10, paddingVertical: 5,
-  },
-  statusEmoji: { fontSize: 13 },
-  statusText: { fontSize: 12, fontWeight: "700" },
-  nextRow: {
-    flexDirection: "row", alignItems: "center", gap: 6,
-    paddingHorizontal: 2,
+    marginTop: 14, paddingTop: 12,
+    borderTopWidth: 1, borderTopColor: "#e8e2f0",
   },
   nextLabel: {
     fontSize: 11, fontWeight: "600", color: T.slateLight,
   },
   nextAction: {
-    fontSize: 12, fontWeight: "600", color: T.navy, flex: 1,
+    fontSize: 13, fontWeight: "600", color: T.navy, flex: 1,
   },
-  nextArrowCircle: {
-    width: 22, height: 22, borderRadius: 11,
-    backgroundColor: "rgba(74,0,128,0.15)",
-    alignItems: "center", justifyContent: "center",
-    marginLeft: 2,
-  },
-  chevron: {
-    width: 7, height: 7,
-    borderTopWidth: 2, borderRightWidth: 2,
-    borderColor: T.teal,
-    transform: [{ rotate: "45deg" }],
-    marginLeft: -1,
+  nextArrow: {
+    fontSize: 22, fontWeight: "300", color: T.slateLight, marginTop: -1,
   },
 
   /* Logout */
@@ -874,8 +844,9 @@ const s = StyleSheet.create({
   /* ── Manage booking button ── */
   manageBtn: {
     width: 30, height: 30, borderRadius: 15,
-    backgroundColor: "rgba(74,0,128,0.06)",
+    backgroundColor: "#f4f1f8",
     alignItems: "center", justifyContent: "center",
+    marginLeft: "auto",
   },
   manageBtnText: { fontSize: 18, fontWeight: "900", color: T.teal, marginTop: -2 },
 

@@ -184,7 +184,7 @@ export default function PatientProfileScreen() {
         <View style={s.section}>
           <View style={s.sectionHeader}>
             <Text style={s.sectionTitle}>Personal Information</Text>
-            <TouchableOpacity style={s.editBtn} onPress={() => router.push("/patient/basic-info?mode=edit" as any)}>
+            <TouchableOpacity style={s.editBtn} onPress={() => router.push("/patient/edit-profile" as any)}>
               <Text style={s.editBtnText}>Edit</Text>
             </TouchableOpacity>
           </View>
