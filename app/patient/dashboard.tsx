@@ -62,6 +62,7 @@ export default function PatientDashboardScreen() {
   const [profileImage, setProfileImage] = useState<string | null>(null);
   const [statusFilter, setStatusFilter] = useState<"all" | "with_quotes" | "bookings" | "in_treatment" | "completed">("all");
   const [manageBooking, setManageBooking] = useState<Booking | null>(null);
+  const [deleteCaseId, setDeleteCaseId] = useState<string | null>(null);
   const [menuOpen, setMenuOpen] = useState(false);
 
   // Stats toggle
@@ -79,7 +80,8 @@ export default function PatientDashboardScreen() {
   const scrollRef = useRef<ScrollView>(null);
 
   const loadData = useCallback(async () => {
-    const c = await store.getCases();
+    const raw = await store.getCases();
+    const c = raw.filter((x) => !x.hidden);
     c.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
     setCases(c);
     const b = await store.getBookings();
@@ -421,7 +423,19 @@ export default function PatientDashboardScreen() {
                     )}
                     {c.status === "booked" && (() => {
                       const bk = bookings.find((b) => b.caseId === c.id);
-                      return bk && bk.status !== "cancelled" && bk.status !== "treatment_done" && bk.status !== "payment_complete" && bk.status !== "departure_set" ? (
+                      if (bk?.status === "cancelled") {
+                        return (
+                          <TouchableOpacity
+                            style={s.manageBtn}
+                            onPress={(e) => { e.stopPropagation(); setDeleteCaseId(c.id); }}
+                            activeOpacity={0.6}
+                            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                          >
+                            <Text style={s.manageBtnText}>⋯</Text>
+                          </TouchableOpacity>
+                        );
+                      }
+                      return bk && bk.status !== "treatment_done" && bk.status !== "payment_complete" && bk.status !== "departure_set" ? (
                         <TouchableOpacity
                           style={s.manageBtn}
                           onPress={(e) => { e.stopPropagation(); setManageBooking(bk); }}
@@ -596,6 +610,47 @@ export default function PatientDashboardScreen() {
             </TouchableOpacity>
 
             <TouchableOpacity style={s.modalCloseBtn} onPress={() => setManageBooking(null)} activeOpacity={0.8}>
+              <Text style={s.modalCloseBtnText}>Close</Text>
+            </TouchableOpacity>
+          </View>
+        </TouchableOpacity>
+      </Modal>
+
+      {/* ── Delete Cancelled Case Modal ── */}
+      <Modal visible={!!deleteCaseId} transparent animationType="fade" onRequestClose={() => setDeleteCaseId(null)}>
+        <TouchableOpacity style={s.modalOverlay} activeOpacity={1} onPress={() => setDeleteCaseId(null)}>
+          <View style={s.modalSheet}>
+            <View style={s.modalHandle} />
+            <Text style={s.modalTitle}>Manage Case</Text>
+
+            <TouchableOpacity
+              style={s.modalOption}
+              activeOpacity={0.7}
+              onPress={() => {
+                const caseId = deleteCaseId;
+                setDeleteCaseId(null);
+                Alert.alert(
+                  "Delete this case?",
+                  "This cancelled booking will be removed from your dashboard.",
+                  [
+                    { text: "Cancel", style: "cancel" },
+                    { text: "Delete", style: "destructive", onPress: async () => {
+                      await store.updateCase(caseId!, { hidden: true } as any);
+                      loadData();
+                    }},
+                  ],
+                );
+              }}
+            >
+              <Text style={s.modalOptionIcon}>🗑️</Text>
+              <View style={{ flex: 1 }}>
+                <Text style={[s.modalOptionLabel, { color: "#b91c1c" }]}>Delete this card</Text>
+                <Text style={s.modalOptionDesc}>Remove this cancelled booking from your dashboard</Text>
+              </View>
+              <View style={[s.modalChevron, { borderColor: "#b91c1c" }]} />
+            </TouchableOpacity>
+
+            <TouchableOpacity style={s.modalCloseBtn} onPress={() => setDeleteCaseId(null)} activeOpacity={0.8}>
               <Text style={s.modalCloseBtnText}>Close</Text>
             </TouchableOpacity>
           </View>

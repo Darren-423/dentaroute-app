@@ -1,4 +1,5 @@
 import { LinearGradient } from "expo-linear-gradient";
+import * as ImagePicker from "expo-image-picker";
 import { router, useLocalSearchParams } from "expo-router";
 import React, { useEffect, useState } from "react";
 import {
@@ -133,6 +134,9 @@ export default function ArrivalInfoScreen() {
   const [checkInDate, setCheckInDate] = useState("");
   const [checkOutDate, setCheckOutDate] = useState("");
   const [confirmationNumber, setConfirmationNumber] = useState("");
+  const [arrivalScreenshot, setArrivalScreenshot] = useState("");
+  const [departureScreenshot, setDepartureScreenshot] = useState("");
+  const [hotelScreenshot, setHotelScreenshot] = useState("");
   const [savedTrips, setSavedTrips] = useState<SavedTrip[]>([]);
   const [showTripPicker, setShowTripPicker] = useState(false);
 
@@ -170,6 +174,9 @@ export default function ArrivalInfoScreen() {
           setCheckInDate(tripData.checkInDate || "");
           setCheckOutDate(tripData.checkOutDate || "");
           setConfirmationNumber(tripData.confirmationNumber || "");
+          setArrivalScreenshot(tripData.arrivalScreenshot || "");
+          setDepartureScreenshot(tripData.departureScreenshot || "");
+          setHotelScreenshot(tripData.hotelScreenshot || "");
         } else if (bk.visitDates?.length > 0) {
           const currentVisitNum = bk.currentVisit || 1;
           const currentVD = bk.visitDates.find((v) => v.visit === currentVisitNum);
@@ -203,6 +210,21 @@ export default function ArrivalInfoScreen() {
 
   const isValid = () => flightNumber.length >= 3 && arrivalDate && arrivalTime.length >= 4 && !isTimeInvalid;
 
+  const pickScreenshot = async (setter: (uri: string) => void) => {
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (status !== "granted") {
+      Alert.alert("Permission needed", "Please allow photo library access.");
+      return;
+    }
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ["images"],
+      quality: 0.8,
+    });
+    if (!result.canceled && result.assets[0]) {
+      setter(result.assets[0].uri);
+    }
+  };
+
   const handleSave = async () => {
     if (!booking || !isValid()) return;
     setSaving(true);
@@ -221,6 +243,9 @@ export default function ArrivalInfoScreen() {
       checkInDate: checkInDate || undefined,
       checkOutDate: checkOutDate || undefined,
       confirmationNumber: confirmationNumber || undefined,
+      arrivalScreenshot: arrivalScreenshot || undefined,
+      departureScreenshot: departureScreenshot || undefined,
+      hotelScreenshot: hotelScreenshot || undefined,
     };
 
     // Save to tripInfos array if tripIndex is provided, otherwise fallback to arrivalInfo
@@ -267,6 +292,9 @@ export default function ArrivalInfoScreen() {
       checkInDate: checkInDate || undefined,
       checkOutDate: checkOutDate || undefined,
       confirmationNumber: confirmationNumber || undefined,
+      arrivalScreenshot: arrivalScreenshot || undefined,
+      departureScreenshot: departureScreenshot || undefined,
+      hotelScreenshot: hotelScreenshot || undefined,
       createdAt: now2,
       updatedAt: now2,
     };
@@ -433,6 +461,24 @@ export default function ArrivalInfoScreen() {
           {/* ── Arrival Flight Section ── */}
           <Text style={st.sectionTitle}>🛬 Arrival Flight</Text>
 
+          {/* ── Arrival Screenshot Upload ── */}
+          {arrivalScreenshot ? (
+            <View style={st.ssUploaded}>
+              <Text style={st.ssCheckIcon}>✅</Text>
+              <Text style={st.ssUploadedText}>Screenshot uploaded</Text>
+              <TouchableOpacity style={st.ssReuploadBtn} onPress={() => pickScreenshot(setArrivalScreenshot)} activeOpacity={0.7}>
+                <Text style={st.ssReuploadText}>Reupload</Text>
+              </TouchableOpacity>
+            </View>
+          ) : (
+            <View style={st.ssCard}>
+              <Text style={st.ssGuide}>📷  Upload a screenshot of your arrival flight details</Text>
+              <TouchableOpacity style={st.ssUploadBtn} onPress={() => pickScreenshot(setArrivalScreenshot)} activeOpacity={0.7}>
+                <Text style={st.ssUploadBtnText}>+ Upload Photo</Text>
+              </TouchableOpacity>
+            </View>
+          )}
+
           {/* ── Flight Number ── */}
           <View style={st.field}>
             <Text style={st.fieldLabel}>Flight Number <Text style={st.req}>*</Text></Text>
@@ -577,6 +623,24 @@ export default function ArrivalInfoScreen() {
           {/* ── Departure Flight Section (Optional) ── */}
           <Text style={[st.sectionTitle, { marginTop: 12 }]}>🛫 Departure Flight <Text style={st.optionalTag}>(Optional)</Text></Text>
 
+          {/* ── Departure Screenshot Upload ── */}
+          {departureScreenshot ? (
+            <View style={st.ssUploaded}>
+              <Text style={st.ssCheckIcon}>✅</Text>
+              <Text style={st.ssUploadedText}>Screenshot uploaded</Text>
+              <TouchableOpacity style={st.ssReuploadBtn} onPress={() => pickScreenshot(setDepartureScreenshot)} activeOpacity={0.7}>
+                <Text style={st.ssReuploadText}>Reupload</Text>
+              </TouchableOpacity>
+            </View>
+          ) : (
+            <View style={st.ssCard}>
+              <Text style={st.ssGuide}>📷  Upload a screenshot of your departure flight details</Text>
+              <TouchableOpacity style={st.ssUploadBtn} onPress={() => pickScreenshot(setDepartureScreenshot)} activeOpacity={0.7}>
+                <Text style={st.ssUploadBtnText}>+ Upload Photo</Text>
+              </TouchableOpacity>
+            </View>
+          )}
+
           <View style={st.field}>
             <Text style={st.fieldLabel}>Airline</Text>
             <TextInput
@@ -652,6 +716,24 @@ export default function ArrivalInfoScreen() {
 
           {/* ── Hotel Section (Optional) ── */}
           <Text style={[st.sectionTitle, { marginTop: 12 }]}>🏨 Hotel Information <Text style={st.optionalTag}>(Optional)</Text></Text>
+
+          {/* ── Hotel Screenshot Upload ── */}
+          {hotelScreenshot ? (
+            <View style={st.ssUploaded}>
+              <Text style={st.ssCheckIcon}>✅</Text>
+              <Text style={st.ssUploadedText}>Screenshot uploaded</Text>
+              <TouchableOpacity style={st.ssReuploadBtn} onPress={() => pickScreenshot(setHotelScreenshot)} activeOpacity={0.7}>
+                <Text style={st.ssReuploadText}>Reupload</Text>
+              </TouchableOpacity>
+            </View>
+          ) : (
+            <View style={st.ssCard}>
+              <Text style={st.ssGuide}>📷  Upload a screenshot of your hotel booking details</Text>
+              <TouchableOpacity style={st.ssUploadBtn} onPress={() => pickScreenshot(setHotelScreenshot)} activeOpacity={0.7}>
+                <Text style={st.ssUploadBtnText}>+ Upload Photo</Text>
+              </TouchableOpacity>
+            </View>
+          )}
 
           <View style={st.field}>
             <Text style={st.fieldLabel}>Hotel Name</Text>
@@ -1149,4 +1231,38 @@ const st = StyleSheet.create({
   },
   tripPickerMain: { fontSize: 15, fontWeight: "600", color: C.navy },
   tripPickerSub: { fontSize: 13, color: C.sub, marginTop: 2 },
+
+  /* ── Screenshot Upload ── */
+  ssCard: {
+    borderWidth: 1.5, borderColor: C.faint, borderStyle: "dashed",
+    borderRadius: 12, padding: 16, alignItems: "center",
+    backgroundColor: "rgba(74,0,128,0.03)", marginBottom: 10,
+  },
+  ssGuide: {
+    fontSize: 13, color: C.sub, textAlign: "center", marginBottom: 12, lineHeight: 18,
+  },
+  ssUploadBtn: {
+    backgroundColor: C.purpleSoft, borderRadius: 8,
+    paddingHorizontal: 20, paddingVertical: 10,
+  },
+  ssUploadBtnText: {
+    fontSize: 14, fontWeight: "600", color: C.purple,
+  },
+  ssUploaded: {
+    flexDirection: "row", alignItems: "center",
+    backgroundColor: "#f0fdf4", borderWidth: 1, borderColor: "#bbf7d0",
+    borderRadius: 12, paddingHorizontal: 14, paddingVertical: 12,
+    marginBottom: 10,
+  },
+  ssCheckIcon: { fontSize: 16, marginRight: 8 },
+  ssUploadedText: {
+    flex: 1, fontSize: 14, fontWeight: "500", color: "#15803d",
+  },
+  ssReuploadBtn: {
+    backgroundColor: "#dcfce7", borderRadius: 6,
+    paddingHorizontal: 12, paddingVertical: 6,
+  },
+  ssReuploadText: {
+    fontSize: 12, fontWeight: "600", color: "#16a34a",
+  },
 });

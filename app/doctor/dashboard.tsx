@@ -45,18 +45,18 @@ const getCountryDisplay = (code: string) => {
 
 // ── Status sections (action-required first) ──
 const SECTION_ORDER = [
-  { key: "pending", label: "New — Send Quote", emoji: "🆕", color: "#f59e0b", colorBg: "rgba(245,158,11,0.15)" },
-  { key: "checked_in_clinic", label: "At Clinic — Send Invoice", emoji: "🏥", color: "#f59e0b", colorBg: "rgba(245,158,11,0.15)" },
-  { key: "confirmed", label: "Deposit Paid & Booked", emoji: "📅", color: "#f59e0b", colorBg: "rgba(245,158,11,0.15)" },
-  { key: "flight_submitted", label: "Flight Submitted", emoji: "✈️", color: "#3b82f6", colorBg: "rgba(59,130,246,0.15)" },
-  { key: "arrived_korea", label: "Arrived in Korea", emoji: "🛬", color: "#7c3aed", colorBg: "rgba(124,58,237,0.15)" },
-  { key: "treatment_done", label: "Awaiting Payment", emoji: "💰", color: "#f59e0b", colorBg: "rgba(245,158,11,0.15)" },
-  { key: "between_visits", label: "Between Visits", emoji: "🔄", color: "#7c3aed", colorBg: "rgba(124,58,237,0.15)" },
-  { key: "returning_home", label: "Patient Returning Home", emoji: "🛫", color: "#3b82f6", colorBg: "rgba(59,130,246,0.15)" },
+  { key: "pending", label: "New — Send Quote", emoji: "🆕", color: "#16a34a", colorBg: "rgba(22,163,74,0.15)" },
+  { key: "checked_in_clinic", label: "At Clinic — Send Invoice", emoji: "🏥", color: "#16a34a", colorBg: "rgba(22,163,74,0.15)" },
+  { key: "confirmed", label: "Deposit Paid & Booked", emoji: "📅", color: "#16a34a", colorBg: "rgba(22,163,74,0.15)" },
+  { key: "flight_submitted", label: "Flight Submitted", emoji: "✈️", color: "#16a34a", colorBg: "rgba(22,163,74,0.15)" },
+  { key: "arrived_korea", label: "Arrived in Korea", emoji: "🛬", color: "#16a34a", colorBg: "rgba(22,163,74,0.15)" },
+  { key: "treatment_done", label: "Awaiting Payment", emoji: "💰", color: "#16a34a", colorBg: "rgba(22,163,74,0.15)" },
+  { key: "between_visits", label: "Between Visits", emoji: "🔄", color: "#16a34a", colorBg: "rgba(22,163,74,0.15)" },
+  { key: "returning_home", label: "Patient Returning Home", emoji: "🛫", color: "#16a34a", colorBg: "rgba(22,163,74,0.15)" },
   { key: "payment_complete", label: "Payment Complete", emoji: "💵", color: "#16a34a", colorBg: "rgba(22,163,74,0.15)" },
-  { key: "departure_set", label: "Pickup Arranged", emoji: "🚗", color: "#3b82f6", colorBg: "rgba(59,130,246,0.15)" },
+  { key: "departure_set", label: "Pickup Arranged", emoji: "🚗", color: "#16a34a", colorBg: "rgba(22,163,74,0.15)" },
   { key: "quotes_received", label: "Quote Sent", emoji: "📨", color: "#16a34a", colorBg: "rgba(22,163,74,0.15)" },
-  { key: "cancelled", label: "Cancelled", emoji: "❌", color: "#ef4444", colorBg: "rgba(239,68,68,0.12)" },
+  { key: "cancelled", label: "Cancelled", emoji: "❌", color: "#16a34a", colorBg: "rgba(22,163,74,0.15)" },
 ];
 
 const getResolvedStatus = (c: PatientCase, bks: Booking[]): string => {
@@ -338,7 +338,7 @@ export default function DoctorDashboardScreen() {
         ) : totalFiltered === 0 ? (
           <View style={s.empty}>
             <Text style={{ fontSize: 40, marginBottom: 10 }}>{getTreatmentIcon(activeFilter)}</Text>
-            <Text style={s.emptyTitle}>No {activeFilter} cases</Text>
+            <Text style={s.emptyTitle}>No cases</Text>
             <Text style={s.emptyDesc}>No patients have requested this treatment yet</Text>
           </View>
         ) : (

@@ -65,7 +65,7 @@ export default function CaseHubScreen() {
         <TouchableOpacity style={s.backBtn} onPress={() => router.back()}>
           <Text style={s.backText}>← Back</Text>
         </TouchableOpacity>
-        <Text style={s.headerTitle}>Case #{caseId}</Text>
+        <Text style={s.headerTitle}>Request Pick Up Service</Text>
         <Text style={s.headerSub}>{booking.dentistName} · {booking.clinicName}</Text>
       </LinearGradient>
 
@@ -268,6 +268,14 @@ export default function CaseHubScreen() {
           ))}
         </View>
 
+        {/* Cancel Booking */}
+        <TouchableOpacity
+          style={s.cancelBtn}
+          onPress={() => router.push(`/patient/cancel-booking?bookingId=${bookingId}` as any)}
+        >
+          <Text style={s.cancelBtnText}>Cancel My Booking</Text>
+        </TouchableOpacity>
+
         <View style={{ height: 100 }} />
       </ScrollView>
     </View>
@@ -322,7 +330,7 @@ const s = StyleSheet.create({
   tripEditBtnText: { color: T.purple, fontSize: 12, fontWeight: "600" },
   addTripBtn: {
     borderWidth: 1, borderColor: T.purple, borderStyle: "dashed", borderRadius: 12,
-    paddingVertical: 12, alignItems: "center", marginTop: 14,
+    paddingVertical: 14, paddingHorizontal: 20, alignItems: "center", marginTop: 14,
   },
   addTripBtnText: { color: T.purple, fontSize: 14, fontWeight: "600" },
   pickupTripLabel: { fontSize: 13, fontWeight: "700", color: T.purple, marginBottom: 6 },
@@ -394,4 +402,12 @@ const s = StyleSheet.create({
   },
   treatmentName: { fontSize: 14, color: T.navy, flex: 1 },
   treatmentDetail: { fontSize: 13, color: T.slate },
+
+  /* Cancel Booking */
+  cancelBtn: {
+    backgroundColor: "#fef2f2", borderWidth: 1, borderColor: "#fecaca",
+    borderRadius: 14, paddingVertical: 16, alignItems: "center" as const,
+    marginBottom: 14,
+  },
+  cancelBtnText: { color: "#dc2626", fontSize: 15, fontWeight: "600" as const },
 });

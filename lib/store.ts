@@ -48,6 +48,7 @@ export interface PatientCase {
   status: "pending" | "quotes_received" | "booked";
   visitDate?: string;    // "Within 10 days", "1 month", etc.
   birthDate?: string;    // "1990-05-15" format
+  hidden?: boolean;
 }
 
 export interface DentistQuote {
@@ -149,6 +150,10 @@ export interface ArrivalInfo {
   checkInDate?: string;
   checkOutDate?: string;
   confirmationNumber?: string;
+  // Screenshots
+  arrivalScreenshot?: string;
+  departureScreenshot?: string;
+  hotelScreenshot?: string;
 }
 
 export interface SavedTrip {
@@ -170,6 +175,10 @@ export interface SavedTrip {
   checkInDate?: string;
   checkOutDate?: string;
   confirmationNumber?: string;
+  // Screenshots
+  arrivalScreenshot?: string;
+  departureScreenshot?: string;
+  hotelScreenshot?: string;
   // Plan B: Case 연결
   caseId?: string;
   tripIndex?: number;
