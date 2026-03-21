@@ -370,7 +370,9 @@ export default function HotelArrivedScreen() {
             </View>
             <View style={s.flightRow}>
               <Text style={s.flightLabel}>Date</Text>
-              <Text style={s.flightValue}>{formatDateDisplay(booking.arrivalInfo.arrivalDate)}</Text>
+              <Text style={s.flightValue}>
+                {formatDateDisplay(booking.arrivalInfo.arrivalDate || booking.arrivalInfo.flightDate || "")}
+              </Text>
             </View>
             <View style={s.flightRow}>
               <Text style={s.flightLabel}>ETA</Text>

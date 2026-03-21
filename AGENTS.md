@@ -14,7 +14,7 @@ You are building the **backend server** for DentaRoute, a dental tourism platfor
 - Multiple Korean dentists send price quotes
 - Patient picks a dentist, books, pays deposit
 - Patient travels to Korea, gets treatment
-- Platform handles: chat, payments, reviews, warranties, aftercare
+- Platform handles: chat, payments, reviews, aftercare
 
 ### Current State (Frontend-Only Prototype)
 - **Framework**: Expo SDK 54 + React Native 0.81 + TypeScript
@@ -208,35 +208,6 @@ type BookingStatus =
 }
 ```
 
-### TreatmentWarranty
-```typescript
-{
-  id: string;
-  bookingId: string;
-  caseId: string;
-  patientName: string;
-  dentistName: string;
-  clinicName: string;
-  treatmentName: string;
-  treatmentQty: number;
-  treatmentDate: string;
-  warrantyMonths: number;        // 0-60
-  expiresAt: string;
-  status: "active" | "claimed" | "expired" | "voided";
-  claims: {
-    id: string;
-    warrantyId: string;
-    description: string;
-    photos: string[];
-    status: "pending" | "approved" | "denied";
-    submittedAt: string;
-    resolvedAt?: string;
-    resolution?: string;
-  }[];
-  createdAt: string;
-}
-```
-
 ### ChatRoom + ChatMessage
 ```typescript
 // ChatRoom
@@ -405,15 +376,6 @@ The frontend's `lib/store.ts` exports a `store` object with these methods. Your 
 | `getReviewForBooking(id)` | `GET /api/bookings/:id/review` |
 | `checkReviewEligibility(id)` | `GET /api/bookings/:id/review-eligibility` |
 
-### Warranties
-| Frontend Method | Backend Endpoint |
-|---|---|
-| `getWarrantiesForPatient(name)` | `GET /api/warranties` |
-| `getWarrantiesForBooking(id)` | `GET /api/bookings/:id/warranties` |
-| `createWarrantiesForBooking(id)` | `POST /api/bookings/:id/warranties` |
-| `submitWarrantyClaim(wId, data)` | `POST /api/warranties/:id/claims` |
-| `checkExpiredWarranties()` | `POST /api/warranties/check-expired` |
-
 ### Notifications
 | Frontend Method | Backend Endpoint |
 |---|---|
@@ -465,12 +427,6 @@ Standard: rest               → 20% platform fee
 - `verified: true` is set automatically when creating review
 - `verifiedTreatments` is pulled from the actual booking data (tamper-proof)
 
-### Warranty Auto-Creation
-- When treatment is completed, warranties are auto-created per treatment type
-- Warranty periods: Implant 60mo, Crown 36mo, Bridge 36mo, Veneers 24mo, Root Canal 24mo, Filling 12mo, Orthodontics 12mo, Gum Treatment 12mo, Jaw Surgery 24mo, Denture 24mo
-- Teeth Whitening, Cleaning, Extraction = 0 months (no warranty)
-- See `constants/warranty.ts` for full config
-
 ---
 
 ## SERVER ARCHITECTURE
@@ -494,13 +450,11 @@ server/
 │   │   ├── bookings.ts
 │   │   ├── chat.ts
 │   │   ├── reviews.ts
-│   │   ├── warranties.ts
 │   │   ├── notifications.ts
 │   │   ├── patients.ts
 │   │   └── doctors.ts
 │   ├── services/
 │   │   ├── chatFilter.ts        # Port from lib/chat-filter.ts
-│   │   ├── warranty.ts          # Port from constants/warranty.ts
 │   │   ├── billing.ts           # Multi-visit billing logic
 │   │   ├── refund.ts            # Refund calculations
 │   │   ├── tier.ts              # Monthly tier recalculation
@@ -599,7 +553,7 @@ This `AGENTS.md` section is the canonical Codex <-> Claude Code collaboration pr
 1. Respect ownership boundaries strictly: Codex edits only `server/`, shared docs, and server-facing handoff files. Never edit `app/`, `lib/`, `components/`, or `constants/`.
 2. Treat repository files as the source of truth. Verbal chat context is not sufficient unless it is written into tracked files.
 3. Work contract-first for integration slices. Before implementing a backend slice, write `docs/api-contract-<slice>.md` and let Claude Code review it.
-4. Use these integration slices, in order: `Auth` -> `Cases + Quotes` -> `Bookings` -> `Chat` -> `Reviews + Warranty`.
+4. Use these integration slices, in order: `Auth` -> `Cases + Quotes` -> `Bookings` -> `Chat` -> `Reviews`.
 5. Record every backend/frontend handoff in `server/CHANGELOG.md` using the exact format defined below.
 6. If any enum, status value, or other cross-team contract changes, update `AGENTS.md` and `server/CHANGELOG.md` in the same change.
 7. Server seed data must reproduce the frontend `store.seedDemoData()` flow as closely as possible so both sides integrate against the same journey.
@@ -639,19 +593,18 @@ Build in this order (each must be fully working before moving on):
 5. **Bookings** - State machine, status transitions
 6. **Chat** - REST + WebSocket, contact filter
 7. **Reviews** - With verified patient logic
-8. **Warranties** - Auto-creation, claims, expiry check
-9. **Payments** - Stripe integration, deposit + final
-10. **Notifications** - Push via Expo, in-app storage
-11. **File Upload** - S3 for X-rays, photos, license
-12. **Translation** - DeepL for chat messages
-13. **Tier System** - Monthly recalculation cron job
-14. **Admin API** - For future admin dashboard
+8. **Payments** - Stripe integration, deposit + final
+9. **Notifications** - Push via Expo, in-app storage
+10. **File Upload** - S3 for X-rays, photos, license
+11. **Translation** - DeepL for chat messages
+12. **Tier System** - Monthly recalculation cron job
+13. **Admin API** - For future admin dashboard
 
 ---
 
 ## TESTING
 
-- Write tests for ALL business logic (billing, refunds, tier, warranty)
+- Write tests for ALL business logic (billing, refunds, tier)
 - Use Jest + Supertest for API tests
 - Provide a seed script that creates demo data matching `store.seedDemoData()`
 - Test the chat filter with the same edge cases from `lib/chat-filter.ts`
@@ -663,7 +616,6 @@ Build in this order (each must be fully working before moving on):
 Read these files to understand business logic before implementing:
 - `lib/store.ts` - All data models and business logic (1200+ lines)
 - `lib/chat-filter.ts` - Chat contact filtering patterns
-- `constants/warranty.ts` - Warranty config + US aftercare partners
 - `docs/tiered-platform-fee-spec.md` - Tier system specification
 - `docs/per-visit-discount-spec.md` - 5% discount specification
 - `docs/multi-visit-billing-spec.md` - Multi-visit billing logic

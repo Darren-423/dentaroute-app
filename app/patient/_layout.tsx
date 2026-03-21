@@ -1,8 +1,12 @@
-import { Stack, useSegments, router } from "expo-router";
+import { router, Stack, useFocusEffect, usePathname, useSegments } from "expo-router";
 import React, { useCallback, useEffect, useRef, useState } from "react";
-import { View, PanResponder } from "react-native";
-import { useFocusEffect } from "expo-router";
+import { BackHandler, PanResponder, Platform, View } from "react-native";
 import { PatientTabBar, TabName } from "../../components/PatientTabBar";
+import {
+  getSafeBackTarget,
+  isPatientRootRoute,
+  markNavigationMode,
+} from "../../lib/navigationHistory";
 import { store } from "../../lib/store";
 
 const TAB_MAP: Record<string, TabName> = {
@@ -14,10 +18,17 @@ const TAB_MAP: Record<string, TabName> = {
 };
 
 const TAB_SCREENS = ["dashboard", "chat-list", "reservation", "my-trips", "profile"];
-const TAB_ROUTES = ["/patient/dashboard", "/patient/chat-list", "/patient/reservation", "/patient/my-trips", "/patient/profile"];
+const TAB_ROUTES = [
+  "/patient/dashboard",
+  "/patient/chat-list",
+  "/patient/reservation",
+  "/patient/my-trips",
+  "/patient/profile",
+];
 
 export default function PatientLayout() {
   const segments = useSegments();
+  const pathname = usePathname();
   const currentScreen = segments[1] as string | undefined;
   const [notifUnread, setNotifUnread] = useState(0);
   const [chatUnread, setChatUnread] = useState(0);
@@ -43,8 +54,10 @@ export default function PatientLayout() {
         if (currentIndex === -1) return;
 
         if (gestureState.dx < -50 && currentIndex < TAB_SCREENS.length - 1) {
+          markNavigationMode("replace");
           router.replace(TAB_ROUTES[currentIndex + 1] as any);
         } else if (gestureState.dx > 50 && currentIndex > 0) {
+          markNavigationMode("replace");
           router.replace(TAB_ROUTES[currentIndex - 1] as any);
         }
       },
@@ -63,9 +76,45 @@ export default function PatientLayout() {
     }, [])
   );
 
+  useFocusEffect(
+    useCallback(() => {
+      if (Platform.OS !== "android") {
+        return undefined;
+      }
+
+      const subscription = BackHandler.addEventListener("hardwareBackPress", () => {
+        if (isPatientRootRoute(pathname)) {
+          if (pathname !== "/patient/dashboard") {
+            markNavigationMode("replace");
+            router.replace("/patient/dashboard" as any);
+          }
+          return true;
+        }
+
+        const target = getSafeBackTarget("/patient/dashboard");
+        if (target) {
+          markNavigationMode("replace");
+          router.replace(target as any);
+          return true;
+        }
+
+        return true;
+      });
+
+      return () => subscription.remove();
+    }, [pathname])
+  );
+
   return (
     <View style={{ flex: 1 }} {...(showTabBar ? panResponder.panHandlers : {})}>
-      <Stack screenOptions={() => ({ headerShown: false, animation: "none" })} />
+      <Stack
+        screenOptions={({ route }) => ({
+          headerShown: false,
+          animation: route.name in TAB_MAP ? "fade" : "slide_from_right",
+          gestureEnabled: true,
+          fullScreenGestureEnabled: true,
+        })}
+      />
       {showTabBar && currentTab && (
         <PatientTabBar currentTab={currentTab} notifUnread={notifUnread} chatUnread={chatUnread} />
       )}

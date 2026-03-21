@@ -22,6 +22,7 @@ import Animated, {
 } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { StatusBar } from "expo-status-bar";
+import { resetNavigationHistory } from "../../lib/navigationHistory";
 import { store } from "../../lib/store";
 
 const { width } = Dimensions.get('window');
@@ -57,6 +58,7 @@ export default function DoctorLoginScreen() {
       await store.setCurrentUser("doctor", doctorName);
       setTimeout(() => {
         setLoading(false);
+        resetNavigationHistory("/doctor/dashboard");
         router.replace("/doctor/dashboard" as any);
       }, 800);
     } catch (err) {
@@ -379,4 +381,3 @@ const styles = StyleSheet.create({
     textDecorationLine: "underline",
   },
 });
-

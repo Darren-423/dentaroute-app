@@ -10,6 +10,7 @@ import {
     View,
 } from "react-native";
 import { getDoctorProfileCache, loadDoctorProfileData } from "../../lib/doctorTabDataCache";
+import { resetNavigationHistory } from "../../lib/navigationHistory";
 import { store } from "../../lib/store";
 
 const T = {
@@ -186,6 +187,7 @@ export default function DoctorProfileScreen() {
                 { text: "Cancel", style: "cancel" },
                 { text: "Log Out", style: "destructive", onPress: async () => {
                   await store.clearCurrentUser();
+                  resetNavigationHistory("/auth/role-select");
                   router.replace("/auth/role-select" as any);
                 }},
               ]);

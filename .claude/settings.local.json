@@ -71,7 +71,11 @@
       "Bash(python -c \":*)",
       "Bash(pip install:*)",
       "Bash(node -e \":*)",
-      "Bash(npx -y adm-zip)"
+      "Bash(npx -y adm-zip)",
+      "Bash(git ls-tree:*)",
+      "Bash(git check-ignore:*)",
+      "Bash(ls -la *.tar.gz *.html TelegramBot/)",
+      "Bash(git rm:*)"
     ]
   }
 }

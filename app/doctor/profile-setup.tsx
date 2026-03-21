@@ -13,6 +13,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import { resetNavigationHistory } from "../../lib/navigationHistory";
 import { store } from "../../lib/store";
 
 const T = {
@@ -223,6 +224,7 @@ export default function DoctorProfileSetupScreen() {
       console.log("Error saving profile:", e);
     }
     setLoading(false);
+    resetNavigationHistory("/doctor/dashboard");
     router.replace("/doctor/dashboard" as any);
   };
 

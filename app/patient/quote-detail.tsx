@@ -288,7 +288,7 @@ export default function QuoteDetailScreen() {
           onPress={() => {
             const effectiveVisits = quote.visits && quote.visits.length > 0
               ? quote.visits
-              : buildQuoteVisitsForTreatments(quote.treatments || []).visits;
+              : buildQuoteVisitsForTreatments(quote.treatments || []);
             const durationLabel = quote.duration || (effectiveVisits.length > 0
               ? `${effectiveVisits.length} visit${effectiveVisits.length !== 1 ? "s" : ""}`
               : "");

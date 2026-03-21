@@ -1,9 +1,14 @@
-import { router, Stack, useFocusEffect, useSegments } from "expo-router";
+import { router, Stack, useFocusEffect, usePathname, useSegments } from "expo-router";
 import React, { useCallback, useEffect, useState } from "react";
-import { Alert, StyleSheet, View } from "react-native";
+import { Alert, BackHandler, Platform, StyleSheet, View } from "react-native";
 import { DoctorTabBar, DoctorTabName } from "../../components/DoctorTabBar";
 import { warmDoctorTabData } from "../../lib/doctorTabDataCache";
 import { isDoctorTabSwipeBlocked, setDoctorTabSwipeBlocked } from "../../lib/doctorTabSwipeGuard";
+import {
+  getSafeBackTarget,
+  isDoctorRootRoute,
+  markNavigationMode,
+} from "../../lib/navigationHistory";
 import { store } from "../../lib/store";
 
 const TAB_MAP: Record<string, DoctorTabName> = {
@@ -24,6 +29,7 @@ const TAB_ROUTES: Record<DoctorTabName, string> = {
 
 export default function DoctorLayout() {
   const segments = useSegments();
+  const pathname = usePathname();
   const currentScreen = segments[1] as string | undefined;
   const [chatUnread, setChatUnread] = useState(0);
 
@@ -48,13 +54,53 @@ export default function DoctorLayout() {
     }, [])
   );
 
+  useFocusEffect(
+    useCallback(() => {
+      if (Platform.OS !== "android") {
+        return undefined;
+      }
+
+      const subscription = BackHandler.addEventListener("hardwareBackPress", () => {
+        if (isDoctorTabSwipeBlocked()) {
+          return true;
+        }
+
+        if (isDoctorRootRoute(pathname)) {
+          if (pathname !== "/doctor/dashboard") {
+            markNavigationMode("replace");
+            router.replace("/doctor/dashboard" as any);
+          }
+          return true;
+        }
+
+        const target = getSafeBackTarget("/doctor/dashboard");
+        if (target) {
+          markNavigationMode("replace");
+          router.replace(target as any);
+          return true;
+        }
+
+        return true;
+      });
+
+      return () => subscription.remove();
+    }, [pathname])
+  );
+
   const showTabBar = !!currentScreen && currentScreen in TAB_MAP;
   const currentTab = currentScreen ? TAB_MAP[currentScreen] : undefined;
 
   return (
     <View style={styles.container}>
       <View style={styles.stackLayer}>
-        <Stack screenOptions={() => ({ headerShown: false, animation: "none" })} />
+        <Stack
+          screenOptions={({ route }) => ({
+            headerShown: false,
+            animation: route.name in TAB_MAP ? "fade" : "slide_from_right",
+            gestureEnabled: true,
+            fullScreenGestureEnabled: true,
+          })}
+        />
       </View>
 
       {showTabBar && currentTab && (
@@ -79,7 +125,10 @@ export default function DoctorLayout() {
                     style: "destructive",
                     onPress: () => {
                       setDoctorTabSwipeBlocked(false);
-                      if (route) router.replace(route as any);
+                      if (route) {
+                        markNavigationMode("replace");
+                        router.replace(route as any);
+                      }
                     },
                   },
                 ]
@@ -88,6 +137,7 @@ export default function DoctorLayout() {
             }
 
             if (route) {
+              markNavigationMode("replace");
               router.replace(route as any);
             }
           }}

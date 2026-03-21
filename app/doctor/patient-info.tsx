@@ -10,6 +10,7 @@ import {
     View,
 } from "react-native";
 import { store } from "../../lib/store";
+import { toDoctorLabel } from "../../lib/treatmentTerminology";
 
 const T = {
   teal: "#0f766e",

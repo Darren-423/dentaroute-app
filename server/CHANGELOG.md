@@ -52,3 +52,12 @@ Use this file for every Codex <-> Claude Code backend handoff.
 - Frontend expects: Patients continue to send and read patient-friendly treatment names; doctors can submit/read professional treatment-plan labels; shared labels such as `Crowns` and `Veneers` remain unchanged.
 - Tested: `npm test -- --runInBand tests/treatmentTerminology.test.ts tests/casesQuotes.integration.test.ts`
 - Status: Ready for integration
+
+## [2026-03-21] Slice: Scope Change
+- Changed: Removed warranty from the shared backend contract in `AGENTS.md`, including the `TreatmentWarranty` data model, warranty API mappings, warranty business rules, warranty architecture references, and the `Reviews + Warranty` slice naming.
+- Contract: Backend scope now stops at `Reviews`; no warranty routes, models, services, or contract expectations should be added unless the product scope changes again.
+- Frontend expects: Existing warranty UI/state cleanup remains a separate frontend-owned follow-up in `app/`, `lib/`, and `constants/`; server integration should not depend on warranty endpoints.
+- Tested: Verified the `server/` source tree has no runtime warranty references after the scope update.
+- Status: Ready for integration
+
+

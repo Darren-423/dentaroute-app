@@ -14,6 +14,7 @@ import {
   View,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { resetNavigationHistory } from "../../lib/navigationHistory";
 import { Booking, PatientCase, store } from "../../lib/store";
 
 const T = {
@@ -511,6 +512,7 @@ export default function PatientDashboardScreen() {
                   style: "destructive",
                   onPress: async () => {
                     await store.clearCurrentUser();
+                    resetNavigationHistory("/auth/role-select");
                     router.replace("/auth/role-select" as any);
                   },
                 },
