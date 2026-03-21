@@ -156,13 +156,6 @@
       <text x="1042" y="822" fill="#726B80" font-size="15" font-family="Segoe UI, Arial, sans-serif">Files and receipts</text>
     </g>
 
-    <g>
-      <rect x="1200" y="700" width="160" height="132" rx="26" fill="#ECFDF3"/>
-      <circle cx="1280" cy="748" r="26" fill="#16A34A"/>
-      <text x="1271" y="756" fill="#FFFFFF" font-size="18" font-family="Segoe UI, Arial, sans-serif" font-weight="700">W</text>
-      <text x="1248" y="798" fill="#1F1630" font-size="22" font-family="Segoe UI, Arial, sans-serif" font-weight="700">Warranty</text>
-      <text x="1230" y="822" fill="#726B80" font-size="15" font-family="Segoe UI, Arial, sans-serif">Aftercare trust layer</text>
-    </g>
   </g>
 
   <text x="980" y="930" fill="#221433" font-size="28" font-family="Segoe UI, Arial, sans-serif" font-weight="700">Bottom dock priority</text>

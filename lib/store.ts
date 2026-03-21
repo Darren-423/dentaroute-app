@@ -367,6 +367,7 @@ export const getRefundInfo = (booking: Booking): { percent: number; amount: numb
   return { percent: 0, amount: 0, tier: "none" };
 };
 
+
 // ── 유저 관리 ──
 export const store = {
   // 현재 유저 설정
@@ -1176,7 +1177,7 @@ export const store = {
           { name: "Crowns", qty: 1, price: 400 },
           { name: "Veneers", qty: 1, price: 900 },
         ],
-        treatmentDetails: "Straumann implants (Swiss) with 10-year warranty. Premium ceramic crowns.",
+        treatmentDetails: "Straumann implants (Swiss). Premium ceramic crowns.",
         duration: "7 Days",
         visits: [
           { visit: 1, description: "Comprehensive exam, 3D CT scan, treatment planning" },
@@ -1185,7 +1186,7 @@ export const store = {
           { visit: 4, description: "Crown fabrication and veneer placement" },
           { visit: 5, description: "Final check and veneer polish" },
         ],
-        message: "Premium Straumann implants for the best long-term results. 10-year warranty included.",
+        message: "Premium Straumann implants for the best long-term results.",
         createdAt: "2026-02-24T14:15:00Z",
         licenseVerified: true,
         certifications: ["License Verified", "ISO 9001"],

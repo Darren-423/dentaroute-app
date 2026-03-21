@@ -247,7 +247,9 @@ function shouldFilter(bookingStatus: BookingStatus | null): boolean;
 
 ---
 
-## 4. Phase 2: 치료 보증 프로그램 (Treatment Warranty)
+## ~~4. Phase 2: 치료 보증 프로그램 (Treatment Warranty) — REMOVED~~
+
+> **이 Phase는 제거되었습니다.** Warranty 기능은 더 이상 구현하지 않습니다.
 
 > **우선순위**: 상 | **유형**: 당근(Carrot) | **효과**: ⭐⭐⭐⭐
 
@@ -623,20 +625,9 @@ Phase 1: 채팅 필터링                    [Week 1-2]
      └── 허용 숫자(가격, 날짜) 오탐 확인
      └── 예약 상태별 필터 ON/OFF 확인
 
-Phase 2: 치료 보증                      [Week 3-4]
-├── 2.1 데이터 모델 + 상수             [Week 3]
-│    └── store.ts에 Warranty 모델 추가
-│    └── constants/warranty.ts 작성
-├── 2.2 보증 화면 구현                  [Week 3-4]
-│    └── warranty.tsx (목록)
-│    └── warranty-detail.tsx (상세)
-│    └── warranty-claim.tsx (클레임 접수)
-└── 2.3 기존 화면 연동                  [Week 4]
-     └── quote-detail.tsx 보증 정보 표시
-     └── final-payment.tsx 보증 안내 배너
-     └── treatment-complete.tsx 보증 생성
+Phase 2: (REMOVED — Warranty 제거됨)
 
-Phase 3: 리뷰 시스템 강화               [Week 4-5]
+Phase 3: 리뷰 시스템 강화               [Week 3-4]
 ├── 3.1 리뷰 자격 검증                  [Week 4]
 │    └── write-review.tsx 결제 확인 로직
 │    └── store.ts createReview() 검증
@@ -721,28 +712,20 @@ Phase 5: 파트너 계약 시스템              [Week 7-8]
 ### 신규 파일 (8개)
 ```
 lib/chat-filter.ts                    — 채팅 필터링 엔진
-constants/warranty.ts                 — 치료별 보증 기간 설정
-app/patient/warranty.tsx              — 내 보증 목록
-app/patient/warranty-detail.tsx       — 보증 상세
-app/patient/warranty-claim.tsx        — 보증 클레임 접수
 app/doctor/partner-agreement.tsx      — 파트너 계약서 조회
 app/doctor/patient-history.tsx        — 환자 치료 이력 CRM
 app/doctor/schedule.tsx              — 스케줄 관리
 ```
 
-### 수정 파일 (11개)
+### 수정 파일 (8개)
 ```
 app/patient/chat.tsx                  — 필터링 통합
 app/doctor/chat.tsx                   — 필터링 통합
-app/patient/quote-detail.tsx          — 보증 정보 표시
-app/patient/final-payment.tsx         — 보증 안내 배너
-app/patient/treatment-complete.tsx    — 보증 자동 생성
-app/patient/dashboard.tsx             — 보증 섹션 추가
 app/patient/write-review.tsx          — 결제 확인 검증
 app/patient/dentist-reviews.tsx       — Verified 배지
 app/patient/dentist-profile.tsx       — 리뷰 통계 강화
 app/auth/doctor-create-account.tsx    — 파트너 계약 동의
-lib/store.ts                          — Warranty 모델 + 리뷰 검증 + 필터 연동
+lib/store.ts                          — 리뷰 검증 + 필터 연동
 ```
 
 ---

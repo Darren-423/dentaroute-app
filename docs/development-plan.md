@@ -64,7 +64,7 @@
 | **Chat + WebSocket** | P0 | 미구현 | 실시간 채팅, 메시지 저장, 읽음 처리 |
 | **Payments (Stripe)** | P0 | 미구현 | 보증금, 최종 결제, 환불, 웹훅 |
 | **File Upload (S3)** | P1 | 미구현 | X-ray, 치료 계획서, 사진 업로드 |
-| **Reviews + Warranty** | P1 | 미구현 | 리뷰 CRUD, 워런티 생성/클레임 |
+| **Reviews** | P1 | 미구현 | 리뷰 CRUD |
 | **Translation (DeepL)** | P2 | 미구현 | 채팅 메시지 자동 번역 |
 | **Push Notifications** | P2 | 미구현 | Expo Push Notification 연동 |
 | **Admin API** | P2 | 미구현 | 의사 라이센스 검증, Tier 재계산, 관리 |
@@ -243,16 +243,6 @@ ANY → cancelled                    (취소 가능, 환불 계산)
 - 중복 리뷰 방지 (1 booking = 1 review)
 - 치료 목록은 실제 booking 데이터에서 추출 (위변조 방지)
 
-#### 6.3 Warranty 슬라이스
-
-**API 엔드포인트:**
-| Method | Path | 설명 |
-|--------|------|------|
-| POST | `/api/warranties` | 치료 완료 시 자동 생성 |
-| GET | `/api/warranties/my` | 내 워런티 목록 |
-| GET | `/api/warranties/:id` | 워런티 상세 |
-| POST | `/api/warranties/:id/claim` | 워런티 클레임 제출 |
-
 ---
 
 ### Phase 7: 부가 기능
@@ -350,7 +340,6 @@ model Booking {
   invoices   VisitInvoice[]
   payments   Payment[]
   review     Review?
-  warranties Warranty[]
 }
 
 enum BookingStatus {
@@ -481,39 +470,6 @@ model Review {
   doctor  User    @relation("DoctorReviews", fields: [doctorId], references: [id])
 }
 
-model Warranty {
-  id            String         @id @default(cuid())
-  bookingId     String
-  patientId     String
-  doctorId      String
-  treatment     String
-  durationMonths Int
-  startDate     DateTime
-  endDate       DateTime
-  status        WarrantyStatus @default(ACTIVE)
-  createdAt     DateTime       @default(now())
-
-  booking Booking         @relation(fields: [bookingId], references: [id])
-  claims  WarrantyClaim[]
-}
-
-enum WarrantyStatus {
-  ACTIVE
-  EXPIRED
-  CLAIMED
-}
-
-model WarrantyClaim {
-  id          String   @id @default(cuid())
-  warrantyId  String
-  description String
-  photos      String[]
-  status      String   @default("submitted")
-  createdAt   DateTime @default(now())
-
-  warranty Warranty @relation(fields: [warrantyId], references: [id])
-}
-
 model Notification {
   id        String   @id @default(cuid())
   userId    String
@@ -605,7 +561,7 @@ EXPO_PUBLIC_WS_URL=wss://api.dentaroute.com
 |-------|------|------|--------|
 | **Phase 4** | 2주 | Bookings + Payments API | 예약/결제 서버 완성 |
 | **Phase 5** | 2주 | Chat WebSocket + Push Notifications | 실시간 통신 |
-| **Phase 6** | 1주 | File Upload + Reviews + Warranty API | 파일/리뷰/워런티 |
+| **Phase 6** | 1주 | File Upload + Reviews API | 파일/리뷰 |
 | **Phase 7** | 1주 | Translation + Admin + Tier Cron | 부가 기능 |
 | **Phase 8** | 2주 | 프론트엔드 API 연동 마이그레이션 | AsyncStorage → API 전환 |
 | **Phase 9** | 1주 | 테스트 + 보안 감사 + 배포 준비 | 프로덕션 배포 |
