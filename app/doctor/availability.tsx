@@ -35,7 +35,7 @@ const WEEKDAY_FULL: Record<string, string> = {
   mon: "Monday", tue: "Tuesday", wed: "Wednesday", thu: "Thursday",
   fri: "Friday", sat: "Saturday", sun: "Sunday",
 };
-const CAL_WEEKDAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+const CAL_WEEKDAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 const MONTH_NAMES = [
   "January", "February", "March", "April", "May", "June",
   "July", "August", "September", "October", "November", "December",
@@ -99,12 +99,12 @@ const getISOWeekKey = (d: Date): string => {
   return `${date.getFullYear()}-W${String(weekNum).padStart(2, "0")}`;
 };
 
-/* Calendar grid builder (Monday-based) */
+/* Calendar grid builder (Sunday-based) */
 type CalDay = { date: Date; day: number; isCurrentMonth: boolean };
 const buildCalendarDays = (year: number, month: number): CalDay[] => {
   const days: CalDay[] = [];
   const first = new Date(year, month, 1);
-  const startPad = (first.getDay() + 6) % 7;
+  const startPad = first.getDay();
   const start = new Date(year, month, 1 - startPad);
   for (let i = 0; i < 42; i++) {
     const d = new Date(start.getFullYear(), start.getMonth(), start.getDate() + i);

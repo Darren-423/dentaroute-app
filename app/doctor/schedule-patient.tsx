@@ -34,7 +34,7 @@ const WEEKDAY_KEYS = ["mon", "tue", "wed", "thu", "fri", "sat", "sun"] as const;
 const WEEKDAY_LABELS: Record<string, string> = {
   mon: "MON", tue: "TUE", wed: "WED", thu: "THU", fri: "FRI", sat: "SAT", sun: "SUN",
 };
-const CAL_WEEKDAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+const CAL_WEEKDAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 const MONTH_NAMES = [
   "January", "February", "March", "April", "May", "June",
   "July", "August", "September", "October", "November", "December",
@@ -115,8 +115,8 @@ type CalDay = { date: Date; day: number; isCurrentMonth: boolean; weekKey: strin
 const buildCalendarDays = (year: number, month: number): CalDay[] => {
   const days: CalDay[] = [];
   const first = new Date(year, month, 1);
-  // Monday-based: Mon=0
-  const startPad = (first.getDay() + 6) % 7;
+  // Sunday-based
+  const startPad = first.getDay();
   const start = new Date(year, month, 1 - startPad);
   for (let i = 0; i < 42; i++) {
     const d = new Date(start.getFullYear(), start.getMonth(), start.getDate() + i);
