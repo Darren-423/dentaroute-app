@@ -148,14 +148,22 @@ const loadOpeningHours = (profile: any): OpeningHoursData => {
 };
 
 /* Generate time blocks for a specific date from opening hours */
-const generateBlocks = (date: Date, oh: OpeningHoursData): number[] => {
+const generateBlocks = (date: Date, oh: OpeningHoursData, dateOverrides?: Record<string, boolean>): number[] => {
+  const dateStr = toDateStr(date);
+  // dateOverrides take highest priority
+  if (dateOverrides && dateStr in dateOverrides) {
+    if (!dateOverrides[dateStr]) return []; // force closed
+    // force open → use default hours for that weekday
+  }
   const dayIdx = (date.getDay() + 6) % 7; // Mon=0...Sun=6
   const dayKey = WEEKDAY_KEYS[dayIdx];
   const weekKey = getISOWeekKey(date);
   const hours = oh.weekOverrides[weekKey]?.[dayKey] ?? oh.defaultHours[dayKey];
-  if (!hours || !hours.open) return [];
+  if (!hours || (!hours.open && !(dateOverrides && dateOverrides[dateStr] === true))) return [];
   const blocks: number[] = [];
-  for (let t = hours.start; t < hours.end; t += 30) {
+  const start = hours.start || 540;
+  const end = hours.end || 1080;
+  for (let t = start; t < end; t += 30) {
     if (hours.lunch && t >= hours.lunch.start && t < hours.lunch.end) continue;
     blocks.push(t);
   }
@@ -177,6 +185,7 @@ export default function AvailabilityScreen() {
 
   // Data state
   const [openingHours, setOpeningHours] = useState<OpeningHoursData>({ defaultHours: DEFAULT_HOURS, weekOverrides: {} });
+  const [dateOverrides, setDateOverrides] = useState<Record<string, boolean>>({});
   const [blockedSlots, setBlockedSlots] = useState<Record<string, Set<number>>>({});
   const [savedKey, setSavedKey] = useState("");
   const [loaded, setLoaded] = useState(false);
@@ -188,6 +197,14 @@ export default function AvailabilityScreen() {
       const profile = (await store.getDoctorProfile()) || {};
       const oh = loadOpeningHours(profile);
       setOpeningHours(oh);
+      // Load dateOverrides
+      const dov: Record<string, boolean> = {};
+      if (profile?.openingHours?.dateOverrides) {
+        for (const [date, val] of Object.entries(profile.openingHours.dateOverrides)) {
+          if (typeof val === "boolean") dov[date] = val;
+        }
+      }
+      setDateOverrides(dov);
 
       const raw = profile.blockedSlots || {};
       const parsed: Record<string, Set<number>> = {};
@@ -228,7 +245,7 @@ export default function AvailabilityScreen() {
   /* ── time blocks for selected date ── */
   const selectedDateStr = useMemo(() => toDateStr(selectedDate), [selectedDate]);
   const dayKey = useMemo(() => getDayKey(selectedDate), [selectedDate]);
-  const timeBlocks = useMemo(() => generateBlocks(selectedDate, openingHours), [selectedDate, openingHours]);
+  const timeBlocks = useMemo(() => generateBlocks(selectedDate, openingHours, dateOverrides), [selectedDate, openingHours, dateOverrides]);
   const blockedSet = useMemo(() => blockedSlots[selectedDateStr] || new Set<number>(), [blockedSlots, selectedDateStr]);
 
   const isClosed = timeBlocks.length === 0;
@@ -334,7 +351,7 @@ export default function AvailabilityScreen() {
               const isSelected = isSameDay(cd.date, selectedDate);
               const isToday = isSameDay(cd.date, today);
               const hasBlocks = blockedDateSet.has(dateStr);
-              const dayBlocks = generateBlocks(cd.date, openingHours);
+              const dayBlocks = generateBlocks(cd.date, openingHours, dateOverrides);
               const dayClosed = dayBlocks.length === 0;
 
               return (

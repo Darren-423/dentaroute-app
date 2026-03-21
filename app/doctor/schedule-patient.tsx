@@ -54,6 +54,7 @@ type WeeklyHours = Record<string, DayHours>;
 type OpeningHoursData = {
   defaultHours: WeeklyHours;
   weekOverrides: Record<string, WeeklyHours>; // key = "2026-W12"
+  dateOverrides?: Record<string, boolean>;     // key = "2026-03-25", true = force open, false = force closed
 };
 
 /* ── default hours ── */
@@ -75,6 +76,13 @@ const fmtTime = (min: number): string => {
   return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`;
 };
 const deepClone = <T2,>(v: T2): T2 => JSON.parse(JSON.stringify(v));
+
+const toDateStr = (d: Date): string => {
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${y}-${m}-${day}`;
+};
 
 /* ── ISO week helpers ── */
 const getISOWeekKey = (d: Date): string => {
@@ -161,7 +169,14 @@ const fromLegacy = (profile: any): OpeningHoursData | null => {
         wo[wk] = wh;
       }
     }
-    return { defaultHours: dh, weekOverrides: wo };
+    const dateOv: Record<string, boolean> = {};
+    if (oh.dateOverrides && typeof oh.dateOverrides === "object") {
+      for (const [date, val] of Object.entries(oh.dateOverrides)) {
+        if (typeof val === "boolean") dateOv[date] = val;
+        else if (val && typeof (val as any).open === "boolean") dateOv[date] = (val as any).open;
+      }
+    }
+    return { defaultHours: dh, weekOverrides: wo, dateOverrides: dateOv };
   }
 
   // Legacy weeklyHours → migrate to defaultHours
@@ -177,7 +192,7 @@ const fromLegacy = (profile: any): OpeningHoursData | null => {
         lunch: d.lunch ? { start: d.lunch.start ?? 720, end: d.lunch.end ?? 780 } : null,
       } : { open: false, start: 540, end: 1080, lunch: null };
     }
-    return { defaultHours: dh, weekOverrides: {} };
+    return { defaultHours: dh, weekOverrides: {}, dateOverrides: {} };
   }
 
   // Legacy weekdayBusinessHours
@@ -199,7 +214,7 @@ const fromLegacy = (profile: any): OpeningHoursData | null => {
         lunch: v.lunchEnabled ? { start: v.lunchStartMin ?? 720, end: v.lunchEndMin ?? 780 } : null,
       };
     }
-    return { defaultHours: dh, weekOverrides: {} };
+    return { defaultHours: dh, weekOverrides: {}, dateOverrides: {} };
   }
 
   return null;
@@ -223,8 +238,8 @@ const validate = (hours: WeeklyHours): string | null => {
   return null;
 };
 
-const fullStateKey = (dh: WeeklyHours, wo: Record<string, WeeklyHours>) =>
-  JSON.stringify({ dh, wo });
+const fullStateKey = (dh: WeeklyHours, wo: Record<string, WeeklyHours>, dov: Record<string, boolean> = {}) =>
+  JSON.stringify({ dh, wo, dov });
 
 /* ================================================================ */
 export default function SchedulePatientScreen() {
@@ -233,6 +248,7 @@ export default function SchedulePatientScreen() {
   // Core data
   const [defaultHours, setDefaultHours] = useState<WeeklyHours>(deepClone(DEFAULT_HOURS));
   const [weekOverrides, setWeekOverrides] = useState<Record<string, WeeklyHours>>({});
+  const [dateOverrides, setDateOverrides] = useState<Record<string, boolean>>({});
   const [savedKey, setSavedKey] = useState("");
   const [loaded, setLoaded] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -275,9 +291,10 @@ export default function SchedulePatientScreen() {
       if (data) {
         setDefaultHours(data.defaultHours);
         setWeekOverrides(data.weekOverrides);
-        setSavedKey(fullStateKey(data.defaultHours, data.weekOverrides));
+        setDateOverrides(data.dateOverrides || {});
+        setSavedKey(fullStateKey(data.defaultHours, data.weekOverrides, data.dateOverrides || {}));
       } else {
-        setSavedKey(fullStateKey(DEFAULT_HOURS, {}));
+        setSavedKey(fullStateKey(DEFAULT_HOURS, {}, {}));
       }
       setLoaded(true);
     })();
@@ -285,8 +302,8 @@ export default function SchedulePatientScreen() {
   }, []);
 
   const isDirty = useMemo(
-    () => loaded && fullStateKey(defaultHours, weekOverrides) !== savedKey,
-    [loaded, defaultHours, weekOverrides, savedKey]
+    () => loaded && fullStateKey(defaultHours, weekOverrides, dateOverrides) !== savedKey,
+    [loaded, defaultHours, weekOverrides, dateOverrides, savedKey]
   );
   useEffect(() => { setDoctorTabSwipeBlocked(isDirty); }, [isDirty]);
 
@@ -300,16 +317,41 @@ export default function SchedulePatientScreen() {
 
   const overrideWeekKeys = useMemo(() => new Set(Object.keys(weekOverrides)), [weekOverrides]);
 
+  /* Helper: is a date "open" by default (considering week overrides + default hours) */
+  const isDateDefaultOpen = useCallback((d: Date): boolean => {
+    const dayIdx = (d.getDay() + 6) % 7;
+    const dayKey = WEEKDAY_KEYS[dayIdx];
+    const weekKey = getISOWeekKey(d);
+    const hours = weekOverrides[weekKey]?.[dayKey] ?? defaultHours[dayKey];
+    return hours?.open ?? false;
+  }, [defaultHours, weekOverrides]);
+
+  /* Tap → toggle individual date available/unavailable */
   const handleDatePress = useCallback((d: Date) => {
+    const dateStr = toDateStr(d);
+    setDateOverrides((prev) => {
+      const next = { ...prev };
+      if (dateStr in next) {
+        // Already overridden → remove override (back to default)
+        delete next[dateStr];
+      } else {
+        // Not overridden → set opposite of default
+        const defaultOpen = isDateDefaultOpen(d);
+        next[dateStr] = !defaultOpen;
+      }
+      return next;
+    });
+  }, [isDateDefaultOpen]);
+
+  /* Long press → select week for weekly override editing */
+  const handleDateLongPress = useCallback((d: Date) => {
     const weekKey = getISOWeekKey(d);
     if (selectedWeek === weekKey) {
-      // Deselect → back to default
       setSelectedWeek(null);
       setSelectedWeekDate(null);
     } else {
       setSelectedWeek(weekKey);
       setSelectedWeekDate(d);
-      // If no override exists for this week, create one from default
       setWeekOverrides((prev) => {
         if (prev[weekKey]) return prev;
         return { ...prev, [weekKey]: deepClone(defaultHours) };
@@ -348,6 +390,36 @@ export default function SchedulePatientScreen() {
       return m + dir;
     });
   };
+
+  /* ── month actions ── */
+  const selectAllMonth = useCallback(() => {
+    const daysInMonth = new Date(viewYear, viewMonth + 1, 0).getDate();
+    setDateOverrides((prev) => {
+      const next = { ...prev };
+      for (let d = 1; d <= daysInMonth; d++) {
+        const date = new Date(viewYear, viewMonth, d);
+        const dateStr = toDateStr(date);
+        if (!isDateDefaultOpen(date)) {
+          next[dateStr] = true; // force open dates that are default-closed
+        } else {
+          delete next[dateStr]; // remove any "force closed" override
+        }
+      }
+      return next;
+    });
+  }, [viewYear, viewMonth, isDateDefaultOpen]);
+
+  const resetMonth = useCallback(() => {
+    const daysInMonth = new Date(viewYear, viewMonth + 1, 0).getDate();
+    setDateOverrides((prev) => {
+      const next = { ...prev };
+      for (let d = 1; d <= daysInMonth; d++) {
+        const dateStr = toDateStr(new Date(viewYear, viewMonth, d));
+        delete next[dateStr];
+      }
+      return next;
+    });
+  }, [viewYear, viewMonth]);
 
   /* ── day mutations ── */
   const toggleDay = (day: string) => {
@@ -459,13 +531,20 @@ export default function SchedulePatientScreen() {
           cleanOverrides[wk] = wh;
         }
       }
+      // Clean dateOverrides: remove past dates
+      const todayStr = toDateStr(today);
+      const cleanDateOverrides: Record<string, boolean> = {};
+      for (const [date, val] of Object.entries(dateOverrides)) {
+        if (date >= todayStr) cleanDateOverrides[date] = val;
+      }
       await store.saveDoctorProfile({
         ...profile,
-        openingHours: { defaultHours, weekOverrides: cleanOverrides },
+        openingHours: { defaultHours, weekOverrides: cleanOverrides, dateOverrides: cleanDateOverrides },
         weeklyHours: defaultHours, // backward compat
       });
       setWeekOverrides(cleanOverrides);
-      setSavedKey(fullStateKey(defaultHours, cleanOverrides));
+      setDateOverrides(cleanDateOverrides);
+      setSavedKey(fullStateKey(defaultHours, cleanOverrides, cleanDateOverrides));
       setDoctorTabSwipeBlocked(false);
       Alert.alert("Saved", "Your opening hours have been updated.");
     } catch (e) {
@@ -499,7 +578,7 @@ export default function SchedulePatientScreen() {
         {/* ── Calendar ── */}
         <View style={s.section}>
           <Text style={s.sectionTitle}>Calendar</Text>
-          <Text style={s.sectionHint}>Tap a date to customize that week. Tap again to go back to default.</Text>
+          <Text style={s.sectionHint}>Tap a date to toggle available/unavailable. Long press to edit that week's hours.</Text>
 
           <View style={s.calCard}>
             {/* Month nav */}
@@ -525,20 +604,32 @@ export default function SchedulePatientScreen() {
             {/* Day grid */}
             <View style={s.calGrid}>
               {calDays.map((cd, idx) => {
+                const dateStr = toDateStr(cd.date);
                 const inSelectedWeek = selectedWeekRange
                   ? cd.date >= selectedWeekRange.start && cd.date <= selectedWeekRange.end
                   : false;
-                const hasOverride = overrideWeekKeys.has(cd.weekKey);
+                const hasWeekOverride = overrideWeekKeys.has(cd.weekKey);
                 const isToday = isSameDay(cd.date, today);
                 const isWeekStart = inSelectedWeek && selectedWeekRange && isSameDay(cd.date, selectedWeekRange.start);
                 const isWeekEnd = inSelectedWeek && selectedWeekRange && isSameDay(cd.date, selectedWeekRange.end);
+
+                // Date override status
+                const hasDateOverride = dateStr in dateOverrides;
+                const dateForceOpen = hasDateOverride && dateOverrides[dateStr] === true;
+                const dateForceClosed = hasDateOverride && dateOverrides[dateStr] === false;
+                // Default open status (from weekly/week-override hours)
+                const defaultOpen = isDateDefaultOpen(cd.date);
+                // Effective status
+                const effectiveOpen = hasDateOverride ? dateOverrides[dateStr] : defaultOpen;
 
                 return (
                   <TouchableOpacity
                     key={idx}
                     style={s.calDayCell}
                     onPress={() => handleDatePress(cd.date)}
+                    onLongPress={() => handleDateLongPress(cd.date)}
                     activeOpacity={0.6}
+                    delayLongPress={400}
                   >
                     {/* Week highlight band */}
                     {inSelectedWeek && (
@@ -552,19 +643,30 @@ export default function SchedulePatientScreen() {
                       s.calDayInner,
                       !cd.isCurrentMonth && s.calDayOther,
                       isToday && !inSelectedWeek && s.calDayToday,
+                      cd.isCurrentMonth && dateForceClosed && s.calDayForceClosed,
+                      cd.isCurrentMonth && dateForceOpen && !defaultOpen && s.calDayForceOpen,
                     ]}>
                       <Text style={[
                         s.calDayText,
                         !cd.isCurrentMonth && s.calDayTextOther,
                         inSelectedWeek && s.calDayTextSelected,
                         isToday && !inSelectedWeek && s.calDayTextToday,
+                        cd.isCurrentMonth && dateForceClosed && s.calDayTextForceClosed,
+                        cd.isCurrentMonth && dateForceOpen && !defaultOpen && s.calDayTextForceOpen,
                       ]}>
                         {cd.day}
                       </Text>
-                      {hasOverride && !inSelectedWeek && cd.isCurrentMonth && (
-                        <View style={s.calOverrideDot} />
-                      )}
                     </View>
+                    {/* Override dots */}
+                    {cd.isCurrentMonth && !inSelectedWeek && dateForceOpen && !defaultOpen && (
+                      <View style={s.calDateDotGreen} />
+                    )}
+                    {cd.isCurrentMonth && !inSelectedWeek && dateForceClosed && (
+                      <View style={s.calDateDotRed} />
+                    )}
+                    {hasWeekOverride && !hasDateOverride && !inSelectedWeek && cd.isCurrentMonth && (
+                      <View style={s.calOverrideDot} />
+                    )}
                   </TouchableOpacity>
                 );
               })}
@@ -582,6 +684,18 @@ export default function SchedulePatientScreen() {
                 </TouchableOpacity>
               </View>
             )}
+
+            {/* Month action buttons */}
+            <View style={s.monthActions}>
+              <TouchableOpacity style={s.monthBtn} onPress={selectAllMonth} activeOpacity={0.7}>
+                <Text style={s.monthBtnIcon}>✓</Text>
+                <Text style={s.monthBtnText}>Select All</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={s.monthBtnReset} onPress={resetMonth} activeOpacity={0.7}>
+                <Text style={s.monthBtnResetIcon}>↺</Text>
+                <Text style={s.monthBtnResetText}>Reset Month</Text>
+              </TouchableOpacity>
+            </View>
           </View>
         </View>
 
@@ -732,6 +846,7 @@ export default function SchedulePatientScreen() {
         <Text style={s.bottomMeta}>
           {isDirty ? "Unsaved changes" : `${openDays.length} day(s) configured`}
           {Object.keys(weekOverrides).length > 0 ? ` · ${Object.keys(weekOverrides).length} week override(s)` : ""}
+          {Object.keys(dateOverrides).length > 0 ? ` · ${Object.keys(dateOverrides).length} date override(s)` : ""}
         </Text>
         <TouchableOpacity
           style={[s.saveBtn, (!isDirty || saving) && s.saveBtnDisabled]}
@@ -836,6 +951,26 @@ const s = StyleSheet.create({
   calDayTextOther: { color: T.textMuted },
   calDayTextSelected: { color: T.teal, fontWeight: "800" },
   calDayTextToday: { color: T.teal, fontWeight: "700" },
+  calDayForceClosed: { backgroundColor: "rgba(239,68,68,0.08)" },
+  calDayForceOpen: { backgroundColor: "rgba(22,163,74,0.10)" },
+  calDayTextForceClosed: { color: "#be123c", textDecorationLine: "line-through" },
+  calDayTextForceOpen: { color: "#16a34a", fontWeight: "800" },
+  calDateDotGreen: {
+    position: "absolute",
+    bottom: 2,
+    width: 5,
+    height: 5,
+    borderRadius: 3,
+    backgroundColor: "#16a34a",
+  },
+  calDateDotRed: {
+    position: "absolute",
+    bottom: 2,
+    width: 5,
+    height: 5,
+    borderRadius: 3,
+    backgroundColor: "#ef4444",
+  },
   calOverrideDot: {
     position: "absolute",
     bottom: 2,
@@ -867,6 +1002,37 @@ const s = StyleSheet.create({
     borderColor: T.border,
   },
   calResetText: { fontSize: 12, fontWeight: "700", color: T.redText },
+
+  /* Month action buttons */
+  monthActions: { flexDirection: "row", gap: 8 },
+  monthBtn: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 6,
+    backgroundColor: T.tealSoft,
+    borderRadius: 10,
+    paddingVertical: 10,
+    borderWidth: 1,
+    borderColor: "rgba(15,118,110,0.15)",
+  },
+  monthBtnIcon: { fontSize: 14, fontWeight: "800", color: T.teal },
+  monthBtnText: { fontSize: 13, fontWeight: "700", color: T.teal },
+  monthBtnReset: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 6,
+    backgroundColor: T.redSoft,
+    borderRadius: 10,
+    paddingVertical: 10,
+    borderWidth: 1,
+    borderColor: "rgba(190,18,60,0.12)",
+  },
+  monthBtnResetIcon: { fontSize: 14, fontWeight: "800", color: T.redText },
+  monthBtnResetText: { fontSize: 13, fontWeight: "700", color: T.redText },
 
   /* Schedule section header */
   scheduleHeader: { flexDirection: "row", alignItems: "center", gap: 10, flexWrap: "wrap" },
