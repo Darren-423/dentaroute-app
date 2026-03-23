@@ -376,6 +376,8 @@ export default function SchedulePatientScreen() {
   };
 
   /* ── month toggle (select / deselect all) ── */
+  // "All selected" means every date in the month is effectively open
+  // (including default-open weekdays + any force-open overrides for closed days)
   const isAllMonthSelected = useMemo(() => {
     const daysInMonth = new Date(viewYear, viewMonth + 1, 0).getDate();
     for (let d = 1; d <= daysInMonth; d++) {
@@ -383,7 +385,6 @@ export default function SchedulePatientScreen() {
       const dateStr = toDateStr(date);
       const hasOverride = dateStr in dateOverrides;
       const defaultOpen = isDateDefaultOpen(date);
-      // A date is "selected" if it's effectively open
       const effectiveOpen = hasOverride ? dateOverrides[dateStr] : defaultOpen;
       if (!effectiveOpen) return false;
     }
@@ -393,7 +394,8 @@ export default function SchedulePatientScreen() {
   const toggleMonth = useCallback(() => {
     const daysInMonth = new Date(viewYear, viewMonth + 1, 0).getDate();
     if (isAllMonthSelected) {
-      // Deselect: reset all overrides for this month (back to defaults)
+      // Deselect: only remove force-open overrides (back to defaults)
+      // Default-open weekdays stay selected
       setDateOverrides((prev) => {
         const next = { ...prev };
         for (let d = 1; d <= daysInMonth; d++) {
@@ -403,7 +405,7 @@ export default function SchedulePatientScreen() {
         return next;
       });
     } else {
-      // Select all: force every date in the month to open
+      // Select all: force every closed date open
       setDateOverrides((prev) => {
         const next = { ...prev };
         for (let d = 1; d <= daysInMonth; d++) {
@@ -614,13 +616,9 @@ export default function SchedulePatientScreen() {
                 const isWeekStart = inSelectedWeek && selectedWeekRange && isSameDay(cd.date, selectedWeekRange.start);
                 const isWeekEnd = inSelectedWeek && selectedWeekRange && isSameDay(cd.date, selectedWeekRange.end);
 
-                // Date override status
+                // Effective open status (override > default weekly hours)
                 const hasDateOverride = dateStr in dateOverrides;
-                const dateForceOpen = hasDateOverride && dateOverrides[dateStr] === true;
-                const dateForceClosed = hasDateOverride && dateOverrides[dateStr] === false;
-                // Default open status (from weekly/week-override hours)
                 const defaultOpen = isDateDefaultOpen(cd.date);
-                // Effective status
                 const effectiveOpen = hasDateOverride ? dateOverrides[dateStr] : defaultOpen;
 
                 return (
