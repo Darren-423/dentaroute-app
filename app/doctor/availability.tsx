@@ -415,15 +415,16 @@ export default function AvailabilityScreen() {
           </View>
         ) : (
           <>
-            {/* Quick actions */}
-            <View style={s.quickRow}>
-              <TouchableOpacity style={s.quickBtn} onPress={blockAll} activeOpacity={0.7}>
-                <Text style={s.quickBtnText}>Block All</Text>
-              </TouchableOpacity>
-              <TouchableOpacity style={s.quickBtn} onPress={unblockAll} activeOpacity={0.7}>
-                <Text style={s.quickBtnText}>Unblock All</Text>
-              </TouchableOpacity>
-            </View>
+            {/* Quick toggle */}
+            <TouchableOpacity
+              style={[s.quickToggle, blockedCount === timeBlocks.length && s.quickToggleActive]}
+              onPress={blockedCount === timeBlocks.length ? unblockAll : blockAll}
+              activeOpacity={0.7}
+            >
+              <Text style={[s.quickToggleText, blockedCount === timeBlocks.length && s.quickToggleTextActive]}>
+                {blockedCount === timeBlocks.length ? "Unblock All" : "Block All"}
+              </Text>
+            </TouchableOpacity>
 
             {/* Grid */}
             <View style={s.blockGrid}>
@@ -512,10 +513,11 @@ const s = StyleSheet.create({
   closedTitle: { fontSize: 18, fontWeight: "700", color: T.text },
   closedSub: { fontSize: 14, color: T.textSec },
 
-  /* Quick actions */
-  quickRow: { flexDirection: "row", gap: 10 },
-  quickBtn: { flex: 1, backgroundColor: T.white, borderRadius: 12, borderWidth: 1, borderColor: T.border, paddingVertical: 10, alignItems: "center" },
-  quickBtnText: { fontSize: 14, fontWeight: "700", color: T.teal },
+  /* Quick toggle */
+  quickToggle: { backgroundColor: T.white, borderRadius: 12, borderWidth: 1, borderColor: T.border, paddingVertical: 10, alignItems: "center" },
+  quickToggleActive: { backgroundColor: T.redSoft, borderColor: "rgba(190,18,60,0.12)" },
+  quickToggleText: { fontSize: 14, fontWeight: "700", color: T.teal },
+  quickToggleTextActive: { color: T.redText },
 
   /* Block grid */
   blockGrid: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
