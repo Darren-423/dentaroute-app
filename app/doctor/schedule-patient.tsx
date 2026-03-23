@@ -343,22 +343,6 @@ export default function SchedulePatientScreen() {
     });
   }, [isDateDefaultOpen]);
 
-  /* Long press → select week for weekly override editing */
-  const handleDateLongPress = useCallback((d: Date) => {
-    const weekKey = getISOWeekKey(d);
-    if (selectedWeek === weekKey) {
-      setSelectedWeek(null);
-      setSelectedWeekDate(null);
-    } else {
-      setSelectedWeek(weekKey);
-      setSelectedWeekDate(d);
-      setWeekOverrides((prev) => {
-        if (prev[weekKey]) return prev;
-        return { ...prev, [weekKey]: deepClone(defaultHours) };
-      });
-    }
-  }, [selectedWeek, defaultHours]);
-
   const clearWeekOverride = useCallback(() => {
     if (!selectedWeek) return;
     Alert.alert(
@@ -391,35 +375,52 @@ export default function SchedulePatientScreen() {
     });
   };
 
-  /* ── month actions ── */
-  const selectAllMonth = useCallback(() => {
+  /* ── month toggle (select / deselect all) ── */
+  const isAllMonthSelected = useMemo(() => {
     const daysInMonth = new Date(viewYear, viewMonth + 1, 0).getDate();
-    setDateOverrides((prev) => {
-      const next = { ...prev };
-      for (let d = 1; d <= daysInMonth; d++) {
-        const date = new Date(viewYear, viewMonth, d);
-        const dateStr = toDateStr(date);
-        if (!isDateDefaultOpen(date)) {
-          next[dateStr] = true; // force open dates that are default-closed
-        } else {
-          delete next[dateStr]; // remove any "force closed" override
-        }
-      }
-      return next;
-    });
-  }, [viewYear, viewMonth, isDateDefaultOpen]);
+    for (let d = 1; d <= daysInMonth; d++) {
+      const date = new Date(viewYear, viewMonth, d);
+      const dateStr = toDateStr(date);
+      const hasOverride = dateStr in dateOverrides;
+      const defaultOpen = isDateDefaultOpen(date);
+      // A date is "selected" if it's effectively open
+      const effectiveOpen = hasOverride ? dateOverrides[dateStr] : defaultOpen;
+      if (!effectiveOpen) return false;
+    }
+    return true;
+  }, [viewYear, viewMonth, dateOverrides, isDateDefaultOpen]);
 
-  const resetMonth = useCallback(() => {
+  const toggleMonth = useCallback(() => {
     const daysInMonth = new Date(viewYear, viewMonth + 1, 0).getDate();
-    setDateOverrides((prev) => {
-      const next = { ...prev };
-      for (let d = 1; d <= daysInMonth; d++) {
-        const dateStr = toDateStr(new Date(viewYear, viewMonth, d));
-        delete next[dateStr];
-      }
-      return next;
-    });
-  }, [viewYear, viewMonth]);
+    if (isAllMonthSelected) {
+      // Deselect: reset all overrides for this month (back to defaults)
+      setDateOverrides((prev) => {
+        const next = { ...prev };
+        for (let d = 1; d <= daysInMonth; d++) {
+          const dateStr = toDateStr(new Date(viewYear, viewMonth, d));
+          delete next[dateStr];
+        }
+        return next;
+      });
+    } else {
+      // Select all: force every date in the month to open
+      setDateOverrides((prev) => {
+        const next = { ...prev };
+        for (let d = 1; d <= daysInMonth; d++) {
+          const date = new Date(viewYear, viewMonth, d);
+          const dateStr = toDateStr(date);
+          const defaultOpen = isDateDefaultOpen(date);
+          if (!defaultOpen) {
+            next[dateStr] = true; // force open
+          } else {
+            // Already default-open, remove any force-closed override
+            delete next[dateStr];
+          }
+        }
+        return next;
+      });
+    }
+  }, [viewYear, viewMonth, isAllMonthSelected, isDateDefaultOpen]);
 
   /* ── day mutations ── */
   const toggleDay = (day: string) => {
@@ -578,7 +579,7 @@ export default function SchedulePatientScreen() {
         {/* ── Calendar ── */}
         <View style={s.section}>
           <Text style={s.sectionTitle}>Calendar</Text>
-          <Text style={s.sectionHint}>Tap a date to toggle available/unavailable. Long press to edit that week's hours.</Text>
+          <Text style={s.sectionHint}>Tap a date to toggle available/unavailable.</Text>
 
           <View style={s.calCard}>
             {/* Month nav */}
@@ -627,9 +628,7 @@ export default function SchedulePatientScreen() {
                     key={idx}
                     style={s.calDayCell}
                     onPress={() => handleDatePress(cd.date)}
-                    onLongPress={() => handleDateLongPress(cd.date)}
                     activeOpacity={0.6}
-                    delayLongPress={400}
                   >
                     {/* Week highlight band */}
                     {inSelectedWeek && (
@@ -642,31 +641,19 @@ export default function SchedulePatientScreen() {
                     <View style={[
                       s.calDayInner,
                       !cd.isCurrentMonth && s.calDayOther,
-                      isToday && !inSelectedWeek && s.calDayToday,
-                      cd.isCurrentMonth && dateForceClosed && s.calDayForceClosed,
-                      cd.isCurrentMonth && dateForceOpen && !defaultOpen && s.calDayForceOpen,
+                      isToday && !inSelectedWeek && !effectiveOpen && s.calDayToday,
+                      cd.isCurrentMonth && effectiveOpen && s.calDayOpen,
                     ]}>
                       <Text style={[
                         s.calDayText,
                         !cd.isCurrentMonth && s.calDayTextOther,
                         inSelectedWeek && s.calDayTextSelected,
-                        isToday && !inSelectedWeek && s.calDayTextToday,
-                        cd.isCurrentMonth && dateForceClosed && s.calDayTextForceClosed,
-                        cd.isCurrentMonth && dateForceOpen && !defaultOpen && s.calDayTextForceOpen,
+                        isToday && !inSelectedWeek && !effectiveOpen && s.calDayTextToday,
+                        cd.isCurrentMonth && effectiveOpen && s.calDayTextOpen,
                       ]}>
                         {cd.day}
                       </Text>
                     </View>
-                    {/* Override dots */}
-                    {cd.isCurrentMonth && !inSelectedWeek && dateForceOpen && !defaultOpen && (
-                      <View style={s.calDateDotGreen} />
-                    )}
-                    {cd.isCurrentMonth && !inSelectedWeek && dateForceClosed && (
-                      <View style={s.calDateDotRed} />
-                    )}
-                    {hasWeekOverride && !hasDateOverride && !inSelectedWeek && cd.isCurrentMonth && (
-                      <View style={s.calOverrideDot} />
-                    )}
                   </TouchableOpacity>
                 );
               })}
@@ -685,17 +672,19 @@ export default function SchedulePatientScreen() {
               </View>
             )}
 
-            {/* Month action buttons */}
-            <View style={s.monthActions}>
-              <TouchableOpacity style={s.monthBtn} onPress={selectAllMonth} activeOpacity={0.7}>
-                <Text style={s.monthBtnIcon}>✓</Text>
-                <Text style={s.monthBtnText}>Select All</Text>
-              </TouchableOpacity>
-              <TouchableOpacity style={s.monthBtnReset} onPress={resetMonth} activeOpacity={0.7}>
-                <Text style={s.monthBtnResetIcon}>↺</Text>
-                <Text style={s.monthBtnResetText}>Reset Month</Text>
-              </TouchableOpacity>
-            </View>
+            {/* Month toggle button */}
+            <TouchableOpacity
+              style={[s.monthToggleBtn, isAllMonthSelected && s.monthToggleBtnActive]}
+              onPress={toggleMonth}
+              activeOpacity={0.7}
+            >
+              <Text style={[s.monthToggleIcon, isAllMonthSelected && s.monthToggleIconActive]}>
+                {isAllMonthSelected ? "↺" : "✓"}
+              </Text>
+              <Text style={[s.monthToggleText, isAllMonthSelected && s.monthToggleTextActive]}>
+                {isAllMonthSelected ? "Deselect This Month" : "Select This Month"}
+              </Text>
+            </TouchableOpacity>
           </View>
         </View>
 
@@ -951,34 +940,8 @@ const s = StyleSheet.create({
   calDayTextOther: { color: T.textMuted },
   calDayTextSelected: { color: T.teal, fontWeight: "800" },
   calDayTextToday: { color: T.teal, fontWeight: "700" },
-  calDayForceClosed: { backgroundColor: "rgba(239,68,68,0.08)" },
-  calDayForceOpen: { backgroundColor: "rgba(22,163,74,0.10)" },
-  calDayTextForceClosed: { color: "#be123c", textDecorationLine: "line-through" },
-  calDayTextForceOpen: { color: "#16a34a", fontWeight: "800" },
-  calDateDotGreen: {
-    position: "absolute",
-    bottom: 2,
-    width: 5,
-    height: 5,
-    borderRadius: 3,
-    backgroundColor: "#16a34a",
-  },
-  calDateDotRed: {
-    position: "absolute",
-    bottom: 2,
-    width: 5,
-    height: 5,
-    borderRadius: 3,
-    backgroundColor: "#ef4444",
-  },
-  calOverrideDot: {
-    position: "absolute",
-    bottom: 2,
-    width: 5,
-    height: 5,
-    borderRadius: 3,
-    backgroundColor: "#f59e0b",
-  },
+  calDayOpen: { backgroundColor: "#16a34a" },
+  calDayTextOpen: { color: "#fff", fontWeight: "800" },
   calSelectedBar: {
     flexDirection: "row",
     alignItems: "center",
@@ -1003,10 +966,8 @@ const s = StyleSheet.create({
   },
   calResetText: { fontSize: 12, fontWeight: "700", color: T.redText },
 
-  /* Month action buttons */
-  monthActions: { flexDirection: "row", gap: 8 },
-  monthBtn: {
-    flex: 1,
+  /* Month toggle button */
+  monthToggleBtn: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
@@ -1017,22 +978,14 @@ const s = StyleSheet.create({
     borderWidth: 1,
     borderColor: "rgba(15,118,110,0.15)",
   },
-  monthBtnIcon: { fontSize: 14, fontWeight: "800", color: T.teal },
-  monthBtnText: { fontSize: 13, fontWeight: "700", color: T.teal },
-  monthBtnReset: {
-    flex: 1,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 6,
+  monthToggleBtnActive: {
     backgroundColor: T.redSoft,
-    borderRadius: 10,
-    paddingVertical: 10,
-    borderWidth: 1,
     borderColor: "rgba(190,18,60,0.12)",
   },
-  monthBtnResetIcon: { fontSize: 14, fontWeight: "800", color: T.redText },
-  monthBtnResetText: { fontSize: 13, fontWeight: "700", color: T.redText },
+  monthToggleIcon: { fontSize: 14, fontWeight: "800", color: T.teal },
+  monthToggleIconActive: { color: T.redText },
+  monthToggleText: { fontSize: 13, fontWeight: "700", color: T.teal },
+  monthToggleTextActive: { color: T.redText },
 
   /* Schedule section header */
   scheduleHeader: { flexDirection: "row", alignItems: "center", gap: 10, flexWrap: "wrap" },
