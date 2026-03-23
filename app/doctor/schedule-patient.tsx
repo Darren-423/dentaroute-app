@@ -375,54 +375,42 @@ export default function SchedulePatientScreen() {
     });
   };
 
-  /* ── month toggle (select / deselect all) ── */
-  // "All selected" means every date in the month is effectively open
-  // (including default-open weekdays + any force-open overrides for closed days)
-  const isAllMonthSelected = useMemo(() => {
+  /* ── month toggle — only affects clinic-hours days ── */
+  // Check if all default-open (clinic hours) days in this month are effectively open
+  const isClinicDaysAllOpen = useMemo(() => {
     const daysInMonth = new Date(viewYear, viewMonth + 1, 0).getDate();
+    let hasClinicDay = false;
     for (let d = 1; d <= daysInMonth; d++) {
       const date = new Date(viewYear, viewMonth, d);
+      if (!isDateDefaultOpen(date)) continue; // skip non-clinic days
+      hasClinicDay = true;
       const dateStr = toDateStr(date);
       const hasOverride = dateStr in dateOverrides;
-      const defaultOpen = isDateDefaultOpen(date);
-      const effectiveOpen = hasOverride ? dateOverrides[dateStr] : defaultOpen;
+      const effectiveOpen = hasOverride ? dateOverrides[dateStr] : true; // default is open
       if (!effectiveOpen) return false;
     }
-    return true;
+    return hasClinicDay; // false if no clinic days exist
   }, [viewYear, viewMonth, dateOverrides, isDateDefaultOpen]);
 
   const toggleMonth = useCallback(() => {
     const daysInMonth = new Date(viewYear, viewMonth + 1, 0).getDate();
-    if (isAllMonthSelected) {
-      // Deselect: only remove force-open overrides (back to defaults)
-      // Default-open weekdays stay selected
-      setDateOverrides((prev) => {
-        const next = { ...prev };
-        for (let d = 1; d <= daysInMonth; d++) {
-          const dateStr = toDateStr(new Date(viewYear, viewMonth, d));
+    setDateOverrides((prev) => {
+      const next = { ...prev };
+      for (let d = 1; d <= daysInMonth; d++) {
+        const date = new Date(viewYear, viewMonth, d);
+        if (!isDateDefaultOpen(date)) continue; // skip non-clinic days
+        const dateStr = toDateStr(date);
+        if (isClinicDaysAllOpen) {
+          // Deselect: force clinic-hours days closed
+          next[dateStr] = false;
+        } else {
+          // Select: remove any force-closed override (back to default open)
           delete next[dateStr];
         }
-        return next;
-      });
-    } else {
-      // Select all: force every closed date open
-      setDateOverrides((prev) => {
-        const next = { ...prev };
-        for (let d = 1; d <= daysInMonth; d++) {
-          const date = new Date(viewYear, viewMonth, d);
-          const dateStr = toDateStr(date);
-          const defaultOpen = isDateDefaultOpen(date);
-          if (!defaultOpen) {
-            next[dateStr] = true; // force open
-          } else {
-            // Already default-open, remove any force-closed override
-            delete next[dateStr];
-          }
-        }
-        return next;
-      });
-    }
-  }, [viewYear, viewMonth, isAllMonthSelected, isDateDefaultOpen]);
+      }
+      return next;
+    });
+  }, [viewYear, viewMonth, isClinicDaysAllOpen, isDateDefaultOpen]);
 
   /* ── day mutations ── */
   const toggleDay = (day: string) => {
@@ -672,15 +660,15 @@ export default function SchedulePatientScreen() {
 
             {/* Month toggle button */}
             <TouchableOpacity
-              style={[s.monthToggleBtn, isAllMonthSelected && s.monthToggleBtnActive]}
+              style={[s.monthToggleBtn, isClinicDaysAllOpen && s.monthToggleBtnActive]}
               onPress={toggleMonth}
               activeOpacity={0.7}
             >
-              <Text style={[s.monthToggleIcon, isAllMonthSelected && s.monthToggleIconActive]}>
-                {isAllMonthSelected ? "↺" : "✓"}
+              <Text style={[s.monthToggleIcon, isClinicDaysAllOpen && s.monthToggleIconActive]}>
+                {isClinicDaysAllOpen ? "↺" : "✓"}
               </Text>
-              <Text style={[s.monthToggleText, isAllMonthSelected && s.monthToggleTextActive]}>
-                {isAllMonthSelected ? "Deselect This Month" : "Select This Month"}
+              <Text style={[s.monthToggleText, isClinicDaysAllOpen && s.monthToggleTextActive]}>
+                {isClinicDaysAllOpen ? "Deselect This Month" : "Select This Month"}
               </Text>
             </TouchableOpacity>
           </View>
