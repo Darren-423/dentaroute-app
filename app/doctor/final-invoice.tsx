@@ -188,8 +188,6 @@ export default function DoctorFinalInvoiceScreen() {
     }
     alertLines.push("");
     alertLines.push(`Patient Pays: $${doctorViewDue.toLocaleString()}`);
-    alertLines.push(`Platform Fee (${tierLabel} ${Math.round(feeRate * 100)}%): -$${platformFee.toLocaleString()}`);
-    alertLines.push(`Your Earnings: $${doctorEarnings.toLocaleString()}`);
     if (remainingVisits > 0) {
       alertLines.push("");
       alertLines.push(`${remainingVisits} visit${remainingVisits > 1 ? "s" : ""} remaining after this.`);
@@ -357,10 +355,6 @@ export default function DoctorFinalInvoiceScreen() {
               <Text style={[s.receiptLabel, { fontWeight: "700", color: SharedColors.navy }]}>Patient Pays</Text>
               <Text style={[s.receiptValue, { fontSize: 18, fontWeight: "900", color: DoctorTheme.primary }]}>${doctorViewDue.toLocaleString()}</Text>
             </View>
-            <View style={[s.receiptRow, { backgroundColor: "rgba(16,185,129,0.06)", marginHorizontal: -16, paddingHorizontal: 16, paddingVertical: 8, borderRadius: 8 }]}>
-              <Text style={[s.receiptLabel, { color: SharedColors.green, fontWeight: "600" }]}>💰 Your Earnings</Text>
-              <Text style={[s.receiptValue, { color: SharedColors.green, fontWeight: "700" }]}>${doctorEarnings.toLocaleString()}</Text>
-            </View>
           </View>
 
           {remainingVisits > 0 && (
@@ -436,11 +430,6 @@ export default function DoctorFinalInvoiceScreen() {
               <Text style={s.patientName}>{casePatientName}</Text>
               <Text style={s.patientCase}>Case #{booking?.caseId}</Text>
             </View>
-            {isFirstVisit && (
-              <View style={s.depositBadge}>
-                <Text style={s.depositBadgeText}>10% deposit paid</Text>
-              </View>
-            )}
           </View>
 
           {/* ── Original Treatment Plan (Visit 2+ only) ── */}
@@ -777,21 +766,6 @@ export default function DoctorFinalInvoiceScreen() {
               <Text style={s.balanceValue}>${doctorViewDue.toLocaleString()}</Text>
             </View>
 
-            {/* Platform Fee & Earnings */}
-            <View style={s.summaryDivider} />
-            <View style={s.summaryRow}>
-              <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
-                <View style={[s.tierBadgeSm, { backgroundColor: tierColor }]}>
-                  <Text style={s.tierBadgeSmText}>{tierLabel}</Text>
-                </View>
-                <Text style={[s.summaryLabel, { color: SharedColors.navySec }]}>Platform Fee ({Math.round(feeRate * 100)}%)</Text>
-              </View>
-              <Text style={[s.summaryValue, { color: SharedColors.red }]}>- ${platformFee.toLocaleString()}</Text>
-            </View>
-            <View style={[s.summaryRow, { backgroundColor: "rgba(16,185,129,0.06)", marginHorizontal: -12, paddingHorizontal: 12, paddingVertical: 8, borderRadius: 8, marginTop: 4 }]}>
-              <Text style={[s.balanceLabel, { color: SharedColors.green }]}>💰 Your Earnings</Text>
-              <Text style={[s.balanceValue, { color: SharedColors.green }]}>${doctorEarnings.toLocaleString()}</Text>
-            </View>
 
             {/* Remaining visits info */}
             {remainingVisits > 0 && (
