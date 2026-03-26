@@ -240,7 +240,7 @@ export default function PatientCreateAccountScreen() {
       //   return;
       // }
 
-      router.replace("/patient/basic-info" as any);
+      router.replace("/patient/dashboard" as any);
     } catch (err) {
       setApiError("Cannot connect to server. Please check your internet.");
     } finally {

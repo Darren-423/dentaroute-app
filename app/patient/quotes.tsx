@@ -157,7 +157,7 @@ export default function PatientQuotesScreen() {
           </View>
         )}
 
-        <View style={{ backgroundColor: "#f1f5f9", borderRadius: 8, padding: 10, marginBottom: 12, borderWidth: 1, borderColor: SharedColors.border }}><Text style={{ fontSize: 11, color: SharedColors.slate, lineHeight: 16 }}>Quotes are estimates only. Actual treatment costs may change after in-person examination. Concourse does not guarantee treatment outcomes.</Text></View>
+        <View style={{ backgroundColor: "#FEF3C7", borderRadius: 8, padding: 10, marginBottom: 12, borderWidth: 1, borderColor: "#FCD34D" }}><Text style={{ fontSize: 11, color: "#92400E", lineHeight: 16 }}>These are preliminary suggestions based on your photos. Actual treatment and costs are finalized after in-person examination. Concourse does not guarantee treatment outcomes.</Text></View>
 
         {quotes.length === 0 ? (
           /* Waiting State */

@@ -129,7 +129,7 @@ export default function PatientReviewScreen() {
     <View style={s.container}>
       <LinearGradient colors={[...PatientTheme.gradient]} style={s.header}>
         <View style={s.headerRow}>
-          <TouchableOpacity style={s.backBtn} onPress={() => router.back()}>
+          <TouchableOpacity style={s.backBtn} onPress={() => router.replace("/patient/upload" as any)}>
             <Text style={s.backArrow}>‹</Text>
           </TouchableOpacity>
           <View style={s.headerCenter}>

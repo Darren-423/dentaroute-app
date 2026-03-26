@@ -199,6 +199,11 @@ export default function PatientPaymentScreen() {
         </LinearGradient>
 
         <View style={s.content}>
+          <View style={{ backgroundColor: "#FEF3C7", borderRadius: 8, padding: 10, marginBottom: 12, borderWidth: 1, borderColor: "#FCD34D" }}>
+            <Text style={{ fontSize: 11, color: "#92400E", lineHeight: 16 }}>
+              You're booking a consultation. The treatment plan may be adjusted after your in-person exam.
+            </Text>
+          </View>
           {/* Booking summary */}
           {(quote || dentistNameStr) && (
             <View style={s.summaryCard}>

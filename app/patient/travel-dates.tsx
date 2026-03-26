@@ -1,5 +1,5 @@
 import { LinearGradient } from "expo-linear-gradient";
-import { router } from "expo-router";
+import { router, useLocalSearchParams } from "expo-router";
 import React, { useMemo, useState } from "react";
 import {
   ActivityIndicator,
@@ -50,6 +50,30 @@ const SCHEDULE_OPTIONS: { key: ScheduleType; icon: string; title: string; desc: 
 ];
 
 export default function TravelDatesScreen() {
+  const rawParams = useLocalSearchParams<{
+    quoteId?: string;
+    caseId?: string;
+    amount?: string;
+    totalPrice?: string;
+    dentistName?: string;
+    clinicName?: string;
+    duration?: string;
+    visitsJson?: string;
+    fromQuote?: string;
+  }>();
+  const params = Object.fromEntries(
+    Object.entries(rawParams).map(([key, value]) => [key, Array.isArray(value) ? value[0] || "" : value || ""])
+  ) as {
+    quoteId: string;
+    caseId: string;
+    amount: string;
+    totalPrice: string;
+    dentistName: string;
+    clinicName: string;
+    duration: string;
+    visitsJson: string;
+    fromQuote: string;
+  };
   const today = new Date();
   const [scheduleType, setScheduleType] = useState<ScheduleType | null>(null);
   const [viewMonth, setViewMonth] = useState(today.getMonth());
@@ -141,6 +165,24 @@ export default function TravelDatesScreen() {
     } catch {}
     setTimeout(() => {
       setLoading(false);
+
+      if (params.fromQuote === "true" && params.quoteId) {
+        router.push({
+          pathname: "/patient/visit-schedule" as any,
+          params: {
+            quoteId: params.quoteId,
+            caseId: params.caseId,
+            amount: params.amount,
+            totalPrice: params.totalPrice,
+            dentistName: params.dentistName,
+            clinicName: params.clinicName,
+            duration: params.duration,
+            visitsJson: params.visitsJson,
+          },
+        });
+        return;
+      }
+
       router.push("/patient/upload" as any);
     }, 300);
   };
@@ -366,7 +408,9 @@ export default function TravelDatesScreen() {
           {loading ? (
             <ActivityIndicator color={SharedColors.white} size="small" />
           ) : (
-            <Text style={s.nextBtnText}>Next: Upload Files →</Text>
+          <Text style={s.nextBtnText}>
+            {params.fromQuote === "true" && params.quoteId ? "Continue to Visit Schedule →" : "Next: Upload Files →"}
+          </Text>
           )}
         </TouchableOpacity>
       </View>

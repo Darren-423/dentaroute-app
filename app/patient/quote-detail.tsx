@@ -284,14 +284,16 @@ export default function QuoteDetailScreen() {
               : "");
 
             router.push({
-              pathname: "/patient/visit-schedule" as any,
+              pathname: "/patient/travel-dates" as any,
               params: {
-                quoteId: quote.id, caseId,
+                quoteId: quote.id,
+                caseId,
                 totalPrice: String(totalPrice),
                 dentistName: quote.dentistName,
                 clinicName: quote.clinicName,
                 duration: durationLabel,
                 visitsJson: JSON.stringify(effectiveVisits),
+                fromQuote: "true",
               },
             });
           }}

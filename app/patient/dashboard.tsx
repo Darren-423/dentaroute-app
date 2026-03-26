@@ -367,7 +367,7 @@ export default function PatientDashboardScreen() {
           <Text style={s.sectionTitle}>{filterSectionTitle}</Text>
           <TouchableOpacity
             style={s.newCaseBtn}
-            onPress={() => router.push("/patient/treatment-select" as any)}
+            onPress={() => router.push("/patient/patient-info" as any)}
             activeOpacity={0.7}
             accessibilityRole="button"
             accessibilityLabel="Create new case"
@@ -389,7 +389,7 @@ export default function PatientDashboardScreen() {
             </Text>
             <TouchableOpacity
               style={s.createBtn}
-              onPress={() => router.push("/patient/treatment-select" as any)}
+              onPress={() => router.push("/patient/patient-info" as any)}
               activeOpacity={0.85}
               accessibilityRole="button"
               accessibilityLabel="Create first case"
