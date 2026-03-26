@@ -139,7 +139,7 @@ export default function PatientDashboardScreen() {
     { key: "treatment_done", label: "Treatment Done", next: "Complete payment", emoji: "✅", dynamic: true },
     { key: "between_visits", label: "Visit Complete", next: "Choose stay or return", emoji: "🎉" },
     { key: "returning_home", label: "Returning Home", next: "Book departure pickup", emoji: "🛫" },
-    { key: "payment_complete", label: "Paid", next: "Book departure pickup", emoji: "🚗" },
+    { key: "payment_complete", label: "Paid", next: "Continue", emoji: "✅" },
     { key: "departure_set", label: "Complete", next: "Leave a review!", emoji: "⭐" },
     { key: "cancelled", label: "Cancelled", next: "View quotes to rebook", emoji: "❌" },
   ];
@@ -225,10 +225,14 @@ export default function PatientDashboardScreen() {
         router.push(`/patient/departure-pickup?bookingId=${bk.id}` as any);
         return;
       } else if (bk?.status === "payment_complete") {
-        router.push(`/patient/departure-pickup?bookingId=${bk.id}` as any);
+        if (bk.dropOffUnlocked) {
+          router.push(`/patient/departure-pickup?bookingId=${bk.id}` as any);
+        } else {
+          router.push(`/patient/write-review?bookingId=${bk.id}` as any);
+        }
         return;
       } else if (bk?.status === "departure_set") {
-        router.push(`/patient/treatment-complete?bookingId=${bk.id}` as any);
+        router.push(`/patient/write-review?bookingId=${bk.id}` as any);
         return;
       } else if (bk?.status === "cancelled") {
         router.push(`/patient/quotes?caseId=${c.id}` as any);

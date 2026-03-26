@@ -77,8 +77,10 @@ export default function VisitCheckoutScreen() {
   };
 
   const handleContinue = () => {
-    if (isLastVisit) {
-      router.push(`/patient/write-review?bookingId=${booking?.id}` as any);
+    if (isLastVisit && dropOffUnlocked) {
+      router.push(`/patient/departure-pickup?bookingId=${booking?.id}` as any);
+    } else if (isLastVisit) {
+      router.replace("/patient/dashboard" as any);
     } else {
       router.replace("/patient/dashboard" as any);
     }
@@ -321,10 +323,10 @@ export default function VisitCheckoutScreen() {
           disabled={!confirmedPayment}
           activeOpacity={0.85}
           accessibilityRole="button"
-          accessibilityLabel={isLastVisit ? "Write a review" : "Back to dashboard"}
+          accessibilityLabel={isLastVisit && dropOffUnlocked ? "Arrange airport drop-off" : "Back to dashboard"}
         >
           <Text style={s.continueBtnText}>
-            {isLastVisit ? "Write a Review →" : "Back to Dashboard →"}
+            {isLastVisit && dropOffUnlocked ? "Arrange Drop-off 🚗 →" : "Back to Dashboard →"}
           </Text>
         </TouchableOpacity>
       </View>

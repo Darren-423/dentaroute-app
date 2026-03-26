@@ -269,6 +269,13 @@ export default function WriteReviewScreen() {
             <Text style={s.submitBtnText}>Submit Review ⭐</Text>
           )}
         </TouchableOpacity>
+        <TouchableOpacity
+          style={s.skipBtn}
+          onPress={() => router.replace("/patient/dashboard" as any)}
+          activeOpacity={0.7}
+        >
+          <Text style={s.skipBtnText}>Skip for now</Text>
+        </TouchableOpacity>
       </View>
     </KeyboardAvoidingView>
   );
@@ -357,6 +364,8 @@ const s = StyleSheet.create({
   },
   submitBtnDisabled: { opacity: 0.5 },
   submitBtnText: { color: SharedColors.white, fontSize: 15, fontWeight: "600" },
+  skipBtn: { alignItems: "center", paddingVertical: 10, marginTop: 4 },
+  skipBtnText: { fontSize: 14, color: SharedColors.slate, fontWeight: "500" },
 
   // Success
   successTitle: { fontSize: 24, fontWeight: "700", color: SharedColors.navy, marginBottom: 8 },
