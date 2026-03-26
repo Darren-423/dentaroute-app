@@ -25,7 +25,7 @@ import { StatusBar } from "expo-status-bar";
 import { resetNavigationHistory } from "../../lib/navigationHistory";
 import { store } from "../../lib/store";
 
-import { PatientTheme, SharedColors } from "../../constants/theme";
+import { DoctorTheme, SharedColors } from "../../constants/theme";
 const { width } = Dimensions.get('window');
 
 export default function DoctorLoginScreen() {
@@ -72,7 +72,7 @@ export default function DoctorLoginScreen() {
 
       {/* Premium Background */}
       <LinearGradient
-        colors={[PatientTheme.primaryDeep, PatientTheme.primaryMid, PatientTheme.primaryLight]}
+        colors={[DoctorTheme.primaryDeep, DoctorTheme.primaryMid, DoctorTheme.primaryLight]}
         locations={[0, 0.55, 1]}
         start={{ x: 0.5, y: 1 }}
         end={{ x: 0, y: 0 }}

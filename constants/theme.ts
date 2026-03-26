@@ -52,6 +52,7 @@ export const DoctorTheme = {
   primaryLight: "#f0fdfa",
   primaryBorder: "#cddbd9",
   gradient: ["#0A4F4A", "#0F766E", "#14B8A6"] as const,
+  authGradient: ["#0d3d38", "#0D9488", "#f0fdfa"] as const,
   primaryForest: "#064e3b",
   primaryDark: "#134e4a",
   primaryDeep: "#0d3d38",
