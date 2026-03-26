@@ -46,7 +46,7 @@ export default function CaseHubScreen() {
         <TouchableOpacity style={s.backBtn} onPress={() => router.back()}>
           <Text style={s.backText}>← Back</Text>
         </TouchableOpacity>
-        <Text style={s.headerTitle}>Request Pick Up Service</Text>
+        <Text style={s.headerTitle}>{hasFlightInfo ? "Booking Overview" : "Trip Details"}</Text>
         <Text style={s.headerSub}>{booking.dentistName} · {booking.clinicName}</Text>
       </LinearGradient>
 
