@@ -157,23 +157,30 @@ export default function DoctorDashboardScreen() {
 
   const totalFiltered = groupedSections.reduce((sum, sec) => sum + sec.cases.length, 0);
 
+  // Strip colors: teal (active/progress), teal-light (done/info), amber (needs action)
+  const STRIP = {
+    action:   { bg: "rgba(245,158,11,0.12)", color: SharedColors.amber, border: "rgba(245,158,11,0.20)" },
+    active:   { bg: "rgba(15,118,110,0.10)", color: DoctorTheme.primary, border: "rgba(15,118,110,0.18)" },
+    done:     { bg: "rgba(20,184,166,0.10)", color: DoctorTheme.accentBright, border: "rgba(20,184,166,0.18)" },
+  };
+
   const getStatusBadge = (status: string, caseId?: string) => {
     if (status === "booked" && caseId) {
       const bk = bookings.find((b) => b.caseId === caseId);
-      if (bk?.status === "flight_submitted") return { label: "✈️ Flight Submitted", bg: "rgba(59,130,246,0.15)", color: "#3b82f6", border: "rgba(59,130,246,0.25)" };
-      if (bk?.status === "arrived_korea") return { label: "🛬 Arrived in Korea", bg: "rgba(124,58,237,0.15)", color: "#7c3aed", border: "rgba(124,58,237,0.25)" };
-      if (bk?.status === "checked_in_clinic") return { label: "🏥 At Clinic — Send Invoice", bg: "rgba(245,158,11,0.15)", color: SharedColors.amber, border: "rgba(245,158,11,0.25)" };
-      if (bk?.status === "treatment_done") return { label: "💰 Awaiting Payment", bg: "rgba(245,158,11,0.15)", color: SharedColors.amber, border: "rgba(245,158,11,0.25)" };
-      if (bk?.status === "payment_complete") return { label: "💵 Payment Complete", bg: "rgba(22,163,74,0.15)", color: SharedColors.green, border: "rgba(22,163,74,0.25)" };
-      if (bk?.status === "departure_set") return { label: "🚗 Pickup Arranged", bg: "rgba(59,130,246,0.15)", color: "#3b82f6", border: "rgba(59,130,246,0.25)" };
+      if (bk?.status === "flight_submitted") return { label: "✈️ Flight Submitted", ...STRIP.active };
+      if (bk?.status === "arrived_korea") return { label: "🛬 Arrived in Korea", ...STRIP.active };
+      if (bk?.status === "checked_in_clinic") return { label: "🏥 At Clinic — Send Invoice", ...STRIP.action };
+      if (bk?.status === "treatment_done") return { label: "💰 Awaiting Payment", ...STRIP.action };
+      if (bk?.status === "payment_complete") return { label: "💵 Payment Complete", ...STRIP.done };
+      if (bk?.status === "departure_set") return { label: "🚗 Pickup Arranged", ...STRIP.done };
     }
     switch (status) {
       case "pending":
-        return { label: "🆕 New — Send Quote", bg: "rgba(245,158,11,0.15)", color: SharedColors.amber, border: "rgba(245,158,11,0.25)" };
+        return { label: "🆕 New — Send Quote", ...STRIP.action };
       case "quotes_received":
-        return { label: "📨 Quote Sent", bg: "rgba(22,163,74,0.15)", color: SharedColors.green, border: "rgba(22,163,74,0.25)" };
+        return { label: "📨 Quote Sent", ...STRIP.done };
       case "booked":
-        return { label: "📅 Booked", bg: "rgba(59,130,246,0.15)", color: "#3b82f6", border: "rgba(59,130,246,0.25)" };
+        return { label: "📅 Booked", ...STRIP.active };
       default:
         return { label: "📋 Open", bg: "#f1f5f9", color: SharedColors.navySec, border: SharedColors.border };
     }
