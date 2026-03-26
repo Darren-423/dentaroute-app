@@ -460,7 +460,7 @@ export default function ArrivalInfoScreen() {
             </View>
           ) : (
             <View style={st.ssCard}>
-              <Text style={st.ssGuide}>📷  Upload a screenshot of your arrival flight details</Text>
+              <Text style={st.ssGuide}>📷  Upload a screenshot of your arrival flight details for the AI to analyze and fill in the blanks for you</Text>
               <TouchableOpacity style={st.ssUploadBtn} onPress={() => pickScreenshot(setArrivalScreenshot)} activeOpacity={0.7}>
                 <Text style={st.ssUploadBtnText}>+ Upload Photo</Text>
               </TouchableOpacity>
@@ -622,7 +622,7 @@ export default function ArrivalInfoScreen() {
             </View>
           ) : (
             <View style={st.ssCard}>
-              <Text style={st.ssGuide}>📷  Upload a screenshot of your departure flight details</Text>
+              <Text style={st.ssGuide}>📷  Upload a screenshot of your departure flight details for the AI to analyze and fill in the blanks for you</Text>
               <TouchableOpacity style={st.ssUploadBtn} onPress={() => pickScreenshot(setDepartureScreenshot)} activeOpacity={0.7}>
                 <Text style={st.ssUploadBtnText}>+ Upload Photo</Text>
               </TouchableOpacity>
@@ -716,7 +716,7 @@ export default function ArrivalInfoScreen() {
             </View>
           ) : (
             <View style={st.ssCard}>
-              <Text style={st.ssGuide}>📷  Upload a screenshot of your hotel booking details</Text>
+              <Text style={st.ssGuide}>📷  Upload a screenshot of your hotel booking details for the AI to analyze and fill in the blanks for you</Text>
               <TouchableOpacity style={st.ssUploadBtn} onPress={() => pickScreenshot(setHotelScreenshot)} activeOpacity={0.7}>
                 <Text style={st.ssUploadBtnText}>+ Upload Photo</Text>
               </TouchableOpacity>
