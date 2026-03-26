@@ -10,6 +10,7 @@ import {
   ScrollView,
   StyleSheet,
   Text,
+  TextInput,
   TouchableOpacity,
   View,
 } from "react-native";
@@ -46,11 +47,13 @@ const CATEGORIES: { key: CategoryKey; title: string; icon: string; desc: string;
 
 export default function PatientUploadScreen() {
   const { from, mode } = useLocalSearchParams<{ from?: string; mode?: string }>();
+  const isProposal = mode === "proposal";
   const [files, setFiles] = useState<Record<CategoryKey, FileItem[]>>({
     xrays: [],
     treatmentPlans: [],
     photos: [],
   });
+  const [concernText, setConcernText] = useState("");
   const [loading, setLoading] = useState(false);
   const [activeCategory, setActiveCategory] = useState<CategoryKey | null>(null);
 
@@ -121,7 +124,15 @@ export default function PatientUploadScreen() {
       router.back();
       return;
     }
-    router.push("/patient/review" as any);
+    if (isProposal) {
+      // Path B: skip treatment-select, go straight to review
+      router.push("/patient/review?caseMode=proposal&concern=" + encodeURIComponent(concernText) as any);
+    } else if (mode === "specific") {
+      // Path A: came from treatment-select
+      router.push("/patient/review?caseMode=specific" as any);
+    } else {
+      router.push("/patient/review" as any);
+    }
   };
 
   return (
@@ -133,8 +144,8 @@ export default function PatientUploadScreen() {
             <Text style={styles.backArrow}>‹</Text>
           </TouchableOpacity>
           <View style={styles.headerCenter}>
-            <Text style={styles.title}>Upload Files</Text>
-            <Text style={styles.subtitle}>X-rays, treatment plans, or photos</Text>
+            <Text style={styles.title}>{isProposal ? "Upload Your Dental Photos" : "Upload Files"}</Text>
+            <Text style={styles.subtitle}>{isProposal ? "Dentists will review and suggest a plan" : "X-rays, treatment plans, or photos"}</Text>
           </View>
           <View style={{ width: 36 }} />
         </View>
@@ -213,6 +224,24 @@ export default function PatientUploadScreen() {
           </View>
         ))}
 
+        {/* Concern Description — Path B only */}
+        {isProposal && (
+          <View style={styles.concernCard}>
+            <Text style={styles.concernTitle}>💬 Describe your concerns</Text>
+            <Text style={styles.concernHint}>What's bothering you? Where does it hurt? Any specific goals?</Text>
+            <TextInput
+              style={styles.concernInput}
+              multiline
+              numberOfLines={4}
+              placeholder="e.g. My front teeth are chipped and discolored. I'd like to explore options for a better smile..."
+              placeholderTextColor={SharedColors.slateLight}
+              value={concernText}
+              onChangeText={setConcernText}
+              textAlignVertical="top"
+            />
+          </View>
+        )}
+
         {/* General Tip */}
         <View style={styles.tipBox}>
           <Text style={styles.tipTitle}>📎 Accepted Formats</Text>
@@ -229,7 +258,7 @@ export default function PatientUploadScreen() {
           {loading ? (
             <ActivityIndicator color={SharedColors.white} size="small" />
           ) : (
-            <Text style={styles.nextBtnText}>Next: Select Treatment →</Text>
+            <Text style={styles.nextBtnText}>{isProposal ? "Next: Review & Submit →" : "Next: Select Treatment →"}</Text>
           )}
         </TouchableOpacity>
         {totalFiles === 0 && (
@@ -395,6 +424,29 @@ const styles = StyleSheet.create({
   uploadBtnText: { fontSize: 14, fontWeight: "600", color: PatientTheme.primary },
 
   catHint: { fontSize: 11, color: SharedColors.slateLight, lineHeight: 16 },
+
+  // Concern card (Path B)
+  concernCard: {
+    backgroundColor: SharedColors.white,
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 16,
+    borderWidth: 1,
+    borderColor: PatientTheme.primaryBorder,
+  },
+  concernTitle: { fontSize: 15, fontWeight: "600", color: SharedColors.navy, marginBottom: 4 },
+  concernHint: { fontSize: 12, color: SharedColors.slate, marginBottom: 10, lineHeight: 17 },
+  concernInput: {
+    borderWidth: 1,
+    borderColor: SharedColors.border,
+    borderRadius: 10,
+    padding: 12,
+    fontSize: 14,
+    color: SharedColors.navy,
+    minHeight: 100,
+    backgroundColor: SharedColors.bg,
+    lineHeight: 20,
+  },
 
   // Tip box
   tipBox: {

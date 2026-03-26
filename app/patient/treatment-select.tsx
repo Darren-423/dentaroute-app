@@ -42,7 +42,7 @@ const treatments: Treatment[] = [
 ];
 
 export default function PatientTreatmentSelectScreen() {
-  const { from } = useLocalSearchParams<{ from?: string }>();
+  const { from, mode } = useLocalSearchParams<{ from?: string; mode?: string }>();
   const [selected, setSelected] = useState<Record<string, number>>({});
   const [implantSubs, setImplantSubs] = useState<Record<string, number>>({});
   const [implantExpanded, setImplantExpanded] = useState(false);
@@ -112,7 +112,7 @@ export default function PatientTreatmentSelectScreen() {
     } catch (err) { console.log("Save error:", err); }
     setLoading(false);
     if (from === "review") { router.back(); return; }
-    router.push("/patient/upload" as any);
+    router.push("/patient/upload?mode=specific" as any);
   };
 
   const QtyStepper = ({ qty, onMinus, onPlus }: { qty: number; onMinus: () => void; onPlus: () => void }) => (

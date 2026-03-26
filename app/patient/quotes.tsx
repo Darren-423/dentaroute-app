@@ -7,7 +7,7 @@ import {
   Text, TouchableOpacity,
   View,
 } from "react-native";
-import { DentistQuote, store } from "../../lib/store";
+import { DentistQuote, PatientCase, store } from "../../lib/store";
 import { formatKRW } from "../../lib/currency";
 
 import { PatientTheme, SharedColors } from "../../constants/theme";
@@ -28,16 +28,20 @@ const parseDuration = (dur: string): number => {
 export default function PatientQuotesScreen() {
   const { caseId } = useLocalSearchParams<{ caseId: string }>();
   const [quotes, setQuotes] = useState<DentistQuote[]>([]);
+  const [caseData, setCaseData] = useState<PatientCase | null>(null);
   const [sortBy, setSortBy] = useState<SortOption>("price");
   const [sortAsc, setSortAsc] = useState(true);
   const [compareMode, setCompareMode] = useState(false);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const isProposal = caseData?.caseMode === "proposal";
 
   useEffect(() => {
     const load = async () => {
       if (caseId) {
         const q = await store.getQuotesForCase(caseId);
         setQuotes(q);
+        const c = await store.getCase(caseId);
+        if (c) setCaseData(c);
       } else {
         const allQuotes = await store.getQuotesForCase("");
         setQuotes(allQuotes);
@@ -158,6 +162,22 @@ export default function PatientQuotesScreen() {
         )}
 
         <View style={{ backgroundColor: "#FEF3C7", borderRadius: 8, padding: 10, marginBottom: 12, borderWidth: 1, borderColor: "#FCD34D" }}><Text style={{ fontSize: 11, color: "#92400E", lineHeight: 16 }}>These are preliminary suggestions based on your photos. Actual treatment and costs are finalized after in-person examination. Concourse does not guarantee treatment outcomes.</Text></View>
+
+        {/* Path A/B indicator */}
+        {isProposal ? (
+          <View style={{ backgroundColor: "#f0f9ff", borderRadius: 8, padding: 10, marginBottom: 12, borderWidth: 1, borderColor: "#bae6fd" }}>
+            <Text style={{ fontSize: 12, fontWeight: "600", color: "#0369a1", marginBottom: 2 }}>🔍 Dentist-suggested plans</Text>
+            <Text style={{ fontSize: 11, color: "#0369a1", lineHeight: 16 }}>Each dentist reviewed your photos and created a custom treatment plan for you.</Text>
+            {caseData?.concernDescription ? (
+              <Text style={{ fontSize: 11, color: "#64748b", marginTop: 6, fontStyle: "italic" }}>Your concern: "{caseData.concernDescription}"</Text>
+            ) : null}
+          </View>
+        ) : caseData?.caseMode === "specific" ? (
+          <View style={{ backgroundColor: PatientTheme.primaryLight, borderRadius: 8, padding: 10, marginBottom: 12, borderWidth: 1, borderColor: PatientTheme.primaryBorder }}>
+            <Text style={{ fontSize: 12, fontWeight: "600", color: PatientTheme.primary, marginBottom: 2 }}>🎯 Quotes for your selected treatments</Text>
+            <Text style={{ fontSize: 11, color: PatientTheme.primary, lineHeight: 16 }}>Dentists may also suggest additional treatments based on your photos.</Text>
+          </View>
+        ) : null}
 
         {quotes.length === 0 ? (
           /* Waiting State */

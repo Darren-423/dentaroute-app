@@ -49,6 +49,8 @@ export interface PatientCase {
   visitDate?: string;    // "Within 10 days", "1 month", etc.
   birthDate?: string;    // "1990-05-15" format
   hidden?: boolean;
+  caseMode?: "specific" | "proposal";  // Treatment Intent: A="specific", B="proposal"
+  concernDescription?: string;         // Path B: patient's concern text
 }
 
 export interface DentistQuote {

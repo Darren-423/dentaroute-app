@@ -1,5 +1,5 @@
 import { LinearGradient } from "expo-linear-gradient";
-import { router } from "expo-router";
+import { router, useLocalSearchParams } from "expo-router";
 import React, { useState } from "react";
 import {
   ActivityIndicator,
@@ -12,6 +12,8 @@ import { store } from "../../lib/store";
 
 import { PatientTheme, SharedColors } from "../../constants/theme";
 export default function PatientReviewScreen() {
+  const { caseMode, concern } = useLocalSearchParams<{ caseMode?: string; concern?: string }>();
+  const isProposal = caseMode === "proposal";
   const [loading, setLoading] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [caseId, setCaseId] = useState("");
@@ -71,6 +73,8 @@ export default function PatientReviewScreen() {
         medicalNotes,
         dentalIssues,
         filesCount: { xrays: 0, treatmentPlans: 0, photos: 0 },
+        ...(caseMode && { caseMode: caseMode as "specific" | "proposal" }),
+        ...(isProposal && concern && { concernDescription: decodeURIComponent(concern) }),
       });
 
       setCaseId(newCase.id);
