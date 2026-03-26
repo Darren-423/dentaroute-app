@@ -10,13 +10,9 @@ import {
 import { DentistQuote, store } from "../../lib/store";
 import { toPatientLabel } from "../../lib/treatmentTerminology";
 
-const T = {
-  teal: "#4A0080", tealMid: "#5C10A0", tealLight: "#f0e6f6",
-  navy: "#0f172a", slate: "#64748b", slateLight: "#94a3b8",
-  border: "#e2e8f0", bg: "#f8fafc", white: "#ffffff",
-  green: "#16a34a", greenLight: "#f0fdf4",
-};
 
+
+import { PatientTheme, SharedColors } from "../../constants/theme";
 export default function QuoteCompareScreen() {
   const { caseId, quoteIds } = useLocalSearchParams<{ caseId: string; quoteIds: string }>();
   const [quotes, setQuotes] = useState<DentistQuote[]>([]);
@@ -38,7 +34,7 @@ export default function QuoteCompareScreen() {
   if (loading) {
     return (
       <View style={[s.container, { justifyContent: "center", alignItems: "center" }]}>
-        <ActivityIndicator color={T.teal} size="large" />
+        <ActivityIndicator color={PatientTheme.primary} size="large" />
       </View>
     );
   }
@@ -182,10 +178,10 @@ export default function QuoteCompareScreen() {
 }
 
 const s = StyleSheet.create({
-  container: { flex: 1, backgroundColor: T.bg },
+  container: { flex: 1, backgroundColor: SharedColors.bg },
   header: {
     paddingHorizontal: 24, paddingTop: 60, paddingBottom: 16,
-    borderBottomWidth: 1, borderBottomColor: T.border, backgroundColor: T.white,
+    borderBottomWidth: 1, borderBottomColor: SharedColors.border, backgroundColor: SharedColors.white,
     flexDirection: "row", alignItems: "center", gap: 16,
   },
   backBtn: {
@@ -193,54 +189,54 @@ const s = StyleSheet.create({
     backgroundColor: "rgba(0,0,0,0.05)", borderWidth: 1, borderColor: "rgba(0,0,0,0.08)",
     alignItems: "center", justifyContent: "center",
   },
-  backArrow: { fontSize: 24, color: "#0f172a", fontWeight: "600", marginTop: -2 },
-  headerTitle: { fontSize: 18, fontWeight: "700", color: T.navy, flex: 1 },
+  backArrow: { fontSize: 24, color: SharedColors.navy, fontWeight: "600", marginTop: -2 },
+  headerTitle: { fontSize: 18, fontWeight: "700", color: SharedColors.navy, flex: 1 },
 
   tableWrap: { padding: 16 },
   table: { gap: 0 },
   tableRow: {
-    flexDirection: "row", borderBottomWidth: 1, borderBottomColor: T.border,
+    flexDirection: "row", borderBottomWidth: 1, borderBottomColor: SharedColors.border,
     minHeight: 52,
   },
   tableRowAlt: { backgroundColor: "rgba(248,250,252,0.6)" },
   labelCol: {
     width: 100, flexDirection: "row", alignItems: "center", gap: 6,
     paddingVertical: 12, paddingHorizontal: 10,
-    backgroundColor: T.white, borderRightWidth: 1, borderRightColor: T.border,
+    backgroundColor: SharedColors.white, borderRightWidth: 1, borderRightColor: SharedColors.border,
   },
-  labelColText: { fontSize: 13, fontWeight: "700", color: T.navy },
+  labelColText: { fontSize: 13, fontWeight: "700", color: SharedColors.navy },
   labelIcon: { fontSize: 14 },
-  labelText: { fontSize: 12, fontWeight: "600", color: T.slate, flex: 1 },
+  labelText: { fontSize: 12, fontWeight: "600", color: SharedColors.slate, flex: 1 },
   valueCol: {
     paddingVertical: 12, paddingHorizontal: 10,
     alignItems: "center", justifyContent: "center",
-    borderRightWidth: 1, borderRightColor: T.border,
+    borderRightWidth: 1, borderRightColor: SharedColors.border,
   },
-  valueText: { fontSize: 14, fontWeight: "600", color: T.navy, textAlign: "center" },
-  valueBest: { color: T.teal, fontWeight: "800" },
+  valueText: { fontSize: 14, fontWeight: "600", color: SharedColors.navy, textAlign: "center" },
+  valueBest: { color: PatientTheme.primary, fontWeight: "800" },
   bestTag: {
-    marginTop: 4, backgroundColor: T.tealLight, borderRadius: 4,
+    marginTop: 4, backgroundColor: PatientTheme.primaryLight, borderRadius: 4,
     paddingHorizontal: 6, paddingVertical: 2,
   },
-  bestTagText: { fontSize: 9, fontWeight: "700", color: T.teal },
+  bestTagText: { fontSize: 9, fontWeight: "700", color: PatientTheme.primary },
 
   dentistHeader: { flexDirection: "row", alignItems: "center", gap: 6, marginBottom: 4 },
   miniAvatar: {
     width: 28, height: 28, borderRadius: 10,
-    backgroundColor: T.tealLight, alignItems: "center", justifyContent: "center",
+    backgroundColor: PatientTheme.primaryLight, alignItems: "center", justifyContent: "center",
   },
-  miniAvatarText: { fontSize: 12, fontWeight: "700", color: T.teal },
-  dentistName: { fontSize: 12, fontWeight: "700", color: T.navy, flex: 1 },
-  clinicName: { fontSize: 10, color: T.slate },
+  miniAvatarText: { fontSize: 12, fontWeight: "700", color: PatientTheme.primary },
+  dentistName: { fontSize: 12, fontWeight: "700", color: SharedColors.navy, flex: 1 },
+  clinicName: { fontSize: 10, color: SharedColors.slate },
 
   treatmentItem: { marginBottom: 6, alignItems: "center" },
-  treatmentName: { fontSize: 10, fontWeight: "600", color: T.navy, textAlign: "center" },
-  treatmentPrice: { fontSize: 10, color: T.slate },
+  treatmentName: { fontSize: 10, fontWeight: "600", color: SharedColors.navy, textAlign: "center" },
+  treatmentPrice: { fontSize: 10, color: SharedColors.slate },
 
   actions: { padding: 16, gap: 10 },
   selectBtn: {
-    backgroundColor: T.teal, borderRadius: 14,
+    backgroundColor: PatientTheme.primary, borderRadius: 14,
     paddingVertical: 14, alignItems: "center",
   },
-  selectBtnText: { color: T.white, fontSize: 15, fontWeight: "600" },
+  selectBtnText: { color: SharedColors.white, fontSize: 15, fontWeight: "600" },
 });

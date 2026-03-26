@@ -10,12 +10,7 @@ import {
 } from "react-native";
 import { ChatMessage, store } from "../../lib/store";
 
-const T = {
-  teal: "#4A0080", tealMid: "#5C10A0", tealLight: "#f0e6f6",
-  navy: "#0f172a", slate: "#64748b", slateLight: "#94a3b8",
-  border: "#e2e8f0", bg: "#f8fafc", white: "#ffffff",
-};
-
+import { PatientTheme, SharedColors } from "../../constants/theme";
 export default function PatientChatScreen() {
   const { chatRoomId, dentistName, clinicName } = useLocalSearchParams<{
     chatRoomId: string; dentistName: string; clinicName: string;
@@ -230,7 +225,7 @@ export default function PatientChatScreen() {
               <>
                 {translatingIds.has(item.id) ? (
                   <View style={s.translatingRow}>
-                    <ActivityIndicator size="small" color={isMe ? "rgba(255,255,255,0.6)" : T.slate} />
+                    <ActivityIndicator size="small" color={isMe ? "rgba(255,255,255,0.6)" : SharedColors.slate} />
                     <Text style={[s.translatingText, isMe && { color: "rgba(255,255,255,0.5)" }]}>
                       Translating...
                     </Text>
@@ -273,7 +268,7 @@ export default function PatientChatScreen() {
       keyboardVerticalOffset={0}
     >
       {/* Header */}
-      <LinearGradient colors={["#3D0070", "#2F0058", "#220040"]} style={s.header}>
+      <LinearGradient colors={[...PatientTheme.gradient]} style={s.header}>
         <TouchableOpacity style={s.backBtn} onPress={() => router.back()} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
           <Text style={s.backArrow}>‹</Text>
         </TouchableOpacity>
@@ -306,8 +301,8 @@ export default function PatientChatScreen() {
         keyExtractor={(item) => item.id}
         renderItem={renderMessage}
         ListHeaderComponent={
-          <View style={{ backgroundColor: "#f1f5f9", borderRadius: 8, padding: 10, margin: 12, marginBottom: 4, borderWidth: 1, borderColor: "#e2e8f0" }}>
-            <Text style={{ fontSize: 11, color: "#64748b", lineHeight: 16, textAlign: "center" }}>
+          <View style={{ backgroundColor: "#f1f5f9", borderRadius: 8, padding: 10, margin: 12, marginBottom: 4, borderWidth: 1, borderColor: SharedColors.border }}>
+            <Text style={{ fontSize: 11, color: SharedColors.slate, lineHeight: 16, textAlign: "center" }}>
               This chat is for general inquiries and quote discussion only. It does not replace an in-person medical consultation.
             </Text>
           </View>
@@ -372,7 +367,7 @@ export default function PatientChatScreen() {
         <TextInput
           style={s.textInput}
           placeholder="Type a message..."
-          placeholderTextColor={T.slateLight}
+          placeholderTextColor={SharedColors.slateLight}
           value={input}
           onChangeText={handleInputChange}
           onSubmitEditing={handleSend}
@@ -427,7 +422,7 @@ export default function PatientChatScreen() {
 }
 
 const s = StyleSheet.create({
-  container: { flex: 1, backgroundColor: T.bg },
+  container: { flex: 1, backgroundColor: SharedColors.bg },
 
   // Header
   header: {
@@ -435,14 +430,14 @@ const s = StyleSheet.create({
     paddingHorizontal: 16, paddingTop: 60, paddingBottom: 14,
   },
   backBtn: { width: 36, height: 36, borderRadius: 12, backgroundColor: "rgba(255,255,255,0.12)", borderWidth: 1, borderColor: "rgba(255,255,255,0.15)", alignItems: "center", justifyContent: "center" },
-  backArrow: { fontSize: 24, color: "#fff", fontWeight: "600", marginTop: -2 },
+  backArrow: { fontSize: 24, color: SharedColors.white, fontWeight: "600", marginTop: -2 },
   headerInfo: { flex: 1, flexDirection: "row", alignItems: "center", gap: 10 },
   headerAvatar: {
     width: 38, height: 38, borderRadius: 19,
     backgroundColor: "rgba(255,255,255,0.15)", alignItems: "center", justifyContent: "center",
   },
-  headerAvatarText: { fontSize: 15, fontWeight: "700", color: "#fff" },
-  headerName: { fontSize: 15, fontWeight: "700", color: "#fff" },
+  headerAvatarText: { fontSize: 15, fontWeight: "700", color: SharedColors.white },
+  headerName: { fontSize: 15, fontWeight: "700", color: SharedColors.white },
   headerClinic: { fontSize: 11, color: "rgba(255,255,255,0.55)" },
 
   // Translation toggle
@@ -457,7 +452,7 @@ const s = StyleSheet.create({
     fontSize: 11, fontWeight: "600", color: "rgba(255,255,255,0.5)",
   },
   translateToggleTextOn: {
-    color: "#fff",
+    color: SharedColors.white,
   },
 
   // Messages
@@ -465,8 +460,8 @@ const s = StyleSheet.create({
 
   dateHeader: { alignItems: "center", marginVertical: 12 },
   dateHeaderText: {
-    fontSize: 11, color: T.slateLight, fontWeight: "600",
-    backgroundColor: T.white, paddingHorizontal: 12, paddingVertical: 4,
+    fontSize: 11, color: SharedColors.slateLight, fontWeight: "600",
+    backgroundColor: SharedColors.white, paddingHorizontal: 12, paddingVertical: 4,
     borderRadius: 10, overflow: "hidden",
   },
 
@@ -475,27 +470,27 @@ const s = StyleSheet.create({
 
   msgAvatar: {
     width: 28, height: 28, borderRadius: 14,
-    backgroundColor: T.tealLight, alignItems: "center", justifyContent: "center",
+    backgroundColor: PatientTheme.primaryLight, alignItems: "center", justifyContent: "center",
   },
-  msgAvatarText: { fontSize: 11, fontWeight: "700", color: T.teal },
+  msgAvatarText: { fontSize: 11, fontWeight: "700", color: PatientTheme.primary },
 
   bubble: {
     maxWidth: "75%", borderRadius: 18, paddingHorizontal: 14, paddingVertical: 10,
   },
   bubbleMe: {
-    backgroundColor: T.teal, borderBottomRightRadius: 4,
+    backgroundColor: PatientTheme.primary, borderBottomRightRadius: 4,
   },
   bubbleThem: {
-    backgroundColor: T.white, borderBottomLeftRadius: 4,
-    borderWidth: 1, borderColor: T.border,
+    backgroundColor: SharedColors.white, borderBottomLeftRadius: 4,
+    borderWidth: 1, borderColor: SharedColors.border,
   },
   bubbleText: { fontSize: 14, lineHeight: 20 },
-  bubbleTextMe: { color: T.white },
-  bubbleTextThem: { color: T.navy },
+  bubbleTextMe: { color: SharedColors.white },
+  bubbleTextThem: { color: SharedColors.navy },
   timeRow: { flexDirection: "row", alignItems: "center", justifyContent: "flex-end", gap: 4, marginTop: 4 },
   timeText: { fontSize: 10 },
   timeTextMe: { color: "rgba(255,255,255,0.6)" },
-  timeTextThem: { color: T.slateLight },
+  timeTextThem: { color: SharedColors.slateLight },
   readReceipt: { fontSize: 11, fontWeight: "700" },
   readReceiptSent: { color: "rgba(255,255,255,0.5)" },
   readReceiptRead: { color: "#60a5fa" },
@@ -506,7 +501,7 @@ const s = StyleSheet.create({
     flexDirection: "row", alignItems: "center", gap: 6, marginTop: 6,
   },
   translatingText: {
-    fontSize: 12, color: T.slate, fontStyle: "italic",
+    fontSize: 12, color: SharedColors.slate, fontStyle: "italic",
   },
   transDivider: {
     height: 1, backgroundColor: "rgba(0,0,0,0.08)", marginVertical: 6,
@@ -518,66 +513,66 @@ const s = StyleSheet.create({
     color: "rgba(255,255,255,0.7)",
   },
   transTextThem: {
-    color: T.slate,
+    color: SharedColors.slate,
   },
   translationFailed: {
-    fontSize: 12, color: "#ef4444", marginTop: 4,
+    fontSize: 12, color: SharedColors.red, marginTop: 4,
   },
 
   // Empty
   emptyChat: { flex: 1, alignItems: "center", justifyContent: "center", paddingVertical: 60 },
   emptyChatIcon: { fontSize: 48, marginBottom: 12 },
-  emptyChatText: { fontSize: 16, fontWeight: "600", color: T.navy, marginBottom: 4 },
-  emptyChatSub: { fontSize: 13, color: T.slateLight, textAlign: "center" },
+  emptyChatText: { fontSize: 16, fontWeight: "600", color: SharedColors.navy, marginBottom: 4 },
+  emptyChatSub: { fontSize: 13, color: SharedColors.slateLight, textAlign: "center" },
 
   // Quick replies
   quickReplies: { paddingHorizontal: 16, paddingBottom: 8, gap: 8 },
   quickChip: {
-    backgroundColor: T.white, borderRadius: 20, paddingHorizontal: 16, paddingVertical: 10,
-    borderWidth: 1, borderColor: T.tealMid,
+    backgroundColor: SharedColors.white, borderRadius: 20, paddingHorizontal: 16, paddingVertical: 10,
+    borderWidth: 1, borderColor: PatientTheme.primaryMid,
   },
-  quickChipText: { fontSize: 13, color: T.teal },
+  quickChipText: { fontSize: 13, color: PatientTheme.primary },
 
   // Typing indicator
   typingBar: { flexDirection: "row", alignItems: "center", gap: 8, paddingHorizontal: 16, paddingBottom: 4 },
-  typingAvatar: { width: 24, height: 24, borderRadius: 12, backgroundColor: T.tealLight, alignItems: "center", justifyContent: "center" },
-  typingAvatarText: { fontSize: 9, fontWeight: "700", color: T.teal },
-  typingBubble: { backgroundColor: T.white, borderRadius: 14, paddingHorizontal: 12, paddingVertical: 4, borderWidth: 1, borderColor: T.border },
-  typingDots: { fontSize: 20, color: T.slate, letterSpacing: 2 },
+  typingAvatar: { width: 24, height: 24, borderRadius: 12, backgroundColor: PatientTheme.primaryLight, alignItems: "center", justifyContent: "center" },
+  typingAvatarText: { fontSize: 9, fontWeight: "700", color: PatientTheme.primary },
+  typingBubble: { backgroundColor: SharedColors.white, borderRadius: 14, paddingHorizontal: 12, paddingVertical: 4, borderWidth: 1, borderColor: SharedColors.border },
+  typingDots: { fontSize: 20, color: SharedColors.slate, letterSpacing: 2 },
 
   // Attach
-  attachBtn: { width: 40, height: 40, borderRadius: 20, backgroundColor: T.bg, borderWidth: 1, borderColor: T.border, alignItems: "center", justifyContent: "center" },
+  attachBtn: { width: 40, height: 40, borderRadius: 20, backgroundColor: SharedColors.bg, borderWidth: 1, borderColor: SharedColors.border, alignItems: "center", justifyContent: "center" },
   attachBtnText: { fontSize: 18 },
 
   // Modals
   modalOverlay: { flex: 1, backgroundColor: "rgba(0,0,0,0.4)", justifyContent: "flex-end" },
-  attachSheet: { backgroundColor: T.white, borderTopLeftRadius: 20, borderTopRightRadius: 20, padding: 20, paddingBottom: 40, gap: 8 },
-  attachOption: { flexDirection: "row", alignItems: "center", gap: 14, padding: 14, borderRadius: 12, backgroundColor: T.bg },
+  attachSheet: { backgroundColor: SharedColors.white, borderTopLeftRadius: 20, borderTopRightRadius: 20, padding: 20, paddingBottom: 40, gap: 8 },
+  attachOption: { flexDirection: "row", alignItems: "center", gap: 14, padding: 14, borderRadius: 12, backgroundColor: SharedColors.bg },
   attachOptionIcon: { fontSize: 22 },
-  attachOptionText: { fontSize: 15, fontWeight: "600", color: T.navy },
+  attachOptionText: { fontSize: 15, fontWeight: "600", color: SharedColors.navy },
   attachCancel: { backgroundColor: "transparent", justifyContent: "center" },
-  attachCancelText: { fontSize: 15, fontWeight: "600", color: T.slate, textAlign: "center" },
+  attachCancelText: { fontSize: 15, fontWeight: "600", color: SharedColors.slate, textAlign: "center" },
 
   imagePreviewOverlay: { flex: 1, backgroundColor: "rgba(0,0,0,0.92)", justifyContent: "center", alignItems: "center" },
   imagePreviewClose: { position: "absolute", top: 56, right: 20, zIndex: 10, width: 36, height: 36, borderRadius: 18, backgroundColor: "rgba(255,255,255,0.15)", alignItems: "center", justifyContent: "center" },
-  imagePreviewCloseText: { color: "#fff", fontSize: 18, fontWeight: "600" },
+  imagePreviewCloseText: { color: SharedColors.white, fontSize: 18, fontWeight: "600" },
   imagePreviewImg: { width: "90%", height: "70%" },
 
   // Input
   inputBar: {
     flexDirection: "row", alignItems: "flex-end", gap: 8,
     paddingHorizontal: 16, paddingVertical: 12, paddingBottom: 56,
-    backgroundColor: T.white, borderTopWidth: 1, borderTopColor: T.border,
+    backgroundColor: SharedColors.white, borderTopWidth: 1, borderTopColor: SharedColors.border,
   },
   textInput: {
-    flex: 1, backgroundColor: T.bg, borderRadius: 22, paddingHorizontal: 18,
-    paddingVertical: 10, fontSize: 14, color: T.navy, maxHeight: 100,
-    borderWidth: 1, borderColor: T.border,
+    flex: 1, backgroundColor: SharedColors.bg, borderRadius: 22, paddingHorizontal: 18,
+    paddingVertical: 10, fontSize: 14, color: SharedColors.navy, maxHeight: 100,
+    borderWidth: 1, borderColor: SharedColors.border,
   },
   sendBtn: {
     width: 44, height: 44, borderRadius: 22,
-    backgroundColor: T.teal, alignItems: "center", justifyContent: "center",
+    backgroundColor: PatientTheme.primary, alignItems: "center", justifyContent: "center",
   },
   sendBtnDisabled: { opacity: 0.4 },
-  sendBtnText: { color: T.white, fontSize: 20, fontWeight: "600" },
+  sendBtnText: { color: SharedColors.white, fontSize: 20, fontWeight: "600" },
 });

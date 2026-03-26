@@ -11,26 +11,7 @@ import {
 } from "react-native";
 import { Booking, store } from "../../lib/store";
 
-const T = {
-  purple: "#4A0080",
-  purpleMid: "#5C10A0",
-  purpleLight: "#f0e6f6",
-  navy: "#0f172a",
-  slate: "#64748b",
-  slateLight: "#94a3b8",
-  border: "#e2e8f0",
-  bg: "#f8fafc",
-  white: "#ffffff",
-  green: "#16a34a",
-  greenLight: "#f0fdf4",
-  blue: "#2563eb",
-  blueLight: "#eff6ff",
-  orange: "#ea580c",
-  orangeLight: "#fff7ed",
-  amber: "#f59e0b",
-  amberLight: "#fffbeb",
-};
-
+import { PatientTheme, SharedColors } from "../../constants/theme";
 export default function CaseHubScreen() {
   const { bookingId, caseId } = useLocalSearchParams<{ bookingId: string; caseId: string }>();
   const [booking, setBooking] = useState<Booking | null>(null);
@@ -48,7 +29,7 @@ export default function CaseHubScreen() {
   if (!booking) {
     return (
       <View style={s.container}>
-        <Text style={{ textAlign: "center", marginTop: 100, color: T.slate }}>Loading...</Text>
+        <Text style={{ textAlign: "center", marginTop: 100, color: SharedColors.slate }}>Loading...</Text>
       </View>
     );
   }
@@ -61,7 +42,7 @@ export default function CaseHubScreen() {
   return (
     <View style={s.container}>
       {/* Header */}
-      <LinearGradient colors={[T.purple, T.purpleMid]} style={s.header}>
+      <LinearGradient colors={[PatientTheme.primary, PatientTheme.primaryMid]} style={s.header}>
         <TouchableOpacity style={s.backBtn} onPress={() => router.back()}>
           <Text style={s.backText}>← Back</Text>
         </TouchableOpacity>
@@ -72,10 +53,10 @@ export default function CaseHubScreen() {
       <ScrollView style={s.body} contentContainerStyle={s.bodyContent} showsVerticalScrollIndicator={false}>
 
         {/* Status Card */}
-        <View style={[s.statusCard, { backgroundColor: hasFlightInfo ? T.greenLight : T.amberLight }]}>
+        <View style={[s.statusCard, { backgroundColor: hasFlightInfo ? SharedColors.greenLight : SharedColors.amberLight }]}>
           <Text style={s.statusEmoji}>{hasFlightInfo ? "✅" : "⏳"}</Text>
           <View style={{ flex: 1 }}>
-            <Text style={[s.statusLabel, { color: hasFlightInfo ? T.green : T.amber }]}>
+            <Text style={[s.statusLabel, { color: hasFlightInfo ? SharedColors.green : SharedColors.amber }]}>
               {hasFlightInfo ? "Flight Booked" : "Booked — Add Trip Info"}
             </Text>
             <Text style={s.statusSub}>
@@ -94,10 +75,10 @@ export default function CaseHubScreen() {
           </TouchableOpacity>
         ) : (
           <TouchableOpacity
-            style={[s.nextStepBtn, { backgroundColor: T.amberLight }]}
+            style={[s.nextStepBtn, { backgroundColor: SharedColors.amberLight }]}
             onPress={() => router.push(`/patient/arrival-info?bookingId=${bookingId}` as any)}
           >
-            <Text style={[s.nextStepText, { color: T.amber }]}>Add Trip Info →</Text>
+            <Text style={[s.nextStepText, { color: SharedColors.amber }]}>Add Trip Info →</Text>
           </TouchableOpacity>
         )}
 
@@ -128,7 +109,7 @@ export default function CaseHubScreen() {
 
           {trips.length > 0 ? (
             trips.map((trip, idx) => (
-              <View key={idx} style={[s.tripBlock, idx > 0 && { borderTopWidth: 1, borderTopColor: T.border, paddingTop: 14, marginTop: 14 }]}>
+              <View key={idx} style={[s.tripBlock, idx > 0 && { borderTopWidth: 1, borderTopColor: SharedColors.border, paddingTop: 14, marginTop: 14 }]}>
                 <View style={s.tripHeaderRow}>
                   <Text style={s.tripLabel}>Trip {idx + 1}</Text>
                   <TouchableOpacity
@@ -202,24 +183,24 @@ export default function CaseHubScreen() {
 
           {trips.length > 0 ? (
             trips.map((trip, idx) => (
-              <View key={idx} style={[idx > 0 && { borderTopWidth: 1, borderTopColor: T.border, paddingTop: 10, marginTop: 10 }]}>
+              <View key={idx} style={[idx > 0 && { borderTopWidth: 1, borderTopColor: SharedColors.border, paddingTop: 10, marginTop: 10 }]}>
                 <Text style={s.pickupTripLabel}>Trip {idx + 1}</Text>
                 <View style={s.pickupRow}>
                   <Text style={s.pickupLabel}>🛬 Arrival</Text>
                   {trip.pickupRequested ? (
-                    <View style={[s.pickupStatus, { backgroundColor: T.greenLight }]}>
-                      <Text style={[s.pickupStatusText, { color: T.green }]}>✅ Requested</Text>
+                    <View style={[s.pickupStatus, { backgroundColor: SharedColors.greenLight }]}>
+                      <Text style={[s.pickupStatusText, { color: SharedColors.green }]}>✅ Requested</Text>
                     </View>
                   ) : (
-                    <View style={[s.pickupStatus, { backgroundColor: T.orangeLight }]}>
-                      <Text style={[s.pickupStatusText, { color: T.orange }]}>Not requested</Text>
+                    <View style={[s.pickupStatus, { backgroundColor: SharedColors.orangeLight }]}>
+                      <Text style={[s.pickupStatusText, { color: SharedColors.orange }]}>Not requested</Text>
                     </View>
                   )}
                 </View>
                 <View style={s.pickupRow}>
                   <Text style={s.pickupLabel}>🛫 Departure</Text>
-                  <View style={[s.pickupStatus, { backgroundColor: T.bg }]}>
-                    <Text style={[s.pickupStatusText, { color: T.slateLight }]}>Available after treatment</Text>
+                  <View style={[s.pickupStatus, { backgroundColor: SharedColors.bg }]}>
+                    <Text style={[s.pickupStatusText, { color: SharedColors.slateLight }]}>Available after treatment</Text>
                   </View>
                 </View>
               </View>
@@ -227,8 +208,8 @@ export default function CaseHubScreen() {
           ) : (
             <View style={s.pickupRow}>
               <Text style={s.pickupLabel}>Add trip info first</Text>
-              <View style={[s.pickupStatus, { backgroundColor: T.bg }]}>
-                <Text style={[s.pickupStatusText, { color: T.slateLight }]}>—</Text>
+              <View style={[s.pickupStatus, { backgroundColor: SharedColors.bg }]}>
+                <Text style={[s.pickupStatusText, { color: SharedColors.slateLight }]}>—</Text>
               </View>
             </View>
           )}
@@ -246,7 +227,7 @@ export default function CaseHubScreen() {
           </View>
           <View style={s.paymentRow}>
             <Text style={s.paymentLabel}>Service Plan</Text>
-            <Text style={[s.paymentValue, { color: T.green }]}>{booking.serviceTier?.charAt(0).toUpperCase()}{booking.serviceTier?.slice(1)} — ${booking.serviceFee}</Text>
+            <Text style={[s.paymentValue, { color: SharedColors.green }]}>{booking.serviceTier?.charAt(0).toUpperCase()}{booking.serviceTier?.slice(1)} — ${booking.serviceFee}</Text>
           </View>
           <View style={[s.paymentRow, { borderBottomWidth: 0 }]}>
             <Text style={s.paymentLabel}>Treatment Cost</Text>
@@ -283,11 +264,11 @@ export default function CaseHubScreen() {
 }
 
 const s = StyleSheet.create({
-  container: { flex: 1, backgroundColor: T.bg },
+  container: { flex: 1, backgroundColor: SharedColors.bg },
   header: { paddingTop: 56, paddingBottom: 20, paddingHorizontal: 20 },
   backBtn: { marginBottom: 8 },
   backText: { color: "rgba(255,255,255,0.8)", fontSize: 14 },
-  headerTitle: { color: T.white, fontSize: 22, fontWeight: "700" },
+  headerTitle: { color: SharedColors.white, fontSize: 22, fontWeight: "700" },
   headerSub: { color: "rgba(255,255,255,0.7)", fontSize: 13, marginTop: 2 },
 
   body: { flex: 1 },
@@ -300,19 +281,19 @@ const s = StyleSheet.create({
   },
   statusEmoji: { fontSize: 24, marginRight: 12 },
   statusLabel: { fontSize: 15, fontWeight: "700" },
-  statusSub: { fontSize: 12, color: T.slate, marginTop: 2 },
+  statusSub: { fontSize: 12, color: SharedColors.slate, marginTop: 2 },
 
   /* Next Step */
   nextStepBtn: {
-    backgroundColor: T.purpleLight, borderRadius: 14, paddingVertical: 14,
+    backgroundColor: PatientTheme.primaryLight, borderRadius: 14, paddingVertical: 14,
     alignItems: "center", marginBottom: 14,
   },
-  nextStepText: { color: T.purple, fontSize: 15, fontWeight: "700" },
+  nextStepText: { color: PatientTheme.primary, fontSize: 15, fontWeight: "700" },
 
   /* Section Card */
   sectionCard: {
-    backgroundColor: T.white, borderRadius: 16, padding: 18,
-    marginBottom: 14, borderWidth: 1, borderColor: T.border,
+    backgroundColor: SharedColors.white, borderRadius: 16, padding: 18,
+    marginBottom: 14, borderWidth: 1, borderColor: SharedColors.border,
     ...Platform.select({
       ios: { shadowColor: "#000", shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.06, shadowRadius: 8 },
       android: { elevation: 3 },
@@ -320,92 +301,92 @@ const s = StyleSheet.create({
   },
   sectionHeader: { flexDirection: "row", alignItems: "center", marginBottom: 14 },
   sectionIcon: { fontSize: 18, marginRight: 8 },
-  sectionTitle: { fontSize: 16, fontWeight: "700", color: T.navy, flex: 1 },
+  sectionTitle: { fontSize: 16, fontWeight: "700", color: SharedColors.navy, flex: 1 },
 
   /* Trip block */
   tripBlock: {},
   tripHeaderRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 10 },
-  tripLabel: { fontSize: 14, fontWeight: "700", color: T.purple },
-  tripEditBtn: { backgroundColor: T.purpleLight, borderRadius: 6, paddingHorizontal: 10, paddingVertical: 4 },
-  tripEditBtnText: { color: T.purple, fontSize: 12, fontWeight: "600" },
+  tripLabel: { fontSize: 14, fontWeight: "700", color: PatientTheme.primary },
+  tripEditBtn: { backgroundColor: PatientTheme.primaryLight, borderRadius: 6, paddingHorizontal: 10, paddingVertical: 4 },
+  tripEditBtnText: { color: PatientTheme.primary, fontSize: 12, fontWeight: "600" },
   addTripBtn: {
-    borderWidth: 1, borderColor: T.purple, borderStyle: "dashed", borderRadius: 12,
+    borderWidth: 1, borderColor: PatientTheme.primary, borderStyle: "dashed", borderRadius: 12,
     paddingVertical: 14, paddingHorizontal: 20, alignItems: "center", marginTop: 14,
   },
-  addTripBtnText: { color: T.purple, fontSize: 14, fontWeight: "600" },
-  pickupTripLabel: { fontSize: 13, fontWeight: "700", color: T.purple, marginBottom: 6 },
+  addTripBtnText: { color: PatientTheme.primary, fontSize: 14, fontWeight: "600" },
+  pickupTripLabel: { fontSize: 13, fontWeight: "700", color: PatientTheme.primary, marginBottom: 6 },
 
   /* Edit button */
   editBtn: {
-    backgroundColor: T.purpleLight, borderRadius: 8,
+    backgroundColor: PatientTheme.primaryLight, borderRadius: 8,
     paddingHorizontal: 14, paddingVertical: 6,
   },
-  editBtnText: { color: T.purple, fontSize: 13, fontWeight: "600" },
+  editBtnText: { color: PatientTheme.primary, fontSize: 13, fontWeight: "600" },
 
   /* Visit */
   visitRow: { flexDirection: "row", alignItems: "flex-start", marginBottom: 12, paddingLeft: 4 },
   visitDot: {
-    width: 8, height: 8, borderRadius: 4, backgroundColor: T.purple,
+    width: 8, height: 8, borderRadius: 4, backgroundColor: PatientTheme.primary,
     marginTop: 6, marginRight: 12,
   },
-  visitLabel: { fontSize: 14, fontWeight: "600", color: T.navy },
-  visitDesc: { fontSize: 12, color: T.slate, marginTop: 1 },
-  visitDate: { fontSize: 12, color: T.purple, fontWeight: "600" },
+  visitLabel: { fontSize: 14, fontWeight: "600", color: SharedColors.navy },
+  visitDesc: { fontSize: 12, color: SharedColors.slate, marginTop: 1 },
+  visitDate: { fontSize: 12, color: PatientTheme.primary, fontWeight: "600" },
 
   /* Flight */
   flightRow: { flexDirection: "row", marginBottom: 12 },
   flightCol: { flex: 1 },
-  flightDivider: { width: 1, backgroundColor: T.border, marginHorizontal: 12 },
+  flightDivider: { width: 1, backgroundColor: SharedColors.border, marginHorizontal: 12 },
   badge: {
-    flexDirection: "row", alignItems: "center", backgroundColor: T.purpleLight,
+    flexDirection: "row", alignItems: "center", backgroundColor: PatientTheme.primaryLight,
     alignSelf: "flex-start", borderRadius: 8, paddingHorizontal: 8, paddingVertical: 3,
     marginBottom: 8,
   },
   badgeIcon: { fontSize: 12, marginRight: 4 },
-  badgeText: { fontSize: 12, fontWeight: "700", color: T.purple },
-  infoMain: { fontSize: 15, fontWeight: "600", color: T.navy, marginBottom: 2 },
-  infoSub: { fontSize: 12, color: T.slate, marginBottom: 1 },
-  infoPlaceholder: { fontSize: 13, color: T.slateLight, fontStyle: "italic", marginTop: 4 },
+  badgeText: { fontSize: 12, fontWeight: "700", color: PatientTheme.primary },
+  infoMain: { fontSize: 15, fontWeight: "600", color: SharedColors.navy, marginBottom: 2 },
+  infoSub: { fontSize: 12, color: SharedColors.slate, marginBottom: 1 },
+  infoPlaceholder: { fontSize: 13, color: SharedColors.slateLight, fontStyle: "italic", marginTop: 4 },
 
   /* Hotel */
   hotelRow: {
-    borderTopWidth: 1, borderTopColor: T.border, paddingTop: 12,
+    borderTopWidth: 1, borderTopColor: SharedColors.border, paddingTop: 12,
   },
 
   /* Empty section */
   emptySection: { alignItems: "center", paddingVertical: 20 },
   emptySectionIcon: { fontSize: 32, marginBottom: 8 },
-  emptySectionText: { fontSize: 15, fontWeight: "600", color: T.navy },
-  emptySectionSub: { fontSize: 12, color: T.slate, marginTop: 4 },
+  emptySectionText: { fontSize: 15, fontWeight: "600", color: SharedColors.navy },
+  emptySectionSub: { fontSize: 12, color: SharedColors.slate, marginTop: 4 },
 
   /* Pickup */
   pickupRow: {
     flexDirection: "row", alignItems: "center", justifyContent: "space-between",
-    paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: T.border,
+    paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: SharedColors.border,
   },
-  pickupLabel: { fontSize: 14, fontWeight: "500", color: T.navy },
+  pickupLabel: { fontSize: 14, fontWeight: "500", color: SharedColors.navy },
   pickupStatus: { borderRadius: 8, paddingHorizontal: 10, paddingVertical: 4 },
   pickupStatusText: { fontSize: 12, fontWeight: "600" },
 
   /* Payment */
   paymentRow: {
     flexDirection: "row", justifyContent: "space-between",
-    paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: T.border,
+    paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: SharedColors.border,
   },
-  paymentLabel: { fontSize: 14, color: T.slate },
-  paymentValue: { fontSize: 14, fontWeight: "600", color: T.navy },
+  paymentLabel: { fontSize: 14, color: SharedColors.slate },
+  paymentValue: { fontSize: 14, fontWeight: "600", color: SharedColors.navy },
 
   /* Treatments */
   treatmentRow: {
     flexDirection: "row", justifyContent: "space-between", alignItems: "center",
-    paddingVertical: 8, borderBottomWidth: 1, borderBottomColor: T.border,
+    paddingVertical: 8, borderBottomWidth: 1, borderBottomColor: SharedColors.border,
   },
-  treatmentName: { fontSize: 14, color: T.navy, flex: 1 },
-  treatmentDetail: { fontSize: 13, color: T.slate },
+  treatmentName: { fontSize: 14, color: SharedColors.navy, flex: 1 },
+  treatmentDetail: { fontSize: 13, color: SharedColors.slate },
 
   /* Cancel Booking */
   cancelBtn: {
-    backgroundColor: "#fef2f2", borderWidth: 1, borderColor: "#fecaca",
+    backgroundColor: SharedColors.redLight, borderWidth: 1, borderColor: "#fecaca",
     borderRadius: 14, paddingVertical: 16, alignItems: "center" as const,
     marginBottom: 14,
   },

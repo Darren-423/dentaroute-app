@@ -8,15 +8,7 @@ import {
 import * as ImagePicker from "expo-image-picker";
 import { Booking, SERVICE_TIER_CONFIG, store } from "../../lib/store";
 
-const C = {
-  plum: "#4A0080", violet: "#5C10A0", lavender: "#f0e6f6",
-  navy: "#0f172a", slate: "#64748b", slateLight: "#94a3b8",
-  border: "#e2e8f0", bg: "#f8fafc", white: "#ffffff",
-  green: "#16a34a", greenLight: "#dcfce7",
-  amber: "#f59e0b", amberLight: "#fffbeb",
-  red: "#ef4444",
-};
-
+import { PatientTheme, SharedColors } from "../../constants/theme";
 export default function VisitCheckoutScreen() {
   const { bookingId } = useLocalSearchParams<{ bookingId: string }>();
   const [booking, setBooking] = useState<Booking | null>(null);
@@ -94,7 +86,7 @@ export default function VisitCheckoutScreen() {
   if (loading) {
     return (
       <View style={s.loadingContainer}>
-        <ActivityIndicator size="large" color={C.plum} />
+        <ActivityIndicator size="large" color={PatientTheme.primary} />
       </View>
     );
   }
@@ -102,7 +94,7 @@ export default function VisitCheckoutScreen() {
   if (!booking) {
     return (
       <View style={s.loadingContainer}>
-        <Text style={{ color: C.slate }}>Booking not found</Text>
+        <Text style={{ color: SharedColors.slate }}>Booking not found</Text>
       </View>
     );
   }
@@ -111,7 +103,7 @@ export default function VisitCheckoutScreen() {
     <View style={s.container}>
       <ScrollView showsVerticalScrollIndicator={false}>
         <LinearGradient
-          colors={["#3D0070", "#2F0058", "#220040"]}
+          colors={[...PatientTheme.gradient]}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
           style={s.header}
@@ -147,7 +139,7 @@ export default function VisitCheckoutScreen() {
                     ]}>
                       <Text style={[
                         s.progressDotText,
-                        (isDone || isCurrent) && { color: C.white },
+                        (isDone || isCurrent) && { color: SharedColors.white },
                       ]}>
                         {isDone ? "✓" : visitNum}
                       </Text>
@@ -215,7 +207,7 @@ export default function VisitCheckoutScreen() {
               </View>
             ) : uploading ? (
               <View style={s.uploadingWrap}>
-                <ActivityIndicator color={C.plum} />
+                <ActivityIndicator color={PatientTheme.primary} />
                 <Text style={s.uploadingText}>Processing receipt...</Text>
               </View>
             ) : (
@@ -310,8 +302,8 @@ export default function VisitCheckoutScreen() {
 }
 
 const s = StyleSheet.create({
-  container: { flex: 1, backgroundColor: C.bg },
-  loadingContainer: { flex: 1, justifyContent: "center", alignItems: "center", backgroundColor: C.bg },
+  container: { flex: 1, backgroundColor: SharedColors.bg },
+  loadingContainer: { flex: 1, justifyContent: "center", alignItems: "center", backgroundColor: SharedColors.bg },
 
   header: { paddingHorizontal: 20, paddingTop: 60, paddingBottom: 18 },
   headerRow: { flexDirection: "row", alignItems: "center" },
@@ -321,83 +313,83 @@ const s = StyleSheet.create({
     borderWidth: 1, borderColor: "rgba(255,255,255,0.15)",
     alignItems: "center", justifyContent: "center",
   },
-  backArrow: { fontSize: 24, color: "#fff", fontWeight: "600", marginTop: -2 },
+  backArrow: { fontSize: 24, color: SharedColors.white, fontWeight: "600", marginTop: -2 },
   headerCenter: { flex: 1, alignItems: "center" },
-  title: { fontSize: 18, fontWeight: "700", color: "#fff" },
+  title: { fontSize: 18, fontWeight: "700", color: SharedColors.white },
   subtitle: { fontSize: 12, color: "rgba(255,255,255,0.55)", marginTop: 2 },
 
   content: { padding: 20, gap: 16 },
 
   // Progress
   progressCard: {
-    backgroundColor: C.white, borderRadius: 16, padding: 18,
-    borderWidth: 1, borderColor: C.border,
+    backgroundColor: SharedColors.white, borderRadius: 16, padding: 18,
+    borderWidth: 1, borderColor: SharedColors.border,
   },
   progressRow: { flexDirection: "row", alignItems: "center", justifyContent: "center" },
   progressStep: { flexDirection: "row", alignItems: "center" },
   progressDot: {
-    width: 32, height: 32, borderRadius: 16, backgroundColor: C.bg,
-    borderWidth: 2, borderColor: C.border,
+    width: 32, height: 32, borderRadius: 16, backgroundColor: SharedColors.bg,
+    borderWidth: 2, borderColor: SharedColors.border,
     alignItems: "center", justifyContent: "center",
   },
-  progressDotDone: { backgroundColor: C.green, borderColor: C.green },
-  progressDotCurrent: { backgroundColor: C.plum, borderColor: C.plum },
-  progressDotText: { fontSize: 13, fontWeight: "700", color: C.slateLight },
-  progressLine: { width: 28, height: 2, backgroundColor: C.border, marginHorizontal: 4 },
-  progressLineDone: { backgroundColor: C.green },
+  progressDotDone: { backgroundColor: SharedColors.green, borderColor: SharedColors.green },
+  progressDotCurrent: { backgroundColor: PatientTheme.primary, borderColor: PatientTheme.primary },
+  progressDotText: { fontSize: 13, fontWeight: "700", color: SharedColors.slateLight },
+  progressLine: { width: 28, height: 2, backgroundColor: SharedColors.border, marginHorizontal: 4 },
+  progressLineDone: { backgroundColor: SharedColors.green },
 
   // Section card
   sectionCard: {
-    backgroundColor: C.white, borderRadius: 16, padding: 18, gap: 12,
-    borderWidth: 1, borderColor: C.border,
+    backgroundColor: SharedColors.white, borderRadius: 16, padding: 18, gap: 12,
+    borderWidth: 1, borderColor: SharedColors.border,
   },
   sectionHeader: { flexDirection: "row", alignItems: "center", gap: 8 },
   sectionIcon: { fontSize: 20 },
-  sectionTitle: { fontSize: 16, fontWeight: "700", color: C.navy, flex: 1 },
-  sectionDesc: { fontSize: 13, color: C.slate, lineHeight: 19 },
+  sectionTitle: { fontSize: 16, fontWeight: "700", color: SharedColors.navy, flex: 1 },
+  sectionDesc: { fontSize: 13, color: SharedColors.slate, lineHeight: 19 },
 
   // Payment info
   paymentInfo: {
-    backgroundColor: C.lavender, borderRadius: 12, padding: 16, alignItems: "center", gap: 4,
+    backgroundColor: PatientTheme.primaryLight, borderRadius: 12, padding: 16, alignItems: "center", gap: 4,
   },
-  paymentLabel: { fontSize: 12, color: C.slate, fontWeight: "600" },
-  paymentAmount: { fontSize: 28, fontWeight: "800", color: C.plum },
-  paymentNote: { fontSize: 11, color: C.slateLight, marginTop: 2 },
+  paymentLabel: { fontSize: 12, color: SharedColors.slate, fontWeight: "600" },
+  paymentAmount: { fontSize: 28, fontWeight: "800", color: PatientTheme.primary },
+  paymentNote: { fontSize: 11, color: SharedColors.slateLight, marginTop: 2 },
 
   confirmBtn: {
-    backgroundColor: C.plum, borderRadius: 12, paddingVertical: 14, alignItems: "center",
+    backgroundColor: PatientTheme.primary, borderRadius: 12, paddingVertical: 14, alignItems: "center",
   },
-  confirmBtnText: { color: C.white, fontSize: 15, fontWeight: "700" },
+  confirmBtnText: { color: SharedColors.white, fontSize: 15, fontWeight: "700" },
 
   confirmedBanner: {
     flexDirection: "row", alignItems: "center", gap: 8,
-    backgroundColor: C.greenLight, borderRadius: 12, padding: 14,
+    backgroundColor: SharedColors.greenLight, borderRadius: 12, padding: 14,
   },
-  confirmedIcon: { fontSize: 18, color: C.green, fontWeight: "700" },
+  confirmedIcon: { fontSize: 18, color: SharedColors.green, fontWeight: "700" },
   confirmedText: { fontSize: 14, fontWeight: "600", color: "#166534" },
 
   // Receipt upload
   freeBadge: {
-    backgroundColor: C.amberLight, borderRadius: 6, paddingHorizontal: 8, paddingVertical: 2,
+    backgroundColor: SharedColors.amberLight, borderRadius: 6, paddingHorizontal: 8, paddingVertical: 2,
     borderWidth: 1, borderColor: "rgba(245,158,11,0.3)",
   },
   freeBadgeText: { fontSize: 9, fontWeight: "700", color: "#92400e", letterSpacing: 0.5 },
 
   uploadBtn: {
-    backgroundColor: C.lavender, borderRadius: 12, paddingVertical: 14, alignItems: "center",
+    backgroundColor: PatientTheme.primaryLight, borderRadius: 12, paddingVertical: 14, alignItems: "center",
     borderWidth: 1.5, borderColor: "rgba(74,0,128,0.2)", borderStyle: "dashed",
   },
   uploadBtnDisabled: { opacity: 0.4 },
-  uploadBtnText: { color: C.plum, fontSize: 14, fontWeight: "600" },
-  uploadHint: { fontSize: 11, color: C.slateLight, textAlign: "center" },
+  uploadBtnText: { color: PatientTheme.primary, fontSize: 14, fontWeight: "600" },
+  uploadHint: { fontSize: 11, color: SharedColors.slateLight, textAlign: "center" },
 
   receiptPreview: { width: "100%", height: 120, borderRadius: 10 },
 
   uploadingWrap: { alignItems: "center", padding: 20, gap: 10 },
-  uploadingText: { fontSize: 13, color: C.slate },
+  uploadingText: { fontSize: 13, color: SharedColors.slate },
 
   unlockedBanner: {
-    backgroundColor: C.greenLight, borderRadius: 12, padding: 16, alignItems: "center", gap: 6,
+    backgroundColor: SharedColors.greenLight, borderRadius: 12, padding: 16, alignItems: "center", gap: 6,
     borderWidth: 1, borderColor: "rgba(22,163,74,0.2)",
   },
   unlockedIcon: { fontSize: 28 },
@@ -405,18 +397,18 @@ const s = StyleSheet.create({
   unlockedDesc: { fontSize: 13, color: "#166534", textAlign: "center" },
 
   privacyNote: {
-    fontSize: 11, color: C.slateLight, fontStyle: "italic", textAlign: "center",
+    fontSize: 11, color: SharedColors.slateLight, fontStyle: "italic", textAlign: "center",
   },
 
   // Trip summary
   summaryItems: { gap: 8 },
   summaryRow: { flexDirection: "row", justifyContent: "space-between" },
-  summaryLabel: { fontSize: 13, color: C.slate },
-  summaryValue: { fontSize: 13, fontWeight: "600", color: C.navy },
+  summaryLabel: { fontSize: 13, color: SharedColors.slate },
+  summaryValue: { fontSize: 13, fontWeight: "600", color: SharedColors.navy },
 
   // Disclaimer
   disclaimer: {
-    backgroundColor: C.amberLight, borderRadius: 10, padding: 12,
+    backgroundColor: SharedColors.amberLight, borderRadius: 10, padding: 12,
     borderWidth: 1, borderColor: "rgba(245,158,11,0.15)",
   },
   disclaimerText: { fontSize: 11, color: "#92400e", lineHeight: 16 },
@@ -424,11 +416,11 @@ const s = StyleSheet.create({
   // Bottom
   bottom: {
     paddingHorizontal: 24, paddingVertical: 16, paddingBottom: 56,
-    backgroundColor: C.white, borderTopWidth: 1, borderTopColor: C.border,
+    backgroundColor: SharedColors.white, borderTopWidth: 1, borderTopColor: SharedColors.border,
   },
   continueBtn: {
-    backgroundColor: C.plum, borderRadius: 14, paddingVertical: 16, alignItems: "center",
+    backgroundColor: PatientTheme.primary, borderRadius: 14, paddingVertical: 16, alignItems: "center",
   },
   continueBtnDisabled: { opacity: 0.4 },
-  continueBtnText: { color: C.white, fontSize: 16, fontWeight: "700" },
+  continueBtnText: { color: SharedColors.white, fontSize: 16, fontWeight: "700" },
 });

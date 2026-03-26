@@ -15,19 +15,7 @@ import {
 } from "react-native";
 import { store } from "../../lib/store";
 
-const T = {
-  teal: "#4A0080",
-  tealMid: "#5C10A0",
-  tealLight: "#f0e6f6",
-  navy: "#0f172a",
-  slate: "#64748b",
-  slateLight: "#94a3b8",
-  border: "#e2e8f0",
-  bg: "#f8fafc",
-  white: "#ffffff",
-  coral: "#e05a3a",
-};
-
+import { PatientTheme, SharedColors } from "../../constants/theme";
 type FileItem = { uri: string; name: string; size?: string };
 
 type CategoryKey = "xrays" | "treatmentPlans" | "photos";
@@ -139,7 +127,7 @@ export default function PatientUploadScreen() {
   return (
     <View style={styles.container}>
       {/* Header */}
-      <LinearGradient colors={["#3D0070", "#2F0058", "#220040"]} style={styles.header}>
+      <LinearGradient colors={[...PatientTheme.gradient]} style={styles.header}>
         <View style={styles.headerRow}>
           <TouchableOpacity style={styles.backBtn} onPress={() => router.back()} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
             <Text style={styles.backArrow}>‹</Text>
@@ -155,7 +143,7 @@ export default function PatientUploadScreen() {
       {/* Content */}
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
 
-                  <View style={{ backgroundColor: "#f1f5f9", borderRadius: 8, padding: 10, marginBottom: 12, borderWidth: 1, borderColor: "#e2e8f0" }}><Text style={{ fontSize: 11, color: "#64748b", lineHeight: 16 }}>Uploaded files are shared with dentists for quoting purposes only, not for diagnosis. Concourse does not verify the accuracy of uploaded files.</Text></View>
+                  <View style={{ backgroundColor: "#f1f5f9", borderRadius: 8, padding: 10, marginBottom: 12, borderWidth: 1, borderColor: SharedColors.border }}><Text style={{ fontSize: 11, color: SharedColors.slate, lineHeight: 16 }}>Uploaded files are shared with dentists for quoting purposes only, not for diagnosis. Concourse does not verify the accuracy of uploaded files.</Text></View>
 
           {/* Recommendation Banner */}
         <View style={styles.recBanner}>
@@ -239,7 +227,7 @@ export default function PatientUploadScreen() {
         )}
         <TouchableOpacity style={styles.nextBtn} onPress={handleNext} disabled={loading} activeOpacity={0.85}>
           {loading ? (
-            <ActivityIndicator color={T.white} size="small" />
+            <ActivityIndicator color={SharedColors.white} size="small" />
           ) : (
             <Text style={styles.nextBtnText}>Next: Select Treatment →</Text>
           )}
@@ -292,7 +280,7 @@ export default function PatientUploadScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: T.bg },
+  container: { flex: 1, backgroundColor: SharedColors.bg },
 
   header: {
     paddingHorizontal: 20,
@@ -309,8 +297,8 @@ const styles = StyleSheet.create({
     borderWidth: 1, borderColor: "rgba(255,255,255,0.15)",
     alignItems: "center", justifyContent: "center",
   },
-  backArrow: { fontSize: 24, color: "#fff", fontWeight: "600", marginTop: -2 },
-  title: { fontSize: 18, fontWeight: "700", color: "#fff" },
+  backArrow: { fontSize: 24, color: SharedColors.white, fontWeight: "600", marginTop: -2 },
+  title: { fontSize: 18, fontWeight: "700", color: SharedColors.white },
   subtitle: { fontSize: 12, color: "rgba(255,255,255,0.55)", marginTop: 2 },
 
   content: { padding: 20, gap: 16, paddingBottom: 60 },
@@ -332,12 +320,12 @@ const styles = StyleSheet.create({
 
   // Category Card
   categoryCard: {
-    backgroundColor: T.white,
+    backgroundColor: SharedColors.white,
     borderRadius: 16,
     padding: 18,
     gap: 14,
     borderWidth: 1,
-    borderColor: T.border,
+    borderColor: SharedColors.border,
   },
   catHeader: {
     flexDirection: "row",
@@ -350,46 +338,46 @@ const styles = StyleSheet.create({
     alignItems: "center",
     gap: 8,
   },
-  catTitle: { fontSize: 16, fontWeight: "700", color: T.navy },
+  catTitle: { fontSize: 16, fontWeight: "700", color: SharedColors.navy },
   countBadge: {
-    backgroundColor: T.tealLight,
+    backgroundColor: PatientTheme.primaryLight,
     borderRadius: 10,
     paddingHorizontal: 8,
     paddingVertical: 2,
   },
-  countBadgeText: { fontSize: 12, fontWeight: "700", color: T.teal },
-  catDesc: { fontSize: 13, color: T.slate, marginTop: 2 },
+  countBadgeText: { fontSize: 12, fontWeight: "700", color: PatientTheme.primary },
+  catDesc: { fontSize: 13, color: SharedColors.slate, marginTop: 2 },
 
   // Files
   filesList: { gap: 8 },
   fileCard: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: T.bg,
+    backgroundColor: SharedColors.bg,
     borderRadius: 10,
     padding: 8,
     gap: 10,
     borderWidth: 1,
-    borderColor: T.border,
+    borderColor: SharedColors.border,
   },
   fileThumb: {
     width: 44,
     height: 44,
     borderRadius: 6,
-    backgroundColor: T.border,
+    backgroundColor: SharedColors.border,
   },
   fileInfo: { flex: 1, gap: 1 },
-  fileName: { fontSize: 12, fontWeight: "600", color: T.navy },
-  fileSize: { fontSize: 11, color: T.slateLight },
+  fileName: { fontSize: 12, fontWeight: "600", color: SharedColors.navy },
+  fileSize: { fontSize: 11, color: SharedColors.slateLight },
   removeBtn: {
     width: 26,
     height: 26,
     borderRadius: 13,
-    backgroundColor: "#fef2ee",
+    backgroundColor: SharedColors.coralLight,
     alignItems: "center",
     justifyContent: "center",
   },
-  removeText: { color: T.coral, fontSize: 12, fontWeight: "600" },
+  removeText: { color: SharedColors.coral, fontSize: 12, fontWeight: "600" },
 
   // Upload button
   uploadBtn: {
@@ -398,24 +386,24 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     gap: 6,
     borderWidth: 1.5,
-    borderColor: T.tealMid,
+    borderColor: PatientTheme.primaryMid,
     borderRadius: 12,
     paddingVertical: 11,
-    backgroundColor: T.tealLight,
+    backgroundColor: PatientTheme.primaryLight,
   },
-  uploadBtnPlus: { fontSize: 18, color: T.teal, fontWeight: "600" },
-  uploadBtnText: { fontSize: 14, fontWeight: "600", color: T.teal },
+  uploadBtnPlus: { fontSize: 18, color: PatientTheme.primary, fontWeight: "600" },
+  uploadBtnText: { fontSize: 14, fontWeight: "600", color: PatientTheme.primary },
 
-  catHint: { fontSize: 11, color: T.slateLight, lineHeight: 16 },
+  catHint: { fontSize: 11, color: SharedColors.slateLight, lineHeight: 16 },
 
   // Tip box
   tipBox: {
-    backgroundColor: T.tealLight,
+    backgroundColor: PatientTheme.primaryLight,
     borderRadius: 12,
     padding: 14,
     gap: 4,
   },
-  tipTitle: { fontSize: 13, fontWeight: "600", color: T.teal },
+  tipTitle: { fontSize: 13, fontWeight: "600", color: PatientTheme.primary },
   tipText: { fontSize: 12, color: "#0f5c53", lineHeight: 18 },
 
   // Bottom
@@ -423,26 +411,26 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
     paddingVertical: 16,
     borderTopWidth: 1,
-    borderTopColor: T.border,
-    backgroundColor: T.white,
+    borderTopColor: SharedColors.border,
+    backgroundColor: SharedColors.white,
     gap: 8,
   },
-  totalText: { fontSize: 13, color: T.teal, fontWeight: "600", textAlign: "center" },
+  totalText: { fontSize: 13, color: PatientTheme.primary, fontWeight: "600", textAlign: "center" },
   nextBtn: {
-    backgroundColor: T.teal,
+    backgroundColor: PatientTheme.primary,
     borderRadius: 14,
     paddingVertical: 15,
     alignItems: "center",
     minHeight: 52,
   },
-  nextBtnText: { color: T.white, fontSize: 15, fontWeight: "600" },
+  nextBtnText: { color: SharedColors.white, fontSize: 15, fontWeight: "600" },
   skipBtn: { alignItems: "center", paddingVertical: 8 },
-  skipText: { fontSize: 13, color: T.slateLight },
+  skipText: { fontSize: 13, color: SharedColors.slateLight },
 
   // Modal
   modalOverlay: { flex: 1, backgroundColor: "rgba(0,0,0,0.5)", justifyContent: "flex-end" },
   modalContent: {
-    backgroundColor: T.white,
+    backgroundColor: SharedColors.white,
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
     padding: 24,
@@ -453,32 +441,32 @@ const styles = StyleSheet.create({
     width: 40,
     height: 4,
     borderRadius: 2,
-    backgroundColor: T.border,
+    backgroundColor: SharedColors.border,
     alignSelf: "center",
     marginBottom: 8,
   },
-  modalTitle: { fontSize: 20, fontWeight: "700", color: T.navy },
-  modalDesc: { fontSize: 14, color: T.slate, marginBottom: 8 },
+  modalTitle: { fontSize: 20, fontWeight: "700", color: SharedColors.navy },
+  modalDesc: { fontSize: 14, color: SharedColors.slate, marginBottom: 8 },
   optionBtn: {
     flexDirection: "row",
     alignItems: "center",
     gap: 16,
-    backgroundColor: T.bg,
+    backgroundColor: SharedColors.bg,
     borderRadius: 14,
     padding: 18,
     borderWidth: 1,
-    borderColor: T.border,
+    borderColor: SharedColors.border,
   },
   optionIcon: {
     width: 52,
     height: 52,
     borderRadius: 14,
-    backgroundColor: T.tealLight,
+    backgroundColor: PatientTheme.primaryLight,
     alignItems: "center",
     justifyContent: "center",
   },
-  optionTitle: { fontSize: 15, fontWeight: "600", color: T.navy, marginBottom: 2 },
-  optionDesc: { fontSize: 12, color: T.slate },
+  optionTitle: { fontSize: 15, fontWeight: "600", color: SharedColors.navy, marginBottom: 2 },
+  optionDesc: { fontSize: 12, color: SharedColors.slate },
   cancelBtn: { alignItems: "center", paddingVertical: 14, marginTop: 4 },
-  cancelText: { fontSize: 15, color: T.slateLight, fontWeight: "500" },
+  cancelText: { fontSize: 15, color: SharedColors.slateLight, fontWeight: "500" },
 });

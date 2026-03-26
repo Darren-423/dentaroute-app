@@ -12,22 +12,8 @@ import {
 } from "react-native";
 import { Booking, getRefundInfo, store } from "../../lib/store";
 
+import { PatientTheme, SharedColors } from "../../constants/theme";
 /* ── Palette: monochrome + single warm accent ── */
-const C = {
-  bg: "#f6f7f9",
-  card: "#ffffff",
-  navy: "#0f172a",
-  text: "#1e293b",
-  sub: "#64748b",
-  muted: "#94a3b8",
-  faint: "#cbd5e1",
-  border: "#e8ecf1",
-  accent: "#b91c1c",       // warm, serious red — the ONLY color accent
-  accentSoft: "#fef2f2",
-  accentMid: "#dc2626",
-  overlay: "rgba(15,23,42,0.04)",
-};
-
 const REASONS = [
   "Changed my mind",
   "Found another dentist",
@@ -93,7 +79,7 @@ export default function CancelBookingScreen() {
   if (loading) {
     return (
       <View style={[s.container, { justifyContent: "center", alignItems: "center" }]}>
-        <ActivityIndicator size="large" color={C.sub} />
+        <ActivityIndicator size="large" color={SharedColors.slate} />
       </View>
     );
   }
@@ -101,7 +87,7 @@ export default function CancelBookingScreen() {
   if (!booking) {
     return (
       <View style={[s.container, { justifyContent: "center", alignItems: "center" }]}>
-        <Text style={{ color: C.sub, fontSize: 16 }}>Booking not found</Text>
+        <Text style={{ color: SharedColors.slate, fontSize: 16 }}>Booking not found</Text>
       </View>
     );
   }
@@ -110,7 +96,7 @@ export default function CancelBookingScreen() {
   if (cancelled) {
     return (
       <View style={s.container}>
-        <LinearGradient colors={["#3D0070", "#2F0058", "#220040"]} style={s.header}>
+        <LinearGradient colors={[...PatientTheme.gradient]} style={s.header}>
           <View style={s.headerRow}>
             <View style={{ width: 36 }} />
             <View style={s.headerCenter}>
@@ -183,7 +169,7 @@ export default function CancelBookingScreen() {
   return (
     <View style={s.container}>
       {/* Header */}
-      <LinearGradient colors={["#3D0070", "#2F0058", "#220040"]} style={s.header}>
+      <LinearGradient colors={[...PatientTheme.gradient]} style={s.header}>
         <View style={s.headerRow}>
           <TouchableOpacity style={s.backBtn} onPress={() => router.back()} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
             <Text style={s.backArrow}>{"<"}</Text>
@@ -303,7 +289,7 @@ export default function CancelBookingScreen() {
           activeOpacity={0.85}
         >
           {cancelling ? (
-            <ActivityIndicator color="#fff" size="small" />
+            <ActivityIndicator color={SharedColors.white} size="small" />
           ) : (
             <Text style={s.cancelBtnText}>Cancel Booking</Text>
           )}
@@ -318,7 +304,7 @@ export default function CancelBookingScreen() {
 
 /* ═══════════════════════════════════════ */
 const s = StyleSheet.create({
-  container: { flex: 1, backgroundColor: C.bg },
+  container: { flex: 1, backgroundColor: SharedColors.bg },
 
   /* ── Header ── */
   header: { paddingHorizontal: 20, paddingTop: 60, paddingBottom: 18 },
@@ -330,19 +316,19 @@ const s = StyleSheet.create({
     borderWidth: 1, borderColor: "rgba(255,255,255,0.15)",
     alignItems: "center", justifyContent: "center",
   },
-  backArrow: { fontSize: 20, color: "#fff", fontWeight: "600" },
-  headerTitle: { fontSize: 17, fontWeight: "700", color: "#fff", letterSpacing: 0.1 },
+  backArrow: { fontSize: 20, color: SharedColors.white, fontWeight: "600" },
+  headerTitle: { fontSize: 17, fontWeight: "700", color: SharedColors.white, letterSpacing: 0.1 },
 
   /* ── Scroll ── */
   scrollContent: { padding: 20, gap: 14, paddingBottom: 20 },
 
   /* ── Card ── */
   card: {
-    backgroundColor: C.card, borderRadius: 16, padding: 20,
-    borderWidth: 1, borderColor: C.border,
+    backgroundColor: SharedColors.white, borderRadius: 16, padding: 20,
+    borderWidth: 1, borderColor: SharedColors.border,
   },
   sectionLabel: {
-    fontSize: 13, fontWeight: "700", color: C.navy,
+    fontSize: 13, fontWeight: "700", color: SharedColors.navy,
     letterSpacing: 0.2, marginBottom: 16,
   },
 
@@ -350,19 +336,19 @@ const s = StyleSheet.create({
   clinicRow: { flexDirection: "row", alignItems: "center", gap: 14 },
   clinicIcon: {
     width: 44, height: 44, borderRadius: 12,
-    backgroundColor: C.overlay, alignItems: "center", justifyContent: "center",
+    backgroundColor: "rgba(15,23,42,0.04)", alignItems: "center", justifyContent: "center",
   },
-  clinicName: { fontSize: 15, fontWeight: "700", color: C.navy },
-  clinicSub: { fontSize: 12, color: C.sub, marginTop: 2 },
-  divider: { height: 1, backgroundColor: C.border, marginVertical: 16 },
+  clinicName: { fontSize: 15, fontWeight: "700", color: SharedColors.navy },
+  clinicSub: { fontSize: 12, color: SharedColors.slate, marginTop: 2 },
+  divider: { height: 1, backgroundColor: SharedColors.border, marginVertical: 16 },
   detailGrid: {
     flexDirection: "row", flexWrap: "wrap", gap: 0,
   },
   detailCell: {
     width: "50%", paddingVertical: 6,
   },
-  detailLabel: { fontSize: 11, color: C.muted, fontWeight: "500", marginBottom: 3 },
-  detailVal: { fontSize: 15, fontWeight: "600", color: C.navy },
+  detailLabel: { fontSize: 11, color: SharedColors.slateLight, fontWeight: "500", marginBottom: 3 },
+  detailVal: { fontSize: 15, fontWeight: "600", color: SharedColors.navy },
 
   /* ── Refund tiers ── */
   tierRow: {
@@ -371,41 +357,41 @@ const s = StyleSheet.create({
     borderRadius: 10, marginBottom: 4,
   },
   tierRowActive: {
-    backgroundColor: C.overlay,
+    backgroundColor: "rgba(15,23,42,0.04)",
     paddingHorizontal: 14,
   },
   tierAccent: {
     width: 3, height: 28, borderRadius: 2,
-    backgroundColor: C.navy, marginRight: 12,
+    backgroundColor: SharedColors.navy, marginRight: 12,
   },
-  tierWindow: { fontSize: 13, color: C.muted, fontWeight: "500" },
-  tierWindowActive: { color: C.navy, fontWeight: "600" },
-  tierNote: { fontSize: 11, color: C.faint, marginTop: 1 },
-  tierNoteActive: { color: C.sub },
-  tierPct: { fontSize: 17, fontWeight: "700", color: C.faint },
-  tierPctActive: { color: C.navy },
+  tierWindow: { fontSize: 13, color: SharedColors.slateLight, fontWeight: "500" },
+  tierWindowActive: { color: SharedColors.navy, fontWeight: "600" },
+  tierNote: { fontSize: 11, color: SharedColors.faint, marginTop: 1 },
+  tierNoteActive: { color: SharedColors.slate },
+  tierPct: { fontSize: 17, fontWeight: "700", color: SharedColors.faint },
+  tierPctActive: { color: SharedColors.navy },
 
   refundSummary: {
     flexDirection: "row", alignItems: "center", justifyContent: "space-between",
     marginTop: 14, paddingTop: 14,
-    borderTopWidth: 1, borderTopColor: C.border,
+    borderTopWidth: 1, borderTopColor: SharedColors.border,
   },
-  refundSummaryLabel: { fontSize: 13, fontWeight: "600", color: C.sub },
-  refundSummaryVal: { fontSize: 18, fontWeight: "800", color: C.navy },
-  refundSummaryOf: { fontSize: 13, fontWeight: "400", color: C.muted },
+  refundSummaryLabel: { fontSize: 13, fontWeight: "600", color: SharedColors.slate },
+  refundSummaryVal: { fontSize: 18, fontWeight: "800", color: SharedColors.navy },
+  refundSummaryOf: { fontSize: 13, fontWeight: "400", color: SharedColors.slateLight },
 
   /* ── Reasons ── */
   reasonGrid: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
   reasonChip: {
     paddingHorizontal: 14, paddingVertical: 10,
-    borderRadius: 10, borderWidth: 1.5, borderColor: C.border,
-    backgroundColor: C.card,
+    borderRadius: 10, borderWidth: 1.5, borderColor: SharedColors.border,
+    backgroundColor: SharedColors.white,
   },
   reasonChipSel: {
-    borderColor: C.navy, backgroundColor: C.navy,
+    borderColor: SharedColors.navy, backgroundColor: SharedColors.navy,
   },
-  reasonText: { fontSize: 13, color: C.sub, fontWeight: "500" },
-  reasonTextSel: { color: "#fff", fontWeight: "600" },
+  reasonText: { fontSize: 13, color: SharedColors.slate, fontWeight: "500" },
+  reasonTextSel: { color: SharedColors.white, fontWeight: "600" },
 
   /* ── Warning ── */
   warningRow: {
@@ -414,23 +400,23 @@ const s = StyleSheet.create({
   },
   warningDot: {
     width: 6, height: 6, borderRadius: 3,
-    backgroundColor: C.muted, marginTop: 6,
+    backgroundColor: SharedColors.slateLight, marginTop: 6,
   },
-  warningText: { fontSize: 12, color: C.muted, lineHeight: 18, flex: 1 },
+  warningText: { fontSize: 12, color: SharedColors.slateLight, lineHeight: 18, flex: 1 },
 
   /* ── Bottom bar ── */
   bottomBar: {
     paddingHorizontal: 20, paddingVertical: 16, paddingBottom: 36,
-    borderTopWidth: 1, borderTopColor: C.border, backgroundColor: C.card,
+    borderTopWidth: 1, borderTopColor: SharedColors.border, backgroundColor: SharedColors.white,
     gap: 10,
   },
   cancelBtn: {
-    backgroundColor: C.accent, borderRadius: 14,
+    backgroundColor: PatientTheme.primary, borderRadius: 14,
     paddingVertical: 16, alignItems: "center",
   },
-  cancelBtnText: { color: "#fff", fontSize: 15, fontWeight: "700" },
+  cancelBtnText: { color: SharedColors.white, fontSize: 15, fontWeight: "700" },
   keepBtn: { alignItems: "center", paddingVertical: 10 },
-  keepBtnText: { color: C.sub, fontSize: 14, fontWeight: "600" },
+  keepBtnText: { color: SharedColors.slate, fontSize: 14, fontWeight: "600" },
 
   /* ── Success state ── */
   successWrap: {
@@ -438,26 +424,26 @@ const s = StyleSheet.create({
   },
   successIcon: {
     width: 72, height: 72, borderRadius: 36,
-    backgroundColor: C.overlay, alignItems: "center", justifyContent: "center",
-    marginBottom: 24, borderWidth: 2, borderColor: C.border,
+    backgroundColor: "rgba(15,23,42,0.04)", alignItems: "center", justifyContent: "center",
+    marginBottom: 24, borderWidth: 2, borderColor: SharedColors.border,
   },
-  successIconText: { fontSize: 28, color: C.navy, fontWeight: "700" },
-  successTitle: { fontSize: 22, fontWeight: "700", color: C.navy, marginBottom: 6 },
-  successDesc: { fontSize: 14, color: C.sub, textAlign: "center", lineHeight: 22 },
+  successIconText: { fontSize: 28, color: SharedColors.navy, fontWeight: "700" },
+  successTitle: { fontSize: 22, fontWeight: "700", color: SharedColors.navy, marginBottom: 6 },
+  successDesc: { fontSize: 14, color: SharedColors.slate, textAlign: "center", lineHeight: 22 },
   successRefundBox: {
     alignItems: "center", paddingVertical: 24, paddingHorizontal: 32,
     borderRadius: 16, marginTop: 28, width: "100%",
-    backgroundColor: C.card, borderWidth: 1, borderColor: C.border,
+    backgroundColor: SharedColors.white, borderWidth: 1, borderColor: SharedColors.border,
   },
-  successRefundLabel: { fontSize: 12, color: C.muted, fontWeight: "500", marginBottom: 6 },
-  successRefundAmount: { fontSize: 32, fontWeight: "800", color: C.navy, marginBottom: 4 },
-  successRefundNote: { fontSize: 12, color: C.sub, textAlign: "center", lineHeight: 18 },
+  successRefundLabel: { fontSize: 12, color: SharedColors.slateLight, fontWeight: "500", marginBottom: 6 },
+  successRefundAmount: { fontSize: 32, fontWeight: "800", color: SharedColors.navy, marginBottom: 4 },
+  successRefundNote: { fontSize: 12, color: SharedColors.slate, textAlign: "center", lineHeight: 18 },
   successPrimaryBtn: {
-    backgroundColor: C.navy, borderRadius: 14,
+    backgroundColor: SharedColors.navy, borderRadius: 14,
     paddingVertical: 16, alignItems: "center",
     marginTop: 28, width: "100%",
   },
-  successPrimaryText: { color: "#fff", fontSize: 15, fontWeight: "700" },
+  successPrimaryText: { color: SharedColors.white, fontSize: 15, fontWeight: "700" },
   successSecondaryBtn: { marginTop: 12, paddingVertical: 10 },
-  successSecondaryText: { color: C.sub, fontSize: 14, fontWeight: "600" },
+  successSecondaryText: { color: SharedColors.slate, fontSize: 14, fontWeight: "600" },
 });

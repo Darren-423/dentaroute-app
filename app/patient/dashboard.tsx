@@ -17,16 +17,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { resetNavigationHistory } from "../../lib/navigationHistory";
 import { Booking, PatientCase, store } from "../../lib/store";
 
-const T = {
-  teal: "#4A0080", tealMid: "#5C10A0", tealLight: "#f0e6f6",
-  navy: "#0f172a", navyMid: "#1e293b", slate: "#64748b", slateLight: "#94a3b8",
-  border: "#e2e8f0", bg: "#f8fafc", white: "#fff",
-  amber: "#f59e0b", amberLight: "#fffbeb",
-  green: "#16a34a", greenLight: "#f0fdf4",
-  yellow: "#a16207", yellowLight: "#fef9c3",
-  red: "#ef4444", redLight: "#fef2f2",
-};
-
+import { PatientTheme, SharedColors } from "../../constants/theme";
 // ── Treatment → Emoji mapping (keyword-based) ──
 const TREATMENT_EMOJI_RULES: [string, string][] = [
   ["implant", "🦷"],
@@ -176,7 +167,7 @@ export default function PatientDashboardScreen() {
         return {
           label: "Cancelled", next: "View quotes to rebook", emoji: "❌",
           step: 0, total: BOOKING_STEPS.length,
-          bg: T.redLight, color: T.red,
+          bg: SharedColors.redLight, color: SharedColors.red,
           isBooking: true,
         };
       }
@@ -192,19 +183,19 @@ export default function PatientDashboardScreen() {
         return {
           label, next: step.next, emoji: step.emoji,
           step: stepIdx + 1, total: BOOKING_STEPS.length,
-          bg: T.tealLight, color: T.teal,
+          bg: PatientTheme.primaryLight, color: PatientTheme.primary,
           isBooking: true,
         };
       }
-      return { label: "Booked", next: "Input flight info for pickup service", emoji: "📖", step: 0, total: BOOKING_STEPS.length, bg: T.tealLight, color: T.teal, isBooking: true };
+      return { label: "Booked", next: "Input flight info for pickup service", emoji: "📖", step: 0, total: BOOKING_STEPS.length, bg: PatientTheme.primaryLight, color: PatientTheme.primary, isBooking: true };
     }
     if (status === "pending") {
-      return { label: "Awaiting Quotes", next: "Dentists are reviewing your case", emoji: "⏳", step: 1, total: 3, bg: T.amberLight, color: T.amber, isBooking: false };
+      return { label: "Awaiting Quotes", next: "Dentists are reviewing your case", emoji: "⏳", step: 1, total: 3, bg: SharedColors.amberLight, color: SharedColors.amber, isBooking: false };
     }
     if (status === "quotes_received") {
-      return { label: "Quotes Ready", next: "Review & accept a quote", emoji: "📋", step: 2, total: 3, bg: T.yellowLight, color: T.yellow, isBooking: false };
+      return { label: "Quotes Ready", next: "Review & accept a quote", emoji: "📋", step: 2, total: 3, bg: SharedColors.yellowLight, color: SharedColors.yellow, isBooking: false };
     }
-    return { label: "Submitted", next: "Waiting for processing", emoji: "📄", step: 0, total: 3, bg: T.bg, color: T.slate, isBooking: false };
+    return { label: "Submitted", next: "Waiting for processing", emoji: "📄", step: 0, total: 3, bg: SharedColors.bg, color: SharedColors.slate, isBooking: false };
   };
 
   const handleCasePress = (c: PatientCase) => {
@@ -247,7 +238,7 @@ export default function PatientDashboardScreen() {
     <View style={s.container}>
       {/* Header */}
       <LinearGradient
-        colors={["#3D0070", "#2F0058", "#220040"]}
+        colors={[...PatientTheme.gradient]}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
         style={s.header}
@@ -663,7 +654,7 @@ export default function PatientDashboardScreen() {
 }
 
 const s = StyleSheet.create({
-  container: { flex: 1, backgroundColor: T.bg },
+  container: { flex: 1, backgroundColor: SharedColors.bg },
 
   /* Header */
   header: {
@@ -693,7 +684,7 @@ const s = StyleSheet.create({
     fontSize: 12, color: "rgba(255,255,255,0.5)", fontWeight: "500",
   },
   userName: {
-    fontSize: 20, fontWeight: "700", color: T.white, marginTop: 1,
+    fontSize: 20, fontWeight: "700", color: SharedColors.white, marginTop: 1,
   },
   headerActions: {
     flexDirection: "row", alignItems: "center", gap: 2,
@@ -707,19 +698,19 @@ const s = StyleSheet.create({
   },
   menuDropdown: {
     position: "absolute", top: 110, right: 16, zIndex: 100,
-    backgroundColor: "#fff", borderRadius: 12, minWidth: 180,
+    backgroundColor: SharedColors.white, borderRadius: 12, minWidth: 180,
     ...Platform.select({
       ios: { shadowColor: "#000", shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.15, shadowRadius: 12 },
       android: { elevation: 8 },
     }),
   },
   menuItem: { paddingVertical: 14, paddingHorizontal: 16 },
-  menuItemText: { fontSize: 15, fontWeight: "600", color: "#0f172a" },
-  menuDivider: { height: 1, backgroundColor: "#e2e8f0", marginHorizontal: 12 },
+  menuItemText: { fontSize: 15, fontWeight: "600", color: SharedColors.navy },
+  menuDivider: { height: 1, backgroundColor: SharedColors.border, marginHorizontal: 12 },
   notifDot: {
     position: "absolute", top: 6, right: 6,
     width: 7, height: 7, borderRadius: 3.5,
-    backgroundColor: "#ef4444", borderWidth: 1.5, borderColor: "rgba(74,0,128,0.8)",
+    backgroundColor: SharedColors.red, borderWidth: 1.5, borderColor: "rgba(74,0,128,0.8)",
   },
 
   /* Stats */
@@ -753,10 +744,10 @@ const s = StyleSheet.create({
     borderColor: "rgba(255,255,255,0.4)",
   },
   statNum: {
-    fontSize: 22, fontWeight: "800", color: T.white,
+    fontSize: 22, fontWeight: "800", color: SharedColors.white,
   },
   statNumActive: {
-    color: T.white,
+    color: SharedColors.white,
   },
   statLabel: {
     fontSize: 10, color: "rgba(255,255,255,0.45)", marginTop: 2,
@@ -774,44 +765,44 @@ const s = StyleSheet.create({
     alignItems: "center", paddingTop: 22, paddingBottom: 14,
   },
   sectionTitle: {
-    fontSize: 17, fontWeight: "700", color: T.navy,
+    fontSize: 17, fontWeight: "700", color: SharedColors.navy,
   },
   newCaseBtn: {
     flexDirection: "row", alignItems: "center", gap: 4,
-    backgroundColor: T.tealLight, borderRadius: 10,
+    backgroundColor: PatientTheme.primaryLight, borderRadius: 10,
     paddingHorizontal: 12, paddingVertical: 7,
   },
-  newCasePlus: { fontSize: 16, fontWeight: "600", color: T.teal },
-  newCaseText: { fontSize: 13, fontWeight: "600", color: T.teal },
+  newCasePlus: { fontSize: 16, fontWeight: "600", color: PatientTheme.primary },
+  newCaseText: { fontSize: 13, fontWeight: "600", color: PatientTheme.primary },
 
   /* Empty state */
   emptyCard: {
-    backgroundColor: T.white, borderRadius: 20, padding: 36,
-    alignItems: "center", borderWidth: 1, borderColor: T.border,
+    backgroundColor: SharedColors.white, borderRadius: 20, padding: 36,
+    alignItems: "center", borderWidth: 1, borderColor: SharedColors.border,
     borderStyle: "dashed",
   },
   emptyIconWrap: {
     width: 64, height: 64, borderRadius: 20,
-    backgroundColor: T.bg, alignItems: "center", justifyContent: "center",
+    backgroundColor: SharedColors.bg, alignItems: "center", justifyContent: "center",
     marginBottom: 16,
   },
   emptyIcon: { fontSize: 28 },
-  emptyTitle: { fontSize: 17, fontWeight: "700", color: T.navy, marginBottom: 6 },
+  emptyTitle: { fontSize: 17, fontWeight: "700", color: SharedColors.navy, marginBottom: 6 },
   emptyDesc: {
-    fontSize: 13, color: T.slate, textAlign: "center",
+    fontSize: 13, color: SharedColors.slate, textAlign: "center",
     lineHeight: 20, marginBottom: 22,
   },
   createBtn: {
-    backgroundColor: T.teal, borderRadius: 12,
+    backgroundColor: PatientTheme.primary, borderRadius: 12,
     paddingHorizontal: 28, paddingVertical: 14,
   },
-  createBtnText: { color: T.white, fontSize: 14, fontWeight: "600" },
+  createBtnText: { color: SharedColors.white, fontSize: 14, fontWeight: "600" },
 
   /* Case card — Clean Floating */
   caseCard: {
-    backgroundColor: T.white, borderRadius: 16, overflow: "hidden",
+    backgroundColor: SharedColors.white, borderRadius: 16, overflow: "hidden",
     marginBottom: 14,
-    borderWidth: 1.5, borderColor: "#ddd6e8",
+    borderWidth: 1.5, borderColor: PatientTheme.primaryBorder,
     shadowColor: "#1e0a3c", shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.10, shadowRadius: 14, elevation: 4,
   },
@@ -839,8 +830,8 @@ const s = StyleSheet.create({
     alignItems: "center", justifyContent: "center",
   },
   caseIconText: { fontSize: 19 },
-  caseTitle: { fontSize: 15, fontWeight: "700", color: T.navy },
-  caseMeta: { fontSize: 12, color: T.slateLight, marginTop: 2 },
+  caseTitle: { fontSize: 15, fontWeight: "700", color: SharedColors.navy },
+  caseMeta: { fontSize: 12, color: SharedColors.slateLight, marginTop: 2 },
   /* Tags */
   tagRow: { flexDirection: "row", flexWrap: "wrap", gap: 6, marginTop: 14 },
   tag: {
@@ -849,13 +840,13 @@ const s = StyleSheet.create({
     paddingHorizontal: 10, paddingVertical: 5,
   },
   tagText: { fontSize: 12, fontWeight: "500", color: "#3d2060" },
-  tagQty: { fontSize: 11, fontWeight: "600", color: T.slateLight },
+  tagQty: { fontSize: 11, fontWeight: "600", color: SharedColors.slateLight },
   tagMore: { backgroundColor: "#f0edf4" },
-  tagMoreText: { fontSize: 12, fontWeight: "500", color: T.slate },
+  tagMoreText: { fontSize: 12, fontWeight: "500", color: SharedColors.slate },
 
   /* Quote count */
   quoteCount: {
-    backgroundColor: "#fef9c3", borderRadius: 12,
+    backgroundColor: SharedColors.yellowLight, borderRadius: 12,
     paddingHorizontal: 10, paddingVertical: 4, marginLeft: "auto",
   },
   quoteCountText: { fontSize: 12, fontWeight: "700", color: "#92400e" },
@@ -881,22 +872,22 @@ const s = StyleSheet.create({
     borderTopWidth: 1, borderTopColor: "#e8e2f0",
   },
   nextLabel: {
-    fontSize: 11, fontWeight: "600", color: T.slateLight,
+    fontSize: 11, fontWeight: "600", color: SharedColors.slateLight,
   },
   nextAction: {
-    fontSize: 13, fontWeight: "600", color: T.navy, flex: 1,
+    fontSize: 13, fontWeight: "600", color: SharedColors.navy, flex: 1,
   },
   nextArrow: {
-    fontSize: 22, fontWeight: "300", color: T.slateLight, marginTop: -1,
+    fontSize: 22, fontWeight: "300", color: SharedColors.slateLight, marginTop: -1,
   },
 
   /* Logout */
   logoutBtn: {
     alignSelf: "center", marginTop: 28,
     paddingHorizontal: 20, paddingVertical: 10,
-    borderRadius: 10, borderWidth: 1, borderColor: T.border,
+    borderRadius: 10, borderWidth: 1, borderColor: SharedColors.border,
   },
-  logoutText: { fontSize: 13, fontWeight: "500", color: T.slate },
+  logoutText: { fontSize: 13, fontWeight: "500", color: SharedColors.slate },
 
   /* ── Manage booking button ── */
   manageBtn: {
@@ -905,7 +896,7 @@ const s = StyleSheet.create({
     alignItems: "center", justifyContent: "center",
     marginLeft: "auto",
   },
-  manageBtnText: { fontSize: 18, fontWeight: "900", color: T.teal, marginTop: -2 },
+  manageBtnText: { fontSize: 18, fontWeight: "900", color: PatientTheme.primary, marginTop: -2 },
 
   /* ── Bottom Bar ── */
   /* ── Manage Booking Modal ── */
@@ -914,7 +905,7 @@ const s = StyleSheet.create({
     justifyContent: "flex-end",
   },
   modalSheet: {
-    backgroundColor: "#fff", borderTopLeftRadius: 24, borderTopRightRadius: 24,
+    backgroundColor: SharedColors.white, borderTopLeftRadius: 24, borderTopRightRadius: 24,
     paddingHorizontal: 20, paddingTop: 12, paddingBottom: 36,
   },
   modalHandle: {
@@ -922,7 +913,7 @@ const s = StyleSheet.create({
     backgroundColor: "#d1d5db", alignSelf: "center", marginBottom: 16,
   },
   modalTitle: {
-    fontSize: 17, fontWeight: "800", color: T.navy,
+    fontSize: 17, fontWeight: "800", color: SharedColors.navy,
     marginBottom: 18,
   },
   modalOption: {
@@ -930,18 +921,18 @@ const s = StyleSheet.create({
     paddingVertical: 14, gap: 14,
   },
   modalOptionIcon: { fontSize: 20, width: 32, textAlign: "center" },
-  modalOptionLabel: { fontSize: 15, fontWeight: "700", color: T.teal },
-  modalOptionDesc: { fontSize: 12, color: T.slate, marginTop: 1 },
+  modalOptionLabel: { fontSize: 15, fontWeight: "700", color: PatientTheme.primary },
+  modalOptionDesc: { fontSize: 12, color: SharedColors.slate, marginTop: 1 },
   modalDivider: { height: 1, backgroundColor: "#f1f5f9", marginVertical: 2 },
   modalChevron: {
     width: 7, height: 7,
     borderTopWidth: 1.8, borderRightWidth: 1.8,
-    borderColor: T.teal, transform: [{ rotate: "45deg" }],
+    borderColor: PatientTheme.primary, transform: [{ rotate: "45deg" }],
   },
   modalCloseBtn: {
     alignItems: "center", paddingVertical: 14, marginTop: 14,
-    backgroundColor: "#f8fafc", borderRadius: 14,
-    borderWidth: 1, borderColor: T.border,
+    backgroundColor: SharedColors.bg, borderRadius: 14,
+    borderWidth: 1, borderColor: SharedColors.border,
   },
-  modalCloseBtnText: { fontSize: 14, fontWeight: "600", color: T.slate },
+  modalCloseBtnText: { fontSize: 14, fontWeight: "600", color: SharedColors.slate },
 });

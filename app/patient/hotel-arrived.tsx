@@ -11,21 +11,8 @@ import {
 } from "react-native";
 import { Booking, store } from "../../lib/store";
 
+import { PatientTheme, SharedColors } from "../../constants/theme";
 /* ── Unified palette (matches arrival-info) ── */
-const C = {
-  purple: "#4A0080",
-  purpleSoft: "rgba(74,0,128,0.08)",
-  purpleMid: "rgba(74,0,128,0.15)",
-  navy: "#0f172a",
-  text: "#1e293b",
-  sub: "#64748b",
-  muted: "#94a3b8",
-  faint: "#cbd5e1",
-  border: "#e8ecf1",
-  bg: "#f6f7f9",
-  card: "#ffffff",
-};
-
 const { width: SCREEN_W } = Dimensions.get("window");
 const SLIDER_PAD = 4;
 const THUMB_SZ = 56;
@@ -162,7 +149,7 @@ export default function HotelArrivedScreen() {
   if (loading) {
     return (
       <View style={[s.container, { justifyContent: "center", alignItems: "center" }]}>
-        <ActivityIndicator color={C.sub} size="large" />
+        <ActivityIndicator color={SharedColors.slate} size="large" />
       </View>
     );
   }
@@ -171,7 +158,7 @@ export default function HotelArrivedScreen() {
   if (confirmed) {
     return (
       <View style={s.container}>
-        <LinearGradient colors={["#3D0070", "#2F0058", "#220040"]} style={s.header}>
+        <LinearGradient colors={[...PatientTheme.gradient]} style={s.header}>
           <View style={s.headerRow}>
             <TouchableOpacity style={s.backBtn} onPress={() => router.back()} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
               <Text style={s.backArrow}>{"<"}</Text>
@@ -222,7 +209,7 @@ export default function HotelArrivedScreen() {
               <View style={s.apptOuter}>
                 {/* Glowing border effect */}
                 <LinearGradient
-                  colors={["#6B21A8", "#4A0080", "#3B0764"]}
+                  colors={["#6B21A8", PatientTheme.primary, "#3B0764"]}
                   start={{ x: 0, y: 0 }}
                   end={{ x: 1, y: 1 }}
                   style={s.apptGradientBorder}
@@ -302,7 +289,7 @@ export default function HotelArrivedScreen() {
               <View style={[s.stepDot, s.stepDotNext]} />
               <View style={{ flex: 1 }}>
                 <Text style={[s.stepText, s.stepTextNext]}>Visit the clinic</Text>
-                <Text style={[s.stepSub, { color: C.purple }]}>Tap below when you get there</Text>
+                <Text style={[s.stepSub, { color: PatientTheme.primary }]}>Tap below when you get there</Text>
               </View>
             </View>
           </View>
@@ -331,7 +318,7 @@ export default function HotelArrivedScreen() {
   // ══════ MAIN: Waiting for confirmation ══════
   return (
     <View style={s.container}>
-      <LinearGradient colors={["#3D0070", "#2F0058", "#220040"]} style={s.header}>
+      <LinearGradient colors={[...PatientTheme.gradient]} style={s.header}>
         <View style={s.headerRow}>
           <TouchableOpacity style={s.backBtn} onPress={() => router.back()} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
             <Text style={s.backArrow}>{"<"}</Text>
@@ -387,7 +374,7 @@ export default function HotelArrivedScreen() {
             <View style={s.flightDivider} />
             <View style={s.flightRow}>
               <Text style={s.flightLabel}>Pickup Service</Text>
-              <Text style={[s.flightValue, { color: booking.arrivalInfo.pickupRequested ? "#16a34a" : C.muted }]}>
+              <Text style={[s.flightValue, { color: booking.arrivalInfo.pickupRequested ? SharedColors.green : SharedColors.slateLight }]}>
                 {booking.arrivalInfo.pickupRequested ? "Requested ✓" : "Not requested"}
               </Text>
             </View>
@@ -420,14 +407,14 @@ export default function HotelArrivedScreen() {
           <View style={s.tlRow}>
             <View style={[s.tlDot, s.tlDotCurrent]} />
             <View style={{ flex: 1 }}>
-              <Text style={[s.tlText, { fontWeight: "700", color: C.navy }]}>Arriving at accommodation</Text>
+              <Text style={[s.tlText, { fontWeight: "700", color: SharedColors.navy }]}>Arriving at accommodation</Text>
               <Text style={s.tlSub}>Swipe below once you've settled in</Text>
             </View>
           </View>
           <View style={s.tlConnector} />
           <View style={s.tlRow}>
             <View style={s.tlDot} />
-            <Text style={[s.tlText, { color: C.faint }]}>Clinic visit</Text>
+            <Text style={[s.tlText, { color: SharedColors.faint }]}>Clinic visit</Text>
           </View>
         </View>
 
@@ -551,7 +538,7 @@ export default function HotelArrivedScreen() {
 
 /* ═══════════════════════════════════════ */
 const s = StyleSheet.create({
-  container: { flex: 1, backgroundColor: C.bg },
+  container: { flex: 1, backgroundColor: SharedColors.bg },
 
   /* ── Header ── */
   header: { paddingHorizontal: 20, paddingTop: 60, paddingBottom: 18 },
@@ -563,8 +550,8 @@ const s = StyleSheet.create({
     borderWidth: 1, borderColor: "rgba(255,255,255,0.15)",
     alignItems: "center", justifyContent: "center",
   },
-  backArrow: { fontSize: 20, color: "#fff", fontWeight: "600" },
-  headerTitle: { fontSize: 17, fontWeight: "700", color: "#fff", letterSpacing: 0.1 },
+  backArrow: { fontSize: 20, color: SharedColors.white, fontWeight: "600" },
+  headerTitle: { fontSize: 17, fontWeight: "700", color: SharedColors.white, letterSpacing: 0.1 },
   headerSub: { fontSize: 11, color: "rgba(255,255,255,0.5)", marginTop: 2 },
 
   /* ── Content ── */
@@ -572,59 +559,59 @@ const s = StyleSheet.create({
 
   /* ── Flight card ── */
   flightCard: {
-    backgroundColor: C.card, borderRadius: 16, padding: 18,
-    borderWidth: 1, borderColor: C.border, gap: 8,
+    backgroundColor: SharedColors.white, borderRadius: 16, padding: 18,
+    borderWidth: 1, borderColor: SharedColors.border, gap: 8,
   },
   flightHeader: { flexDirection: "row", alignItems: "center", gap: 8 },
-  flightTitle: { fontSize: 15, fontWeight: "700", color: C.navy, flex: 1 },
+  flightTitle: { fontSize: 15, fontWeight: "700", color: SharedColors.navy, flex: 1 },
   flightBadge: {
-    backgroundColor: C.purpleSoft, borderRadius: 8, paddingHorizontal: 10, paddingVertical: 4,
+    backgroundColor: PatientTheme.accentSoft, borderRadius: 8, paddingHorizontal: 10, paddingVertical: 4,
   },
-  flightBadgeText: { fontSize: 11, fontWeight: "600", color: C.purple },
-  flightDivider: { height: 1, backgroundColor: C.border },
+  flightBadgeText: { fontSize: 11, fontWeight: "600", color: PatientTheme.primary },
+  flightDivider: { height: 1, backgroundColor: SharedColors.border },
   flightRow: {
     flexDirection: "row", justifyContent: "space-between", paddingVertical: 5,
   },
-  flightLabel: { fontSize: 13, color: C.sub },
-  flightValue: { fontSize: 13, fontWeight: "600", color: C.navy },
+  flightLabel: { fontSize: 13, color: SharedColors.slate },
+  flightValue: { fontSize: 13, fontWeight: "600", color: SharedColors.navy },
   pickupBanner: {
     flexDirection: "row", alignItems: "center", gap: 8,
-    backgroundColor: C.purpleSoft, borderRadius: 10, padding: 12, marginTop: 4,
-    borderWidth: 1, borderColor: C.purpleMid,
+    backgroundColor: PatientTheme.accentSoft, borderRadius: 10, padding: 12, marginTop: 4,
+    borderWidth: 1, borderColor: PatientTheme.primaryMid,
   },
-  pickupText: { fontSize: 12, color: C.text, flex: 1, lineHeight: 17 },
+  pickupText: { fontSize: 12, color: SharedColors.text, flex: 1, lineHeight: 17 },
   editBtn: {
-    backgroundColor: C.purpleSoft,
+    backgroundColor: PatientTheme.accentSoft,
     borderRadius: 8,
     paddingHorizontal: 12,
     paddingVertical: 5,
     borderWidth: 1,
-    borderColor: C.purpleMid,
+    borderColor: PatientTheme.primaryMid,
   },
-  editBtnText: { fontSize: 12, fontWeight: "600", color: C.purple },
+  editBtnText: { fontSize: 12, fontWeight: "600", color: PatientTheme.primary },
 
   /* ── Timeline ── */
   timelineCard: {
-    backgroundColor: C.card, borderRadius: 16, padding: 20,
-    borderWidth: 1, borderColor: C.border, gap: 0,
+    backgroundColor: SharedColors.white, borderRadius: 16, padding: 20,
+    borderWidth: 1, borderColor: SharedColors.border, gap: 0,
   },
-  timelineTitle: { fontSize: 15, fontWeight: "700", color: C.navy, marginBottom: 16 },
+  timelineTitle: { fontSize: 15, fontWeight: "700", color: SharedColors.navy, marginBottom: 16 },
   tlRow: { flexDirection: "row", alignItems: "flex-start", gap: 14 },
   tlDot: {
-    width: 12, height: 12, borderRadius: 6, backgroundColor: C.border,
-    marginTop: 3, borderWidth: 2, borderColor: C.border,
+    width: 12, height: 12, borderRadius: 6, backgroundColor: SharedColors.border,
+    marginTop: 3, borderWidth: 2, borderColor: SharedColors.border,
   },
-  tlDotDone: { backgroundColor: C.navy, borderColor: C.navy },
-  tlDotCurrent: { backgroundColor: C.card, borderColor: C.purple, borderWidth: 3 },
-  tlConnector: { width: 2, height: 20, backgroundColor: C.border, marginLeft: 5 },
-  tlText: { fontSize: 13, color: C.sub },
-  tlTextDone: { color: C.navy, fontWeight: "500" },
-  tlSub: { fontSize: 11, color: C.purple, marginTop: 2 },
+  tlDotDone: { backgroundColor: SharedColors.navy, borderColor: SharedColors.navy },
+  tlDotCurrent: { backgroundColor: SharedColors.white, borderColor: PatientTheme.primary, borderWidth: 3 },
+  tlConnector: { width: 2, height: 20, backgroundColor: SharedColors.border, marginLeft: 5 },
+  tlText: { fontSize: 13, color: SharedColors.slate },
+  tlTextDone: { color: SharedColors.navy, fontWeight: "500" },
+  tlSub: { fontSize: 11, color: PatientTheme.primary, marginTop: 2 },
 
   /* ── Divider ── */
   dividerSection: { flexDirection: "row", alignItems: "center", gap: 12, paddingVertical: 4 },
-  dividerLine: { flex: 1, height: 1, backgroundColor: C.border },
-  dividerText: { fontSize: 12, color: C.muted, fontWeight: "500" },
+  dividerLine: { flex: 1, height: 1, backgroundColor: SharedColors.border },
+  dividerText: { fontSize: 12, color: SharedColors.slateLight, fontWeight: "500" },
 
   /* ── Swipe slider ── */
   sliderOuter: {
@@ -672,7 +659,7 @@ const s = StyleSheet.create({
   sliderThumb: {
     width: THUMB_SZ, height: THUMB_SZ,
     borderRadius: THUMB_SZ / 2,
-    backgroundColor: "#ffffff",
+    backgroundColor: SharedColors.white,
     alignItems: "center", justifyContent: "center",
     shadowColor: "#a78bfa",
     shadowOffset: { width: 0, height: 0 },
@@ -682,27 +669,27 @@ const s = StyleSheet.create({
   },
   sliderThumbIcon: { fontSize: 24 },
   hint: {
-    fontSize: 12, color: C.muted, textAlign: "center", lineHeight: 17, paddingHorizontal: 16,
+    fontSize: 12, color: SharedColors.slateLight, textAlign: "center", lineHeight: 17, paddingHorizontal: 16,
   },
 
   /* ── Done state ── */
   doneIcon: {
-    width: 100, height: 100, borderRadius: 50, backgroundColor: C.purpleSoft,
+    width: 100, height: 100, borderRadius: 50, backgroundColor: PatientTheme.accentSoft,
     alignItems: "center", justifyContent: "center", marginTop: 16, marginBottom: 8,
-    borderWidth: 2, borderColor: C.purpleMid,
+    borderWidth: 2, borderColor: PatientTheme.primaryMid,
   },
-  doneTitle: { fontSize: 26, fontWeight: "800", color: C.navy, marginBottom: 6 },
-  doneSub: { fontSize: 14, color: C.sub, textAlign: "center", lineHeight: 22, paddingHorizontal: 20, marginBottom: 8 },
+  doneTitle: { fontSize: 26, fontWeight: "800", color: SharedColors.navy, marginBottom: 6 },
+  doneSub: { fontSize: 14, color: SharedColors.slate, textAlign: "center", lineHeight: 22, paddingHorizontal: 20, marginBottom: 8 },
   doneStatusCard: {
     flexDirection: "row", alignItems: "center", gap: 14, width: "100%",
-    backgroundColor: C.purpleSoft, borderRadius: 14, padding: 16,
-    borderWidth: 1, borderColor: C.purpleMid,
+    backgroundColor: PatientTheme.accentSoft, borderRadius: 14, padding: 16,
+    borderWidth: 1, borderColor: PatientTheme.primaryMid,
   },
   doneStatusDot: {
-    width: 10, height: 10, borderRadius: 5, backgroundColor: C.purple,
+    width: 10, height: 10, borderRadius: 5, backgroundColor: PatientTheme.primary,
   },
-  doneStatusTitle: { fontSize: 14, fontWeight: "700", color: C.navy },
-  doneStatusSub: { fontSize: 12, color: C.sub, marginTop: 2 },
+  doneStatusTitle: { fontSize: 14, fontWeight: "700", color: SharedColors.navy },
+  doneStatusSub: { fontSize: 12, color: SharedColors.slate, marginTop: 2 },
 
   /* ── Next appointment (premium) ── */
   apptOuter: { width: "100%" },
@@ -763,7 +750,7 @@ const s = StyleSheet.create({
   },
   apptClinicIcon: { fontSize: 12 },
   apptClinicName: {
-    fontSize: 13, fontWeight: "600", color: "#4A0080",
+    fontSize: 13, fontWeight: "600", color: PatientTheme.primary,
     flex: 1,
   },
   apptDesc: {
@@ -781,36 +768,36 @@ const s = StyleSheet.create({
 
   /* ── What's next ── */
   whatsNextCard: {
-    backgroundColor: C.card, borderRadius: 16, padding: 20, width: "100%",
-    borderWidth: 1, borderColor: C.border,
+    backgroundColor: SharedColors.white, borderRadius: 16, padding: 20, width: "100%",
+    borderWidth: 1, borderColor: SharedColors.border,
   },
-  whatsNextTitle: { fontSize: 15, fontWeight: "700", color: C.navy, marginBottom: 14 },
+  whatsNextTitle: { fontSize: 15, fontWeight: "700", color: SharedColors.navy, marginBottom: 14 },
   stepRow: { flexDirection: "row", alignItems: "flex-start", gap: 14 },
   stepDot: {
     width: 12, height: 12, borderRadius: 6, marginTop: 3,
-    borderWidth: 2, borderColor: C.border, backgroundColor: C.border,
+    borderWidth: 2, borderColor: SharedColors.border, backgroundColor: SharedColors.border,
   },
-  stepDotDone: { backgroundColor: C.navy, borderColor: C.navy },
-  stepDotNext: { backgroundColor: C.card, borderColor: C.purple, borderWidth: 3 },
-  stepConnector: { width: 2, height: 14, backgroundColor: C.border, marginLeft: 5 },
-  stepText: { fontSize: 13, color: C.sub },
-  stepTextDone: { color: C.navy, fontWeight: "500" },
-  stepTextNext: { fontWeight: "700", color: C.navy },
-  stepSub: { fontSize: 11, color: C.muted, marginTop: 1 },
+  stepDotDone: { backgroundColor: SharedColors.navy, borderColor: SharedColors.navy },
+  stepDotNext: { backgroundColor: SharedColors.white, borderColor: PatientTheme.primary, borderWidth: 3 },
+  stepConnector: { width: 2, height: 14, backgroundColor: SharedColors.border, marginLeft: 5 },
+  stepText: { fontSize: 13, color: SharedColors.slate },
+  stepTextDone: { color: SharedColors.navy, fontWeight: "500" },
+  stepTextNext: { fontWeight: "700", color: SharedColors.navy },
+  stepSub: { fontSize: 11, color: SharedColors.slateLight, marginTop: 1 },
 
   /* ── Actions ── */
   doneActions: { gap: 10, width: "100%" },
   primaryBtn: {
-    backgroundColor: C.purple, borderRadius: 14,
+    backgroundColor: PatientTheme.primary, borderRadius: 14,
     paddingVertical: 16, alignItems: "center",
   },
-  primaryBtnText: { fontSize: 15, fontWeight: "600", color: "#fff" },
+  primaryBtnText: { fontSize: 15, fontWeight: "600", color: SharedColors.white },
   secondaryBtn: {
-    backgroundColor: C.card, borderRadius: 14,
+    backgroundColor: SharedColors.white, borderRadius: 14,
     paddingVertical: 16, alignItems: "center",
-    borderWidth: 1, borderColor: C.border,
+    borderWidth: 1, borderColor: SharedColors.border,
   },
-  secondaryBtnText: { fontSize: 15, fontWeight: "600", color: C.navy },
+  secondaryBtnText: { fontSize: 15, fontWeight: "600", color: SharedColors.navy },
 
   /* ── Cancel link ── */
   rescheduleLink: {
@@ -818,10 +805,10 @@ const s = StyleSheet.create({
     backgroundColor: "rgba(74,0,128,0.06)", borderRadius: 14,
     borderWidth: 1, borderColor: "rgba(74,0,128,0.12)",
   },
-  rescheduleLinkText: { fontSize: 13, color: "#4A0080", fontWeight: "600" },
+  rescheduleLinkText: { fontSize: 13, color: PatientTheme.primary, fontWeight: "600" },
   cancelLink: {
     alignItems: "center", paddingVertical: 14,
-    backgroundColor: "#fef2f2", borderRadius: 14,
+    backgroundColor: SharedColors.redLight, borderRadius: 14,
     borderWidth: 1, borderColor: "rgba(185,28,28,0.12)",
   },
   cancelLinkText: { fontSize: 13, color: "#b91c1c", fontWeight: "600" },

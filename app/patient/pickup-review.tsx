@@ -14,21 +14,7 @@ import {
 } from "react-native";
 import { Booking, store } from "../../lib/store";
 
-const C = {
-  purple: "#4A0080",
-  purpleSoft: "rgba(74,0,128,0.08)",
-  purpleMid: "rgba(74,0,128,0.15)",
-  navy: "#0f172a",
-  text: "#1e293b",
-  sub: "#64748b",
-  muted: "#94a3b8",
-  faint: "#cbd5e1",
-  border: "#e8ecf1",
-  bg: "#f6f7f9",
-  card: "#ffffff",
-  amber: "#f59e0b",
-};
-
+import { PatientTheme, SharedColors } from "../../constants/theme";
 const TAGS = [
   { label: "On time", emoji: "⏰" },
   { label: "Friendly driver", emoji: "😊" },
@@ -124,7 +110,7 @@ export default function PickupReviewScreen() {
   if (loading) {
     return (
       <View style={[s.container, { justifyContent: "center", alignItems: "center" }]}>
-        <ActivityIndicator color={C.sub} size="large" />
+        <ActivityIndicator color={SharedColors.slate} size="large" />
       </View>
     );
   }
@@ -133,7 +119,7 @@ export default function PickupReviewScreen() {
   if (submitted) {
     return (
       <View style={s.container}>
-        <LinearGradient colors={["#3D0070", "#2F0058", "#220040"]} style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
+        <LinearGradient colors={[...PatientTheme.gradient]} style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
           <Animated.View style={{
             opacity: checkAnim,
             transform: [{ scale: checkAnim.interpolate({ inputRange: [0, 1], outputRange: [0.5, 1] }) }],
@@ -151,7 +137,7 @@ export default function PickupReviewScreen() {
 
   return (
     <View style={s.container}>
-      <LinearGradient colors={["#3D0070", "#2F0058", "#220040"]} style={s.header}>
+      <LinearGradient colors={[...PatientTheme.gradient]} style={s.header}>
         <View style={s.headerRow}>
           <TouchableOpacity
             style={s.backBtn}
@@ -255,7 +241,7 @@ export default function PickupReviewScreen() {
             <TextInput
               style={s.commentInput}
               placeholder="Share your experience... (optional)"
-              placeholderTextColor={C.muted}
+              placeholderTextColor={SharedColors.slateLight}
               value={comment}
               onChangeText={setComment}
               multiline
@@ -272,7 +258,7 @@ export default function PickupReviewScreen() {
             disabled={rating === 0 || submitting}
           >
             {submitting ? (
-              <ActivityIndicator color="#fff" size="small" />
+              <ActivityIndicator color={SharedColors.white} size="small" />
             ) : (
               <Text style={s.submitBtnText}>Submit Review</Text>
             )}
@@ -290,7 +276,7 @@ export default function PickupReviewScreen() {
 }
 
 const s = StyleSheet.create({
-  container: { flex: 1, backgroundColor: C.bg },
+  container: { flex: 1, backgroundColor: SharedColors.bg },
 
   /* Header */
   header: { paddingHorizontal: 20, paddingTop: 60, paddingBottom: 18 },
@@ -302,8 +288,8 @@ const s = StyleSheet.create({
     borderWidth: 1, borderColor: "rgba(255,255,255,0.15)",
     alignItems: "center", justifyContent: "center",
   },
-  backArrow: { fontSize: 20, color: "#fff", fontWeight: "600" },
-  headerTitle: { fontSize: 17, fontWeight: "700", color: "#fff", letterSpacing: 0.1 },
+  backArrow: { fontSize: 20, color: SharedColors.white, fontWeight: "600" },
+  headerTitle: { fontSize: 17, fontWeight: "700", color: SharedColors.white, letterSpacing: 0.1 },
   headerSub: { fontSize: 11, color: "rgba(255,255,255,0.5)", marginTop: 2 },
   skipText: { fontSize: 14, fontWeight: "600", color: "rgba(255,255,255,0.6)" },
 
@@ -313,88 +299,88 @@ const s = StyleSheet.create({
   heroWrap: { alignItems: "center", paddingVertical: 8 },
   heroCircle: {
     width: 88, height: 88, borderRadius: 44,
-    backgroundColor: C.purpleSoft, alignItems: "center", justifyContent: "center",
-    borderWidth: 2, borderColor: C.purpleMid, marginBottom: 16,
+    backgroundColor: PatientTheme.accentSoft, alignItems: "center", justifyContent: "center",
+    borderWidth: 2, borderColor: PatientTheme.primaryMid, marginBottom: 16,
   },
-  heroTitle: { fontSize: 22, fontWeight: "800", color: C.navy, marginBottom: 6 },
+  heroTitle: { fontSize: 22, fontWeight: "800", color: SharedColors.navy, marginBottom: 6 },
   heroSub: {
-    fontSize: 14, color: C.sub, textAlign: "center", lineHeight: 21,
+    fontSize: 14, color: SharedColors.slate, textAlign: "center", lineHeight: 21,
   },
 
   /* Rating card */
   ratingCard: {
-    backgroundColor: C.card, borderRadius: 16, padding: 24,
-    alignItems: "center", borderWidth: 1, borderColor: C.border,
+    backgroundColor: SharedColors.white, borderRadius: 16, padding: 24,
+    alignItems: "center", borderWidth: 1, borderColor: SharedColors.border,
   },
-  ratingLabel: { fontSize: 15, fontWeight: "700", color: C.navy, marginBottom: 18 },
+  ratingLabel: { fontSize: 15, fontWeight: "700", color: SharedColors.navy, marginBottom: 18 },
   starsRow: { flexDirection: "row", gap: 10 },
   starBtn: {
     width: 52, height: 52, borderRadius: 16,
-    backgroundColor: C.bg, alignItems: "center", justifyContent: "center",
-    borderWidth: 1.5, borderColor: C.border,
+    backgroundColor: SharedColors.bg, alignItems: "center", justifyContent: "center",
+    borderWidth: 1.5, borderColor: SharedColors.border,
   },
   starBtnFilled: {
-    backgroundColor: "#fffbeb",
-    borderColor: "#f59e0b",
+    backgroundColor: SharedColors.amberLight,
+    borderColor: SharedColors.amber,
   },
-  starIcon: { fontSize: 26, color: C.amber },
+  starIcon: { fontSize: 26, color: SharedColors.amber },
   ratingText: {
-    fontSize: 14, fontWeight: "700", color: C.purple, marginTop: 14,
+    fontSize: 14, fontWeight: "700", color: PatientTheme.primary, marginTop: 14,
     letterSpacing: 0.3,
   },
 
   /* Tags */
   tagsCard: {
-    backgroundColor: C.card, borderRadius: 16, padding: 20,
-    borderWidth: 1, borderColor: C.border,
+    backgroundColor: SharedColors.white, borderRadius: 16, padding: 20,
+    borderWidth: 1, borderColor: SharedColors.border,
   },
-  tagsLabel: { fontSize: 15, fontWeight: "700", color: C.navy, marginBottom: 2 },
-  tagsSub: { fontSize: 12, color: C.muted, marginBottom: 14 },
+  tagsLabel: { fontSize: 15, fontWeight: "700", color: SharedColors.navy, marginBottom: 2 },
+  tagsSub: { fontSize: 12, color: SharedColors.slateLight, marginBottom: 14 },
   tagsGrid: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
   tagPill: {
     flexDirection: "row", alignItems: "center", gap: 6,
-    backgroundColor: C.bg, borderRadius: 12,
+    backgroundColor: SharedColors.bg, borderRadius: 12,
     paddingHorizontal: 14, paddingVertical: 10,
-    borderWidth: 1.5, borderColor: C.border,
+    borderWidth: 1.5, borderColor: SharedColors.border,
   },
   tagPillSelected: {
-    backgroundColor: C.purpleSoft,
-    borderColor: C.purple,
+    backgroundColor: PatientTheme.accentSoft,
+    borderColor: PatientTheme.primary,
   },
   tagEmoji: { fontSize: 15 },
-  tagLabel: { fontSize: 13, fontWeight: "500", color: C.sub },
-  tagLabelSelected: { color: C.purple, fontWeight: "600" },
+  tagLabel: { fontSize: 13, fontWeight: "500", color: SharedColors.slate },
+  tagLabelSelected: { color: PatientTheme.primary, fontWeight: "600" },
 
   /* Comment */
   commentCard: {
-    backgroundColor: C.card, borderRadius: 16, padding: 20,
-    borderWidth: 1, borderColor: C.border,
+    backgroundColor: SharedColors.white, borderRadius: 16, padding: 20,
+    borderWidth: 1, borderColor: SharedColors.border,
   },
-  commentLabel: { fontSize: 15, fontWeight: "700", color: C.navy, marginBottom: 12 },
+  commentLabel: { fontSize: 15, fontWeight: "700", color: SharedColors.navy, marginBottom: 12 },
   commentInput: {
-    backgroundColor: C.bg, borderRadius: 12, padding: 14,
-    fontSize: 14, color: C.text, minHeight: 80,
-    borderWidth: 1, borderColor: C.border, lineHeight: 20,
+    backgroundColor: SharedColors.bg, borderRadius: 12, padding: 14,
+    fontSize: 14, color: SharedColors.text, minHeight: 80,
+    borderWidth: 1, borderColor: SharedColors.border, lineHeight: 20,
   },
 
   /* Submit */
   submitBtn: {
-    backgroundColor: C.purple, borderRadius: 14,
+    backgroundColor: PatientTheme.primary, borderRadius: 14,
     paddingVertical: 17, alignItems: "center",
-    shadowColor: "#4A0080",
+    shadowColor: PatientTheme.primary,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.25,
     shadowRadius: 10,
     elevation: 6,
   },
   submitBtnDisabled: {
-    backgroundColor: C.faint,
+    backgroundColor: SharedColors.faint,
     shadowOpacity: 0,
     elevation: 0,
   },
-  submitBtnText: { fontSize: 16, fontWeight: "700", color: "#fff", letterSpacing: 0.2 },
+  submitBtnText: { fontSize: 16, fontWeight: "700", color: SharedColors.white, letterSpacing: 0.2 },
   submitHint: {
-    fontSize: 12, color: C.muted, textAlign: "center", marginTop: 6,
+    fontSize: 12, color: SharedColors.slateLight, textAlign: "center", marginTop: 6,
   },
 
   /* Success */
@@ -406,7 +392,7 @@ const s = StyleSheet.create({
     borderWidth: 2, borderColor: "rgba(255,255,255,0.15)",
   },
   successTitle: {
-    fontSize: 28, fontWeight: "800", color: "#fff", textAlign: "center",
+    fontSize: 28, fontWeight: "800", color: SharedColors.white, textAlign: "center",
   },
   successSub: {
     fontSize: 15, color: "rgba(255,255,255,0.6)", textAlign: "center", marginTop: 6,

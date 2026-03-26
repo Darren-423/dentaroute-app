@@ -12,18 +12,7 @@ import {
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Booking, PatientCase, store } from "../../lib/store";
 
-const T = {
-  purple: "#4A0080", purpleMid: "#5C10A0", purpleLight: "#f0e6f6",
-  navy: "#0f172a", slate: "#64748b", slateLight: "#94a3b8",
-  border: "#e2e8f0", bg: "#f8fafc", white: "#fff",
-  red: "#ef4444", redLight: "#fef2f2",
-  // Trip colors
-  arrival: "#0EA5E9",       // sky blue — flight arrival / check-in
-  departure: "#F97316",     // orange  — check-out / departure
-  stayBg: "rgba(14,165,233,0.12)", // light sky blue — hotel stay bar
-  stayBgDark: "rgba(14,165,233,0.22)",
-};
-
+import { PatientTheme, SharedColors } from "../../constants/theme";
 const BOOKING_STEPS: { key: string; label: string; next: string; emoji: string }[] = [
   { key: "confirmed", label: "Booked", next: "Input flight info for pickup service", emoji: "📖" },
   { key: "flight_submitted", label: "Flight Booked", next: "Confirm hotel arrival", emoji: "🏨" },
@@ -41,7 +30,7 @@ const MONTHS = ["January", "February", "March", "April", "May", "June", "July", 
 
 function getStepInfo(booking: Booking) {
   if (booking.status === "cancelled") {
-    return { label: "Cancelled", next: "View quotes to rebook", emoji: "❌", step: 0, total: BOOKING_STEPS.length, bg: T.redLight, color: T.red };
+    return { label: "Cancelled", next: "View quotes to rebook", emoji: "❌", step: 0, total: BOOKING_STEPS.length, bg: SharedColors.redLight, color: SharedColors.red };
   }
   const idx = BOOKING_STEPS.findIndex((s) => s.key === booking.status);
   if (idx >= 0) {
@@ -51,9 +40,9 @@ function getStepInfo(booking: Booking) {
       const cur = booking.currentVisit || 1;
       label = `Visit ${cur} of ${booking.visitDates.length} Complete`;
     }
-    return { label, next: step.next, emoji: step.emoji, step: idx + 1, total: BOOKING_STEPS.length, bg: T.purpleLight, color: T.purple };
+    return { label, next: step.next, emoji: step.emoji, step: idx + 1, total: BOOKING_STEPS.length, bg: PatientTheme.primaryLight, color: PatientTheme.primary };
   }
-  return { label: "Booked", next: "Input flight info", emoji: "📖", step: 0, total: BOOKING_STEPS.length, bg: T.purpleLight, color: T.purple };
+  return { label: "Booked", next: "Input flight info", emoji: "📖", step: 0, total: BOOKING_STEPS.length, bg: PatientTheme.primaryLight, color: PatientTheme.primary };
 }
 
 function navigateToBookingStep(booking: Booking, caseId: string) {
@@ -225,16 +214,16 @@ export default function ReservationScreen() {
 
 
   const dotColor = (type: DotType, isSelected: boolean) => {
-    if (isSelected) return T.white;
+    if (isSelected) return SharedColors.white;
     if (type === "booking") return "#7C3AED";
-    if (type === "arrival") return T.arrival;
-    return T.departure;
+    if (type === "arrival") return SharedColors.sky;
+    return SharedColors.orange;
   };
 
   return (
     <View style={s.container}>
       <LinearGradient
-        colors={["#3D0070", "#2F0058", "#220040"]}
+        colors={[...PatientTheme.gradient]}
         style={[s.header, { paddingTop: insets.top + 12 }]}
       >
         <Text style={s.headerTitle}>My Reservations</Text>
@@ -292,7 +281,7 @@ export default function ReservationScreen() {
                 // Stay range background styles
                 const stayStyle: any = {};
                 if (info?.isStayRange && !isSelected) {
-                  stayStyle.backgroundColor = T.stayBg;
+                  stayStyle.backgroundColor = SharedColors.skySoft;
                   if (info.isStayStart && info.isStayEnd) {
                     stayStyle.borderRadius = 12;
                   } else if (info.isStayStart) {
@@ -358,15 +347,15 @@ export default function ReservationScreen() {
               <Text style={s.legendText}>Treatment</Text>
             </View>
             <View style={s.legendItem}>
-              <View style={[s.legendDot, { backgroundColor: T.arrival }]} />
+              <View style={[s.legendDot, { backgroundColor: SharedColors.sky }]} />
               <Text style={s.legendText}>Arrival</Text>
             </View>
             <View style={s.legendItem}>
-              <View style={[s.legendDot, { backgroundColor: T.departure }]} />
+              <View style={[s.legendDot, { backgroundColor: SharedColors.orange }]} />
               <Text style={s.legendText}>Departure</Text>
             </View>
             <View style={s.legendItem}>
-              <View style={[s.legendBar, { backgroundColor: T.stayBgDark }]} />
+              <View style={[s.legendBar, { backgroundColor: SharedColors.skySoftStrong }]} />
               <Text style={s.legendText}>Stay</Text>
             </View>
           </View>
@@ -406,7 +395,7 @@ export default function ReservationScreen() {
                   {arrivalTrips.map((ai, idx) => (
                     <View key={`arr-${idx}`} style={s.tripInfoCard}>
                       <View style={[s.tripInfoBadge, { backgroundColor: "rgba(14,165,233,0.12)" }]}>
-                        <Text style={[s.tripInfoBadgeText, { color: T.arrival }]}>🛬 Arrival Flight{tripList.length > 1 ? ` (Trip ${tripList.indexOf(ai) + 1})` : ""}</Text>
+                        <Text style={[s.tripInfoBadgeText, { color: SharedColors.sky }]}>🛬 Arrival Flight{tripList.length > 1 ? ` (Trip ${tripList.indexOf(ai) + 1})` : ""}</Text>
                       </View>
                       <View style={s.tripInfoBody}>
                         <Text style={s.tripInfoMain}>{ai.airline ? `${ai.airline} ` : ""}{ai.flightNumber}</Text>
@@ -420,7 +409,7 @@ export default function ReservationScreen() {
                   {departureTrips.map((ai, idx) => (
                     <View key={`dep-${idx}`} style={s.tripInfoCard}>
                       <View style={[s.tripInfoBadge, { backgroundColor: "rgba(249,115,22,0.12)" }]}>
-                        <Text style={[s.tripInfoBadgeText, { color: T.departure }]}>🛫 Departure Flight{tripList.length > 1 ? ` (Trip ${tripList.indexOf(ai) + 1})` : ""}</Text>
+                        <Text style={[s.tripInfoBadgeText, { color: SharedColors.orange }]}>🛫 Departure Flight{tripList.length > 1 ? ` (Trip ${tripList.indexOf(ai) + 1})` : ""}</Text>
                       </View>
                       <View style={s.tripInfoBody}>
                         <Text style={s.tripInfoMain}>{ai.depAirline ? `${ai.depAirline} ` : ""}{ai.depFlightNumber || ""}</Text>
@@ -453,7 +442,7 @@ export default function ReservationScreen() {
                           </TouchableOpacity>
                           <View style={s.dropdownDivider} />
                           <TouchableOpacity style={s.dropdownItem} onPress={() => handleCancel(bk)}>
-                            <Text style={[s.dropdownText, { color: T.red }]}>❌ Cancel Booking</Text>
+                            <Text style={[s.dropdownText, { color: SharedColors.red }]}>❌ Cancel Booking</Text>
                           </TouchableOpacity>
                         </View>
                       )}
@@ -471,11 +460,11 @@ export default function ReservationScreen() {
                                   s.stepDot,
                                   isCompleted && { backgroundColor: info.color, borderColor: info.color },
                                   isCurrent && { backgroundColor: info.color, borderColor: info.color, width: 14, height: 14, borderRadius: 7, borderWidth: 3 },
-                                  !isCompleted && !isCurrent && { backgroundColor: T.white, borderColor: T.border },
+                                  !isCompleted && !isCurrent && { backgroundColor: SharedColors.white, borderColor: SharedColors.border },
                                 ]}
                               />
                               {!isLast && (
-                                <View style={[s.stepLine, { backgroundColor: isCompleted ? info.color : T.border }]} />
+                                <View style={[s.stepLine, { backgroundColor: isCompleted ? info.color : SharedColors.border }]} />
                               )}
                             </React.Fragment>
                           );
@@ -528,8 +517,8 @@ export default function ReservationScreen() {
                       const isDep = departureTrips.includes(ai) && !arrivalTrips.includes(ai);
                       return (
                         <View key={`hotel-${idx}`} style={s.tripInfoCard}>
-                          <View style={[s.tripInfoBadge, { backgroundColor: T.stayBg }]}>
-                            <Text style={[s.tripInfoBadgeText, { color: T.arrival }]}>
+                          <View style={[s.tripInfoBadge, { backgroundColor: SharedColors.skySoft }]}>
+                            <Text style={[s.tripInfoBadgeText, { color: SharedColors.sky }]}>
                               {isDep ? "🏨 Hotel Check-out" : "🏨 Hotel"}{tripList.length > 1 ? ` (Trip ${tripList.indexOf(ai) + 1})` : ""}
                             </Text>
                           </View>
@@ -567,16 +556,16 @@ export default function ReservationScreen() {
 }
 
 const s = StyleSheet.create({
-  container: { flex: 1, backgroundColor: T.bg },
+  container: { flex: 1, backgroundColor: SharedColors.bg },
   header: { paddingHorizontal: 20, paddingBottom: 20 },
-  headerTitle: { fontSize: 26, fontWeight: "800", color: "#fff" },
+  headerTitle: { fontSize: 26, fontWeight: "800", color: SharedColors.white },
   headerSub: { fontSize: 14, color: "rgba(255,255,255,0.7)", marginTop: 4 },
   scroll: { flex: 1 },
   scrollContent: { padding: 16 },
 
   // Calendar
   calendarCard: {
-    backgroundColor: T.white, borderRadius: 16, padding: 20,
+    backgroundColor: SharedColors.white, borderRadius: 16, padding: 20,
     ...Platform.select({
       ios: { shadowColor: "#000", shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.08, shadowRadius: 8 },
       android: { elevation: 4 },
@@ -586,22 +575,22 @@ const s = StyleSheet.create({
     flexDirection: "row", alignItems: "center", justifyContent: "space-between",
     marginBottom: 20,
   },
-  monthArrow: { width: 40, height: 40, borderRadius: 20, backgroundColor: T.purpleLight, alignItems: "center", justifyContent: "center" },
-  monthArrowText: { fontSize: 26, color: T.purple, fontWeight: "600" },
-  monthTitle: { fontSize: 20, fontWeight: "700", color: T.navy },
+  monthArrow: { width: 40, height: 40, borderRadius: 20, backgroundColor: PatientTheme.primaryLight, alignItems: "center", justifyContent: "center" },
+  monthArrowText: { fontSize: 26, color: PatientTheme.primary, fontWeight: "600" },
+  monthTitle: { fontSize: 20, fontWeight: "700", color: SharedColors.navy },
 
   weekdayRow: { flexDirection: "row", marginBottom: 8 },
   weekdayCell: { flex: 1, alignItems: "center", paddingVertical: 6 },
-  weekdayText: { fontSize: 13, fontWeight: "600", color: T.slateLight },
+  weekdayText: { fontSize: 13, fontWeight: "600", color: SharedColors.slateLight },
 
   weekRow: { flexDirection: "row" },
   dayCell: { flex: 1, alignItems: "center", paddingVertical: 10, minHeight: 56 },
-  dayCellSelected: { backgroundColor: T.purple, borderRadius: 12 },
-  dayCellToday: { backgroundColor: T.purpleLight, borderRadius: 12 },
-  dayText: { fontSize: 17, fontWeight: "500", color: T.navy },
-  dayTextSelected: { color: T.white, fontWeight: "700" },
-  dayTextToday: { color: T.purple, fontWeight: "700" },
-  dayTextDim: { color: T.slateLight },
+  dayCellSelected: { backgroundColor: PatientTheme.primary, borderRadius: 12 },
+  dayCellToday: { backgroundColor: PatientTheme.primaryLight, borderRadius: 12 },
+  dayText: { fontSize: 17, fontWeight: "500", color: SharedColors.navy },
+  dayTextSelected: { color: SharedColors.white, fontWeight: "700" },
+  dayTextToday: { color: PatientTheme.primary, fontWeight: "700" },
+  dayTextDim: { color: SharedColors.slateLight },
 
   // Multi-dot row
   dotsRow: { flexDirection: "row", gap: 3, marginTop: 3 },
@@ -610,21 +599,21 @@ const s = StyleSheet.create({
   // Legend
   legendRow: {
     flexDirection: "row", justifyContent: "center", gap: 16,
-    marginTop: 14, paddingTop: 12, borderTopWidth: 1, borderTopColor: T.border,
+    marginTop: 14, paddingTop: 12, borderTopWidth: 1, borderTopColor: SharedColors.border,
   },
   legendItem: { flexDirection: "row", alignItems: "center", gap: 4 },
   legendDot: { width: 9, height: 9, borderRadius: 4.5 },
   legendBar: { width: 18, height: 9, borderRadius: 3.5 },
-  legendText: { fontSize: 12, color: T.slateLight, fontWeight: "500" },
+  legendText: { fontSize: 12, color: SharedColors.slateLight, fontWeight: "500" },
 
   // Selected date
   selectedSection: { marginTop: 16 },
-  selectedDateTitle: { fontSize: 16, fontWeight: "700", color: T.navy, marginBottom: 12 },
+  selectedDateTitle: { fontSize: 16, fontWeight: "700", color: SharedColors.navy, marginBottom: 12 },
 
   // Booking card
   bookingCard: {
-    backgroundColor: T.white, borderRadius: 16, marginBottom: 12,
-    borderWidth: 1, borderColor: T.border,
+    backgroundColor: SharedColors.white, borderRadius: 16, marginBottom: 12,
+    borderWidth: 1, borderColor: SharedColors.border,
     ...Platform.select({
       ios: { shadowColor: "#000", shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.06, shadowRadius: 6 },
       android: { elevation: 3 },
@@ -641,20 +630,20 @@ const s = StyleSheet.create({
   statusEmoji: { fontSize: 16 },
   statusLabel: { fontSize: 13, fontWeight: "700" },
 
-  menuBtn: { width: 32, height: 32, borderRadius: 16, backgroundColor: T.bg, alignItems: "center", justifyContent: "center" },
-  menuBtnText: { fontSize: 18, color: T.slate, fontWeight: "700" },
+  menuBtn: { width: 32, height: 32, borderRadius: 16, backgroundColor: SharedColors.bg, alignItems: "center", justifyContent: "center" },
+  menuBtnText: { fontSize: 18, color: SharedColors.slate, fontWeight: "700" },
 
   dropdown: {
     marginHorizontal: 14, marginBottom: 8,
-    backgroundColor: T.white, borderRadius: 12, borderWidth: 1, borderColor: T.border,
+    backgroundColor: SharedColors.white, borderRadius: 12, borderWidth: 1, borderColor: SharedColors.border,
     ...Platform.select({
       ios: { shadowColor: "#000", shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.1, shadowRadius: 6 },
       android: { elevation: 4 },
     }),
   },
   dropdownItem: { padding: 12 },
-  dropdownText: { fontSize: 14, fontWeight: "600", color: T.navy },
-  dropdownDivider: { height: 1, backgroundColor: T.border },
+  dropdownText: { fontSize: 14, fontWeight: "600", color: SharedColors.navy },
+  dropdownDivider: { height: 1, backgroundColor: SharedColors.border },
 
   stepProgressWrap: {
     flexDirection: "row", alignItems: "center",
@@ -662,50 +651,50 @@ const s = StyleSheet.create({
   },
   stepDot: {
     width: 10, height: 10, borderRadius: 5,
-    borderWidth: 2, backgroundColor: T.white, borderColor: T.border,
+    borderWidth: 2, backgroundColor: SharedColors.white, borderColor: SharedColors.border,
   },
-  stepLine: { flex: 1, height: 2, backgroundColor: T.border },
+  stepLine: { flex: 1, height: 2, backgroundColor: SharedColors.border },
 
   bookingBody: { paddingHorizontal: 14, paddingBottom: 12 },
-  clinicName: { fontSize: 17, fontWeight: "700", color: T.navy },
-  dentistName: { fontSize: 13, color: T.slate, marginTop: 2 },
+  clinicName: { fontSize: 17, fontWeight: "700", color: SharedColors.navy },
+  dentistName: { fontSize: 13, color: SharedColors.slate, marginTop: 2 },
 
   treatmentRow: { flexDirection: "row", flexWrap: "wrap", gap: 6, marginTop: 10 },
-  treatmentChip: { backgroundColor: T.purpleLight, paddingHorizontal: 10, paddingVertical: 4, borderRadius: 8 },
-  treatmentChipText: { fontSize: 12, color: T.purple, fontWeight: "600" },
-  moreText: { fontSize: 12, color: T.slateLight, alignSelf: "center" },
+  treatmentChip: { backgroundColor: PatientTheme.primaryLight, paddingHorizontal: 10, paddingVertical: 4, borderRadius: 8 },
+  treatmentChipText: { fontSize: 12, color: PatientTheme.primary, fontWeight: "600" },
+  moreText: { fontSize: 12, color: SharedColors.slateLight, alignSelf: "center" },
 
-  visitInfo: { marginTop: 8, backgroundColor: T.bg, borderRadius: 8, padding: 8 },
-  visitText: { fontSize: 13, color: T.slate },
+  visitInfo: { marginTop: 8, backgroundColor: SharedColors.bg, borderRadius: 8, padding: 8 },
+  visitText: { fontSize: 13, color: SharedColors.slate },
 
   // Trip info card (separate card for flight/hotel)
   tripInfoCard: {
-    backgroundColor: T.white, borderRadius: 16, marginBottom: 12,
-    borderWidth: 1, borderColor: T.border,
+    backgroundColor: SharedColors.white, borderRadius: 16, marginBottom: 12,
+    borderWidth: 1, borderColor: SharedColors.border,
     ...Platform.select({
       ios: { shadowColor: "#000", shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.06, shadowRadius: 6 },
       android: { elevation: 3 },
     }),
   },
-  tripInfoBadge: { flexDirection: "row", alignItems: "center", paddingHorizontal: 14, paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: T.border },
+  tripInfoBadge: { flexDirection: "row", alignItems: "center", paddingHorizontal: 14, paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: SharedColors.border },
   tripInfoBadgeText: { fontSize: 14, fontWeight: "700" },
   tripInfoBody: { padding: 14 },
-  tripInfoMain: { fontSize: 16, fontWeight: "700", color: T.navy, marginBottom: 4 },
-  tripInfoSub: { fontSize: 13, color: T.slate, marginTop: 2 },
+  tripInfoMain: { fontSize: 16, fontWeight: "700", color: SharedColors.navy, marginBottom: 4 },
+  tripInfoSub: { fontSize: 13, color: SharedColors.slate, marginTop: 2 },
 
   priceRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginTop: 12 },
-  priceLabel: { fontSize: 13, color: T.slate },
-  priceValue: { fontSize: 18, fontWeight: "800", color: T.purple },
+  priceLabel: { fontSize: 13, color: SharedColors.slate },
+  priceValue: { fontSize: 18, fontWeight: "800", color: PatientTheme.primary },
 
   continueBtn: {
-    borderTopWidth: 1, borderTopColor: T.border,
+    borderTopWidth: 1, borderTopColor: SharedColors.border,
     padding: 12, alignItems: "center",
   },
-  continueBtnText: { fontSize: 14, fontWeight: "600", color: T.purple },
+  continueBtnText: { fontSize: 14, fontWeight: "600", color: PatientTheme.primary },
 
   // Empty
   emptyWrap: { alignItems: "center", marginTop: 80 },
   emptyEmoji: { fontSize: 56 },
-  emptyTitle: { fontSize: 20, fontWeight: "700", color: T.navy, marginTop: 16 },
-  emptySub: { fontSize: 14, color: T.slate, textAlign: "center", marginTop: 8, lineHeight: 20 },
+  emptyTitle: { fontSize: 20, fontWeight: "700", color: SharedColors.navy, marginTop: 16 },
+  emptySub: { fontSize: 14, color: SharedColors.slate, textAlign: "center", marginTop: 8, lineHeight: 20 },
 });

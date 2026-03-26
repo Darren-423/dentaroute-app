@@ -9,14 +9,7 @@ import {
 } from "react-native";
 import { DentistQuote, store } from "../../lib/store";
 
-const T = {
-  teal: "#4A0080", tealMid: "#5C10A0", tealLight: "#f0e6f6",
-  navy: "#0f172a", navyMid: "#1e293b", slate: "#64748b", slateLight: "#94a3b8",
-  border: "#e2e8f0", bg: "#f8fafc", white: "#ffffff",
-  green: "#16a34a", greenLight: "#f0fdf4",
-  amber: "#f59e0b", amberLight: "#fffbeb",
-};
-
+import { PatientTheme, SharedColors } from "../../constants/theme";
 type SortOption = "price" | "reviews" | "stars" | "duration";
 
 const parseDuration = (dur: string): number => {
@@ -93,7 +86,7 @@ export default function PatientQuotesScreen() {
     <View style={s.container}>
       {/* Header */}
       <LinearGradient
-        colors={["#3D0070", "#2F0058", "#220040"]}
+        colors={[...PatientTheme.gradient]}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
         style={s.header}
@@ -183,7 +176,7 @@ export default function PatientQuotesScreen() {
       )}
 
       <ScrollView contentContainerStyle={s.content} showsVerticalScrollIndicator={false}>
-        <View style={{ backgroundColor: "#f1f5f9", borderRadius: 8, padding: 10, marginBottom: 12, borderWidth: 1, borderColor: "#e2e8f0" }}><Text style={{ fontSize: 11, color: "#64748b", lineHeight: 16 }}>Quotes are estimates only. Actual treatment costs may change after in-person examination. Concourse does not guarantee treatment outcomes.</Text></View>
+        <View style={{ backgroundColor: "#f1f5f9", borderRadius: 8, padding: 10, marginBottom: 12, borderWidth: 1, borderColor: SharedColors.border }}><Text style={{ fontSize: 11, color: SharedColors.slate, lineHeight: 16 }}>Quotes are estimates only. Actual treatment costs may change after in-person examination. Concourse does not guarantee treatment outcomes.</Text></View>
 
         {quotes.length === 0 ? (
           /* Waiting State */
@@ -215,7 +208,7 @@ export default function PatientQuotesScreen() {
               {/* Step 2 - Active */}
               <View style={s.timelineStep}>
                 <View style={s.stepDotActive} />
-                <View style={[s.stepLine, { backgroundColor: T.border }]} />
+                <View style={[s.stepLine, { backgroundColor: SharedColors.border }]} />
                 <View style={s.stepContent}>
                   <Text style={s.stepTitleActive}>Dentists reviewing</Text>
                   <Text style={s.stepSub}>Usually within 12 hours</Text>
@@ -286,8 +279,8 @@ export default function PatientQuotesScreen() {
                         {isSelected && <Text style={s.checkboxIcon}>✓</Text>}
                       </View>
                     ) : (
-                      <View style={[s.rankCircle, isLowest && { backgroundColor: T.teal }]}>
-                        <Text style={[s.rankText, isLowest && { color: T.white }]}>{index + 1}</Text>
+                      <View style={[s.rankCircle, isLowest && { backgroundColor: PatientTheme.primary }]}>
+                        <Text style={[s.rankText, isLowest && { color: SharedColors.white }]}>{index + 1}</Text>
                       </View>
                     )}
                     <View style={s.avatar}>
@@ -299,7 +292,7 @@ export default function PatientQuotesScreen() {
                       <Text style={s.dentistName}>{q.dentistName || "Doctor"}</Text>
                       <Text style={s.clinicName}>{q.clinicName || "Clinic"}</Text>
                     </View>
-                    <Text style={[s.price, isLowest && { color: T.teal }]}>
+                    <Text style={[s.price, isLowest && { color: PatientTheme.primary }]}>
                       ${(q.totalPrice || 0).toLocaleString()}
                     </Text>
                   </View>
@@ -347,7 +340,7 @@ export default function PatientQuotesScreen() {
 }
 
 const s = StyleSheet.create({
-  container: { flex: 1, backgroundColor: T.bg },
+  container: { flex: 1, backgroundColor: SharedColors.bg },
 
   /* Header */
   header: {
@@ -362,42 +355,42 @@ const s = StyleSheet.create({
     borderWidth: 1, borderColor: "rgba(255,255,255,0.15)",
     alignItems: "center", justifyContent: "center",
   },
-  backArrow: { fontSize: 24, color: "#fff", fontWeight: "600", marginTop: -2 },
+  backArrow: { fontSize: 24, color: SharedColors.white, fontWeight: "600", marginTop: -2 },
   headerCenter: { flex: 1, alignItems: "center" },
-  title: { fontSize: 18, fontWeight: "700", color: "#fff" },
+  title: { fontSize: 18, fontWeight: "700", color: SharedColors.white },
   subtitle: { fontSize: 12, color: "rgba(255,255,255,0.55)", marginTop: 2 },
   mapBtn: {
     backgroundColor: "rgba(255,255,255,0.12)", borderRadius: 10,
     borderWidth: 1, borderColor: "rgba(255,255,255,0.15)",
     paddingHorizontal: 14, paddingVertical: 8,
   },
-  mapBtnText: { fontSize: 13, fontWeight: "600", color: "#fff" },
+  mapBtnText: { fontSize: 13, fontWeight: "600", color: SharedColors.white },
 
   /* Sort row */
-  sortWrapper: { backgroundColor: T.bg },
+  sortWrapper: { backgroundColor: SharedColors.bg },
   sortRow: {
     flexDirection: "row", alignItems: "center", gap: 6,
     paddingHorizontal: 16, paddingVertical: 12,
-    backgroundColor: T.bg,
+    backgroundColor: SharedColors.bg,
   },
   sortLabel: {
-    fontSize: 12, fontWeight: "600", color: T.slate, marginRight: 2,
+    fontSize: 12, fontWeight: "600", color: SharedColors.slate, marginRight: 2,
   },
   sortBtn: {
     flex: 1, alignItems: "center", justifyContent: "center",
     flexDirection: "row", gap: 5,
     paddingVertical: 8, borderRadius: 10,
-    backgroundColor: T.white,
-    borderWidth: 1, borderColor: T.border,
+    backgroundColor: SharedColors.white,
+    borderWidth: 1, borderColor: SharedColors.border,
   },
   sortBtnActive: {
-    backgroundColor: T.teal, borderColor: T.teal,
+    backgroundColor: PatientTheme.primary, borderColor: PatientTheme.primary,
   },
   sortBtnText: {
-    fontSize: 12, fontWeight: "600", color: T.slate,
+    fontSize: 12, fontWeight: "600", color: SharedColors.slate,
   },
   sortBtnTextActive: {
-    color: T.white,
+    color: SharedColors.white,
   },
   sortArrows: {
     gap: 2, alignItems: "center",
@@ -409,7 +402,7 @@ const s = StyleSheet.create({
     borderBottomColor: "rgba(255,255,255,0.3)",
   },
   sortTriUpActive: {
-    borderBottomColor: "#fff",
+    borderBottomColor: SharedColors.white,
   },
   sortTriDown: {
     width: 0, height: 0,
@@ -418,7 +411,7 @@ const s = StyleSheet.create({
     borderTopColor: "rgba(255,255,255,0.3)",
   },
   sortTriDownActive: {
-    borderTopColor: "#fff",
+    borderTopColor: SharedColors.white,
   },
 
   /* Compare */
@@ -428,50 +421,50 @@ const s = StyleSheet.create({
   },
   compareBtn: {
     borderRadius: 10, paddingHorizontal: 14, paddingVertical: 8,
-    backgroundColor: T.white, borderWidth: 1, borderColor: T.border,
+    backgroundColor: SharedColors.white, borderWidth: 1, borderColor: SharedColors.border,
   },
   compareBtnActive: {
-    backgroundColor: "#fef2f2", borderColor: "#fca5a5",
+    backgroundColor: SharedColors.redLight, borderColor: "#fca5a5",
   },
-  compareBtnText: { fontSize: 12, fontWeight: "600", color: T.slate },
+  compareBtnText: { fontSize: 12, fontWeight: "600", color: SharedColors.slate },
   compareBtnTextActive: { color: "#dc2626" },
   compareGoBtn: {
-    backgroundColor: T.teal, borderRadius: 10,
+    backgroundColor: PatientTheme.primary, borderRadius: 10,
     paddingHorizontal: 16, paddingVertical: 8,
   },
-  compareGoBtnText: { fontSize: 12, fontWeight: "700", color: T.white },
-  compareHint: { fontSize: 11, color: T.slateLight, marginLeft: "auto" },
+  compareGoBtnText: { fontSize: 12, fontWeight: "700", color: SharedColors.white },
+  compareHint: { fontSize: 11, color: SharedColors.slateLight, marginLeft: "auto" },
 
   checkbox: {
     width: 26, height: 26, borderRadius: 8,
-    borderWidth: 2, borderColor: T.border,
-    backgroundColor: T.white, alignItems: "center", justifyContent: "center",
+    borderWidth: 2, borderColor: SharedColors.border,
+    backgroundColor: SharedColors.white, alignItems: "center", justifyContent: "center",
   },
   checkboxActive: {
-    backgroundColor: T.teal, borderColor: T.teal,
+    backgroundColor: PatientTheme.primary, borderColor: PatientTheme.primary,
   },
-  checkboxIcon: { color: T.white, fontSize: 14, fontWeight: "700" },
+  checkboxIcon: { color: SharedColors.white, fontSize: 14, fontWeight: "700" },
   quoteCardSelected: {
-    borderColor: T.teal, borderWidth: 2,
+    borderColor: PatientTheme.primary, borderWidth: 2,
   },
 
   content: { padding: 20, gap: 12, paddingBottom: 40 },
 
   /* Waiting state */
   waitingCard: {
-    backgroundColor: T.white, borderRadius: 20, padding: 28,
-    alignItems: "center", borderWidth: 1, borderColor: T.border,
+    backgroundColor: SharedColors.white, borderRadius: 20, padding: 28,
+    alignItems: "center", borderWidth: 1, borderColor: SharedColors.border,
   },
   waitingIconWrap: { marginBottom: 20 },
   waitingIconRing: {
     width: 72, height: 72, borderRadius: 36,
-    backgroundColor: T.amberLight, borderWidth: 2, borderColor: "rgba(245,158,11,0.2)",
+    backgroundColor: SharedColors.amberLight, borderWidth: 2, borderColor: "rgba(245,158,11,0.2)",
     alignItems: "center", justifyContent: "center",
   },
   waitingIcon: { fontSize: 32 },
-  waitingTitle: { fontSize: 19, fontWeight: "700", color: T.navy, marginBottom: 8 },
+  waitingTitle: { fontSize: 19, fontWeight: "700", color: SharedColors.navy, marginBottom: 8 },
   waitingDesc: {
-    fontSize: 14, color: T.slate, textAlign: "center",
+    fontSize: 14, color: SharedColors.slate, textAlign: "center",
     lineHeight: 22, marginBottom: 24,
   },
 
@@ -479,107 +472,107 @@ const s = StyleSheet.create({
   timeline: { width: "100%", gap: 0, marginBottom: 20 },
   timelineStep: { flexDirection: "row", alignItems: "flex-start", gap: 14 },
   stepDotDone: {
-    width: 28, height: 28, borderRadius: 14, backgroundColor: T.teal,
+    width: 28, height: 28, borderRadius: 14, backgroundColor: PatientTheme.primary,
     alignItems: "center", justifyContent: "center", marginTop: 2,
   },
-  stepDotDoneText: { color: T.white, fontSize: 13, fontWeight: "700" },
+  stepDotDoneText: { color: SharedColors.white, fontSize: 13, fontWeight: "700" },
   stepDotActive: {
     width: 28, height: 28, borderRadius: 14,
-    backgroundColor: T.amberLight, borderWidth: 2.5, borderColor: T.amber,
+    backgroundColor: SharedColors.amberLight, borderWidth: 2.5, borderColor: SharedColors.amber,
     marginTop: 2,
   },
   stepDotPending: {
     width: 28, height: 28, borderRadius: 14,
-    backgroundColor: T.bg, borderWidth: 2, borderColor: T.border,
+    backgroundColor: SharedColors.bg, borderWidth: 2, borderColor: SharedColors.border,
     alignItems: "center", justifyContent: "center", marginTop: 2,
   },
-  stepDotPendingText: { fontSize: 12, fontWeight: "600", color: T.slateLight },
+  stepDotPendingText: { fontSize: 12, fontWeight: "600", color: SharedColors.slateLight },
   stepLine: {
     position: "absolute", left: 12.5, top: 32, width: 3, height: 24,
-    backgroundColor: T.tealLight, borderRadius: 2,
+    backgroundColor: PatientTheme.primaryLight, borderRadius: 2,
   },
   stepContent: { flex: 1, paddingBottom: 20 },
-  stepTitleDone: { fontSize: 14, fontWeight: "600", color: T.teal },
-  stepTitleActive: { fontSize: 14, fontWeight: "600", color: T.amber },
-  stepTitlePending: { fontSize: 14, color: T.slateLight },
-  stepSub: { fontSize: 12, color: T.slateLight, marginTop: 2 },
+  stepTitleDone: { fontSize: 14, fontWeight: "600", color: PatientTheme.primary },
+  stepTitleActive: { fontSize: 14, fontWeight: "600", color: SharedColors.amber },
+  stepTitlePending: { fontSize: 14, color: SharedColors.slateLight },
+  stepSub: { fontSize: 12, color: SharedColors.slateLight, marginTop: 2 },
 
   tipBar: {
     flexDirection: "row", alignItems: "center", gap: 8,
-    width: "100%", backgroundColor: T.tealLight, borderRadius: 12,
+    width: "100%", backgroundColor: PatientTheme.primaryLight, borderRadius: 12,
     padding: 14,
   },
   tipDot: {
-    width: 6, height: 6, borderRadius: 3, backgroundColor: T.teal,
+    width: 6, height: 6, borderRadius: 3, backgroundColor: PatientTheme.primary,
   },
-  tipText: { fontSize: 13, color: T.teal, fontWeight: "500" },
+  tipText: { fontSize: 13, color: PatientTheme.primary, fontWeight: "500" },
 
   /* Range bar */
   rangeBar: {
     flexDirection: "row", justifyContent: "space-between", alignItems: "center",
-    backgroundColor: T.white, borderRadius: 12, paddingHorizontal: 16, paddingVertical: 12,
-    borderWidth: 1, borderColor: T.border,
+    backgroundColor: SharedColors.white, borderRadius: 12, paddingHorizontal: 16, paddingVertical: 12,
+    borderWidth: 1, borderColor: SharedColors.border,
   },
-  rangeLabel: { fontSize: 12, fontWeight: "500", color: T.slate },
-  rangeValue: { fontSize: 14, fontWeight: "700", color: T.navy },
+  rangeLabel: { fontSize: 12, fontWeight: "500", color: SharedColors.slate },
+  rangeValue: { fontSize: 14, fontWeight: "700", color: SharedColors.navy },
 
   /* Quote card */
   quoteCard: {
-    backgroundColor: T.white, borderRadius: 18, padding: 18,
+    backgroundColor: SharedColors.white, borderRadius: 18, padding: 18,
     gap: 14,
-    borderWidth: 1, borderColor: T.border,
-    shadowColor: "#0f172a", shadowOffset: { width: 0, height: 2 },
+    borderWidth: 1, borderColor: SharedColors.border,
+    shadowColor: SharedColors.navy, shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.04, shadowRadius: 12, elevation: 2,
   },
   quoteCardHighlight: {
     borderColor: "rgba(74,0,128,0.25)",
-    shadowColor: T.teal, shadowOpacity: 0.08,
+    shadowColor: PatientTheme.primary, shadowOpacity: 0.08,
   },
 
   bestBadge: {
     alignSelf: "flex-start",
-    backgroundColor: T.tealLight, borderRadius: 6,
+    backgroundColor: PatientTheme.primaryLight, borderRadius: 6,
     paddingHorizontal: 10, paddingVertical: 4,
   },
-  bestBadgeText: { fontSize: 11, fontWeight: "700", color: T.teal },
+  bestBadgeText: { fontSize: 11, fontWeight: "700", color: PatientTheme.primary },
 
   cardTop: {
     flexDirection: "row", alignItems: "center", gap: 10,
   },
   rankCircle: {
     width: 26, height: 26, borderRadius: 13,
-    backgroundColor: T.bg, alignItems: "center", justifyContent: "center",
+    backgroundColor: SharedColors.bg, alignItems: "center", justifyContent: "center",
   },
-  rankText: { fontSize: 12, fontWeight: "700", color: T.slate },
+  rankText: { fontSize: 12, fontWeight: "700", color: SharedColors.slate },
   avatar: {
     width: 38, height: 38, borderRadius: 12,
-    backgroundColor: T.tealLight, alignItems: "center", justifyContent: "center",
+    backgroundColor: PatientTheme.primaryLight, alignItems: "center", justifyContent: "center",
   },
-  avatarText: { fontSize: 14, fontWeight: "700", color: T.teal },
-  dentistName: { fontSize: 15, fontWeight: "700", color: T.navy },
-  clinicName: { fontSize: 12, color: T.slate, marginTop: 1 },
-  price: { fontSize: 18, fontWeight: "800", color: T.navy },
+  avatarText: { fontSize: 14, fontWeight: "700", color: PatientTheme.primary },
+  dentistName: { fontSize: 15, fontWeight: "700", color: SharedColors.navy },
+  clinicName: { fontSize: 12, color: SharedColors.slate, marginTop: 1 },
+  price: { fontSize: 18, fontWeight: "800", color: SharedColors.navy },
 
   metaRow: {
     flexDirection: "row", alignItems: "center",
-    backgroundColor: T.bg, borderRadius: 10, paddingVertical: 10, paddingHorizontal: 8,
+    backgroundColor: SharedColors.bg, borderRadius: 10, paddingVertical: 10, paddingHorizontal: 8,
   },
   metaItem: { flex: 1, alignItems: "center", paddingHorizontal: 2 },
-  metaValue: { fontSize: 13, fontWeight: "700", color: T.navy, textAlign: "center" },
-  metaLabel: { fontSize: 10, color: T.slateLight, marginTop: 2 },
-  metaDivider: { width: 1, height: 24, backgroundColor: T.border },
+  metaValue: { fontSize: 13, fontWeight: "700", color: SharedColors.navy, textAlign: "center" },
+  metaLabel: { fontSize: 10, color: SharedColors.slateLight, marginTop: 2 },
+  metaDivider: { width: 1, height: 24, backgroundColor: SharedColors.border },
 
   cardFooter: { alignItems: "flex-end" },
   viewBtn: {
     flexDirection: "row", alignItems: "center", gap: 6,
-    backgroundColor: T.tealLight, borderRadius: 10,
+    backgroundColor: PatientTheme.primaryLight, borderRadius: 10,
     paddingHorizontal: 14, paddingVertical: 7,
   },
-  viewBtnText: { fontSize: 12, fontWeight: "600", color: T.teal },
+  viewBtnText: { fontSize: 12, fontWeight: "600", color: PatientTheme.primary },
   viewBtnChevron: {
     width: 6, height: 6,
     borderTopWidth: 1.5, borderRightWidth: 1.5,
-    borderColor: T.teal,
+    borderColor: PatientTheme.primary,
     transform: [{ rotate: "45deg" }],
   },
 });

@@ -18,18 +18,9 @@ import {
 } from "react-native";
 import { store } from "../../lib/store";
 
-const T = {
-  teal: "#4A0080",
-  tealMid: "#5C10A0",
-  tealLight: "#f0e6f6",
-  navy: "#0f172a",
-  slate: "#64748b",
-  slateLight: "#94a3b8",
-  border: "#e2e8f0",
-  bg: "#f8fafc",
-  white: "#fff",
-};
 
+
+import { PatientTheme, SharedColors } from "../../constants/theme";
 // ── Country Data ──
 const ALL_COUNTRIES = [
   { code: "AF", name: "Afghanistan", flag: "\u{1F1E6}\u{1F1EB}" },
@@ -405,7 +396,7 @@ export default function EditProfileScreen() {
           <TextInput
             style={st.addInput}
             placeholder={`Add custom ${label.toLowerCase()}...`}
-            placeholderTextColor={T.slateLight}
+            placeholderTextColor={SharedColors.slateLight}
             value={newVal}
             onChangeText={setNewVal}
             onSubmitEditing={() => { addCustomItem(newVal, setNewVal, custom, setCustom, defaults); }}
@@ -429,7 +420,7 @@ export default function EditProfileScreen() {
 
   return (
     <View style={st.container}>
-      <LinearGradient colors={["#4A0080", "#5C10A0"]} style={st.header}>
+      <LinearGradient colors={[PatientTheme.primary, PatientTheme.primaryMid]} style={st.header}>
         <TouchableOpacity style={st.backBtn} onPress={() => router.back()} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
           <Text style={st.backArrow}>‹</Text>
         </TouchableOpacity>
@@ -458,15 +449,15 @@ export default function EditProfileScreen() {
           <Text style={st.sectionTitle}>PERSONAL INFORMATION</Text>
           <View style={st.fieldGroup}>
             <Text style={st.label}>Full Name *</Text>
-            <TextInput style={st.input} value={fullName} onChangeText={setFullName} placeholder="Enter full name" placeholderTextColor={T.slateLight} />
+            <TextInput style={st.input} value={fullName} onChangeText={setFullName} placeholder="Enter full name" placeholderTextColor={SharedColors.slateLight} />
           </View>
           <View style={st.fieldGroup}>
             <Text style={st.label}>Email</Text>
-            <TextInput style={st.input} value={email} onChangeText={setEmail} placeholder="Enter email" placeholderTextColor={T.slateLight} keyboardType="email-address" autoCapitalize="none" />
+            <TextInput style={st.input} value={email} onChangeText={setEmail} placeholder="Enter email" placeholderTextColor={SharedColors.slateLight} keyboardType="email-address" autoCapitalize="none" />
           </View>
           <View style={st.fieldGroup}>
             <Text style={st.label}>Phone Number</Text>
-            <TextInput style={st.input} value={phone} onChangeText={setPhone} placeholder="Enter phone number" placeholderTextColor={T.slateLight} keyboardType="phone-pad" />
+            <TextInput style={st.input} value={phone} onChangeText={setPhone} placeholder="Enter phone number" placeholderTextColor={SharedColors.slateLight} keyboardType="phone-pad" />
           </View>
 
           {/* Country Picker */}
@@ -566,7 +557,7 @@ export default function EditProfileScreen() {
 
         {/* Save Button */}
         <TouchableOpacity style={[st.saveBtn, loading && { opacity: 0.6 }]} onPress={handleSave} disabled={loading}>
-          {loading ? <ActivityIndicator color="#fff" /> : <Text style={st.saveBtnText}>Save Changes</Text>}
+          {loading ? <ActivityIndicator color={SharedColors.white} /> : <Text style={st.saveBtnText}>Save Changes</Text>}
         </TouchableOpacity>
 
         <View style={{ height: 40 }} />
@@ -585,7 +576,7 @@ export default function EditProfileScreen() {
             <TextInput
               style={st.searchInput}
               placeholder="Search countries..."
-              placeholderTextColor={T.slateLight}
+              placeholderTextColor={SharedColors.slateLight}
               value={countrySearch}
               onChangeText={setCountrySearch}
               autoFocus
@@ -622,7 +613,7 @@ export default function EditProfileScreen() {
             <TextInput
               style={st.searchInput}
               placeholder="Search year..."
-              placeholderTextColor={T.slateLight}
+              placeholderTextColor={SharedColors.slateLight}
               value={yearSearch}
               onChangeText={setYearSearch}
               keyboardType="number-pad"
@@ -706,82 +697,82 @@ export default function EditProfileScreen() {
 }
 
 const st = StyleSheet.create({
-  container: { flex: 1, backgroundColor: T.bg },
+  container: { flex: 1, backgroundColor: SharedColors.bg },
   header: { paddingTop: 56, paddingBottom: 24, paddingHorizontal: 20, borderBottomLeftRadius: 20, borderBottomRightRadius: 20 },
   backBtn: { position: "absolute", top: 54, left: 16, zIndex: 10, width: 36, height: 36, borderRadius: 18, backgroundColor: "rgba(255,255,255,0.15)", alignItems: "center", justifyContent: "center" },
-  backArrow: { color: "#fff", fontSize: 24, fontWeight: "600", marginTop: -2 },
-  title: { fontSize: 22, fontWeight: "700", color: "#fff", textAlign: "center" },
+  backArrow: { color: SharedColors.white, fontSize: 24, fontWeight: "600", marginTop: -2 },
+  title: { fontSize: 22, fontWeight: "700", color: SharedColors.white, textAlign: "center" },
   subtitle: { fontSize: 13, color: "rgba(255,255,255,0.7)", textAlign: "center", marginTop: 4 },
   content: { padding: 16 },
   photoSection: { alignItems: "center", marginBottom: 20 },
-  avatar: { width: 90, height: 90, borderRadius: 45, borderWidth: 3, borderColor: T.teal },
-  avatarPlaceholder: { width: 90, height: 90, borderRadius: 45, backgroundColor: T.tealLight, alignItems: "center", justifyContent: "center" },
-  avatarText: { fontSize: 32, fontWeight: "700", color: T.teal },
-  cameraBadge: { position: "absolute", bottom: 0, right: 0, backgroundColor: T.white, borderRadius: 14, width: 28, height: 28, alignItems: "center", justifyContent: "center", borderWidth: 1, borderColor: T.border },
+  avatar: { width: 90, height: 90, borderRadius: 45, borderWidth: 3, borderColor: PatientTheme.primary },
+  avatarPlaceholder: { width: 90, height: 90, borderRadius: 45, backgroundColor: PatientTheme.primaryLight, alignItems: "center", justifyContent: "center" },
+  avatarText: { fontSize: 32, fontWeight: "700", color: PatientTheme.primary },
+  cameraBadge: { position: "absolute", bottom: 0, right: 0, backgroundColor: SharedColors.white, borderRadius: 14, width: 28, height: 28, alignItems: "center", justifyContent: "center", borderWidth: 1, borderColor: SharedColors.border },
   cameraIcon: { fontSize: 14 },
-  photoHint: { fontSize: 12, color: T.slate, marginTop: 6 },
-  section: { backgroundColor: T.white, borderRadius: 16, padding: 16, marginBottom: 16, borderWidth: 1, borderColor: T.border },
-  sectionTitle: { fontSize: 12, fontWeight: "700", color: T.teal, letterSpacing: 1, marginBottom: 12 },
+  photoHint: { fontSize: 12, color: SharedColors.slate, marginTop: 6 },
+  section: { backgroundColor: SharedColors.white, borderRadius: 16, padding: 16, marginBottom: 16, borderWidth: 1, borderColor: SharedColors.border },
+  sectionTitle: { fontSize: 12, fontWeight: "700", color: PatientTheme.primary, letterSpacing: 1, marginBottom: 12 },
   fieldGroup: { marginBottom: 14 },
-  label: { fontSize: 12, fontWeight: "600", color: T.slate, marginBottom: 6 },
-  input: { borderWidth: 1, borderColor: T.border, borderRadius: 10, padding: 12, fontSize: 15, color: T.navy, backgroundColor: T.bg },
+  label: { fontSize: 12, fontWeight: "600", color: SharedColors.slate, marginBottom: 6 },
+  input: { borderWidth: 1, borderColor: SharedColors.border, borderRadius: 10, padding: 12, fontSize: 15, color: SharedColors.navy, backgroundColor: SharedColors.bg },
   // Country picker
   popularRow: { flexDirection: "row", gap: 8, marginBottom: 10 },
-  popularBtn: { flex: 1, alignItems: "center", padding: 8, borderRadius: 10, borderWidth: 1, borderColor: T.border, backgroundColor: T.bg },
-  popularBtnSelected: { backgroundColor: T.tealLight, borderColor: T.teal },
+  popularBtn: { flex: 1, alignItems: "center", padding: 8, borderRadius: 10, borderWidth: 1, borderColor: SharedColors.border, backgroundColor: SharedColors.bg },
+  popularBtnSelected: { backgroundColor: PatientTheme.primaryLight, borderColor: PatientTheme.primary },
   popularFlag: { fontSize: 20, marginBottom: 2 },
-  popularName: { fontSize: 11, color: T.slate },
-  popularNameSelected: { color: T.teal, fontWeight: "600" },
-  countrySelector: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", borderWidth: 1, borderColor: T.border, borderRadius: 10, padding: 12, backgroundColor: T.bg },
-  countrySelectorText: { fontSize: 15, color: T.navy },
-  countrySelectorPlaceholder: { fontSize: 15, color: T.slateLight },
-  countrySelectorArrow: { fontSize: 12, color: T.slate },
+  popularName: { fontSize: 11, color: SharedColors.slate },
+  popularNameSelected: { color: PatientTheme.primary, fontWeight: "600" },
+  countrySelector: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", borderWidth: 1, borderColor: SharedColors.border, borderRadius: 10, padding: 12, backgroundColor: SharedColors.bg },
+  countrySelectorText: { fontSize: 15, color: SharedColors.navy },
+  countrySelectorPlaceholder: { fontSize: 15, color: SharedColors.slateLight },
+  countrySelectorArrow: { fontSize: 12, color: SharedColors.slate },
   // DOB Dropdown
   dobRow: { flexDirection: "row", gap: 8 },
-  dobDropdown: { flex: 1, flexDirection: "row", justifyContent: "space-between", alignItems: "center", borderWidth: 1, borderColor: T.border, borderRadius: 10, padding: 12, backgroundColor: T.bg },
-  dobDropdownSelected: { backgroundColor: T.tealLight, borderColor: T.teal },
+  dobDropdown: { flex: 1, flexDirection: "row", justifyContent: "space-between", alignItems: "center", borderWidth: 1, borderColor: SharedColors.border, borderRadius: 10, padding: 12, backgroundColor: SharedColors.bg },
+  dobDropdownSelected: { backgroundColor: PatientTheme.primaryLight, borderColor: PatientTheme.primary },
   dobDropdownText: { fontSize: 14, flex: 1 },
-  dobDropdownTextSelected: { color: T.teal, fontWeight: "600" },
-  dobDropdownPlaceholder: { color: T.slateLight },
-  dobDropdownArrow: { fontSize: 10, color: T.slate, marginLeft: 4 },
-  dobSummary: { fontSize: 13, color: T.teal, fontWeight: "600", textAlign: "center", marginTop: 8 },
+  dobDropdownTextSelected: { color: PatientTheme.primary, fontWeight: "600" },
+  dobDropdownPlaceholder: { color: SharedColors.slateLight },
+  dobDropdownArrow: { fontSize: 10, color: SharedColors.slate, marginLeft: 4 },
+  dobSummary: { fontSize: 13, color: PatientTheme.primary, fontWeight: "600", textAlign: "center", marginTop: 8 },
   // DOB Picker rows
-  pickerRow: { flexDirection: "row", alignItems: "center", padding: 14, borderBottomWidth: 1, borderBottomColor: T.border },
-  pickerRowSelected: { backgroundColor: T.tealLight },
-  pickerRowText: { fontSize: 16, color: T.navy, flex: 1 },
-  pickerRowTextSelected: { color: T.teal, fontWeight: "600" },
-  pickerRowCheck: { fontSize: 18, color: T.teal, fontWeight: "700" },
+  pickerRow: { flexDirection: "row", alignItems: "center", padding: 14, borderBottomWidth: 1, borderBottomColor: SharedColors.border },
+  pickerRowSelected: { backgroundColor: PatientTheme.primaryLight },
+  pickerRowText: { fontSize: 16, color: SharedColors.navy, flex: 1 },
+  pickerRowTextSelected: { color: PatientTheme.primary, fontWeight: "600" },
+  pickerRowCheck: { fontSize: 18, color: PatientTheme.primary, fontWeight: "700" },
   // Tags
   subsection: { marginBottom: 16 },
-  subsectionLabel: { fontSize: 13, fontWeight: "600", color: T.navy, marginBottom: 8 },
+  subsectionLabel: { fontSize: 13, fontWeight: "600", color: SharedColors.navy, marginBottom: 8 },
   tagWrap: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
-  tag: { paddingHorizontal: 14, paddingVertical: 8, borderRadius: 20, borderWidth: 1, borderColor: T.border, backgroundColor: T.bg },
-  tagSelected: { backgroundColor: T.tealLight, borderColor: T.teal },
-  tagText: { fontSize: 13, color: T.slate },
-  tagTextSelected: { color: T.teal, fontWeight: "600" },
-  tagCustom: { flexDirection: "row", alignItems: "center", backgroundColor: "#fef3c7", borderColor: "#f59e0b" },
+  tag: { paddingHorizontal: 14, paddingVertical: 8, borderRadius: 20, borderWidth: 1, borderColor: SharedColors.border, backgroundColor: SharedColors.bg },
+  tagSelected: { backgroundColor: PatientTheme.primaryLight, borderColor: PatientTheme.primary },
+  tagText: { fontSize: 13, color: SharedColors.slate },
+  tagTextSelected: { color: PatientTheme.primary, fontWeight: "600" },
+  tagCustom: { flexDirection: "row", alignItems: "center", backgroundColor: "#fef3c7", borderColor: SharedColors.amber },
   tagTextCustom: { fontSize: 13, color: "#92400e" },
-  tagRemove: { fontSize: 12, color: "#ef4444" },
+  tagRemove: { fontSize: 12, color: SharedColors.red },
   addRow: { flexDirection: "row", alignItems: "center", marginTop: 8, gap: 8 },
-  addInput: { flex: 1, borderWidth: 1, borderColor: T.border, borderRadius: 10, padding: 10, fontSize: 14, color: T.navy, backgroundColor: T.bg },
-  addBtn: { backgroundColor: T.teal, paddingHorizontal: 14, paddingVertical: 10, borderRadius: 10 },
-  addBtnText: { color: "#fff", fontSize: 13, fontWeight: "600" },
-  cancelBtnText: { color: T.slate, fontSize: 13, paddingHorizontal: 8 },
+  addInput: { flex: 1, borderWidth: 1, borderColor: SharedColors.border, borderRadius: 10, padding: 10, fontSize: 14, color: SharedColors.navy, backgroundColor: SharedColors.bg },
+  addBtn: { backgroundColor: PatientTheme.primary, paddingHorizontal: 14, paddingVertical: 10, borderRadius: 10 },
+  addBtnText: { color: SharedColors.white, fontSize: 13, fontWeight: "600" },
+  cancelBtnText: { color: SharedColors.slate, fontSize: 13, paddingHorizontal: 8 },
   addCustomBtn: { marginTop: 8 },
-  addCustomBtnText: { fontSize: 13, color: T.teal, fontWeight: "600" },
-  saveBtn: { backgroundColor: T.teal, padding: 16, borderRadius: 14, alignItems: "center", marginTop: 8 },
-  saveBtnText: { color: "#fff", fontSize: 16, fontWeight: "700" },
+  addCustomBtnText: { fontSize: 13, color: PatientTheme.primary, fontWeight: "600" },
+  saveBtn: { backgroundColor: PatientTheme.primary, padding: 16, borderRadius: 14, alignItems: "center", marginTop: 8 },
+  saveBtnText: { color: SharedColors.white, fontSize: 16, fontWeight: "700" },
   // Modal
   modalOverlay: { flex: 1, backgroundColor: "rgba(0,0,0,0.5)", justifyContent: "flex-end" },
-  modalContent: { backgroundColor: T.white, borderTopLeftRadius: 20, borderTopRightRadius: 20, padding: 20, maxHeight: "80%" },
+  modalContent: { backgroundColor: SharedColors.white, borderTopLeftRadius: 20, borderTopRightRadius: 20, padding: 20, maxHeight: "80%" },
   modalHeader: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 12 },
-  modalTitle: { fontSize: 18, fontWeight: "700", color: T.navy },
-  modalClose: { fontSize: 20, color: T.slate, padding: 4 },
-  searchInput: { borderWidth: 1, borderColor: T.border, borderRadius: 10, padding: 12, fontSize: 15, color: T.navy, backgroundColor: T.bg, marginBottom: 12 },
-  countryRow: { flexDirection: "row", alignItems: "center", padding: 12, borderBottomWidth: 1, borderBottomColor: T.border },
-  countryRowSelected: { backgroundColor: T.tealLight },
+  modalTitle: { fontSize: 18, fontWeight: "700", color: SharedColors.navy },
+  modalClose: { fontSize: 20, color: SharedColors.slate, padding: 4 },
+  searchInput: { borderWidth: 1, borderColor: SharedColors.border, borderRadius: 10, padding: 12, fontSize: 15, color: SharedColors.navy, backgroundColor: SharedColors.bg, marginBottom: 12 },
+  countryRow: { flexDirection: "row", alignItems: "center", padding: 12, borderBottomWidth: 1, borderBottomColor: SharedColors.border },
+  countryRowSelected: { backgroundColor: PatientTheme.primaryLight },
   countryRowFlag: { fontSize: 22, marginRight: 12 },
-  countryRowName: { fontSize: 15, color: T.navy, flex: 1 },
-  countryRowNameSelected: { color: T.teal, fontWeight: "600" },
-  countryRowCheck: { fontSize: 18, color: T.teal, fontWeight: "700" },
+  countryRowName: { fontSize: 15, color: SharedColors.navy, flex: 1 },
+  countryRowNameSelected: { color: PatientTheme.primary, fontWeight: "600" },
+  countryRowCheck: { fontSize: 18, color: PatientTheme.primary, fontWeight: "700" },
 });

@@ -18,6 +18,7 @@ import {
   View,
 } from "react-native";
 
+import { SharedColors } from "../../constants/theme";
 const API_URL = "https://concourse-api.onrender.com/api";
 
 const COUNTRY_CODES = [
@@ -281,7 +282,7 @@ export default function DoctorCreateAccountScreen() {
           style={[styles.verifyBtn, codes.join("").length !== 6 && styles.verifyBtnDisabled]}
           onPress={onVerify} disabled={codes.join("").length !== 6 || verifying}
         >
-          {verifying ? <ActivityIndicator color="#0f172a" size="small" /> : <Text style={styles.verifyBtnText}>Verify</Text>}
+          {verifying ? <ActivityIndicator color={SharedColors.navy} size="small" /> : <Text style={styles.verifyBtnText}>Verify</Text>}
         </TouchableOpacity>
       ) : (
         <View style={styles.verifiedBadge}><Text style={styles.verifiedText}>✓ Verified</Text></View>
@@ -290,7 +291,7 @@ export default function DoctorCreateAccountScreen() {
   );
 
   return (
-    <LinearGradient colors={["#0f172a", "#0f2a40"]} start={{ x: 0.2, y: 0 }} end={{ x: 0.8, y: 1 }} style={styles.container}>
+    <LinearGradient colors={[SharedColors.navy, "#0f2a40"]} start={{ x: 0.2, y: 0 }} end={{ x: 0.8, y: 1 }} style={styles.container}>
       <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : "height"} style={{ flex: 1 }}>
         <ScrollView contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
 
@@ -337,7 +338,7 @@ export default function DoctorCreateAccountScreen() {
                 />
                 {!emailVerified && (
                   <TouchableOpacity style={[styles.sendCodeBtn, emailCodeSent && styles.sendCodeBtnResend]} onPress={handleSendEmailCode} disabled={emailVerifying}>
-                    {emailVerifying ? <ActivityIndicator color="#ffffff" size="small" /> : <Text style={styles.sendCodeBtnText}>{emailCodeSent ? "Resend" : "Send Code"}</Text>}
+                    {emailVerifying ? <ActivityIndicator color={SharedColors.white} size="small" /> : <Text style={styles.sendCodeBtnText}>{emailCodeSent ? "Resend" : "Send Code"}</Text>}
                   </TouchableOpacity>
                 )}
               </View>
@@ -367,7 +368,7 @@ export default function DoctorCreateAccountScreen() {
                 />
                 {!phoneVerified && (
                   <TouchableOpacity style={[styles.sendCodeBtn, phoneCodeSent && styles.sendCodeBtnResend]} onPress={handleSendPhoneCode} disabled={phoneVerifying}>
-                    {phoneVerifying ? <ActivityIndicator color="#ffffff" size="small" /> : <Text style={styles.sendCodeBtnText}>{phoneCodeSent ? "Resend" : "Send"}</Text>}
+                    {phoneVerifying ? <ActivityIndicator color={SharedColors.white} size="small" /> : <Text style={styles.sendCodeBtnText}>{phoneCodeSent ? "Resend" : "Send"}</Text>}
                   </TouchableOpacity>
                 )}
               </View>
@@ -481,7 +482,7 @@ export default function DoctorCreateAccountScreen() {
 
           {/* Create Account */}
           <TouchableOpacity style={[styles.createBtn, loading && { opacity: 0.6 }]} onPress={handleCreateAccount} disabled={loading} activeOpacity={0.85}>
-            {loading ? <ActivityIndicator color="#0f172a" size="small" /> : <Text style={styles.createBtnText}>Create Account →</Text>}
+            {loading ? <ActivityIndicator color={SharedColors.navy} size="small" /> : <Text style={styles.createBtnText}>Create Account →</Text>}
           </TouchableOpacity>
 
           <View style={styles.bottomLink}>
@@ -569,21 +570,21 @@ const styles = StyleSheet.create({
     alignItems: "center", justifyContent: "center",
     marginBottom: 8,
   },
-  backArrow: { fontSize: 24, color: "#fff", fontWeight: "600", marginTop: -2 },
+  backArrow: { fontSize: 24, color: SharedColors.white, fontWeight: "600", marginTop: -2 },
   header: { marginBottom: 28 },
   emoji: { fontSize: 36, marginBottom: 10 },
-  title: { fontSize: 30, fontWeight: "700", color: "#ffffff", marginBottom: 6 },
+  title: { fontSize: 30, fontWeight: "700", color: SharedColors.white, marginBottom: 6 },
   subtitle: { fontSize: 14, color: "rgba(255,255,255,0.45)", fontWeight: "300" },
-  errorBanner: { backgroundColor: "#fef2ee", borderRadius: 8, paddingHorizontal: 12, paddingVertical: 12, marginBottom: 16 },
-  errorBannerText: { color: "#e05a3a", fontSize: 12 },
+  errorBanner: { backgroundColor: SharedColors.coralLight, borderRadius: 8, paddingHorizontal: 12, paddingVertical: 12, marginBottom: 16 },
+  errorBannerText: { color: SharedColors.coral, fontSize: 12 },
   formArea: { gap: 16 },
   nameRow: { flexDirection: "row", gap: 12 },
   fieldGroup: { gap: 6 },
   label: { fontSize: 11, fontWeight: "600", color: "rgba(255,255,255,0.5)", letterSpacing: 0.8 },
-  input: { borderWidth: 1.5, borderColor: "rgba(255,255,255,0.15)", backgroundColor: "rgba(255,255,255,0.08)", borderRadius: 12, paddingHorizontal: 16, paddingVertical: 13, fontSize: 14, color: "#ffffff" },
-  inputError: { borderColor: "#e05a3a" },
-  inputVerified: { borderColor: "#16a34a", backgroundColor: "rgba(22,163,74,0.1)" },
-  fieldError: { fontSize: 11, color: "#e05a3a", marginTop: 2 },
+  input: { borderWidth: 1.5, borderColor: "rgba(255,255,255,0.15)", backgroundColor: "rgba(255,255,255,0.08)", borderRadius: 12, paddingHorizontal: 16, paddingVertical: 13, fontSize: 14, color: SharedColors.white },
+  inputError: { borderColor: SharedColors.coral },
+  inputVerified: { borderColor: SharedColors.green, backgroundColor: "rgba(22,163,74,0.1)" },
+  fieldError: { fontSize: 11, color: SharedColors.coral, marginTop: 2 },
   helpText: { fontSize: 11, color: "rgba(255,255,255,0.4)" },
   passportNotice: { flexDirection: "row", alignItems: "center", gap: 8, backgroundColor: "rgba(255,255,255,0.06)", borderRadius: 10, paddingHorizontal: 14, paddingVertical: 10, borderWidth: 1, borderColor: "rgba(255,255,255,0.08)" },
   passportIcon: { fontSize: 16 },
@@ -592,23 +593,23 @@ const styles = StyleSheet.create({
   phoneRow: { flexDirection: "row", gap: 8, alignItems: "center" },
   sendCodeBtn: { backgroundColor: "#1a9e8f", borderRadius: 12, paddingHorizontal: 14, paddingVertical: 13, justifyContent: "center", alignItems: "center", minWidth: 80 },
   sendCodeBtnResend: { backgroundColor: "rgba(255,255,255,0.15)" },
-  sendCodeBtnText: { color: "#ffffff", fontSize: 13, fontWeight: "600" },
+  sendCodeBtnText: { color: SharedColors.white, fontSize: 13, fontWeight: "600" },
   countryCodeBtn: { flexDirection: "row", alignItems: "center", gap: 4, borderWidth: 1.5, borderColor: "rgba(255,255,255,0.15)", backgroundColor: "rgba(255,255,255,0.08)", borderRadius: 12, paddingHorizontal: 12, paddingVertical: 13 },
   countryFlag: { fontSize: 18 },
-  countryCodeText: { color: "#ffffff", fontSize: 14, fontWeight: "500" },
+  countryCodeText: { color: SharedColors.white, fontSize: 14, fontWeight: "500" },
   dropdownArrow: { color: "rgba(255,255,255,0.4)", fontSize: 8, marginLeft: 2 },
   verifySection: { backgroundColor: "rgba(255,255,255,0.06)", borderRadius: 14, padding: 16, borderWidth: 1, borderColor: "rgba(255,255,255,0.08)" },
   verifyLabel: { fontSize: 12, color: "rgba(255,255,255,0.6)", marginBottom: 14, textAlign: "center" },
   codeSection: { alignItems: "center", gap: 14 },
   codeRow: { flexDirection: "row", gap: 8, justifyContent: "center" },
-  codeInput: { width: 42, height: 48, borderRadius: 10, borderWidth: 1.5, borderColor: "rgba(255,255,255,0.2)", backgroundColor: "rgba(255,255,255,0.08)", textAlign: "center", fontSize: 20, fontWeight: "700", color: "#ffffff" },
+  codeInput: { width: 42, height: 48, borderRadius: 10, borderWidth: 1.5, borderColor: "rgba(255,255,255,0.2)", backgroundColor: "rgba(255,255,255,0.08)", textAlign: "center", fontSize: 20, fontWeight: "700", color: SharedColors.white },
   codeInputFilled: { borderColor: "#1a9e8f", backgroundColor: "rgba(26,158,143,0.15)" },
-  codeInputVerified: { borderColor: "#16a34a", backgroundColor: "rgba(22,163,74,0.15)" },
-  verifyBtn: { backgroundColor: "#ffffff", borderRadius: 10, paddingHorizontal: 28, paddingVertical: 10, minWidth: 100, alignItems: "center" },
+  codeInputVerified: { borderColor: SharedColors.green, backgroundColor: "rgba(22,163,74,0.15)" },
+  verifyBtn: { backgroundColor: SharedColors.white, borderRadius: 10, paddingHorizontal: 28, paddingVertical: 10, minWidth: 100, alignItems: "center" },
   verifyBtnDisabled: { opacity: 0.4 },
-  verifyBtnText: { color: "#0f172a", fontSize: 14, fontWeight: "600" },
+  verifyBtnText: { color: SharedColors.navy, fontSize: 14, fontWeight: "600" },
   verifiedBadge: { backgroundColor: "rgba(22,163,74,0.15)", borderRadius: 20, paddingHorizontal: 16, paddingVertical: 8, borderWidth: 1, borderColor: "rgba(22,163,74,0.3)" },
-  verifiedText: { color: "#16a34a", fontSize: 13, fontWeight: "700" },
+  verifiedText: { color: SharedColors.green, fontSize: 13, fontWeight: "700" },
 
   // ── License Upload ──
   licenseSection: {
@@ -627,7 +628,7 @@ const styles = StyleSheet.create({
   licenseTitle: {
     fontSize: 16,
     fontWeight: "700",
-    color: "#ffffff",
+    color: SharedColors.white,
   },
   requiredBadge: {
     backgroundColor: "rgba(224,90,58,0.15)",
@@ -640,7 +641,7 @@ const styles = StyleSheet.create({
   requiredBadgeText: {
     fontSize: 11,
     fontWeight: "600",
-    color: "#e05a3a",
+    color: SharedColors.coral,
   },
   licenseDesc: {
     fontSize: 13,
@@ -672,7 +673,7 @@ const styles = StyleSheet.create({
   imageFileName: {
     fontSize: 13,
     fontWeight: "600",
-    color: "#ffffff",
+    color: SharedColors.white,
   },
   imageStatus: {
     fontSize: 11,
@@ -687,7 +688,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   removeImageText: {
-    color: "#e05a3a",
+    color: SharedColors.coral,
     fontSize: 14,
     fontWeight: "600",
   },
@@ -716,7 +717,7 @@ const styles = StyleSheet.create({
   },
   uploadIcon: { fontSize: 22 },
   uploadTextWrap: { flex: 1, gap: 2 },
-  uploadMainText: { fontSize: 14, fontWeight: "600", color: "#ffffff" },
+  uploadMainText: { fontSize: 14, fontWeight: "600", color: SharedColors.white },
   uploadSubText: { fontSize: 12, color: "rgba(255,255,255,0.4)" },
   uploadPlus: { fontSize: 24, color: "rgba(255,255,255,0.3)", fontWeight: "300" },
 
@@ -730,14 +731,14 @@ const styles = StyleSheet.create({
   termsRow: { flexDirection: "row", alignItems: "flex-start", gap: 10, marginTop: 8 },
   checkbox: { width: 20, height: 20, borderRadius: 4, borderWidth: 2, borderColor: "rgba(255,255,255,0.3)", backgroundColor: "transparent", alignItems: "center", justifyContent: "center", marginTop: 2 },
   checkboxChecked: { backgroundColor: "#1a9e8f", borderColor: "#1a9e8f" },
-  checkboxError: { borderColor: "#e05a3a" },
-  checkmark: { color: "#ffffff", fontSize: 12, fontWeight: "700" },
+  checkboxError: { borderColor: SharedColors.coral },
+  checkmark: { color: SharedColors.white, fontSize: 12, fontWeight: "700" },
   termsText: { flex: 1, fontSize: 13, color: "rgba(255,255,255,0.8)", lineHeight: 20 },
   termsLink: { color: "#1a9e8f", fontWeight: "600", textDecorationLine: "underline" },
 
   // Create button
-  createBtn: { backgroundColor: "#ffffff", borderRadius: 14, paddingVertical: 15, alignItems: "center", justifyContent: "center", minHeight: 52, marginTop: 24, shadowColor: "#000", shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.15, shadowRadius: 24, elevation: 8 },
-  createBtnText: { color: "#0f172a", fontSize: 15, fontWeight: "600" },
+  createBtn: { backgroundColor: SharedColors.white, borderRadius: 14, paddingVertical: 15, alignItems: "center", justifyContent: "center", minHeight: 52, marginTop: 24, shadowColor: "#000", shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.15, shadowRadius: 24, elevation: 8 },
+  createBtnText: { color: SharedColors.navy, fontSize: 15, fontWeight: "600" },
   bottomLink: { flexDirection: "row", justifyContent: "center", marginTop: 16, paddingBottom: 8 },
   bottomLinkText: { fontSize: 13, color: "rgba(255,255,255,0.35)" },
   bottomLinkAction: { fontSize: 13, color: "#1a9e8f", fontWeight: "600" },
@@ -745,7 +746,7 @@ const styles = StyleSheet.create({
   // ── Upload Options Modal ──
   modalOverlay: { flex: 1, backgroundColor: "rgba(0,0,0,0.6)", justifyContent: "flex-end" },
   uploadModalContent: {
-    backgroundColor: "#1e293b",
+    backgroundColor: SharedColors.text,
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
     padding: 24,
@@ -760,7 +761,7 @@ const styles = StyleSheet.create({
     alignSelf: "center",
     marginBottom: 8,
   },
-  uploadModalTitle: { fontSize: 20, fontWeight: "700", color: "#ffffff" },
+  uploadModalTitle: { fontSize: 20, fontWeight: "700", color: SharedColors.white },
   uploadModalDesc: { fontSize: 14, color: "rgba(255,255,255,0.5)", marginBottom: 8 },
   uploadOption: {
     flexDirection: "row",
@@ -780,7 +781,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
-  uploadOptionTitle: { fontSize: 15, fontWeight: "600", color: "#ffffff", marginBottom: 2 },
+  uploadOptionTitle: { fontSize: 15, fontWeight: "600", color: SharedColors.white, marginBottom: 2 },
   uploadOptionDesc: { fontSize: 12, color: "rgba(255,255,255,0.45)" },
   uploadCancelBtn: {
     alignItems: "center",
@@ -790,14 +791,14 @@ const styles = StyleSheet.create({
   uploadCancelText: { fontSize: 15, color: "rgba(255,255,255,0.5)", fontWeight: "500" },
 
   // ── Country Picker Modal ──
-  countryModalContent: { backgroundColor: "#1e293b", borderTopLeftRadius: 24, borderTopRightRadius: 24, maxHeight: "60%", paddingBottom: 30 },
+  countryModalContent: { backgroundColor: SharedColors.text, borderTopLeftRadius: 24, borderTopRightRadius: 24, maxHeight: "60%", paddingBottom: 30 },
   modalHeader: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", padding: 20, borderBottomWidth: 1, borderBottomColor: "rgba(255,255,255,0.1)" },
-  modalTitle: { fontSize: 18, fontWeight: "700", color: "#ffffff" },
+  modalTitle: { fontSize: 18, fontWeight: "700", color: SharedColors.white },
   modalClose: { fontSize: 20, color: "rgba(255,255,255,0.5)", padding: 4 },
   countryItem: { flexDirection: "row", alignItems: "center", paddingHorizontal: 20, paddingVertical: 14, gap: 14, borderBottomWidth: 1, borderBottomColor: "rgba(255,255,255,0.05)" },
   countryItemSelected: { backgroundColor: "rgba(26,158,143,0.15)" },
   countryItemFlag: { fontSize: 24 },
-  countryItemName: { flex: 1, fontSize: 15, color: "#ffffff" },
+  countryItemName: { flex: 1, fontSize: 15, color: SharedColors.white },
   countryItemCode: { fontSize: 15, color: "rgba(255,255,255,0.5)", fontWeight: "500" },
 });
 

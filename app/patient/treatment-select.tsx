@@ -10,8 +10,7 @@ import {
 } from "react-native";
 import { store } from "../../lib/store";
 
-const T = { teal: "#4A0080", tealMid: "#5C10A0", tealLight: "#f0e6f6", navy: "#0f172a", slate: "#64748b", slateLight: "#94a3b8", border: "#e2e8f0", bg: "#f8fafc", white: "#ffffff" };
-
+import { PatientTheme, SharedColors } from "../../constants/theme";
 type SubOption = { id: string; label: string; desc: string };
 type Treatment = {
   id: string; name: string; price: string; icon: string; desc: string;
@@ -30,16 +29,16 @@ const treatments: Treatment[] = [
       { id: "implant_crown", label: "Crown Only", desc: "Crown placed on existing implant post" },
     ],
   },
-  { id: "veneer", name: "Veneers", price: "$800–1,200", icon: "✨", desc: "Porcelain or composite shells for a perfect smile", duration: "⏳ Approx. 1 week", durationColor: "#4A0080" },
-  { id: "smile_makeover", name: "Smile Makeover", price: "$2,000–5,000", icon: "😁", desc: "Full smile transformation — veneers, whitening, contouring & more", duration: "⏳ Approx. 1–2 weeks", durationColor: "#4A0080" },
-  { id: "filling", name: "Fillings", price: "$80–200", icon: "🪥", desc: "Repair cavities and minor tooth damage", duration: "⏳ Approx. 1 week", durationColor: "#4A0080" },
-  { id: "crown", name: "Crowns", price: "$300–600", icon: "👑", desc: "Cap damaged or weakened teeth with custom crowns", duration: "⏳ Approx. 1 week", durationColor: "#4A0080" },
-  { id: "rootcanal", name: "Root Canals", price: "$200–400", icon: "🏥", desc: "Save infected teeth from extraction", duration: "⏳ Approx. 1 week", durationColor: "#4A0080" },
-  { id: "gum", name: "Gum Treatment", price: "$200–800", icon: "🩺", desc: "Periodontal treatment, gum contouring & grafting", duration: "⏳ Approx. 1 week", durationColor: "#4A0080" },
+  { id: "veneer", name: "Veneers", price: "$800–1,200", icon: "✨", desc: "Porcelain or composite shells for a perfect smile", duration: "⏳ Approx. 1 week", durationColor: PatientTheme.primary },
+  { id: "smile_makeover", name: "Smile Makeover", price: "$2,000–5,000", icon: "😁", desc: "Full smile transformation — veneers, whitening, contouring & more", duration: "⏳ Approx. 1–2 weeks", durationColor: PatientTheme.primary },
+  { id: "filling", name: "Fillings", price: "$80–200", icon: "🪥", desc: "Repair cavities and minor tooth damage", duration: "⏳ Approx. 1 week", durationColor: PatientTheme.primary },
+  { id: "crown", name: "Crowns", price: "$300–600", icon: "👑", desc: "Cap damaged or weakened teeth with custom crowns", duration: "⏳ Approx. 1 week", durationColor: PatientTheme.primary },
+  { id: "rootcanal", name: "Root Canals", price: "$200–400", icon: "🏥", desc: "Save infected teeth from extraction", duration: "⏳ Approx. 1 week", durationColor: PatientTheme.primary },
+  { id: "gum", name: "Gum Treatment", price: "$200–800", icon: "🩺", desc: "Periodontal treatment, gum contouring & grafting", duration: "⏳ Approx. 1 week", durationColor: PatientTheme.primary },
   { id: "invisalign", name: "Invisalign", price: "$2,500–5,000", icon: "🔗", desc: "Clear aligners for straighter teeth without braces", duration: "⏳ Approx. 3 months minimum", durationColor: "#d97706" },
-  { id: "sleep_appliance", name: "Oral Sleep Appliance", price: "$500–1,500", icon: "😴", desc: "Custom-fitted device for sleep apnea & snoring", duration: "⏳ Approx. 1–2 weeks", durationColor: "#4A0080" },
-  { id: "tongue_tie", name: "Tongue Tie Surgery", price: "$300–800", icon: "✂️", desc: "Frenectomy to release restricted tongue movement", duration: "⏳ Approx. 1 week", durationColor: "#4A0080" },
-  { id: "wisdom_teeth", name: "Wisdom Teeth Extractions", price: "$200–600", icon: "🦷", desc: "Removal of impacted or problematic wisdom teeth", duration: "⏳ Approx. 1 week", durationColor: "#4A0080" },
+  { id: "sleep_appliance", name: "Oral Sleep Appliance", price: "$500–1,500", icon: "😴", desc: "Custom-fitted device for sleep apnea & snoring", duration: "⏳ Approx. 1–2 weeks", durationColor: PatientTheme.primary },
+  { id: "tongue_tie", name: "Tongue Tie Surgery", price: "$300–800", icon: "✂️", desc: "Frenectomy to release restricted tongue movement", duration: "⏳ Approx. 1 week", durationColor: PatientTheme.primary },
+  { id: "wisdom_teeth", name: "Wisdom Teeth Extractions", price: "$200–600", icon: "🦷", desc: "Removal of impacted or problematic wisdom teeth", duration: "⏳ Approx. 1 week", durationColor: PatientTheme.primary },
 ];
 
 export default function PatientTreatmentSelectScreen() {
@@ -126,7 +125,7 @@ export default function PatientTreatmentSelectScreen() {
 
   return (
     <View style={st.container}>
-      <LinearGradient colors={["#3D0070", "#2F0058", "#220040"]} style={st.header}>
+      <LinearGradient colors={[...PatientTheme.gradient]} style={st.header}>
         <View style={st.headerRow}>
           <TouchableOpacity style={st.backBtn} onPress={() => router.back()} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
             <Text style={st.backArrow}>‹</Text>
@@ -163,7 +162,7 @@ export default function PatientTreatmentSelectScreen() {
                   </View>
                 </View>
                 {isSelected && !isImplant && <View style={st.checkCircle}><Text style={st.checkMark}>✓</Text></View>}
-                {isImplant && <Text style={{ fontSize: 14, color: T.slateLight }}>{isExpanded ? "▲" : "▼"}</Text>}
+                {isImplant && <Text style={{ fontSize: 14, color: SharedColors.slateLight }}>{isExpanded ? "▲" : "▼"}</Text>}
               </TouchableOpacity>
 
               {/* Implant sub-options */}
@@ -176,15 +175,15 @@ export default function PatientTreatmentSelectScreen() {
                     return (
                       <View key={sub.id} style={[st.subCard, isSubSel && st.subCardSelected]}>
                         <View style={{ flex: 1 }}>
-                          <Text style={[st.subLabel, isSubSel && { color: T.teal }]}>{sub.label}</Text>
+                          <Text style={[st.subLabel, isSubSel && { color: PatientTheme.primary }]}>{sub.label}</Text>
                           <Text style={st.subDesc}>{sub.desc}</Text>
                         </View>
                         <View style={st.subQtyRow}>
                           <TouchableOpacity style={[st.subQtyBtn, subQty === 0 && { opacity: 0.3 }]} onPress={() => changeImplantSubQty(sub.id, -1)} disabled={subQty === 0}>
                             <Text style={st.subQtyBtnText}>−</Text>
                           </TouchableOpacity>
-                          <View style={[st.subQtyDisplay, isSubSel && { borderColor: T.teal }]}>
-                            <Text style={[st.subQtyText, isSubSel && { color: T.teal }]}>{subQty}</Text>
+                          <View style={[st.subQtyDisplay, isSubSel && { borderColor: PatientTheme.primary }]}>
+                            <Text style={[st.subQtyText, isSubSel && { color: PatientTheme.primary }]}>{subQty}</Text>
                           </View>
                           <TouchableOpacity style={st.subQtyBtn} onPress={() => changeImplantSubQty(sub.id, 1)}>
                             <Text style={st.subQtyBtnText}>+</Text>
@@ -236,7 +235,7 @@ export default function PatientTreatmentSelectScreen() {
 
         {showAddInput ? (
           <View style={st.addInputRow}>
-            <TextInput style={st.addInput} placeholder="Type a treatment..." placeholderTextColor={T.slateLight} value={newTreatment} onChangeText={setNewTreatment} onSubmitEditing={addCustomTreatment} returnKeyType="done" autoFocus />
+            <TextInput style={st.addInput} placeholder="Type a treatment..." placeholderTextColor={SharedColors.slateLight} value={newTreatment} onChangeText={setNewTreatment} onSubmitEditing={addCustomTreatment} returnKeyType="done" autoFocus />
             <TouchableOpacity style={[st.addConfirmBtn, !newTreatment.trim() && { opacity: 0.4 }]} onPress={addCustomTreatment} disabled={!newTreatment.trim()}><Text style={st.addConfirmText}>Add</Text></TouchableOpacity>
             <TouchableOpacity style={st.addCancelBtn} onPress={() => { setShowAddInput(false); setNewTreatment(""); }}><Text style={st.addCancelText}>✕</Text></TouchableOpacity>
           </View>
@@ -251,7 +250,7 @@ export default function PatientTreatmentSelectScreen() {
 
       <View style={st.bottomBar}>
         <TouchableOpacity style={[st.nextBtn, totalSelected === 0 && st.nextBtnDisabled]} onPress={handleNext} disabled={totalSelected === 0 || loading} activeOpacity={0.85}>
-          {loading ? <ActivityIndicator color={T.white} size="small" /> : <Text style={st.nextBtnText}>Review & Submit ({totalSelected} selected) →</Text>}
+          {loading ? <ActivityIndicator color={SharedColors.white} size="small" /> : <Text style={st.nextBtnText}>Review & Submit ({totalSelected} selected) →</Text>}
         </TouchableOpacity>
       </View>
     </View>
@@ -259,68 +258,68 @@ export default function PatientTreatmentSelectScreen() {
 }
 
 const st = StyleSheet.create({
-  container: { flex: 1, backgroundColor: T.bg },
+  container: { flex: 1, backgroundColor: SharedColors.bg },
   header: { paddingHorizontal: 20, paddingTop: 60, paddingBottom: 18 },
   headerRow: { flexDirection: "row", alignItems: "center" },
   headerCenter: { flex: 1, alignItems: "center" },
   backBtn: { width: 36, height: 36, borderRadius: 12, backgroundColor: "rgba(255,255,255,0.12)", borderWidth: 1, borderColor: "rgba(255,255,255,0.15)", alignItems: "center", justifyContent: "center" },
-  backArrow: { fontSize: 24, color: "#fff", fontWeight: "600", marginTop: -2 },
-  title: { fontSize: 18, fontWeight: "700", color: "#fff" },
+  backArrow: { fontSize: 24, color: SharedColors.white, fontWeight: "600", marginTop: -2 },
+  title: { fontSize: 18, fontWeight: "700", color: SharedColors.white },
   subtitle: { fontSize: 12, color: "rgba(255,255,255,0.55)", marginTop: 2 },
   content: { padding: 20, gap: 12, paddingBottom: 60 },
 
-  treatmentCard: { flexDirection: "row", alignItems: "center", padding: 16, borderRadius: 14, borderWidth: 2, borderColor: T.border, backgroundColor: T.white, gap: 14 },
-  treatmentCardSelected: { borderColor: T.tealMid, backgroundColor: T.tealLight },
+  treatmentCard: { flexDirection: "row", alignItems: "center", padding: 16, borderRadius: 14, borderWidth: 2, borderColor: SharedColors.border, backgroundColor: SharedColors.white, gap: 14 },
+  treatmentCardSelected: { borderColor: PatientTheme.primaryMid, backgroundColor: PatientTheme.primaryLight },
   treatmentIcon: { fontSize: 32 },
-  treatmentName: { fontSize: 15, fontWeight: "600", color: T.navy },
-  treatmentNameSelected: { color: T.teal },
-  treatmentDesc: { fontSize: 12, color: T.slate, marginTop: 2 },
-  treatmentPrice: { fontSize: 13, fontWeight: "700", color: T.slateLight },
-  treatmentPriceSelected: { color: T.teal },
-  checkCircle: { width: 28, height: 28, borderRadius: 14, backgroundColor: T.teal, alignItems: "center", justifyContent: "center" },
-  checkMark: { color: T.white, fontSize: 16, fontWeight: "700" },
+  treatmentName: { fontSize: 15, fontWeight: "600", color: SharedColors.navy },
+  treatmentNameSelected: { color: PatientTheme.primary },
+  treatmentDesc: { fontSize: 12, color: SharedColors.slate, marginTop: 2 },
+  treatmentPrice: { fontSize: 13, fontWeight: "700", color: SharedColors.slateLight },
+  treatmentPriceSelected: { color: PatientTheme.primary },
+  checkCircle: { width: 28, height: 28, borderRadius: 14, backgroundColor: PatientTheme.primary, alignItems: "center", justifyContent: "center" },
+  checkMark: { color: SharedColors.white, fontSize: 16, fontWeight: "700" },
   metaRow: { flexDirection: "row", alignItems: "center", gap: 8, marginTop: 4, flexWrap: "wrap" },
   durationBadge: { borderRadius: 8, paddingHorizontal: 8, paddingVertical: 3, marginTop: 4, alignSelf: "flex-start" },
   durationText: { fontSize: 10, fontWeight: "600" },
 
-  qtySection: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", backgroundColor: "#dff0ee", borderWidth: 2, borderTopWidth: 0, borderColor: T.tealMid, borderBottomLeftRadius: 14, borderBottomRightRadius: 14, paddingHorizontal: 16, paddingVertical: 10 },
-  qtyLabel: { fontSize: 13, fontWeight: "600", color: T.teal },
+  qtySection: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", backgroundColor: "#dff0ee", borderWidth: 2, borderTopWidth: 0, borderColor: PatientTheme.primaryMid, borderBottomLeftRadius: 14, borderBottomRightRadius: 14, paddingHorizontal: 16, paddingVertical: 10 },
+  qtyLabel: { fontSize: 13, fontWeight: "600", color: PatientTheme.primary },
   qtyRow: { flexDirection: "row", alignItems: "center" },
-  qtyBtn: { width: 36, height: 36, borderRadius: 10, backgroundColor: T.white, alignItems: "center", justifyContent: "center", borderWidth: 1.5, borderColor: T.tealMid },
-  qtyBtnText: { fontSize: 20, fontWeight: "600", color: T.teal, lineHeight: 22 },
-  qtyDisplay: { minWidth: 44, height: 36, alignItems: "center", justifyContent: "center", backgroundColor: T.white, borderRadius: 10, marginHorizontal: 6, borderWidth: 1.5, borderColor: T.border },
-  qtyText: { fontSize: 16, fontWeight: "700", color: T.navy },
+  qtyBtn: { width: 36, height: 36, borderRadius: 10, backgroundColor: SharedColors.white, alignItems: "center", justifyContent: "center", borderWidth: 1.5, borderColor: PatientTheme.primaryMid },
+  qtyBtnText: { fontSize: 20, fontWeight: "600", color: PatientTheme.primary, lineHeight: 22 },
+  qtyDisplay: { minWidth: 44, height: 36, alignItems: "center", justifyContent: "center", backgroundColor: SharedColors.white, borderRadius: 10, marginHorizontal: 6, borderWidth: 1.5, borderColor: SharedColors.border },
+  qtyText: { fontSize: 16, fontWeight: "700", color: SharedColors.navy },
 
-  subSection: { backgroundColor: "#dff0ee", borderWidth: 2, borderTopWidth: 0, borderColor: T.tealMid, borderBottomLeftRadius: 14, borderBottomRightRadius: 14, padding: 14, gap: 8 },
-  subTitle: { fontSize: 12, fontWeight: "700", color: T.teal, marginBottom: 2 },
-  subCard: { flexDirection: "row", alignItems: "center", gap: 12, backgroundColor: T.white, borderRadius: 12, padding: 14, borderWidth: 1.5, borderColor: T.border },
-  subCardSelected: { borderColor: T.teal, backgroundColor: "#f0e6f6" },
-  subLabel: { fontSize: 14, fontWeight: "600", color: T.navy },
-  subDesc: { fontSize: 11, color: T.slate, marginTop: 2 },
+  subSection: { backgroundColor: "#dff0ee", borderWidth: 2, borderTopWidth: 0, borderColor: PatientTheme.primaryMid, borderBottomLeftRadius: 14, borderBottomRightRadius: 14, padding: 14, gap: 8 },
+  subTitle: { fontSize: 12, fontWeight: "700", color: PatientTheme.primary, marginBottom: 2 },
+  subCard: { flexDirection: "row", alignItems: "center", gap: 12, backgroundColor: SharedColors.white, borderRadius: 12, padding: 14, borderWidth: 1.5, borderColor: SharedColors.border },
+  subCardSelected: { borderColor: PatientTheme.primary, backgroundColor: PatientTheme.primaryLight },
+  subLabel: { fontSize: 14, fontWeight: "600", color: SharedColors.navy },
+  subDesc: { fontSize: 11, color: SharedColors.slate, marginTop: 2 },
   subQtyRow: { flexDirection: "row", alignItems: "center", gap: 4 },
-  subQtyBtn: { width: 32, height: 32, borderRadius: 8, backgroundColor: T.white, alignItems: "center", justifyContent: "center", borderWidth: 1.5, borderColor: T.tealMid },
-  subQtyBtnText: { fontSize: 18, fontWeight: "600", color: T.teal },
-  subQtyDisplay: { minWidth: 36, height: 32, alignItems: "center", justifyContent: "center", backgroundColor: T.white, borderRadius: 8, marginHorizontal: 2, borderWidth: 1.5, borderColor: T.border },
-  subQtyText: { fontSize: 15, fontWeight: "700", color: T.navy },
+  subQtyBtn: { width: 32, height: 32, borderRadius: 8, backgroundColor: SharedColors.white, alignItems: "center", justifyContent: "center", borderWidth: 1.5, borderColor: PatientTheme.primaryMid },
+  subQtyBtnText: { fontSize: 18, fontWeight: "600", color: PatientTheme.primary },
+  subQtyDisplay: { minWidth: 36, height: 32, alignItems: "center", justifyContent: "center", backgroundColor: SharedColors.white, borderRadius: 8, marginHorizontal: 2, borderWidth: 1.5, borderColor: SharedColors.border },
+  subQtyText: { fontSize: 15, fontWeight: "700", color: SharedColors.navy },
   implantSummary: { backgroundColor: "rgba(74,0,128,0.1)", borderRadius: 8, paddingVertical: 6, paddingHorizontal: 12, alignSelf: "flex-start" },
-  implantSummaryText: { fontSize: 12, fontWeight: "600", color: T.teal },
+  implantSummaryText: { fontSize: 12, fontWeight: "600", color: PatientTheme.primary },
 
   customSection: { gap: 8 },
-  customLabel: { fontSize: 11, fontWeight: "600", color: T.slate, letterSpacing: 0.8, marginTop: 4 },
-  removeText: { fontSize: 16, color: T.teal, fontWeight: "600" },
-  addBtn: { flexDirection: "row", alignItems: "center", gap: 8, paddingVertical: 10, paddingHorizontal: 14, borderWidth: 1.5, borderColor: T.border, borderRadius: 20, borderStyle: "dashed", alignSelf: "flex-start" },
-  addBtnPlus: { fontSize: 18, color: T.tealMid, fontWeight: "600" },
-  addBtnText: { fontSize: 13, color: T.slate },
+  customLabel: { fontSize: 11, fontWeight: "600", color: SharedColors.slate, letterSpacing: 0.8, marginTop: 4 },
+  removeText: { fontSize: 16, color: PatientTheme.primary, fontWeight: "600" },
+  addBtn: { flexDirection: "row", alignItems: "center", gap: 8, paddingVertical: 10, paddingHorizontal: 14, borderWidth: 1.5, borderColor: SharedColors.border, borderRadius: 20, borderStyle: "dashed", alignSelf: "flex-start" },
+  addBtnPlus: { fontSize: 18, color: PatientTheme.primaryMid, fontWeight: "600" },
+  addBtnText: { fontSize: 13, color: SharedColors.slate },
   addInputRow: { flexDirection: "row", alignItems: "center", gap: 8 },
-  addInput: { flex: 1, borderWidth: 1.5, borderColor: T.tealMid, backgroundColor: T.white, borderRadius: 12, paddingHorizontal: 14, paddingVertical: 11, fontSize: 14, color: T.navy },
-  addConfirmBtn: { backgroundColor: T.teal, borderRadius: 10, paddingHorizontal: 16, paddingVertical: 11 },
-  addConfirmText: { color: T.white, fontSize: 13, fontWeight: "600" },
+  addInput: { flex: 1, borderWidth: 1.5, borderColor: PatientTheme.primaryMid, backgroundColor: SharedColors.white, borderRadius: 12, paddingHorizontal: 14, paddingVertical: 11, fontSize: 14, color: SharedColors.navy },
+  addConfirmBtn: { backgroundColor: PatientTheme.primary, borderRadius: 10, paddingHorizontal: 16, paddingVertical: 11 },
+  addConfirmText: { color: SharedColors.white, fontSize: 13, fontWeight: "600" },
   addCancelBtn: { width: 36, height: 36, borderRadius: 18, backgroundColor: "#f1f5f9", alignItems: "center", justifyContent: "center" },
-  addCancelText: { color: T.slate, fontSize: 14, fontWeight: "600" },
-  noteBox: { backgroundColor: T.tealLight, borderRadius: 12, padding: 14 },
+  addCancelText: { color: SharedColors.slate, fontSize: 14, fontWeight: "600" },
+  noteBox: { backgroundColor: PatientTheme.primaryLight, borderRadius: 12, padding: 14 },
   noteText: { fontSize: 12, color: "#0f5c53", lineHeight: 18 },
-  bottomBar: { paddingHorizontal: 24, paddingVertical: 16, paddingBottom: 56, borderTopWidth: 1, borderTopColor: T.border, backgroundColor: T.white },
-  nextBtn: { backgroundColor: T.teal, borderRadius: 14, paddingVertical: 15, alignItems: "center", minHeight: 52 },
+  bottomBar: { paddingHorizontal: 24, paddingVertical: 16, paddingBottom: 56, borderTopWidth: 1, borderTopColor: SharedColors.border, backgroundColor: SharedColors.white },
+  nextBtn: { backgroundColor: PatientTheme.primary, borderRadius: 14, paddingVertical: 15, alignItems: "center", minHeight: 52 },
   nextBtnDisabled: { opacity: 0.5 },
-  nextBtnText: { color: T.white, fontSize: 15, fontWeight: "600" },
+  nextBtnText: { color: SharedColors.white, fontSize: 15, fontWeight: "600" },
 });

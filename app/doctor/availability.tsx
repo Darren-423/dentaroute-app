@@ -13,21 +13,9 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { setDoctorTabSwipeBlocked } from "../../lib/doctorTabSwipeGuard";
 import { store } from "../../lib/store";
 
+import { DoctorTheme, SharedColors } from "../../constants/theme";
 /* ── colours ── */
-const T = {
-  teal: "#0f766e",
-  tealDark: "#134e4a",
-  tealSoft: "rgba(15,118,110,0.08)",
-  bg: "#f8fafc",
-  white: "#fff",
-  text: "#0f172a",
-  textSec: "#64748b",
-  textMuted: "#94a3b8",
-  border: "#e2e8f0",
-  redSoft: "#fff1f2",
-  redText: "#be123c",
-  red: "#ef4444",
-};
+
 
 /* ── constants ── */
 const WEEKDAY_KEYS = ["mon", "tue", "wed", "thu", "fri", "sat", "sun"] as const;
@@ -317,7 +305,7 @@ export default function AvailabilityScreen() {
   /* ── render ── */
   return (
     <View style={s.container}>
-      <LinearGradient colors={[T.teal, T.tealDark]} style={s.header}>
+      <LinearGradient colors={[DoctorTheme.primary, DoctorTheme.primaryDark]} style={s.header}>
         <Text style={s.title}>My Schedule</Text>
         <Text style={s.subtitle}>Manage your availability for patients</Text>
       </LinearGradient>
@@ -394,12 +382,12 @@ export default function AvailabilityScreen() {
           <Text style={s.dateHeaderTitle}>{selectedDayLabel}</Text>
           {!isClosed && (
             <View style={s.dateHeaderMeta}>
-              <View style={[s.metaPill, { backgroundColor: T.tealSoft }]}>
-                <Text style={[s.metaPillText, { color: T.teal }]}>{availCount} available</Text>
+              <View style={[s.metaPill, { backgroundColor: DoctorTheme.primaryLight }]}>
+                <Text style={[s.metaPillText, { color: DoctorTheme.primary }]}>{availCount} available</Text>
               </View>
               {blockedCount > 0 && (
-                <View style={[s.metaPill, { backgroundColor: T.redSoft }]}>
-                  <Text style={[s.metaPillText, { color: T.redText }]}>{blockedCount} blocked</Text>
+                <View style={[s.metaPill, { backgroundColor: SharedColors.coralLight }]}>
+                  <Text style={[s.metaPillText, { color: SharedColors.coral }]}>{blockedCount} blocked</Text>
                 </View>
               )}
             </View>
@@ -461,7 +449,7 @@ export default function AvailabilityScreen() {
           disabled={!isDirty || saving}
           activeOpacity={0.85}
         >
-          {saving ? <ActivityIndicator color={T.white} size="small" /> : <Text style={s.saveBtnText}>Save Availability</Text>}
+          {saving ? <ActivityIndicator color={SharedColors.white} size="small" /> : <Text style={s.saveBtnText}>Save Availability</Text>}
         </TouchableOpacity>
       </View>
     </View>
@@ -470,54 +458,54 @@ export default function AvailabilityScreen() {
 
 /* ================================================================ */
 const s = StyleSheet.create({
-  container: { flex: 1, backgroundColor: T.bg },
+  container: { flex: 1, backgroundColor: SharedColors.bg },
   header: { paddingHorizontal: 24, paddingTop: 60, paddingBottom: 18 },
-  title: { fontSize: 28, fontWeight: "700", color: T.white },
+  title: { fontSize: 28, fontWeight: "700", color: SharedColors.white },
   subtitle: { fontSize: 14, color: "rgba(255,255,255,0.7)", marginTop: 4 },
   content: { paddingHorizontal: 14, paddingTop: 16, gap: 16 },
 
   /* Calendar */
-  calCard: { backgroundColor: T.white, borderRadius: 16, borderWidth: 1, borderColor: T.border, padding: 14, gap: 10 },
+  calCard: { backgroundColor: SharedColors.white, borderRadius: 16, borderWidth: 1, borderColor: SharedColors.border, padding: 14, gap: 10 },
   calNav: { flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
   calNavBtn: { width: 34, height: 34, borderRadius: 10, alignItems: "center", justifyContent: "center" },
-  calNavArrow: { fontSize: 24, fontWeight: "600", color: T.text },
-  calMonthTitle: { fontSize: 17, fontWeight: "700", color: T.text },
+  calNavArrow: { fontSize: 24, fontWeight: "600", color: SharedColors.navy },
+  calMonthTitle: { fontSize: 17, fontWeight: "700", color: SharedColors.navy },
   calWeekRow: { flexDirection: "row", marginBottom: 2 },
   calWeekCell: { flex: 1, alignItems: "center" },
-  calWeekText: { fontSize: 11, fontWeight: "700", color: T.textMuted },
+  calWeekText: { fontSize: 11, fontWeight: "700", color: SharedColors.navyMuted },
   calGrid: { flexDirection: "row", flexWrap: "wrap" },
   calDayCell: { width: "14.28%", alignItems: "center", justifyContent: "center", height: 44 },
   calDayInner: { alignItems: "center", justifyContent: "center", width: 36, height: 36, borderRadius: 18 },
   calDayOther: { opacity: 0.30 },
   calDayPast: { opacity: 0.35 },
-  calDayToday: { borderWidth: 1.5, borderColor: T.teal },
-  calDaySelected: { backgroundColor: T.teal },
-  calDayText: { fontSize: 14, fontWeight: "600", color: T.text },
-  calDayTextOther: { color: T.textMuted },
+  calDayToday: { borderWidth: 1.5, borderColor: DoctorTheme.primary },
+  calDaySelected: { backgroundColor: DoctorTheme.primary },
+  calDayText: { fontSize: 14, fontWeight: "600", color: SharedColors.navy },
+  calDayTextOther: { color: SharedColors.navyMuted },
   calDayTextPast: { color: "#cbd5e1" },
   calDayTextClosed: { color: "#cbd5e1" },
-  calDayTextToday: { color: T.teal, fontWeight: "700" },
-  calDayTextSelected: { color: T.white, fontWeight: "800" },
-  calBlockDot: { position: "absolute", bottom: 3, width: 5, height: 5, borderRadius: 3, backgroundColor: T.red },
+  calDayTextToday: { color: DoctorTheme.primary, fontWeight: "700" },
+  calDayTextSelected: { color: SharedColors.white, fontWeight: "800" },
+  calBlockDot: { position: "absolute", bottom: 3, width: 5, height: 5, borderRadius: 3, backgroundColor: SharedColors.red },
 
   /* Date header */
   dateHeader: { gap: 6 },
-  dateHeaderTitle: { fontSize: 20, fontWeight: "800", color: T.text },
+  dateHeaderTitle: { fontSize: 20, fontWeight: "800", color: SharedColors.navy },
   dateHeaderMeta: { flexDirection: "row", gap: 8 },
   metaPill: { borderRadius: 8, paddingHorizontal: 10, paddingVertical: 4 },
   metaPillText: { fontSize: 12, fontWeight: "700" },
 
   /* Closed state */
-  closedCard: { backgroundColor: T.white, borderRadius: 16, borderWidth: 1, borderColor: T.border, paddingVertical: 40, alignItems: "center", gap: 8 },
+  closedCard: { backgroundColor: SharedColors.white, borderRadius: 16, borderWidth: 1, borderColor: SharedColors.border, paddingVertical: 40, alignItems: "center", gap: 8 },
   closedIcon: { fontSize: 32 },
-  closedTitle: { fontSize: 18, fontWeight: "700", color: T.text },
-  closedSub: { fontSize: 14, color: T.textSec },
+  closedTitle: { fontSize: 18, fontWeight: "700", color: SharedColors.navy },
+  closedSub: { fontSize: 14, color: SharedColors.navySec },
 
   /* Quick toggle */
-  quickToggle: { backgroundColor: T.white, borderRadius: 12, borderWidth: 1, borderColor: T.border, paddingVertical: 10, alignItems: "center" },
-  quickToggleActive: { backgroundColor: T.redSoft, borderColor: "rgba(190,18,60,0.12)" },
-  quickToggleText: { fontSize: 14, fontWeight: "700", color: T.teal },
-  quickToggleTextActive: { color: T.redText },
+  quickToggle: { backgroundColor: SharedColors.white, borderRadius: 12, borderWidth: 1, borderColor: SharedColors.border, paddingVertical: 10, alignItems: "center" },
+  quickToggleActive: { backgroundColor: SharedColors.coralLight, borderColor: "rgba(190,18,60,0.12)" },
+  quickToggleText: { fontSize: 14, fontWeight: "700", color: DoctorTheme.primary },
+  quickToggleTextActive: { color: SharedColors.coral },
 
   /* Block grid */
   blockGrid: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
@@ -531,18 +519,18 @@ const s = StyleSheet.create({
     justifyContent: "center",
     gap: 4,
   },
-  blockItemAvail: { backgroundColor: T.white, borderColor: "rgba(15,118,110,0.2)" },
-  blockItemBlocked: { backgroundColor: T.redSoft, borderColor: "rgba(239,68,68,0.25)" },
+  blockItemAvail: { backgroundColor: SharedColors.white, borderColor: "rgba(15,118,110,0.2)" },
+  blockItemBlocked: { backgroundColor: SharedColors.coralLight, borderColor: "rgba(239,68,68,0.25)" },
   blockTime: { fontSize: 13, fontWeight: "700" },
-  blockTimeAvail: { color: T.teal },
-  blockTimeBlocked: { color: T.redText, textDecorationLine: "line-through" },
-  blockX: { fontSize: 11, fontWeight: "800", color: T.red },
-  blockDot: { width: 5, height: 5, borderRadius: 3, backgroundColor: T.teal },
+  blockTimeAvail: { color: DoctorTheme.primary },
+  blockTimeBlocked: { color: SharedColors.coral, textDecorationLine: "line-through" },
+  blockX: { fontSize: 11, fontWeight: "800", color: SharedColors.red },
+  blockDot: { width: 5, height: 5, borderRadius: 3, backgroundColor: DoctorTheme.primary },
 
   /* Bottom bar */
-  bottomBar: { position: "absolute", left: 0, right: 0, paddingHorizontal: 24, paddingTop: 10, paddingBottom: 16, borderTopWidth: 1, borderTopColor: T.border, backgroundColor: T.white, gap: 8, zIndex: 20, elevation: 10 },
-  bottomMeta: { fontSize: 13, color: T.textSec, fontWeight: "600" },
-  saveBtn: { backgroundColor: T.teal, borderRadius: 14, paddingVertical: 15, alignItems: "center", minHeight: 52 },
+  bottomBar: { position: "absolute", left: 0, right: 0, paddingHorizontal: 24, paddingTop: 10, paddingBottom: 16, borderTopWidth: 1, borderTopColor: SharedColors.border, backgroundColor: SharedColors.white, gap: 8, zIndex: 20, elevation: 10 },
+  bottomMeta: { fontSize: 13, color: SharedColors.navySec, fontWeight: "600" },
+  saveBtn: { backgroundColor: DoctorTheme.primary, borderRadius: 14, paddingVertical: 15, alignItems: "center", minHeight: 52 },
   saveBtnDisabled: { opacity: 0.45 },
-  saveBtnText: { fontSize: 17, fontWeight: "700", color: T.white },
+  saveBtnText: { fontSize: 17, fontWeight: "700", color: SharedColors.white },
 });

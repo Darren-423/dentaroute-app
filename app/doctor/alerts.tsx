@@ -9,27 +9,7 @@ import {
 } from "react-native";
 import { AppNotification, store } from "../../lib/store";
 
-const THEME = {
-  gradient: ["#0f766e", "#134e4a", "#0d3d38"] as const,
-  accent: "#0f766e",
-  accentSoft: "rgba(20,184,166,0.08)",
-  accentMid: "rgba(20,184,166,0.15)",
-  accentLight: "#e6faf8",
-  unreadBg: "rgba(20,184,166,0.07)",
-  unreadBorder: "rgba(20,184,166,0.15)",
-  dot: "#14b8a6",
-};
-
-const C = {
-  navy: "#0f172a",
-  text: "#1e293b",
-  sub: "#64748b",
-  muted: "#94a3b8",
-  border: "#e8ecf1",
-  bg: "#f6f7f9",
-  card: "#ffffff",
-};
-
+import { DoctorTheme, SharedColors } from "../../constants/theme";
 const timeAgo = (dateStr: string) => {
   const diff = Date.now() - new Date(dateStr).getTime();
   const mins = Math.floor(diff / 60000);
@@ -101,7 +81,7 @@ export default function DoctorAlertsScreen() {
     <View style={s.container}>
       {/* ── Gradient header ── */}
       <LinearGradient
-        colors={THEME.gradient as any}
+        colors={DoctorTheme.gradient as any}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
         style={s.header}
@@ -133,7 +113,7 @@ export default function DoctorAlertsScreen() {
       <ScrollView contentContainerStyle={s.content} showsVerticalScrollIndicator={false}>
         {notifications.length === 0 ? (
           <View style={s.emptyState}>
-            <View style={[s.emptyIconWrap, { backgroundColor: THEME.accentSoft, borderColor: THEME.accentMid }]}>
+            <View style={[s.emptyIconWrap, { backgroundColor: DoctorTheme.accentSoft, borderColor: DoctorTheme.accentMid }]}>
               <Text style={{ fontSize: 36 }}>🔔</Text>
             </View>
             <Text style={s.emptyTitle}>No notifications yet</Text>
@@ -150,18 +130,18 @@ export default function DoctorAlertsScreen() {
                   key={n.id}
                   style={[
                     s.notifCard,
-                    !n.read && { backgroundColor: THEME.unreadBg, borderColor: THEME.unreadBorder },
+                    !n.read && { backgroundColor: DoctorTheme.unreadBg, borderColor: DoctorTheme.unreadBorder },
                   ]}
                   onPress={() => handleTap(n)}
                   activeOpacity={0.7}
                 >
-                  <View style={[s.notifIconWrap, !n.read && { backgroundColor: THEME.accentSoft }]}>
+                  <View style={[s.notifIconWrap, !n.read && { backgroundColor: DoctorTheme.accentSoft }]}>
                     <Text style={s.notifIcon}>{n.icon}</Text>
                   </View>
                   <View style={{ flex: 1 }}>
                     <View style={s.notifTitleRow}>
                       <Text style={s.notifTitle} numberOfLines={1}>{n.title}</Text>
-                      {!n.read && <View style={[s.unreadDot, { backgroundColor: THEME.dot }]} />}
+                      {!n.read && <View style={[s.unreadDot, { backgroundColor: DoctorTheme.dot }]} />}
                     </View>
                     <Text style={s.notifBody} numberOfLines={2}>{n.body}</Text>
                     <Text style={s.notifTime}>{timeAgo(n.createdAt)}</Text>
@@ -179,7 +159,7 @@ export default function DoctorAlertsScreen() {
 }
 
 const s = StyleSheet.create({
-  container: { flex: 1, backgroundColor: C.bg },
+  container: { flex: 1, backgroundColor: SharedColors.bg },
 
   /* ── Header ── */
   header: { paddingHorizontal: 20, paddingTop: 60, paddingBottom: 18 },
@@ -191,8 +171,8 @@ const s = StyleSheet.create({
     borderWidth: 1, borderColor: "rgba(255,255,255,0.15)",
     alignItems: "center", justifyContent: "center",
   },
-  backArrow: { fontSize: 20, color: "#fff", fontWeight: "600" },
-  headerTitle: { fontSize: 17, fontWeight: "700", color: "#fff", letterSpacing: 0.1 },
+  backArrow: { fontSize: 20, color: SharedColors.white, fontWeight: "600" },
+  headerTitle: { fontSize: 17, fontWeight: "700", color: SharedColors.white, letterSpacing: 0.1 },
   headerSub: { fontSize: 11, color: "rgba(255,255,255,0.5)", marginTop: 2 },
   markAllText: { fontSize: 12, fontWeight: "600", color: "rgba(255,255,255,0.7)" },
 
@@ -206,13 +186,13 @@ const s = StyleSheet.create({
     alignItems: "center", justifyContent: "center",
     borderWidth: 2, marginBottom: 16,
   },
-  emptyTitle: { fontSize: 18, fontWeight: "700", color: C.navy },
-  emptyDesc: { fontSize: 13, color: C.sub, textAlign: "center", marginTop: 6, lineHeight: 20 },
+  emptyTitle: { fontSize: 18, fontWeight: "700", color: SharedColors.navy },
+  emptyDesc: { fontSize: 13, color: SharedColors.slate, textAlign: "center", marginTop: 6, lineHeight: 20 },
 
   /* ── Groups ── */
   group: { gap: 8 },
   groupLabel: {
-    fontSize: 12, fontWeight: "700", color: C.muted,
+    fontSize: 12, fontWeight: "700", color: SharedColors.slateLight,
     textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 4,
   },
 
@@ -220,17 +200,17 @@ const s = StyleSheet.create({
   notifCard: {
     flexDirection: "row", alignItems: "center", gap: 14,
     padding: 16, borderRadius: 14,
-    backgroundColor: C.card, borderWidth: 1, borderColor: C.border,
+    backgroundColor: SharedColors.white, borderWidth: 1, borderColor: SharedColors.border,
   },
   notifIconWrap: {
     width: 44, height: 44, borderRadius: 14,
-    backgroundColor: C.bg, alignItems: "center", justifyContent: "center",
+    backgroundColor: SharedColors.bg, alignItems: "center", justifyContent: "center",
   },
   notifIcon: { fontSize: 20 },
   notifTitleRow: { flexDirection: "row", alignItems: "center", gap: 6 },
-  notifTitle: { fontSize: 14, fontWeight: "700", color: C.navy, flex: 1 },
+  notifTitle: { fontSize: 14, fontWeight: "700", color: SharedColors.navy, flex: 1 },
   unreadDot: { width: 8, height: 8, borderRadius: 4 },
-  notifBody: { fontSize: 12, color: C.sub, marginTop: 2, lineHeight: 17 },
-  notifTime: { fontSize: 11, color: C.muted, marginTop: 4 },
-  notifArrow: { fontSize: 22, color: C.muted },
+  notifBody: { fontSize: 12, color: SharedColors.slate, marginTop: 2, lineHeight: 17 },
+  notifTime: { fontSize: 11, color: SharedColors.slateLight, marginTop: 4 },
+  notifArrow: { fontSize: 22, color: SharedColors.slateLight },
 });

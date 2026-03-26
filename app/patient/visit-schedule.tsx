@@ -9,14 +9,9 @@ import {
     View,
 } from "react-native";
 import { store } from "../../lib/store";
-const T = {
-  teal: "#4A0080", tealMid: "#5C10A0", tealLight: "#f0e6f6",
-  navy: "#0f172a", navyMid: "#1e293b", slate: "#64748b", slateLight: "#94a3b8",
-  border: "#e2e8f0", bg: "#f8fafc", white: "#fff",
-  green: "#16a34a", greenLight: "#f0fdf4",
-  red: "#ef4444", redLight: "#fef2f2",
-};
 
+
+import { PatientTheme, SharedColors } from "../../constants/theme";
 const WEEKDAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 const MONTH_NAMES = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
 
@@ -482,13 +477,13 @@ export default function VisitScheduleScreen() {
     }
   };
 
-  const VISIT_COLORS = ["#4A0080", "#eab308", "#f59e0b", "#ef4444", "#8b5cf6", "#ec4899", "#14b8a6", "#f97316", "#6366f1", "#84cc16"];
+  const VISIT_COLORS = [PatientTheme.primary, "#eab308", SharedColors.amber, SharedColors.red, "#8b5cf6", "#ec4899", "#14b8a6", "#f97316", "#6366f1", "#84cc16"];
 
   return (
     <View style={s.container}>
       {/* Header */}
       <LinearGradient
-        colors={["#3D0070", "#2F0058", "#220040"]}
+        colors={[...PatientTheme.gradient]}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
         style={s.header}
@@ -616,7 +611,7 @@ export default function VisitScheduleScreen() {
           <View style={s.weekRow}>
             {WEEKDAYS.map((d) => (
               <View key={d} style={s.weekCell}>
-                <Text style={[s.weekText, (d === "Sun" || d === "Sat") && { color: T.slateLight }]}>{d}</Text>
+                <Text style={[s.weekText, (d === "Sun" || d === "Sat") && { color: SharedColors.slateLight }]}>{d}</Text>
               </View>
             ))}
           </View>
@@ -648,7 +643,7 @@ export default function VisitScheduleScreen() {
                 >
                   <View style={[
                     s.dayInner,
-                    visitNum != null && { backgroundColor: visitColor || T.teal },
+                    visitNum != null && { backgroundColor: visitColor || PatientTheme.primary },
                     isBlocked && s.dayInnerBlocked,
                     unavailableByDoctor && !isBlocked && s.dayInnerUnavailable,
                     isBlocked && dimmed && { borderColor: "rgba(239,68,68,0.1)", backgroundColor: "rgba(239,68,68,0.04)" },
@@ -657,9 +652,9 @@ export default function VisitScheduleScreen() {
                       s.dayText,
                       dimmed && s.dayTextOther,
                       d.isPast && s.dayTextPast,
-                      visitNum != null && { color: "#fff", fontWeight: "700" as const },
+                      visitNum != null && { color: SharedColors.white, fontWeight: "700" as const },
                       isBlocked && !dimmed && { color: "#fca5a5" },
-                      unavailableByDoctor && !isBlocked && { color: "#cbd5e1" },
+                      unavailableByDoctor && !isBlocked && { color: SharedColors.faint },
                       isBlocked && dimmed && { color: "#e5c8c8" },
                     ]}>
                       {d.day}
@@ -710,7 +705,7 @@ export default function VisitScheduleScreen() {
                     }}
                     activeOpacity={0.7}
                   >
-                    <Text style={[s.slotBtnText, isSelected && { color: "#fff" }]}>{slot}</Text>
+                    <Text style={[s.slotBtnText, isSelected && { color: SharedColors.white }]}>{slot}</Text>
                   </TouchableOpacity>
                 );
               })}
@@ -794,7 +789,7 @@ export default function VisitScheduleScreen() {
           activeOpacity={0.85}
         >
           {loading ? (
-            <ActivityIndicator color={T.white} size="small" />
+            <ActivityIndicator color={SharedColors.white} size="small" />
           ) : (
             <Text style={s.nextBtnText}>
               {isReschedule
@@ -809,7 +804,7 @@ export default function VisitScheduleScreen() {
 }
 
 const s = StyleSheet.create({
-  container: { flex: 1, backgroundColor: T.bg },
+  container: { flex: 1, backgroundColor: SharedColors.bg },
 
   /* Header */
   header: {
@@ -822,48 +817,48 @@ const s = StyleSheet.create({
     borderWidth: 1, borderColor: "rgba(255,255,255,0.15)",
     alignItems: "center", justifyContent: "center",
   },
-  backArrow: { fontSize: 24, color: "#fff", fontWeight: "600", marginTop: -2 },
+  backArrow: { fontSize: 24, color: SharedColors.white, fontWeight: "600", marginTop: -2 },
   headerCenter: { flex: 1, alignItems: "center" },
-  title: { fontSize: 18, fontWeight: "700", color: "#fff" },
+  title: { fontSize: 18, fontWeight: "700", color: SharedColors.white },
   subtitle: { fontSize: 12, color: "rgba(255,255,255,0.55)", marginTop: 2 },
 
   content: { padding: 20, gap: 16, paddingBottom: 40 },
 
   /* Doctor summary */
   summaryCard: {
-    backgroundColor: T.white, borderRadius: 16, padding: 16,
-    borderWidth: 1, borderColor: T.border,
+    backgroundColor: SharedColors.white, borderRadius: 16, padding: 16,
+    borderWidth: 1, borderColor: SharedColors.border,
     flexDirection: "row", alignItems: "center", justifyContent: "space-between",
   },
   summaryLeft: { flexDirection: "row", alignItems: "center", gap: 12, flex: 1 },
   summaryAvatar: {
     width: 40, height: 40, borderRadius: 12,
-    backgroundColor: T.tealLight, alignItems: "center", justifyContent: "center",
+    backgroundColor: PatientTheme.primaryLight, alignItems: "center", justifyContent: "center",
   },
-  summaryAvatarText: { fontSize: 16, fontWeight: "700", color: T.teal },
-  summaryName: { fontSize: 15, fontWeight: "700", color: T.navy },
-  summaryClinic: { fontSize: 12, color: T.slate, marginTop: 1 },
+  summaryAvatarText: { fontSize: 16, fontWeight: "700", color: PatientTheme.primary },
+  summaryName: { fontSize: 15, fontWeight: "700", color: SharedColors.navy },
+  summaryClinic: { fontSize: 12, color: SharedColors.slate, marginTop: 1 },
   summaryDurationBadge: {
-    backgroundColor: T.tealLight, borderRadius: 8,
+    backgroundColor: PatientTheme.primaryLight, borderRadius: 8,
     paddingHorizontal: 10, paddingVertical: 5,
   },
-  summaryDurationText: { fontSize: 12, fontWeight: "600", color: T.teal },
+  summaryDurationText: { fontSize: 12, fontWeight: "600", color: PatientTheme.primary },
 
   /* Visit chips */
   visitChips: { gap: 8 },
   visitChip: {
     flexDirection: "row", alignItems: "center", gap: 12,
     padding: 14, borderRadius: 14,
-    backgroundColor: T.white, borderWidth: 1.5, borderColor: T.border,
+    backgroundColor: SharedColors.white, borderWidth: 1.5, borderColor: SharedColors.border,
   },
   visitChipDot: {
     width: 26, height: 26, borderRadius: 13,
     alignItems: "center", justifyContent: "center",
   },
-  visitChipCheck: { color: "#fff", fontSize: 12, fontWeight: "800" },
-  visitChipNum: { color: "#fff", fontSize: 12, fontWeight: "700" },
-  visitChipTitle: { fontSize: 14, fontWeight: "700", color: T.navy },
-  visitChipDesc: { fontSize: 11, color: T.slate, marginTop: 1 },
+  visitChipCheck: { color: SharedColors.white, fontSize: 12, fontWeight: "800" },
+  visitChipNum: { color: SharedColors.white, fontSize: 12, fontWeight: "700" },
+  visitChipTitle: { fontSize: 14, fontWeight: "700", color: SharedColors.navy },
+  visitChipDesc: { fontSize: 11, color: SharedColors.slate, marginTop: 1 },
   visitDateBadge: {
     borderRadius: 8, paddingHorizontal: 10, paddingVertical: 5,
   },
@@ -876,25 +871,25 @@ const s = StyleSheet.create({
   },
   gapLine: { height: 1, width: 20, backgroundColor: "#fde68a" },
   gapBadge: {
-    backgroundColor: "#fffbeb", borderRadius: 6, paddingHorizontal: 8, paddingVertical: 3,
+    backgroundColor: SharedColors.amberLight, borderRadius: 6, paddingHorizontal: 8, paddingVertical: 3,
     borderWidth: 1, borderColor: "#fde68a",
   },
   gapBadgeText: { fontSize: 10, fontWeight: "600", color: "#b45309" },
 
   /* Active visit banner */
   activeVisitBanner: {
-    backgroundColor: T.white, borderRadius: 12, padding: 14,
-    borderWidth: 1, borderColor: T.border,
+    backgroundColor: SharedColors.white, borderRadius: 12, padding: 14,
+    borderWidth: 1, borderColor: SharedColors.border,
     borderLeftWidth: 4,
   },
-  activeVisitLabel: { fontSize: 13, color: T.navy },
-  activeVisitDesc: { fontSize: 11, color: T.slate, marginTop: 3 },
+  activeVisitLabel: { fontSize: 13, color: SharedColors.navy },
+  activeVisitDesc: { fontSize: 11, color: SharedColors.slate, marginTop: 3 },
   earliestNote: { fontSize: 11, fontWeight: "600", color: "#b45309", marginTop: 6 },
 
   /* Calendar */
   calendar: {
-    backgroundColor: T.white, borderRadius: 18, padding: 16,
-    borderWidth: 1, borderColor: T.border,
+    backgroundColor: SharedColors.white, borderRadius: 18, padding: 16,
+    borderWidth: 1, borderColor: SharedColors.border,
   },
   monthNav: {
     flexDirection: "row", justifyContent: "space-between",
@@ -902,21 +897,21 @@ const s = StyleSheet.create({
   },
   navBtn: {
     width: 36, height: 36, borderRadius: 12,
-    backgroundColor: T.bg, alignItems: "center", justifyContent: "center",
+    backgroundColor: SharedColors.bg, alignItems: "center", justifyContent: "center",
   },
-  navBtnText: { fontSize: 22, color: T.navy, fontWeight: "600" },
-  monthTitle: { fontSize: 16, fontWeight: "700", color: T.navy },
+  navBtnText: { fontSize: 22, color: SharedColors.navy, fontWeight: "600" },
+  monthTitle: { fontSize: 16, fontWeight: "700", color: SharedColors.navy },
 
   weekRow: { flexDirection: "row", marginBottom: 6 },
   weekCell: { flex: 1, alignItems: "center", paddingVertical: 4 },
-  weekText: { fontSize: 11, fontWeight: "600", color: T.slate },
+  weekText: { fontSize: 11, fontWeight: "600", color: SharedColors.slate },
 
   daysGrid: { flexDirection: "row", flexWrap: "wrap" },
   dayCell: {
     width: "14.28%", alignItems: "center", justifyContent: "center",
     paddingVertical: 2,
   },
-  dayCellBlocked: { backgroundColor: T.redLight },
+  dayCellBlocked: { backgroundColor: SharedColors.redLight },
   dayCellUnavailable: { backgroundColor: "rgba(241,245,249,0.5)" },
 
   dayInner: {
@@ -933,7 +928,7 @@ const s = StyleSheet.create({
     borderColor: "rgba(203,213,225,0.8)",
     borderStyle: "dashed",
   },
-  dayText: { fontSize: 14, fontWeight: "500", color: T.navy },
+  dayText: { fontSize: 14, fontWeight: "500", color: SharedColors.navy },
   dayTextOther: { color: "#c8cdd3" },
   dayTextPast: { color: "#d1d5db" },
   dayVisitLabel: {
@@ -951,33 +946,33 @@ const s = StyleSheet.create({
     width: 4,
     height: 4,
     borderRadius: 2,
-    backgroundColor: "#cbd5e1",
+    backgroundColor: SharedColors.faint,
   },
 
   /* Time slot picker */
   timeSection: {
-    backgroundColor: T.white, borderRadius: 18, padding: 18,
-    borderWidth: 1, borderColor: T.border, gap: 12,
+    backgroundColor: SharedColors.white, borderRadius: 18, padding: 18,
+    borderWidth: 1, borderColor: SharedColors.border, gap: 12,
   },
   timeSectionHeader: { gap: 2 },
-  timeSectionTitle: { fontSize: 14, fontWeight: "700", color: T.navy },
-  timeSectionDate: { fontSize: 12, color: T.slate },
+  timeSectionTitle: { fontSize: 14, fontWeight: "700", color: SharedColors.navy },
+  timeSectionDate: { fontSize: 12, color: SharedColors.slate },
   slotsGrid: {
     flexDirection: "row", flexWrap: "wrap", gap: 8,
   },
   slotBtn: {
     paddingHorizontal: 14, paddingVertical: 10, borderRadius: 10,
-    borderWidth: 1.5, borderColor: T.border, backgroundColor: T.bg,
+    borderWidth: 1.5, borderColor: SharedColors.border, backgroundColor: SharedColors.bg,
     minWidth: 72, alignItems: "center",
   },
-  slotBtnText: { fontSize: 13, fontWeight: "600", color: T.navy },
+  slotBtnText: { fontSize: 13, fontWeight: "600", color: SharedColors.navy },
   noTimeOptionText: {
     fontSize: 12,
-    color: T.red,
+    color: SharedColors.red,
     fontWeight: "600",
   },
   timeSectionNote: {
-    fontSize: 11, color: T.slateLight, fontStyle: "italic",
+    fontSize: 11, color: SharedColors.slateLight, fontStyle: "italic",
   },
 
   /* Legend */
@@ -986,11 +981,11 @@ const s = StyleSheet.create({
   },
   legendItem: { flexDirection: "row", alignItems: "center", gap: 5 },
   legendDot: { width: 10, height: 10, borderRadius: 5 },
-  legendText: { fontSize: 11, color: T.slate },
+  legendText: { fontSize: 11, color: SharedColors.slate },
 
   /* All set */
   allSetCard: {
-    backgroundColor: T.greenLight, borderRadius: 16, padding: 18,
+    backgroundColor: SharedColors.greenLight, borderRadius: 16, padding: 18,
     borderWidth: 1, borderColor: "#bbf7d0",
   },
   allSetHeader: {
@@ -998,15 +993,15 @@ const s = StyleSheet.create({
   },
   allSetCheck: {
     width: 28, height: 28, borderRadius: 14,
-    backgroundColor: T.green, alignItems: "center", justifyContent: "center",
+    backgroundColor: SharedColors.green, alignItems: "center", justifyContent: "center",
   },
-  allSetCheckText: { color: "#fff", fontSize: 14, fontWeight: "800" },
-  allSetTitle: { fontSize: 16, fontWeight: "700", color: T.green },
+  allSetCheckText: { color: SharedColors.white, fontSize: 14, fontWeight: "800" },
+  allSetTitle: { fontSize: 16, fontWeight: "700", color: SharedColors.green },
   allSetList: { gap: 8 },
   allSetRow: { flexDirection: "row", alignItems: "center", gap: 10 },
   allSetDot: { width: 8, height: 8, borderRadius: 4 },
-  allSetVisit: { fontSize: 13, fontWeight: "600", color: T.navy, width: 56 },
-  allSetDate: { fontSize: 13, color: T.slate, flex: 1 },
+  allSetVisit: { fontSize: 13, fontWeight: "600", color: SharedColors.navy, width: 56 },
+  allSetDate: { fontSize: 13, color: SharedColors.slate, flex: 1 },
   allSetGap: {
     marginLeft: 18, paddingLeft: 10, borderLeftWidth: 2, borderLeftColor: "#fde68a",
     paddingVertical: 3,
@@ -1016,7 +1011,7 @@ const s = StyleSheet.create({
   /* Bottom bar */
   bottomBar: {
     paddingHorizontal: 24, paddingTop: 14, paddingBottom: 48,
-    borderTopWidth: 1, borderTopColor: T.border, backgroundColor: T.white,
+    borderTopWidth: 1, borderTopColor: SharedColors.border, backgroundColor: SharedColors.white,
     gap: 12,
   },
   bottomTop: {
@@ -1026,13 +1021,13 @@ const s = StyleSheet.create({
     flex: 1, height: 4, backgroundColor: "#e5e7eb", borderRadius: 2, overflow: "hidden",
   },
   bottomProgressFill: {
-    height: "100%", backgroundColor: T.teal, borderRadius: 2,
+    height: "100%", backgroundColor: PatientTheme.primary, borderRadius: 2,
   },
-  bottomCount: { fontSize: 12, fontWeight: "600", color: T.slate },
+  bottomCount: { fontSize: 12, fontWeight: "600", color: SharedColors.slate },
   nextBtn: {
-    backgroundColor: T.teal, borderRadius: 14,
+    backgroundColor: PatientTheme.primary, borderRadius: 14,
     paddingVertical: 16, alignItems: "center",
   },
   nextBtnDisabled: { opacity: 0.4 },
-  nextBtnText: { color: T.white, fontSize: 15, fontWeight: "600" },
+  nextBtnText: { color: SharedColors.white, fontSize: 15, fontWeight: "600" },
 });

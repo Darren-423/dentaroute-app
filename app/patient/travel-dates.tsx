@@ -10,15 +10,7 @@ import {
 } from "react-native";
 import { store } from "../../lib/store";
 
-const T = {
-  teal: "#4A0080", tealMid: "#5C10A0", tealLight: "#f0e6f6",
-  navy: "#0f172a", slate: "#64748b", slateLight: "#94a3b8",
-  border: "#e2e8f0", bg: "#f8fafc", white: "#fff",
-  blue: "#3b82f6", blueLight: "#eff6ff",
-  amber: "#f59e0b", amberLight: "#fffbeb",
-  purple: "#8b5cf6", purpleLight: "#f5f3ff",
-};
-
+import { PatientTheme, SharedColors } from "../../constants/theme";
 const WEEKDAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 const MONTH_NAMES = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
 
@@ -36,24 +28,24 @@ const SCHEDULE_OPTIONS: { key: ScheduleType; icon: string; title: string; desc: 
     icon: "📌",
     title: "Fixed Dates",
     desc: "I have confirmed flight tickets",
-    color: T.teal,
-    bgColor: T.tealLight,
+    color: PatientTheme.primary,
+    bgColor: PatientTheme.primaryLight,
   },
   {
     key: "flexible",
     icon: "🔄",
     title: "Flexible Dates",
     desc: "Approximate dates, can adjust",
-    color: T.amber,
-    bgColor: T.amberLight,
+    color: SharedColors.amber,
+    bgColor: SharedColors.amberLight,
   },
   {
     key: "undetermined",
     icon: "❓",
     title: "Not Decided Yet",
     desc: "I'll decide after seeing treatment plans",
-    color: T.purple,
-    bgColor: T.purpleLight,
+    color: PatientTheme.primary,
+    bgColor: PatientTheme.primaryLight,
   },
 ];
 
@@ -161,7 +153,7 @@ export default function TravelDatesScreen() {
   return (
     <View style={s.container}>
       {/* Header */}
-      <LinearGradient colors={["#3D0070", "#2F0058", "#220040"]} style={s.header}>
+      <LinearGradient colors={[...PatientTheme.gradient]} style={s.header}>
         <View style={s.headerRow}>
           <TouchableOpacity style={s.backBtn} onPress={() => router.back()} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
             <Text style={s.backArrow}>‹</Text>
@@ -217,7 +209,7 @@ export default function TravelDatesScreen() {
 
         {/* ── Flexible Note ── */}
         {scheduleType === "flexible" && (
-          <View style={[s.infoBox, { backgroundColor: T.amberLight, borderColor: T.amber }]}>
+          <View style={[s.infoBox, { backgroundColor: SharedColors.amberLight, borderColor: SharedColors.amber }]}>
             <Text style={[s.infoBoxText, { color: "#92400e" }]}>
               💡 Select your approximate dates. Your dentist may suggest adjusting them based on the treatment plan.
             </Text>
@@ -226,7 +218,7 @@ export default function TravelDatesScreen() {
 
         {/* ── Undetermined Note ── */}
         {scheduleType === "undetermined" && (
-          <View style={[s.infoBox, { backgroundColor: T.purpleLight, borderColor: T.purple }]}>
+          <View style={[s.infoBox, { backgroundColor: PatientTheme.primaryLight, borderColor: PatientTheme.primary }]}>
             <Text style={[s.infoBoxText, { color: "#5b21b6" }]}>
               👍 No problem! Your dentist will recommend a treatment duration, and you can plan your trip around it.
             </Text>
@@ -372,7 +364,7 @@ export default function TravelDatesScreen() {
           activeOpacity={0.85}
         >
           {loading ? (
-            <ActivityIndicator color={T.white} size="small" />
+            <ActivityIndicator color={SharedColors.white} size="small" />
           ) : (
             <Text style={s.nextBtnText}>Next: Upload Files →</Text>
           )}
@@ -383,17 +375,17 @@ export default function TravelDatesScreen() {
 }
 
 const s = StyleSheet.create({
-  container: { flex: 1, backgroundColor: T.bg },
+  container: { flex: 1, backgroundColor: SharedColors.bg },
   header: { paddingHorizontal: 20, paddingTop: 60, paddingBottom: 18 },
   headerRow: { flexDirection: "row", alignItems: "center" },
   headerCenter: { flex: 1, alignItems: "center" },
   backBtn: { width: 36, height: 36, borderRadius: 12, backgroundColor: "rgba(255,255,255,0.12)", borderWidth: 1, borderColor: "rgba(255,255,255,0.15)", alignItems: "center", justifyContent: "center" },
-  backArrow: { fontSize: 24, color: "#fff", fontWeight: "600", marginTop: -2 },
-  title: { fontSize: 18, fontWeight: "700", color: "#fff" },
+  backArrow: { fontSize: 24, color: SharedColors.white, fontWeight: "600", marginTop: -2 },
+  title: { fontSize: 18, fontWeight: "700", color: SharedColors.white },
   subtitle: { fontSize: 12, color: "rgba(255,255,255,0.55)", marginTop: 2 },
   stepRow: { flexDirection: "row", alignItems: "center", marginTop: 14, paddingHorizontal: 20 },
   stepDot: { width: 8, height: 8, borderRadius: 4, backgroundColor: "rgba(255,255,255,0.25)" },
-  stepDotActive: { backgroundColor: "#f59e0b", width: 10, height: 10, borderRadius: 5 },
+  stepDotActive: { backgroundColor: SharedColors.amber, width: 10, height: 10, borderRadius: 5 },
   stepLine: { flex: 1, height: 2, backgroundColor: "rgba(255,255,255,0.15)", marginHorizontal: 6 },
 
   content: { padding: 20, gap: 16, paddingBottom: 60 },
@@ -403,14 +395,14 @@ const s = StyleSheet.create({
   typeCard: {
     flexDirection: "row", alignItems: "center", gap: 14,
     padding: 16, borderRadius: 16,
-    backgroundColor: T.white, borderWidth: 1.5, borderColor: T.border,
+    backgroundColor: SharedColors.white, borderWidth: 1.5, borderColor: SharedColors.border,
   },
   typeIcon: { fontSize: 26 },
-  typeTitle: { fontSize: 15, fontWeight: "700", color: T.navy },
-  typeDesc: { fontSize: 12, color: T.slate, marginTop: 2 },
+  typeTitle: { fontSize: 15, fontWeight: "700", color: SharedColors.navy },
+  typeDesc: { fontSize: 12, color: SharedColors.slate, marginTop: 2 },
   typeRadio: {
     width: 22, height: 22, borderRadius: 11,
-    borderWidth: 2, borderColor: T.border,
+    borderWidth: 2, borderColor: SharedColors.border,
     alignItems: "center", justifyContent: "center",
   },
   typeRadioDot: { width: 12, height: 12, borderRadius: 6 },
@@ -424,54 +416,54 @@ const s = StyleSheet.create({
 
   // ── Selection tabs ──
   selectionRow: { flexDirection: "row", alignItems: "center", gap: 8 },
-  selectionTab: { flex: 1, flexDirection: "row", alignItems: "center", gap: 10, padding: 14, borderRadius: 14, backgroundColor: T.white, borderWidth: 1.5, borderColor: T.border },
-  selectionTabActive: { borderColor: T.tealMid, backgroundColor: T.tealLight },
+  selectionTab: { flex: 1, flexDirection: "row", alignItems: "center", gap: 10, padding: 14, borderRadius: 14, backgroundColor: SharedColors.white, borderWidth: 1.5, borderColor: SharedColors.border },
+  selectionTabActive: { borderColor: PatientTheme.primaryMid, backgroundColor: PatientTheme.primaryLight },
   selectionIcon: { fontSize: 20 },
-  selectionLabel: { fontSize: 10, fontWeight: "600", color: T.slateLight, letterSpacing: 0.5, textTransform: "uppercase" },
-  selectionDate: { fontSize: 13, color: T.slateLight, marginTop: 2, fontWeight: "500" },
-  selectionDateFilled: { color: T.navy, fontWeight: "600" },
-  arrow: { fontSize: 16, color: T.slateLight },
+  selectionLabel: { fontSize: 10, fontWeight: "600", color: SharedColors.slateLight, letterSpacing: 0.5, textTransform: "uppercase" },
+  selectionDate: { fontSize: 13, color: SharedColors.slateLight, marginTop: 2, fontWeight: "500" },
+  selectionDateFilled: { color: SharedColors.navy, fontWeight: "600" },
+  arrow: { fontSize: 16, color: SharedColors.slateLight },
 
   // ── Duration ──
-  durationBadge: { alignSelf: "center", backgroundColor: T.tealLight, borderRadius: 20, paddingHorizontal: 16, paddingVertical: 8 },
-  durationText: { fontSize: 13, fontWeight: "600", color: T.teal },
+  durationBadge: { alignSelf: "center", backgroundColor: PatientTheme.primaryLight, borderRadius: 20, paddingHorizontal: 16, paddingVertical: 8 },
+  durationText: { fontSize: 13, fontWeight: "600", color: PatientTheme.primary },
 
   // ── Calendar ──
-  calendar: { backgroundColor: T.white, borderRadius: 18, padding: 16, borderWidth: 1, borderColor: T.border },
+  calendar: { backgroundColor: SharedColors.white, borderRadius: 18, padding: 16, borderWidth: 1, borderColor: SharedColors.border },
   monthNav: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 14 },
-  navBtn: { width: 36, height: 36, borderRadius: 12, backgroundColor: T.bg, alignItems: "center", justifyContent: "center" },
-  navBtnText: { fontSize: 22, color: T.navy, fontWeight: "600" },
-  monthTitle: { fontSize: 16, fontWeight: "700", color: T.navy },
+  navBtn: { width: 36, height: 36, borderRadius: 12, backgroundColor: SharedColors.bg, alignItems: "center", justifyContent: "center" },
+  navBtnText: { fontSize: 22, color: SharedColors.navy, fontWeight: "600" },
+  monthTitle: { fontSize: 16, fontWeight: "700", color: SharedColors.navy },
 
   weekRow: { flexDirection: "row", marginBottom: 6 },
   weekCell: { flex: 1, alignItems: "center", paddingVertical: 4 },
-  weekText: { fontSize: 11, fontWeight: "600", color: T.slateLight },
+  weekText: { fontSize: 11, fontWeight: "600", color: SharedColors.slateLight },
 
   daysGrid: { flexDirection: "row", flexWrap: "wrap" },
   dayCell: { width: "14.28%", alignItems: "center", justifyContent: "center", paddingVertical: 2 },
-  dayCellRange: { backgroundColor: T.tealLight },
-  dayCellRangeStart: { backgroundColor: T.tealLight, borderTopLeftRadius: 20, borderBottomLeftRadius: 20 },
-  dayCellRangeEnd: { backgroundColor: T.tealLight, borderTopRightRadius: 20, borderBottomRightRadius: 20 },
+  dayCellRange: { backgroundColor: PatientTheme.primaryLight },
+  dayCellRangeStart: { backgroundColor: PatientTheme.primaryLight, borderTopLeftRadius: 20, borderBottomLeftRadius: 20 },
+  dayCellRangeEnd: { backgroundColor: PatientTheme.primaryLight, borderTopRightRadius: 20, borderBottomRightRadius: 20 },
 
   dayInner: { width: 38, height: 38, borderRadius: 19, alignItems: "center", justifyContent: "center" },
-  dayInnerSelected: { backgroundColor: T.teal },
+  dayInnerSelected: { backgroundColor: PatientTheme.primary },
 
-  dayText: { fontSize: 14, fontWeight: "500", color: T.navy },
-  dayTextOther: { color: T.slateLight },
+  dayText: { fontSize: 14, fontWeight: "500", color: SharedColors.navy },
+  dayTextOther: { color: SharedColors.slateLight },
   dayTextPast: { color: "#d1d5db" },
-  dayTextSelected: { color: T.white, fontWeight: "700" },
-  dayTextRange: { color: T.teal, fontWeight: "600" },
+  dayTextSelected: { color: SharedColors.white, fontWeight: "700" },
+  dayTextRange: { color: PatientTheme.primary, fontWeight: "600" },
 
   // ── Hint ──
-  hint: { backgroundColor: T.blueLight, borderRadius: 12, padding: 14, alignItems: "center" },
-  hintText: { fontSize: 13, color: T.blue, fontWeight: "500" },
+  hint: { backgroundColor: SharedColors.blueLight, borderRadius: 12, padding: 14, alignItems: "center" },
+  hintText: { fontSize: 13, color: SharedColors.blue, fontWeight: "500" },
 
   // ── Bottom ──
-  bottomBar: { paddingHorizontal: 24, paddingVertical: 16, borderTopWidth: 1, borderTopColor: T.border, backgroundColor: T.white, gap: 10 },
+  bottomBar: { paddingHorizontal: 24, paddingVertical: 16, borderTopWidth: 1, borderTopColor: SharedColors.border, backgroundColor: SharedColors.white, gap: 10 },
   bottomSummary: { flexDirection: "row", alignItems: "center", gap: 8, paddingVertical: 4 },
   bottomSummaryIcon: { fontSize: 16 },
-  bottomSummaryText: { fontSize: 12, color: T.slate, flex: 1 },
-  nextBtn: { backgroundColor: T.teal, borderRadius: 14, paddingVertical: 15, alignItems: "center", minHeight: 52 },
+  bottomSummaryText: { fontSize: 12, color: SharedColors.slate, flex: 1 },
+  nextBtn: { backgroundColor: PatientTheme.primary, borderRadius: 14, paddingVertical: 15, alignItems: "center", minHeight: 52 },
   nextBtnDisabled: { opacity: 0.5 },
-  nextBtnText: { color: T.white, fontSize: 15, fontWeight: "600" },
+  nextBtnText: { color: SharedColors.white, fontSize: 15, fontWeight: "600" },
 });

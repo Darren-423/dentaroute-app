@@ -10,17 +10,7 @@ import {
 } from "react-native";
 import { ChatMessage, store } from "../../lib/store";
 
-const T = {
-  teal: "#0f766e",
-  tealLight: "#14b8a6",
-  bg: "#f8fafc",
-  white: "#fff",
-  text: "#0f172a",
-  textSec: "#64748b",
-  textMuted: "#94a3b8",
-  border: "#e2e8f0",
-};
-
+import { DoctorTheme, SharedColors } from "../../constants/theme";
 export default function DoctorChatScreen() {
   const { chatRoomId, patientName } = useLocalSearchParams<{
     chatRoomId: string; patientName: string;
@@ -231,7 +221,7 @@ export default function DoctorChatScreen() {
               <>
                 {translatingIds.has(item.id) ? (
                   <View style={s.translatingRow}>
-                    <ActivityIndicator size="small" color={isMe ? "rgba(255,255,255,0.6)" : T.textSec} />
+                    <ActivityIndicator size="small" color={isMe ? "rgba(255,255,255,0.6)" : SharedColors.navySec} />
                     <Text style={[s.translatingText, isMe && { color: "rgba(255,255,255,0.5)" }]}>
                       Translating...
                     </Text>
@@ -274,7 +264,7 @@ export default function DoctorChatScreen() {
       keyboardVerticalOffset={0}
     >
       {/* Header */}
-      <LinearGradient colors={["#0f766e", "#134e4a"]} style={s.header}>
+      <LinearGradient colors={[DoctorTheme.primary, DoctorTheme.primaryDark]} style={s.header}>
         <TouchableOpacity style={s.backBtn} onPress={() => router.back()} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
           <Text style={s.backArrow}>‹</Text>
         </TouchableOpacity>
@@ -305,8 +295,8 @@ export default function DoctorChatScreen() {
         keyExtractor={(item) => item.id}
         renderItem={renderMessage}
         ListHeaderComponent={
-          <View style={{ backgroundColor: "#f1f5f9", borderRadius: 8, padding: 10, margin: 12, marginBottom: 4, borderWidth: 1, borderColor: "#e2e8f0" }}>
-            <Text style={{ fontSize: 11, color: "#64748b", lineHeight: 16, textAlign: "center" }}>
+          <View style={{ backgroundColor: "#f1f5f9", borderRadius: 8, padding: 10, margin: 12, marginBottom: 4, borderWidth: 1, borderColor: SharedColors.border }}>
+            <Text style={{ fontSize: 11, color: SharedColors.slate, lineHeight: 16, textAlign: "center" }}>
               채팅은 견적 논의 및 일반 상담 전용입니다. 구체적 진단/치료계획을 제공하지 마십시오.
             </Text>
           </View>
@@ -372,7 +362,7 @@ export default function DoctorChatScreen() {
         <TextInput
           style={s.textInput}
           placeholder="Type a message..."
-          placeholderTextColor="#94a3b8"
+          placeholderTextColor={SharedColors.slateLight}
           value={input}
           onChangeText={handleInputChange}
           onSubmitEditing={handleSend}
@@ -427,7 +417,7 @@ export default function DoctorChatScreen() {
 }
 
 const s = StyleSheet.create({
-  container: { flex: 1, backgroundColor: T.bg },
+  container: { flex: 1, backgroundColor: SharedColors.bg },
 
   header: {
     flexDirection: "row", alignItems: "center", gap: 12,
@@ -439,14 +429,14 @@ const s = StyleSheet.create({
     borderWidth: 1, borderColor: "rgba(255,255,255,0.15)",
     alignItems: "center", justifyContent: "center",
   },
-  backArrow: { fontSize: 24, color: "#fff", fontWeight: "600", marginTop: -2 },
+  backArrow: { fontSize: 24, color: SharedColors.white, fontWeight: "600", marginTop: -2 },
   headerInfo: { flex: 1, flexDirection: "row", alignItems: "center", gap: 10 },
   headerAvatar: {
     width: 38, height: 38, borderRadius: 19,
     backgroundColor: "rgba(255,255,255,0.2)", alignItems: "center", justifyContent: "center",
   },
-  headerAvatarText: { fontSize: 15, fontWeight: "700", color: T.white },
-  headerName: { fontSize: 15, fontWeight: "700", color: T.white },
+  headerAvatarText: { fontSize: 15, fontWeight: "700", color: SharedColors.white },
+  headerName: { fontSize: 15, fontWeight: "700", color: SharedColors.white },
   headerSub: { fontSize: 11, color: "rgba(255,255,255,0.7)" },
 
   // Translation toggle (dark header variant)
@@ -461,19 +451,19 @@ const s = StyleSheet.create({
     fontSize: 11, fontWeight: "600", color: "rgba(255,255,255,0.5)",
   },
   translateToggleTextOn: {
-    color: T.white,
+    color: SharedColors.white,
   },
 
   onlineDot: {
     width: 8, height: 8, borderRadius: 4, backgroundColor: "#22c55e",
   },
 
-  messageArea: { flex: 1, backgroundColor: T.bg },
+  messageArea: { flex: 1, backgroundColor: SharedColors.bg },
   messageList: { padding: 16, paddingBottom: 8, flexGrow: 1 },
 
   dateHeader: { alignItems: "center", marginVertical: 12 },
   dateHeaderText: {
-    fontSize: 11, color: T.textMuted, fontWeight: "600",
+    fontSize: 11, color: SharedColors.navyMuted, fontWeight: "600",
     backgroundColor: "#f1f5f9", paddingHorizontal: 12, paddingVertical: 4,
     borderRadius: 10, overflow: "hidden",
   },
@@ -485,24 +475,24 @@ const s = StyleSheet.create({
     width: 28, height: 28, borderRadius: 14,
     backgroundColor: "rgba(20,184,166,0.1)", alignItems: "center", justifyContent: "center",
   },
-  msgAvatarText: { fontSize: 11, fontWeight: "700", color: T.teal },
+  msgAvatarText: { fontSize: 11, fontWeight: "700", color: DoctorTheme.primary },
 
   bubble: {
     maxWidth: "75%", borderRadius: 18, paddingHorizontal: 14, paddingVertical: 10,
   },
   bubbleMe: {
-    backgroundColor: T.teal, borderBottomRightRadius: 4,
+    backgroundColor: DoctorTheme.primary, borderBottomRightRadius: 4,
   },
   bubbleThem: {
     backgroundColor: "#f1f5f9", borderBottomLeftRadius: 4,
   },
   bubbleText: { fontSize: 14, lineHeight: 20 },
-  bubbleTextMe: { color: T.white },
-  bubbleTextThem: { color: T.text },
+  bubbleTextMe: { color: SharedColors.white },
+  bubbleTextThem: { color: SharedColors.navy },
   timeRow: { flexDirection: "row", alignItems: "center", justifyContent: "flex-end", gap: 4, marginTop: 4 },
   timeText: { fontSize: 10 },
   timeTextMe: { color: "rgba(255,255,255,0.6)" },
-  timeTextThem: { color: T.textMuted },
+  timeTextThem: { color: SharedColors.navyMuted },
   readReceipt: { fontSize: 11, fontWeight: "700" },
   readReceiptSent: { color: "rgba(255,255,255,0.5)" },
   readReceiptRead: { color: "#60a5fa" },
@@ -513,7 +503,7 @@ const s = StyleSheet.create({
     flexDirection: "row", alignItems: "center", gap: 6, marginTop: 6,
   },
   translatingText: {
-    fontSize: 12, color: T.textSec, fontStyle: "italic",
+    fontSize: 12, color: SharedColors.navySec, fontStyle: "italic",
   },
   transDivider: {
     height: 1, backgroundColor: "rgba(0,0,0,0.08)", marginVertical: 6,
@@ -525,63 +515,63 @@ const s = StyleSheet.create({
     color: "rgba(255,255,255,0.7)",
   },
   transTextThem: {
-    color: T.textSec,
+    color: SharedColors.navySec,
   },
   translationFailed: {
-    fontSize: 12, color: "#ef4444", marginTop: 4,
+    fontSize: 12, color: SharedColors.red, marginTop: 4,
   },
 
   emptyChat: { flex: 1, alignItems: "center", justifyContent: "center", paddingVertical: 60 },
   emptyChatIcon: { fontSize: 48, marginBottom: 12 },
-  emptyChatText: { fontSize: 16, fontWeight: "600", color: T.text, marginBottom: 4 },
-  emptyChatSub: { fontSize: 13, color: T.textSec, textAlign: "center" },
+  emptyChatText: { fontSize: 16, fontWeight: "600", color: SharedColors.navy, marginBottom: 4 },
+  emptyChatSub: { fontSize: 13, color: SharedColors.navySec, textAlign: "center" },
 
   quickReplies: { paddingHorizontal: 16, paddingBottom: 8, gap: 8 },
   quickChip: {
-    backgroundColor: T.white, borderRadius: 20, paddingHorizontal: 16, paddingVertical: 10,
-    borderWidth: 1, borderColor: T.border,
+    backgroundColor: SharedColors.white, borderRadius: 20, paddingHorizontal: 16, paddingVertical: 10,
+    borderWidth: 1, borderColor: SharedColors.border,
   },
-  quickChipText: { fontSize: 13, color: T.teal },
+  quickChipText: { fontSize: 13, color: DoctorTheme.primary },
 
   // Typing indicator
   typingBar: { flexDirection: "row", alignItems: "center", gap: 8, paddingHorizontal: 16, paddingBottom: 4 },
   typingAvatar: { width: 24, height: 24, borderRadius: 12, backgroundColor: "rgba(20,184,166,0.1)", alignItems: "center", justifyContent: "center" },
-  typingAvatarText: { fontSize: 9, fontWeight: "700", color: T.teal },
-  typingBubble: { backgroundColor: "#f1f5f9", borderRadius: 14, paddingHorizontal: 12, paddingVertical: 4, borderWidth: 1, borderColor: T.border },
-  typingDots: { fontSize: 20, color: T.textSec, letterSpacing: 2 },
+  typingAvatarText: { fontSize: 9, fontWeight: "700", color: DoctorTheme.primary },
+  typingBubble: { backgroundColor: "#f1f5f9", borderRadius: 14, paddingHorizontal: 12, paddingVertical: 4, borderWidth: 1, borderColor: SharedColors.border },
+  typingDots: { fontSize: 20, color: SharedColors.navySec, letterSpacing: 2 },
 
   // Attach
-  attachBtn: { width: 40, height: 40, borderRadius: 20, backgroundColor: T.bg, borderWidth: 1, borderColor: T.border, alignItems: "center", justifyContent: "center" },
+  attachBtn: { width: 40, height: 40, borderRadius: 20, backgroundColor: SharedColors.bg, borderWidth: 1, borderColor: SharedColors.border, alignItems: "center", justifyContent: "center" },
   attachBtnText: { fontSize: 18 },
 
   // Modals
   modalOverlay: { flex: 1, backgroundColor: "rgba(0,0,0,0.4)", justifyContent: "flex-end" },
-  attachSheet: { backgroundColor: T.white, borderTopLeftRadius: 20, borderTopRightRadius: 20, padding: 20, paddingBottom: 40, gap: 8 },
-  attachOption: { flexDirection: "row", alignItems: "center", gap: 14, padding: 14, borderRadius: 12, backgroundColor: T.bg },
+  attachSheet: { backgroundColor: SharedColors.white, borderTopLeftRadius: 20, borderTopRightRadius: 20, padding: 20, paddingBottom: 40, gap: 8 },
+  attachOption: { flexDirection: "row", alignItems: "center", gap: 14, padding: 14, borderRadius: 12, backgroundColor: SharedColors.bg },
   attachOptionIcon: { fontSize: 22 },
-  attachOptionText: { fontSize: 15, fontWeight: "600", color: T.text },
+  attachOptionText: { fontSize: 15, fontWeight: "600", color: SharedColors.navy },
   attachCancel: { backgroundColor: "transparent", justifyContent: "center" },
-  attachCancelText: { fontSize: 15, fontWeight: "600", color: T.textSec, textAlign: "center" },
+  attachCancelText: { fontSize: 15, fontWeight: "600", color: SharedColors.navySec, textAlign: "center" },
 
   imagePreviewOverlay: { flex: 1, backgroundColor: "rgba(0,0,0,0.92)", justifyContent: "center", alignItems: "center" },
   imagePreviewClose: { position: "absolute", top: 56, right: 20, zIndex: 10, width: 36, height: 36, borderRadius: 18, backgroundColor: "rgba(255,255,255,0.15)", alignItems: "center", justifyContent: "center" },
-  imagePreviewCloseText: { color: "#fff", fontSize: 18, fontWeight: "600" },
+  imagePreviewCloseText: { color: SharedColors.white, fontSize: 18, fontWeight: "600" },
   imagePreviewImg: { width: "90%", height: "70%" },
 
   inputBar: {
     flexDirection: "row", alignItems: "flex-end", gap: 8,
     paddingHorizontal: 16, paddingVertical: 12, paddingBottom: 36,
-    backgroundColor: T.white, borderTopWidth: 1, borderTopColor: T.border,
+    backgroundColor: SharedColors.white, borderTopWidth: 1, borderTopColor: SharedColors.border,
   },
   textInput: {
-    flex: 1, backgroundColor: T.bg, borderRadius: 22, paddingHorizontal: 18,
-    paddingVertical: 10, fontSize: 14, color: T.text, maxHeight: 100,
-    borderWidth: 1, borderColor: T.border,
+    flex: 1, backgroundColor: SharedColors.bg, borderRadius: 22, paddingHorizontal: 18,
+    paddingVertical: 10, fontSize: 14, color: SharedColors.navy, maxHeight: 100,
+    borderWidth: 1, borderColor: SharedColors.border,
   },
   sendBtn: {
     width: 44, height: 44, borderRadius: 22,
-    backgroundColor: T.teal, alignItems: "center", justifyContent: "center",
+    backgroundColor: DoctorTheme.primary, alignItems: "center", justifyContent: "center",
   },
   sendBtnDisabled: { opacity: 0.4 },
-  sendBtnText: { color: T.white, fontSize: 20, fontWeight: "600" },
+  sendBtnText: { color: SharedColors.white, fontSize: 20, fontWeight: "600" },
 });

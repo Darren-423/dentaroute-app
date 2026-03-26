@@ -13,18 +13,7 @@ import {
 } from "react-native";
 import { store } from "../../lib/store";
 
-const T = {
-  teal: "#4A0080",
-  tealMid: "#5C10A0",
-  tealLight: "#f0e6f6",
-  navy: "#0f172a",
-  slate: "#64748b",
-  slateLight: "#94a3b8",
-  border: "#e2e8f0",
-  bg: "#f8fafc",
-  white: "#ffffff",
-};
-
+import { PatientTheme, SharedColors } from "../../constants/theme";
 const DEFAULT_ISSUES = ["Tooth Pain", "Missing Teeth", "Broken Teeth", "Gum Disease", "Cavities", "Discoloration"];
 const visitOptions = ["< 6 months", "6-12 months", "1-2 years", "2+ years", "Never"];
 
@@ -115,7 +104,7 @@ export default function PatientDentalHistoryScreen() {
   return (
     <View style={styles.container}>
       {/* Header */}
-      <LinearGradient colors={["#3D0070", "#2F0058", "#220040"]} style={styles.header}>
+      <LinearGradient colors={[...PatientTheme.gradient]} style={styles.header}>
         <View style={styles.headerRow}>
           <TouchableOpacity style={styles.backBtn} onPress={() => router.back()} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
             <Text style={styles.backArrow}>‹</Text>
@@ -137,7 +126,7 @@ export default function PatientDentalHistoryScreen() {
 
       {/* Content */}
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
-                  <View style={{ backgroundColor: "#f1f5f9", borderRadius: 8, padding: 10, marginBottom: 16, borderWidth: 1, borderColor: "#e2e8f0" }}><Text style={{ fontSize: 11, color: "#64748b", lineHeight: 16 }}>Your health information is used solely for treatment quotes and is protected under Korean data protection law (PIPA).</Text></View>
+                  <View style={{ backgroundColor: "#f1f5f9", borderRadius: 8, padding: 10, marginBottom: 16, borderWidth: 1, borderColor: SharedColors.border }}><Text style={{ fontSize: 11, color: SharedColors.slate, lineHeight: 16 }}>Your health information is used solely for treatment quotes and is protected under Korean data protection law (PIPA).</Text></View>
 
           {/* Dental Issues */}
         <View style={styles.section}>
@@ -174,7 +163,7 @@ export default function PatientDentalHistoryScreen() {
               <TextInput
                 style={styles.addInput}
                 placeholder="Type a dental issue..."
-                placeholderTextColor={T.slateLight}
+                placeholderTextColor={SharedColors.slateLight}
                 value={newIssue}
                 onChangeText={setNewIssue}
                 onSubmitEditing={addCustomIssue}
@@ -229,7 +218,7 @@ export default function PatientDentalHistoryScreen() {
       <View style={styles.bottomBar}>
         <TouchableOpacity style={styles.nextBtn} onPress={handleNext} disabled={loading} activeOpacity={0.85}>
           {loading ? (
-            <ActivityIndicator color={T.white} size="small" />
+            <ActivityIndicator color={SharedColors.white} size="small" />
           ) : (
             <Text style={styles.nextBtnText}>{isEditMode ? "Save Profile" : "Complete Profile →"}</Text>
           )}
@@ -240,37 +229,37 @@ export default function PatientDentalHistoryScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: T.bg },
+  container: { flex: 1, backgroundColor: SharedColors.bg },
   header: { paddingHorizontal: 20, paddingTop: 60, paddingBottom: 18 },
   headerRow: { flexDirection: "row", alignItems: "center" },
   headerCenter: { flex: 1, alignItems: "center" },
   backBtn: { width: 36, height: 36, borderRadius: 12, backgroundColor: "rgba(255,255,255,0.12)", borderWidth: 1, borderColor: "rgba(255,255,255,0.15)", alignItems: "center", justifyContent: "center" },
-  backArrow: { fontSize: 24, color: "#fff", fontWeight: "600", marginTop: -2 },
-  title: { fontSize: 18, fontWeight: "700", color: "#fff" },
+  backArrow: { fontSize: 24, color: SharedColors.white, fontWeight: "600", marginTop: -2 },
+  title: { fontSize: 18, fontWeight: "700", color: SharedColors.white },
   subtitle: { fontSize: 12, color: "rgba(255,255,255,0.55)", marginTop: 2 },
   progressRow: { flexDirection: "row", alignItems: "center", marginTop: 14, paddingHorizontal: 20 },
   progressDot: { width: 8, height: 8, borderRadius: 4, backgroundColor: "rgba(255,255,255,0.25)" },
-  progressDotActive: { backgroundColor: "#f59e0b", width: 10, height: 10, borderRadius: 5 },
+  progressDotActive: { backgroundColor: SharedColors.amber, width: 10, height: 10, borderRadius: 5 },
   progressDotDone: { backgroundColor: "rgba(255,255,255,0.8)" },
   progressLine: { flex: 1, height: 2, backgroundColor: "rgba(255,255,255,0.15)", marginHorizontal: 6 },
   progressLineDone: { backgroundColor: "rgba(255,255,255,0.5)" },
 
   content: { padding: 24, gap: 28, paddingBottom: 60 },
   section: { gap: 10 },
-  label: { fontSize: 11, fontWeight: "600", color: T.slate, letterSpacing: 0.8 },
-  hint: { fontSize: 12, color: T.slateLight, marginTop: -4 },
+  label: { fontSize: 11, fontWeight: "600", color: SharedColors.slate, letterSpacing: 0.8 },
+  hint: { fontSize: 12, color: SharedColors.slateLight, marginTop: -4 },
   tagWrap: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
   tag: {
     paddingHorizontal: 14,
     paddingVertical: 9,
     borderRadius: 20,
     borderWidth: 1.5,
-    borderColor: T.border,
-    backgroundColor: T.white,
+    borderColor: SharedColors.border,
+    backgroundColor: SharedColors.white,
   },
-  tagSelected: { borderColor: T.tealMid, backgroundColor: T.tealLight },
-  tagText: { fontSize: 13, color: T.slate, fontWeight: "400" },
-  tagTextSelected: { color: T.teal, fontWeight: "600" },
+  tagSelected: { borderColor: PatientTheme.primaryMid, backgroundColor: PatientTheme.primaryLight },
+  tagText: { fontSize: 13, color: SharedColors.slate, fontWeight: "400" },
+  tagTextSelected: { color: PatientTheme.primary, fontWeight: "600" },
 
   customTagsWrap: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
   customTag: {
@@ -282,11 +271,11 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     borderRadius: 20,
     borderWidth: 1.5,
-    borderColor: T.tealMid,
-    backgroundColor: T.tealLight,
+    borderColor: PatientTheme.primaryMid,
+    backgroundColor: PatientTheme.primaryLight,
   },
-  customTagText: { fontSize: 13, color: T.teal, fontWeight: "600" },
-  customTagRemove: { fontSize: 12, color: T.teal, fontWeight: "700", padding: 2 },
+  customTagText: { fontSize: 13, color: PatientTheme.primary, fontWeight: "600" },
+  customTagRemove: { fontSize: 12, color: PatientTheme.primary, fontWeight: "700", padding: 2 },
 
   addBtn: {
     flexDirection: "row",
@@ -295,32 +284,32 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     paddingHorizontal: 14,
     borderWidth: 1.5,
-    borderColor: T.border,
+    borderColor: SharedColors.border,
     borderRadius: 20,
     borderStyle: "dashed",
     alignSelf: "flex-start",
   },
-  addBtnPlus: { fontSize: 18, color: T.tealMid, fontWeight: "600" },
-  addBtnText: { fontSize: 13, color: T.slate },
+  addBtnPlus: { fontSize: 18, color: PatientTheme.primaryMid, fontWeight: "600" },
+  addBtnText: { fontSize: 13, color: SharedColors.slate },
   addInputRow: { flexDirection: "row", alignItems: "center", gap: 8 },
   addInput: {
     flex: 1,
     borderWidth: 1.5,
-    borderColor: T.tealMid,
-    backgroundColor: T.white,
+    borderColor: PatientTheme.primaryMid,
+    backgroundColor: SharedColors.white,
     borderRadius: 12,
     paddingHorizontal: 14,
     paddingVertical: 11,
     fontSize: 14,
-    color: T.navy,
+    color: SharedColors.navy,
   },
   addConfirmBtn: {
-    backgroundColor: T.teal,
+    backgroundColor: PatientTheme.primary,
     borderRadius: 10,
     paddingHorizontal: 16,
     paddingVertical: 11,
   },
-  addConfirmText: { color: T.white, fontSize: 13, fontWeight: "600" },
+  addConfirmText: { color: SharedColors.white, fontSize: 13, fontWeight: "600" },
   addCancelBtn: {
     width: 36,
     height: 36,
@@ -329,34 +318,34 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
-  addCancelText: { color: T.slate, fontSize: 14, fontWeight: "600" },
+  addCancelText: { color: SharedColors.slate, fontSize: 14, fontWeight: "600" },
 
   infoCard: {
     flexDirection: "row",
     gap: 14,
-    backgroundColor: T.tealLight,
+    backgroundColor: PatientTheme.primaryLight,
     borderRadius: 14,
     padding: 16,
     borderWidth: 1,
     borderColor: "rgba(74,0,128,0.15)",
   },
   infoIcon: { fontSize: 24, marginTop: 2 },
-  infoTitle: { fontSize: 14, fontWeight: "600", color: T.teal, marginBottom: 4 },
+  infoTitle: { fontSize: 14, fontWeight: "600", color: PatientTheme.primary, marginBottom: 4 },
   infoDesc: { fontSize: 12, color: "#0f5c53", lineHeight: 18 },
 
   bottomBar: {
     paddingHorizontal: 24,
     paddingVertical: 16,
     borderTopWidth: 1,
-    borderTopColor: T.border,
-    backgroundColor: T.white,
+    borderTopColor: SharedColors.border,
+    backgroundColor: SharedColors.white,
   },
   nextBtn: {
-    backgroundColor: T.teal,
+    backgroundColor: PatientTheme.primary,
     borderRadius: 14,
     paddingVertical: 15,
     alignItems: "center",
     minHeight: 52,
   },
-  nextBtnText: { color: T.white, fontSize: 15, fontWeight: "600" },
+  nextBtnText: { color: SharedColors.white, fontSize: 15, fontWeight: "600" },
 });

@@ -15,13 +15,7 @@ import {
 import { resetNavigationHistory } from "../../lib/navigationHistory";
 import { store } from "../../lib/store";
 
-const T = {
-  teal: "#4A0080", tealMid: "#5C10A0", tealLight: "#f0e6f6",
-  navy: "#0f172a", slate: "#64748b", slateLight: "#94a3b8",
-  border: "#e2e8f0", bg: "#f8fafc", white: "#fff",
-  red: "#ef4444", redLight: "#fef2f2",
-};
-
+import { PatientTheme, SharedColors } from "../../constants/theme";
 export default function PatientProfileScreen() {
   const [profile, setProfile] = useState<any>(null);
   const [medical, setMedical] = useState<any>(null);
@@ -133,7 +127,7 @@ export default function PatientProfileScreen() {
   return (
     <View style={s.container}>
       <LinearGradient
-        colors={["#3D0070", "#2F0058", "#220040"]}
+        colors={[...PatientTheme.gradient]}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
         style={s.header}
@@ -236,7 +230,7 @@ export default function PatientProfileScreen() {
             <Text style={s.menuArrow}>›</Text>
           </TouchableOpacity>
           <TouchableOpacity
-            style={[s.menuItem, { borderColor: T.redLight }]}
+            style={[s.menuItem, { borderColor: SharedColors.redLight }]}
             onPress={() => {
               Alert.alert("Log Out", "Are you sure?", [
                 { text: "Cancel", style: "cancel" },
@@ -249,8 +243,8 @@ export default function PatientProfileScreen() {
             }}
           >
             <Text style={s.menuIcon}>🚪</Text>
-            <Text style={[s.menuText, { color: T.red }]}>Log Out</Text>
-            <Text style={[s.menuArrow, { color: T.red }]}>›</Text>
+            <Text style={[s.menuText, { color: SharedColors.red }]}>Log Out</Text>
+            <Text style={[s.menuArrow, { color: SharedColors.red }]}>›</Text>
           </TouchableOpacity>
         </View>
         <View style={{ height: 80 }} />
@@ -271,12 +265,12 @@ const iStyles = StyleSheet.create({
   row: { flexDirection: "row", alignItems: "center", gap: 10, paddingVertical: 12 },
   rowBorder: { borderBottomWidth: 1, borderBottomColor: "#f1f5f9" },
   icon: { fontSize: 16, width: 24, textAlign: "center" },
-  label: { fontSize: 13, color: T.slate, width: 90 },
-  value: { flex: 1, fontSize: 13, fontWeight: "600", color: T.navy, textAlign: "right" },
+  label: { fontSize: 13, color: SharedColors.slate, width: 90 },
+  value: { flex: 1, fontSize: 13, fontWeight: "600", color: SharedColors.navy, textAlign: "right" },
 });
 
 const s = StyleSheet.create({
-  container: { flex: 1, backgroundColor: T.bg },
+  container: { flex: 1, backgroundColor: SharedColors.bg },
   header: {
     paddingHorizontal: 24, paddingTop: 60, paddingBottom: 16,
     flexDirection: "row", alignItems: "center", gap: 16,
@@ -287,8 +281,8 @@ const s = StyleSheet.create({
     borderWidth: 1, borderColor: "rgba(255,255,255,0.15)",
     alignItems: "center", justifyContent: "center",
   },
-  backArrow: { fontSize: 24, color: "#fff", fontWeight: "600", marginTop: -2 },
-  headerTitle: { fontSize: 18, fontWeight: "700", color: T.white },
+  backArrow: { fontSize: 24, color: SharedColors.white, fontWeight: "600", marginTop: -2 },
+  headerTitle: { fontSize: 18, fontWeight: "700", color: SharedColors.white },
 
   content: { padding: 20, gap: 20, paddingBottom: 40 },
 
@@ -299,51 +293,51 @@ const s = StyleSheet.create({
     marginBottom: 4,
   },
   avatar: {
-    width: 88, height: 88, borderRadius: 44, backgroundColor: T.teal,
+    width: 88, height: 88, borderRadius: 44, backgroundColor: PatientTheme.primary,
     alignItems: "center", justifyContent: "center",
   },
   avatarImage: {
     width: 88, height: 88, borderRadius: 44,
   },
-  avatarText: { color: T.white, fontSize: 32, fontWeight: "700" },
+  avatarText: { color: SharedColors.white, fontSize: 32, fontWeight: "700" },
   cameraBadge: {
     position: "absolute", bottom: 0, right: -2,
     width: 30, height: 30, borderRadius: 15,
-    backgroundColor: T.white,
-    borderWidth: 2, borderColor: T.bg,
+    backgroundColor: SharedColors.white,
+    borderWidth: 2, borderColor: SharedColors.bg,
     alignItems: "center", justifyContent: "center",
   },
   cameraIcon: { fontSize: 14 },
-  name: { fontSize: 22, fontWeight: "700", color: T.navy },
-  email: { fontSize: 13, color: T.slate },
+  name: { fontSize: 22, fontWeight: "700", color: SharedColors.navy },
+  email: { fontSize: 13, color: SharedColors.slate },
 
   // Stats
   statsRow: { flexDirection: "row", gap: 10 },
   statCard: {
-    flex: 1, backgroundColor: T.white, borderRadius: 14, padding: 16,
-    alignItems: "center", borderWidth: 1, borderColor: T.border,
+    flex: 1, backgroundColor: SharedColors.white, borderRadius: 14, padding: 16,
+    alignItems: "center", borderWidth: 1, borderColor: SharedColors.border,
   },
-  statNum: { fontSize: 24, fontWeight: "800", color: T.teal },
-  statLabel: { fontSize: 11, color: T.slate, marginTop: 2 },
+  statNum: { fontSize: 24, fontWeight: "800", color: PatientTheme.primary },
+  statLabel: { fontSize: 11, color: SharedColors.slate, marginTop: 2 },
 
   // Section
   section: { gap: 8 },
   sectionHeader: { flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
-  sectionTitle: { fontSize: 14, fontWeight: "700", color: T.navy, marginBottom: 2 },
-  editBtn: { backgroundColor: T.tealLight, borderRadius: 8, paddingHorizontal: 12, paddingVertical: 5 },
-  editBtnText: { fontSize: 12, fontWeight: "600", color: T.teal },
+  sectionTitle: { fontSize: 14, fontWeight: "700", color: SharedColors.navy, marginBottom: 2 },
+  editBtn: { backgroundColor: PatientTheme.primaryLight, borderRadius: 8, paddingHorizontal: 12, paddingVertical: 5 },
+  editBtnText: { fontSize: 12, fontWeight: "600", color: PatientTheme.primary },
   card: {
-    backgroundColor: T.white, borderRadius: 14, paddingHorizontal: 16,
-    borderWidth: 1, borderColor: T.border,
+    backgroundColor: SharedColors.white, borderRadius: 14, paddingHorizontal: 16,
+    borderWidth: 1, borderColor: SharedColors.border,
   },
 
   // Menu items
   menuItem: {
     flexDirection: "row", alignItems: "center", gap: 12,
-    backgroundColor: T.white, borderRadius: 14, padding: 16,
-    borderWidth: 1, borderColor: T.border,
+    backgroundColor: SharedColors.white, borderRadius: 14, padding: 16,
+    borderWidth: 1, borderColor: SharedColors.border,
   },
   menuIcon: { fontSize: 18 },
-  menuText: { flex: 1, fontSize: 14, fontWeight: "600", color: T.navy },
-  menuArrow: { fontSize: 20, color: T.slateLight },
+  menuText: { flex: 1, fontSize: 14, fontWeight: "600", color: SharedColors.navy },
+  menuArrow: { fontSize: 20, color: SharedColors.slateLight },
 });

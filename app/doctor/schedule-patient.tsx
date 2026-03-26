@@ -14,20 +14,9 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { setDoctorTabSwipeBlocked } from "../../lib/doctorTabSwipeGuard";
 import { store } from "../../lib/store";
 
+import { DoctorTheme, SharedColors } from "../../constants/theme";
 /* ── colours ── */
-const T = {
-  teal: "#0f766e",
-  tealDark: "#134e4a",
-  tealSoft: "rgba(15,118,110,0.08)",
-  bg: "#f8fafc",
-  white: "#fff",
-  text: "#0f172a",
-  textSec: "#64748b",
-  textMuted: "#94a3b8",
-  border: "#e2e8f0",
-  redSoft: "#fff1f2",
-  redText: "#be123c",
-};
+
 
 /* ── constants ── */
 const WEEKDAY_KEYS = ["mon", "tue", "wed", "thu", "fri", "sat", "sun"] as const;
@@ -559,7 +548,7 @@ export default function SchedulePatientScreen() {
   /* ── render ── */
   return (
     <View style={s.container}>
-      <LinearGradient colors={[T.teal, T.tealDark]} style={s.header}>
+      <LinearGradient colors={[DoctorTheme.primary, DoctorTheme.primaryDark]} style={s.header}>
         <Text style={s.title}>Opening Hours</Text>
         <Text style={s.subtitle}>Set your clinic's weekly schedule</Text>
       </LinearGradient>
@@ -802,12 +791,12 @@ export default function SchedulePatientScreen() {
             </View>
             <View style={s.ovFooter}>
               <View style={s.ovLegendItem}>
-                <View style={[s.ovLegendDot, { backgroundColor: T.teal }]} />
+                <View style={[s.ovLegendDot, { backgroundColor: DoctorTheme.primary }]} />
                 <Text style={s.ovLegendText}>{openDays.length} days open</Text>
               </View>
               {WEEKDAY_KEYS.some((k) => activeHours[k].lunch) && (
                 <View style={s.ovLegendItem}>
-                  <View style={[s.ovLegendDot, { backgroundColor: "#f59e0b" }]} />
+                  <View style={[s.ovLegendDot, { backgroundColor: SharedColors.amber }]} />
                   <Text style={s.ovLegendText}>Lunch break</Text>
                 </View>
               )}
@@ -829,7 +818,7 @@ export default function SchedulePatientScreen() {
           disabled={!isDirty || saving}
           activeOpacity={0.85}
         >
-          {saving ? <ActivityIndicator color={T.white} size="small" /> : <Text style={s.saveBtnText}>Save Opening Hours</Text>}
+          {saving ? <ActivityIndicator color={SharedColors.white} size="small" /> : <Text style={s.saveBtnText}>Save Opening Hours</Text>}
         </TouchableOpacity>
       </View>
 
@@ -877,31 +866,31 @@ export default function SchedulePatientScreen() {
 
 /* ================================================================ */
 const s = StyleSheet.create({
-  container: { flex: 1, backgroundColor: T.bg },
+  container: { flex: 1, backgroundColor: SharedColors.bg },
   header: { paddingHorizontal: 24, paddingTop: 60, paddingBottom: 18 },
-  title: { fontSize: 28, fontWeight: "700", color: T.white },
+  title: { fontSize: 28, fontWeight: "700", color: SharedColors.white },
   subtitle: { fontSize: 14, color: "rgba(255,255,255,0.7)", marginTop: 4 },
   content: { paddingHorizontal: 14, paddingTop: 16, gap: 24 },
   section: { gap: 12 },
-  sectionTitle: { fontSize: 20, fontWeight: "800", color: T.text },
-  sectionHint: { fontSize: 14, color: T.textSec, lineHeight: 20 },
+  sectionTitle: { fontSize: 20, fontWeight: "800", color: SharedColors.navy },
+  sectionHint: { fontSize: 14, color: SharedColors.navySec, lineHeight: 20 },
 
   /* Calendar */
   calCard: {
-    backgroundColor: T.white,
+    backgroundColor: SharedColors.white,
     borderRadius: 16,
     borderWidth: 1,
-    borderColor: T.border,
+    borderColor: SharedColors.border,
     padding: 14,
     gap: 10,
   },
   calNav: { flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
   calNavBtn: { width: 34, height: 34, borderRadius: 10, alignItems: "center", justifyContent: "center" },
-  calNavArrow: { fontSize: 24, fontWeight: "600", color: T.text },
-  calMonthTitle: { fontSize: 17, fontWeight: "700", color: T.text },
+  calNavArrow: { fontSize: 24, fontWeight: "600", color: SharedColors.navy },
+  calMonthTitle: { fontSize: 17, fontWeight: "700", color: SharedColors.navy },
   calWeekRow: { flexDirection: "row", marginBottom: 2 },
   calWeekCell: { flex: 1, alignItems: "center" },
-  calWeekText: { fontSize: 11, fontWeight: "700", color: T.textMuted },
+  calWeekText: { fontSize: 11, fontWeight: "700", color: SharedColors.navyMuted },
   calGrid: { flexDirection: "row", flexWrap: "wrap" },
   calDayCell: {
     width: "14.28%",
@@ -921,18 +910,18 @@ const s = StyleSheet.create({
   calWeekBandEnd: { borderTopRightRadius: 10, borderBottomRightRadius: 10 },
   calDayInner: { alignItems: "center", justifyContent: "center", width: 34, height: 34, borderRadius: 17 },
   calDayOther: { opacity: 0.35 },
-  calDayToday: { borderWidth: 1.5, borderColor: T.teal },
-  calDayText: { fontSize: 14, fontWeight: "600", color: T.text },
-  calDayTextOther: { color: T.textMuted },
-  calDayTextSelected: { color: T.teal, fontWeight: "800" },
-  calDayTextToday: { color: T.teal, fontWeight: "700" },
-  calDayOpen: { backgroundColor: "#16a34a" },
-  calDayTextOpen: { color: "#fff", fontWeight: "800" },
+  calDayToday: { borderWidth: 1.5, borderColor: DoctorTheme.primary },
+  calDayText: { fontSize: 14, fontWeight: "600", color: SharedColors.navy },
+  calDayTextOther: { color: SharedColors.navyMuted },
+  calDayTextSelected: { color: DoctorTheme.primary, fontWeight: "800" },
+  calDayTextToday: { color: DoctorTheme.primary, fontWeight: "700" },
+  calDayOpen: { backgroundColor: SharedColors.green },
+  calDayTextOpen: { color: SharedColors.white, fontWeight: "800" },
   calSelectedBar: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    backgroundColor: T.tealSoft,
+    backgroundColor: DoctorTheme.primaryLight,
     borderRadius: 10,
     paddingHorizontal: 12,
     paddingVertical: 8,
@@ -940,17 +929,17 @@ const s = StyleSheet.create({
     borderColor: "rgba(15,118,110,0.15)",
   },
   calSelectedInfo: { flexDirection: "row", alignItems: "center", gap: 8 },
-  calSelectedDot: { width: 8, height: 8, borderRadius: 4, backgroundColor: T.teal },
-  calSelectedText: { fontSize: 13, fontWeight: "700", color: T.teal },
+  calSelectedDot: { width: 8, height: 8, borderRadius: 4, backgroundColor: DoctorTheme.primary },
+  calSelectedText: { fontSize: 13, fontWeight: "700", color: DoctorTheme.primary },
   calResetBtn: {
-    backgroundColor: T.white,
+    backgroundColor: SharedColors.white,
     borderRadius: 8,
     paddingHorizontal: 10,
     paddingVertical: 5,
     borderWidth: 1,
-    borderColor: T.border,
+    borderColor: SharedColors.border,
   },
-  calResetText: { fontSize: 12, fontWeight: "700", color: T.redText },
+  calResetText: { fontSize: 12, fontWeight: "700", color: SharedColors.coral },
 
   /* Month toggle button */
   monthToggleBtn: {
@@ -958,121 +947,121 @@ const s = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     gap: 6,
-    backgroundColor: T.tealSoft,
+    backgroundColor: DoctorTheme.primaryLight,
     borderRadius: 10,
     paddingVertical: 10,
     borderWidth: 1,
     borderColor: "rgba(15,118,110,0.15)",
   },
   monthToggleBtnActive: {
-    backgroundColor: T.redSoft,
+    backgroundColor: SharedColors.coralLight,
     borderColor: "rgba(190,18,60,0.12)",
   },
-  monthToggleIcon: { fontSize: 14, fontWeight: "800", color: T.teal },
-  monthToggleIconActive: { color: T.redText },
-  monthToggleText: { fontSize: 13, fontWeight: "700", color: T.teal },
-  monthToggleTextActive: { color: T.redText },
+  monthToggleIcon: { fontSize: 14, fontWeight: "800", color: DoctorTheme.primary },
+  monthToggleIconActive: { color: SharedColors.coral },
+  monthToggleText: { fontSize: 13, fontWeight: "700", color: DoctorTheme.primary },
+  monthToggleTextActive: { color: SharedColors.coral },
 
   /* Schedule section header */
   scheduleHeader: { flexDirection: "row", alignItems: "center", gap: 10, flexWrap: "wrap" },
   weekBadge: {
-    backgroundColor: T.tealSoft,
+    backgroundColor: DoctorTheme.primaryLight,
     borderRadius: 8,
     paddingHorizontal: 10,
     paddingVertical: 4,
     borderWidth: 1,
     borderColor: "rgba(15,118,110,0.15)",
   },
-  weekBadgeText: { fontSize: 12, fontWeight: "700", color: T.teal },
+  weekBadgeText: { fontSize: 12, fontWeight: "700", color: DoctorTheme.primary },
 
   /* Day cards */
   daysList: { gap: 8 },
-  dayCard: { backgroundColor: T.white, borderRadius: 16, borderWidth: 1, borderColor: T.border, paddingHorizontal: 16, paddingVertical: 14, gap: 14 },
+  dayCard: { backgroundColor: SharedColors.white, borderRadius: 16, borderWidth: 1, borderColor: SharedColors.border, paddingHorizontal: 16, paddingVertical: 14, gap: 14 },
   dayCardClosed: { backgroundColor: "#fafbfc", paddingVertical: 12 },
   dayHeader: { flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
   dayNameWrap: { flexDirection: "row", alignItems: "center", gap: 10 },
   dayDot: { width: 8, height: 8, borderRadius: 4 },
-  dayDotOpen: { backgroundColor: T.teal },
+  dayDotOpen: { backgroundColor: DoctorTheme.primary },
   dayDotClosed: { backgroundColor: "#d1d5db" },
-  dayLabel: { fontSize: 16, fontWeight: "700", color: T.text, letterSpacing: 0.5 },
-  dayLabelClosed: { color: T.textMuted },
-  closedTag: { fontSize: 12, fontWeight: "600", color: T.textMuted, marginLeft: 4 },
+  dayLabel: { fontSize: 16, fontWeight: "700", color: SharedColors.navy, letterSpacing: 0.5 },
+  dayLabelClosed: { color: SharedColors.navyMuted },
+  closedTag: { fontSize: 12, fontWeight: "600", color: SharedColors.navyMuted, marginLeft: 4 },
   dayActions: { flexDirection: "row", alignItems: "center", gap: 10 },
   copyBtn: { width: 30, height: 30, borderRadius: 8, backgroundColor: "rgba(15,118,110,0.06)", alignItems: "center", justifyContent: "center" },
-  copyBtnIcon: { fontSize: 16, color: T.teal, fontWeight: "600" },
-  togglePill: { width: 44, height: 26, borderRadius: 13, backgroundColor: "#e2e8f0", justifyContent: "center", paddingHorizontal: 3 },
-  togglePillOn: { backgroundColor: T.teal },
-  toggleDot: { width: 20, height: 20, borderRadius: 10, backgroundColor: T.white, shadowColor: "#000", shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.15, shadowRadius: 2, elevation: 2 },
+  copyBtnIcon: { fontSize: 16, color: DoctorTheme.primary, fontWeight: "600" },
+  togglePill: { width: 44, height: 26, borderRadius: 13, backgroundColor: SharedColors.border, justifyContent: "center", paddingHorizontal: 3 },
+  togglePillOn: { backgroundColor: DoctorTheme.primary },
+  toggleDot: { width: 20, height: 20, borderRadius: 10, backgroundColor: SharedColors.white, shadowColor: "#000", shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.15, shadowRadius: 2, elevation: 2 },
   toggleDotOn: { alignSelf: "flex-end" },
 
   /* Time bar */
   timeBar: { flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 2, backgroundColor: "#f4f7fa", borderRadius: 12, paddingVertical: 10, paddingHorizontal: 6 },
   arrowBtn: { width: 28, height: 28, borderRadius: 8, alignItems: "center", justifyContent: "center" },
-  arrowText: { fontSize: 22, fontWeight: "600", color: T.teal, marginTop: -1 },
-  timePill: { backgroundColor: T.white, borderRadius: 8, paddingHorizontal: 12, paddingVertical: 6, borderWidth: 1, borderColor: "rgba(15,118,110,0.15)", minWidth: 68, alignItems: "center" },
-  timePillText: { fontSize: 16, fontWeight: "700", color: T.text, letterSpacing: 0.5 },
+  arrowText: { fontSize: 22, fontWeight: "600", color: DoctorTheme.primary, marginTop: -1 },
+  timePill: { backgroundColor: SharedColors.white, borderRadius: 8, paddingHorizontal: 12, paddingVertical: 6, borderWidth: 1, borderColor: "rgba(15,118,110,0.15)", minWidth: 68, alignItems: "center" },
+  timePillText: { fontSize: 16, fontWeight: "700", color: SharedColors.navy, letterSpacing: 0.5 },
   timeLine: { width: 20, height: 2, backgroundColor: "#cbd5e1", borderRadius: 1, marginHorizontal: 4 },
 
   /* Lunch */
   lunchSection: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", borderTopWidth: 1, borderTopColor: "#f1f5f9", paddingTop: 12, flexWrap: "wrap", gap: 8 },
   lunchToggle: { flexDirection: "row", alignItems: "center", gap: 8 },
-  lunchCheck: { width: 20, height: 20, borderRadius: 5, borderWidth: 1.5, borderColor: "#cbd5e1", backgroundColor: T.white, alignItems: "center", justifyContent: "center" },
-  lunchCheckOn: { backgroundColor: T.teal, borderColor: T.teal },
-  lunchCheckIcon: { color: T.white, fontSize: 12, fontWeight: "800" },
-  lunchLabel: { fontSize: 13, fontWeight: "600", color: T.textMuted },
-  lunchLabelOn: { color: T.text },
+  lunchCheck: { width: 20, height: 20, borderRadius: 5, borderWidth: 1.5, borderColor: "#cbd5e1", backgroundColor: SharedColors.white, alignItems: "center", justifyContent: "center" },
+  lunchCheckOn: { backgroundColor: DoctorTheme.primary, borderColor: DoctorTheme.primary },
+  lunchCheckIcon: { color: SharedColors.white, fontSize: 12, fontWeight: "800" },
+  lunchLabel: { fontSize: 13, fontWeight: "600", color: SharedColors.navyMuted },
+  lunchLabelOn: { color: SharedColors.navy },
   lunchTimeRow: { flexDirection: "row", alignItems: "center", gap: 2 },
   arrowBtnSm: { width: 22, height: 22, borderRadius: 6, alignItems: "center", justifyContent: "center" },
-  arrowSmText: { fontSize: 18, fontWeight: "600", color: T.teal, marginTop: -1 },
-  lunchTimeText: { fontSize: 13, fontWeight: "700", color: T.text, backgroundColor: "#f4f7fa", borderRadius: 6, paddingHorizontal: 8, paddingVertical: 3, overflow: "hidden", minWidth: 50, textAlign: "center" },
+  arrowSmText: { fontSize: 18, fontWeight: "600", color: DoctorTheme.primary, marginTop: -1 },
+  lunchTimeText: { fontSize: 13, fontWeight: "700", color: SharedColors.navy, backgroundColor: "#f4f7fa", borderRadius: 6, paddingHorizontal: 8, paddingVertical: 3, overflow: "hidden", minWidth: 50, textAlign: "center" },
   lunchTimeSep: { fontSize: 13, color: "#cbd5e1", fontWeight: "700", marginHorizontal: 2 },
 
   /* Weekly Overview */
-  ovCard: { backgroundColor: T.white, borderRadius: 16, borderWidth: 1, borderColor: T.border, paddingTop: 14, paddingBottom: 0, overflow: "hidden" },
+  ovCard: { backgroundColor: SharedColors.white, borderRadius: 16, borderWidth: 1, borderColor: SharedColors.border, paddingTop: 14, paddingBottom: 0, overflow: "hidden" },
   ovGrid: { flexDirection: "row", paddingHorizontal: 4 },
   ovCol: { flex: 1, alignItems: "center", gap: 6, paddingHorizontal: 1 },
-  ovDayLabel: { fontSize: 10, fontWeight: "700", color: T.textMuted, letterSpacing: 0.2 },
-  ovDayLabelOn: { color: T.teal },
+  ovDayLabel: { fontSize: 10, fontWeight: "700", color: SharedColors.navyMuted, letterSpacing: 0.2 },
+  ovDayLabelOn: { color: DoctorTheme.primary },
   ovBar: { width: 4, height: 28, borderRadius: 2 },
-  ovBarOpen: { backgroundColor: T.teal },
+  ovBarOpen: { backgroundColor: DoctorTheme.primary },
   ovBarOff: { backgroundColor: "#e5e7eb" },
   ovInfo: { alignItems: "center", gap: 1, minHeight: 32 },
-  ovTime: { fontSize: 9, fontWeight: "700", color: T.text, letterSpacing: 0.1 },
-  ovLunchDot: { width: 5, height: 5, borderRadius: 3, backgroundColor: "#f59e0b", marginTop: 3 },
+  ovTime: { fontSize: 9, fontWeight: "700", color: SharedColors.navy, letterSpacing: 0.1 },
+  ovLunchDot: { width: 5, height: 5, borderRadius: 3, backgroundColor: SharedColors.amber, marginTop: 3 },
   ovLunchDotEmpty: { width: 5, height: 5, marginTop: 3 },
   ovOff: { fontSize: 12, fontWeight: "600", color: "#d1d5db", marginTop: 4 },
   ovFooter: { flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 16, paddingVertical: 10, marginTop: 12, backgroundColor: "#f8fafb", borderTopWidth: 1, borderTopColor: "#f1f5f9" },
   ovLegendItem: { flexDirection: "row", alignItems: "center", gap: 5 },
   ovLegendDot: { width: 6, height: 6, borderRadius: 3 },
-  ovLegendText: { fontSize: 11, fontWeight: "600", color: T.textSec },
+  ovLegendText: { fontSize: 11, fontWeight: "600", color: SharedColors.navySec },
 
   /* Bottom bar */
-  bottomBar: { position: "absolute", left: 0, right: 0, paddingHorizontal: 24, paddingTop: 10, paddingBottom: 16, borderTopWidth: 1, borderTopColor: T.border, backgroundColor: T.white, gap: 8, zIndex: 20, elevation: 10 },
-  bottomMeta: { fontSize: 13, color: T.textSec, fontWeight: "600" },
-  saveBtn: { backgroundColor: T.teal, borderRadius: 14, paddingVertical: 15, alignItems: "center", minHeight: 52 },
+  bottomBar: { position: "absolute", left: 0, right: 0, paddingHorizontal: 24, paddingTop: 10, paddingBottom: 16, borderTopWidth: 1, borderTopColor: SharedColors.border, backgroundColor: SharedColors.white, gap: 8, zIndex: 20, elevation: 10 },
+  bottomMeta: { fontSize: 13, color: SharedColors.navySec, fontWeight: "600" },
+  saveBtn: { backgroundColor: DoctorTheme.primary, borderRadius: 14, paddingVertical: 15, alignItems: "center", minHeight: 52 },
   saveBtnDisabled: { opacity: 0.45 },
-  saveBtnText: { fontSize: 17, fontWeight: "700", color: T.white },
+  saveBtnText: { fontSize: 17, fontWeight: "700", color: SharedColors.white },
 
   /* Copy Modal */
   overlay: { flex: 1, backgroundColor: "rgba(0,0,0,0.45)", justifyContent: "flex-end" },
-  sheet: { backgroundColor: T.white, borderTopLeftRadius: 24, borderTopRightRadius: 24, paddingBottom: 32 },
-  sheetHandle: { width: 40, height: 4, borderRadius: 2, backgroundColor: "#e2e8f0", alignSelf: "center", marginTop: 10, marginBottom: 4 },
+  sheet: { backgroundColor: SharedColors.white, borderTopLeftRadius: 24, borderTopRightRadius: 24, paddingBottom: 32 },
+  sheetHandle: { width: 40, height: 4, borderRadius: 2, backgroundColor: SharedColors.border, alignSelf: "center", marginTop: 10, marginBottom: 4 },
   sheetHeader: { flexDirection: "row", justifyContent: "space-between", alignItems: "flex-start", paddingHorizontal: 24, paddingTop: 14, paddingBottom: 10 },
-  sheetTitle: { fontSize: 18, fontWeight: "800", color: T.text },
-  sheetSub: { fontSize: 13, color: T.textSec, marginTop: 2 },
+  sheetTitle: { fontSize: 18, fontWeight: "800", color: SharedColors.navy },
+  sheetSub: { fontSize: 13, color: SharedColors.navySec, marginTop: 2 },
   sheetClose: { width: 32, height: 32, borderRadius: 16, backgroundColor: "#f1f5f9", alignItems: "center", justifyContent: "center" },
-  sheetCloseText: { fontSize: 14, color: T.textSec, fontWeight: "700" },
-  selectAllBtn: { alignSelf: "flex-start", marginLeft: 24, marginBottom: 10, backgroundColor: T.tealSoft, borderRadius: 10, paddingHorizontal: 14, paddingVertical: 7, borderWidth: 1, borderColor: "rgba(15,118,110,0.25)" },
-  selectAllText: { fontSize: 13, fontWeight: "700", color: T.teal },
+  sheetCloseText: { fontSize: 14, color: SharedColors.navySec, fontWeight: "700" },
+  selectAllBtn: { alignSelf: "flex-start", marginLeft: 24, marginBottom: 10, backgroundColor: DoctorTheme.primaryLight, borderRadius: 10, paddingHorizontal: 14, paddingVertical: 7, borderWidth: 1, borderColor: "rgba(15,118,110,0.25)" },
+  selectAllText: { fontSize: 13, fontWeight: "700", color: DoctorTheme.primary },
   copyTargets: { paddingHorizontal: 24, gap: 6 },
   copyTarget: { flexDirection: "row", alignItems: "center", gap: 12, paddingVertical: 12, paddingHorizontal: 14, borderRadius: 12, borderWidth: 1, borderColor: "transparent" },
-  copyTargetChecked: { backgroundColor: T.tealSoft, borderColor: "rgba(15,118,110,0.2)" },
-  checkbox: { width: 24, height: 24, borderRadius: 7, borderWidth: 2, borderColor: T.border, backgroundColor: T.white, alignItems: "center", justifyContent: "center" },
-  checkboxOn: { backgroundColor: T.teal, borderColor: T.teal },
-  checkboxMark: { color: T.white, fontSize: 14, fontWeight: "800" },
-  copyTargetLabel: { fontSize: 16, fontWeight: "600", color: T.text },
-  copyTargetLabelChecked: { color: T.teal, fontWeight: "700" },
-  sheetFooter: { paddingHorizontal: 24, paddingTop: 16, borderTopWidth: 1, borderTopColor: T.border, marginTop: 12 },
-  applyBtn: { backgroundColor: T.teal, borderRadius: 14, paddingVertical: 14, alignItems: "center" },
-  applyBtnText: { fontSize: 16, fontWeight: "700", color: T.white },
+  copyTargetChecked: { backgroundColor: DoctorTheme.primaryLight, borderColor: "rgba(15,118,110,0.2)" },
+  checkbox: { width: 24, height: 24, borderRadius: 7, borderWidth: 2, borderColor: SharedColors.border, backgroundColor: SharedColors.white, alignItems: "center", justifyContent: "center" },
+  checkboxOn: { backgroundColor: DoctorTheme.primary, borderColor: DoctorTheme.primary },
+  checkboxMark: { color: SharedColors.white, fontSize: 14, fontWeight: "800" },
+  copyTargetLabel: { fontSize: 16, fontWeight: "600", color: SharedColors.navy },
+  copyTargetLabelChecked: { color: DoctorTheme.primary, fontWeight: "700" },
+  sheetFooter: { paddingHorizontal: 24, paddingTop: 16, borderTopWidth: 1, borderTopColor: SharedColors.border, marginTop: 12 },
+  applyBtn: { backgroundColor: DoctorTheme.primary, borderRadius: 14, paddingVertical: 14, alignItems: "center" },
+  applyBtnText: { fontSize: 16, fontWeight: "700", color: SharedColors.white },
 });

@@ -11,19 +11,7 @@ import {
   View,
 } from "react-native";
 
-const T = {
-  purple: "#4A0080",
-  purpleMid: "#5C10A0",
-  purpleLight: "#f0e6f6",
-  navy: "#0f172a",
-  slate: "#64748b",
-  slateLight: "#94a3b8",
-  border: "#e2e8f0",
-  bg: "#f8fafc",
-  white: "#ffffff",
-  green: "#16a34a",
-};
-
+import { PatientTheme, SharedColors } from "../../constants/theme";
 interface AffiliateClinic {
   id: string;
   name: string;
@@ -163,7 +151,7 @@ const renderClinic = ({ item }: { item: AffiliateClinic }) => (
 export default function AffiliateClinicsScreen() {
   return (
     <View style={s.container}>
-      <LinearGradient colors={[T.purple, T.purpleMid]} style={s.header}>
+      <LinearGradient colors={[PatientTheme.primary, PatientTheme.primaryMid]} style={s.header}>
         <View style={s.headerRow}>
           <TouchableOpacity onPress={() => router.back()} style={s.backBtn}>
             <Text style={s.backText}>{"\u2190"}</Text>
@@ -195,19 +183,19 @@ export default function AffiliateClinicsScreen() {
 }
 
 const s = StyleSheet.create({
-  container: { flex: 1, backgroundColor: T.bg },
+  container: { flex: 1, backgroundColor: SharedColors.bg },
   header: { paddingTop: 56, paddingBottom: 20, paddingHorizontal: 20 },
   headerRow: { flexDirection: "row", alignItems: "center" },
   backBtn: { width: 40, height: 40, borderRadius: 20, backgroundColor: "rgba(255,255,255,0.2)", alignItems: "center", justifyContent: "center" },
-  backText: { color: T.white, fontSize: 20 },
+  backText: { color: SharedColors.white, fontSize: 20 },
   headerCenter: { flex: 1, alignItems: "center" },
-  headerTitle: { color: T.white, fontSize: 20, fontWeight: "700" },
+  headerTitle: { color: SharedColors.white, fontSize: 20, fontWeight: "700" },
   headerSub: { color: "rgba(255,255,255,0.7)", fontSize: 13, marginTop: 2 },
 
   list: { padding: 16, paddingBottom: 100 },
 
   card: {
-    backgroundColor: T.white,
+    backgroundColor: SharedColors.white,
     borderRadius: 16,
     padding: 18,
     marginBottom: 14,
@@ -217,39 +205,39 @@ const s = StyleSheet.create({
     shadowRadius: 8,
     elevation: 3,
     borderWidth: 1,
-    borderColor: T.border,
+    borderColor: SharedColors.border,
   },
   cardHeader: { marginBottom: 12 },
-  clinicName: { fontSize: 17, fontWeight: "700", color: T.navy, marginBottom: 4 },
+  clinicName: { fontSize: 17, fontWeight: "700", color: SharedColors.navy, marginBottom: 4 },
   ratingRow: { flexDirection: "row", alignItems: "center", gap: 4 },
-  stars: { color: "#f59e0b", fontSize: 14 },
-  ratingText: { fontSize: 13, fontWeight: "600", color: T.navy },
-  reviewCount: { fontSize: 12, color: T.slate },
+  stars: { color: SharedColors.amber, fontSize: 14 },
+  ratingText: { fontSize: 13, fontWeight: "600", color: SharedColors.navy },
+  reviewCount: { fontSize: 12, color: SharedColors.slate },
 
   infoRow: { flexDirection: "row", alignItems: "center", marginBottom: 6, gap: 8 },
   infoIcon: { fontSize: 14 },
-  infoText: { fontSize: 14, color: T.slate, flex: 1 },
+  infoText: { fontSize: 14, color: SharedColors.slate, flex: 1 },
 
-  description: { fontSize: 13, color: T.slateLight, lineHeight: 18, marginTop: 8, marginBottom: 14 },
+  description: { fontSize: 13, color: SharedColors.slateLight, lineHeight: 18, marginTop: 8, marginBottom: 14 },
 
   actionRow: { flexDirection: "row", gap: 10 },
   actionBtn: {
     flex: 1,
-    backgroundColor: T.purple,
+    backgroundColor: PatientTheme.primary,
     borderRadius: 10,
     paddingVertical: 11,
     alignItems: "center",
   },
-  actionBtnText: { color: T.white, fontSize: 14, fontWeight: "600" },
+  actionBtnText: { color: SharedColors.white, fontSize: 14, fontWeight: "600" },
   actionBtnOutline: {
     backgroundColor: "transparent",
     borderWidth: 1.5,
-    borderColor: T.purple,
+    borderColor: PatientTheme.primary,
   },
-  actionBtnOutlineText: { color: T.purple },
+  actionBtnOutlineText: { color: PatientTheme.primary },
 
   empty: { alignItems: "center", paddingTop: 80 },
   emptyIcon: { fontSize: 48, marginBottom: 12 },
-  emptyTitle: { fontSize: 18, fontWeight: "700", color: T.navy },
-  emptySub: { fontSize: 14, color: T.slate, marginTop: 4 },
+  emptyTitle: { fontSize: 18, fontWeight: "700", color: SharedColors.navy },
+  emptySub: { fontSize: 14, color: SharedColors.slate, marginTop: 4 },
 });

@@ -15,14 +15,8 @@ import Animated, {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 
+import { PatientTheme, SharedColors } from "../../constants/theme";
 const { width } = Dimensions.get('window');
-
-const T = {
-  white: "#ffffff",
-  purpleDeep: "#1A002E",
-  purpleMid: "#3A0068",
-  purpleLight: "#7B2FBE",
-};
 
 // --- Animated Pressable Card Component ---
 const RoleCard = ({ 
@@ -82,7 +76,7 @@ const RoleCard = ({
           />
           
           <View style={styles.iconContainer}>
-            <Ionicons name={iconName} size={32} color={T.white} />
+            <Ionicons name={iconName} size={32} color={SharedColors.white} />
           </View>
           <View style={styles.cardTextContainer}>
             <Text style={styles.cardTitle}>{title}</Text>
@@ -121,7 +115,7 @@ export default function RoleSelectScreen() {
       
       {/* Background with multiple gradient layers for depth */}
       <LinearGradient
-        colors={[T.purpleDeep, T.purpleMid, T.purpleLight]}
+        colors={[PatientTheme.primaryDeep, PatientTheme.primaryMid, PatientTheme.primaryLight]}
         locations={[0, 0.5, 1]}
         start={{ x: 0.5, y: 1 }}
         end={{ x: 0, y: 0 }}
@@ -141,7 +135,7 @@ export default function RoleSelectScreen() {
             ]}
             hitSlop={{ top: 15, bottom: 15, left: 15, right: 15 }}
           >
-            <Ionicons name="arrow-back" size={24} color={T.white} />
+            <Ionicons name="arrow-back" size={24} color={SharedColors.white} />
           </Pressable>
         </Animated.View>
 
@@ -225,7 +219,7 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   badgeText: {
-    color: T.white,
+    color: SharedColors.white,
     fontSize: 12,
     fontWeight: '600',
     letterSpacing: 0.5,
@@ -233,7 +227,7 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 40,
     fontWeight: '800',
-    color: T.white,
+    color: SharedColors.white,
     marginBottom: 12,
     letterSpacing: -0.5,
   },
@@ -292,7 +286,7 @@ const styles = StyleSheet.create({
   cardTitle: {
     fontSize: 20,
     fontWeight: '700',
-    color: T.white,
+    color: SharedColors.white,
     marginBottom: 6,
     letterSpacing: -0.3,
   },

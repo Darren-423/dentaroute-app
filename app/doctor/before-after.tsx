@@ -17,18 +17,7 @@ import {
 } from "react-native";
 import { store } from "../../lib/store";
 
-const T = {
-  teal: "#0f766e",
-  tealLight: "#14b8a6",
-  bg: "#f8fafc",
-  white: "#fff",
-  text: "#0f172a",
-  textSec: "#64748b",
-  textMuted: "#94a3b8",
-  border: "#e2e8f0",
-  red: "#ef4444",
-};
-
+import { DoctorTheme, SharedColors } from "../../constants/theme";
 interface BAPhoto {
   before: string;
   after: string;
@@ -175,7 +164,7 @@ export default function BeforeAfterScreen() {
       </Modal>
 
       {/* Header */}
-      <LinearGradient colors={["#0f766e", "#134e4a"]} style={s.header}>
+      <LinearGradient colors={[DoctorTheme.primary, DoctorTheme.primaryDark]} style={s.header}>
         <TouchableOpacity style={s.backBtn} onPress={() => router.back()} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
           <Text style={s.backArrow}>‹</Text>
         </TouchableOpacity>
@@ -208,7 +197,7 @@ export default function BeforeAfterScreen() {
               <TextInput
                 style={s.treatmentInput}
                 placeholder="e.g. Dental Implant, Veneers..."
-                placeholderTextColor={T.textMuted}
+                placeholderTextColor={SharedColors.navyMuted}
                 value={treatmentName}
                 onChangeText={setTreatmentName}
                 autoFocus
@@ -280,7 +269,7 @@ export default function BeforeAfterScreen() {
 }
 
 const s = StyleSheet.create({
-  container: { flex: 1, backgroundColor: T.bg },
+  container: { flex: 1, backgroundColor: SharedColors.bg },
   header: {
     paddingHorizontal: 24, paddingTop: 60, paddingBottom: 20,
     flexDirection: "row", alignItems: "center", gap: 16,
@@ -291,89 +280,89 @@ const s = StyleSheet.create({
     borderWidth: 1, borderColor: "rgba(255,255,255,0.15)",
     alignItems: "center", justifyContent: "center",
   },
-  backArrow: { fontSize: 24, color: "#fff", fontWeight: "600", marginTop: -2 },
-  headerTitle: { fontSize: 20, fontWeight: "700", color: T.white },
+  backArrow: { fontSize: 24, color: SharedColors.white, fontWeight: "600", marginTop: -2 },
+  headerTitle: { fontSize: 20, fontWeight: "700", color: SharedColors.white },
   headerSubtitle: { fontSize: 12, color: "rgba(255,255,255,0.7)", marginTop: 2 },
 
   // Empty state
   empty: { alignItems: "center", justifyContent: "center", paddingHorizontal: 40, paddingTop: 80 },
   emptyIcon: { fontSize: 56, marginBottom: 16 },
-  emptyTitle: { fontSize: 18, fontWeight: "700", color: T.text, marginBottom: 8 },
-  emptyDesc: { fontSize: 14, color: T.textSec, textAlign: "center", lineHeight: 22 },
+  emptyTitle: { fontSize: 18, fontWeight: "700", color: SharedColors.navy, marginBottom: 8 },
+  emptyDesc: { fontSize: 14, color: SharedColors.navySec, textAlign: "center", lineHeight: 22 },
 
   // List
   list: { padding: 16, gap: 14 },
 
   // Pending card (inline treatment name input)
   pendingCard: {
-    backgroundColor: T.white, borderRadius: 16, padding: 16,
-    borderWidth: 2, borderColor: T.teal,
-    shadowColor: T.teal, shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.15, shadowRadius: 8, elevation: 4,
+    backgroundColor: SharedColors.white, borderRadius: 16, padding: 16,
+    borderWidth: 2, borderColor: DoctorTheme.primary,
+    shadowColor: DoctorTheme.primary, shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.15, shadowRadius: 8, elevation: 4,
   },
-  pendingTitle: { fontSize: 15, fontWeight: "700", color: T.teal, marginBottom: 12 },
+  pendingTitle: { fontSize: 15, fontWeight: "700", color: DoctorTheme.primary, marginBottom: 12 },
   pendingImages: { flexDirection: "row", alignItems: "center", gap: 8 },
   pendingImgWrap: { flex: 1, position: "relative" as const },
-  pendingImg: { width: "100%", height: 100, borderRadius: 12, backgroundColor: T.border },
-  inputLabel: { fontSize: 12, fontWeight: "600", color: T.textSec, marginTop: 14, marginBottom: 6 },
+  pendingImg: { width: "100%", height: 100, borderRadius: 12, backgroundColor: SharedColors.border },
+  inputLabel: { fontSize: 12, fontWeight: "600", color: SharedColors.navySec, marginTop: 14, marginBottom: 6 },
   treatmentInput: {
-    borderWidth: 1.5, borderColor: T.border, borderRadius: 12,
-    paddingHorizontal: 14, paddingVertical: 12, fontSize: 15, color: T.text,
-    backgroundColor: "#f8fafc",
+    borderWidth: 1.5, borderColor: SharedColors.border, borderRadius: 12,
+    paddingHorizontal: 14, paddingVertical: 12, fontSize: 15, color: SharedColors.navy,
+    backgroundColor: SharedColors.bg,
   },
   pendingBtns: { flexDirection: "row", gap: 10, marginTop: 14 },
   cancelBtn: {
     flex: 1, paddingVertical: 12, borderRadius: 12,
-    borderWidth: 1.5, borderColor: T.border, alignItems: "center",
+    borderWidth: 1.5, borderColor: SharedColors.border, alignItems: "center",
   },
-  cancelBtnText: { fontSize: 14, fontWeight: "600", color: T.textSec },
+  cancelBtnText: { fontSize: 14, fontWeight: "600", color: SharedColors.navySec },
   saveBtn: {
     flex: 1, paddingVertical: 12, borderRadius: 12,
-    backgroundColor: T.teal, alignItems: "center",
+    backgroundColor: DoctorTheme.primary, alignItems: "center",
   },
-  saveBtnText: { fontSize: 14, fontWeight: "700", color: T.white },
+  saveBtnText: { fontSize: 14, fontWeight: "700", color: SharedColors.white },
 
   // Card
   card: {
-    backgroundColor: T.white, borderRadius: 16, padding: 14,
-    borderWidth: 1, borderColor: T.border,
+    backgroundColor: SharedColors.white, borderRadius: 16, padding: 14,
+    borderWidth: 1, borderColor: SharedColors.border,
     shadowColor: "#000", shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.06, shadowRadius: 8, elevation: 3,
   },
   cardImages: { flexDirection: "row", alignItems: "center", gap: 8 },
   imgWrap: { flex: 1, position: "relative" as const },
-  img: { width: "100%", height: 120, borderRadius: 12, backgroundColor: T.border },
+  img: { width: "100%", height: 120, borderRadius: 12, backgroundColor: SharedColors.border },
   imgLabel: {
     position: "absolute" as const, top: 8, left: 8,
     backgroundColor: "rgba(0,0,0,0.6)", borderRadius: 6,
     paddingHorizontal: 8, paddingVertical: 3,
   },
   imgLabelAfter: { backgroundColor: "rgba(22,163,74,0.85)" },
-  imgLabelText: { fontSize: 10, fontWeight: "700", color: "#fff" },
-  arrow: { fontSize: 18, color: T.textMuted, fontWeight: "700" },
+  imgLabelText: { fontSize: 10, fontWeight: "700", color: SharedColors.white },
+  arrow: { fontSize: 18, color: SharedColors.navyMuted, fontWeight: "700" },
   cardFooter: {
     flexDirection: "row", alignItems: "center", justifyContent: "space-between",
-    marginTop: 12, paddingTop: 10, borderTopWidth: 1, borderTopColor: T.border,
+    marginTop: 12, paddingTop: 10, borderTopWidth: 1, borderTopColor: SharedColors.border,
   },
   treatmentBadge: {
     backgroundColor: "rgba(20,184,166,0.1)", borderRadius: 8,
     paddingHorizontal: 10, paddingVertical: 4,
   },
-  treatmentBadgeText: { fontSize: 12, fontWeight: "600", color: T.teal },
-  removeText: { fontSize: 13, color: T.red, fontWeight: "600" },
+  treatmentBadgeText: { fontSize: 12, fontWeight: "600", color: DoctorTheme.primary },
+  removeText: { fontSize: 13, color: SharedColors.red, fontWeight: "600" },
 
   // Fixed Add Button
   addBtnWrap: {
     position: "absolute" as const, bottom: 0, left: 0, right: 0,
     paddingHorizontal: 16, paddingBottom: 34, paddingTop: 12,
-    backgroundColor: T.bg,
-    borderTopWidth: 1, borderTopColor: T.border,
+    backgroundColor: SharedColors.bg,
+    borderTopWidth: 1, borderTopColor: SharedColors.border,
   },
   addBtn: {
     flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 10,
-    backgroundColor: T.teal, borderRadius: 14, paddingVertical: 16,
-    shadowColor: T.teal, shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.3, shadowRadius: 8, elevation: 4,
+    backgroundColor: DoctorTheme.primary, borderRadius: 14, paddingVertical: 16,
+    shadowColor: DoctorTheme.primary, shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.3, shadowRadius: 8, elevation: 4,
   },
   addBtnIcon: { fontSize: 18 },
-  addBtnText: { fontSize: 15, fontWeight: "700", color: T.white },
+  addBtnText: { fontSize: 15, fontWeight: "700", color: SharedColors.white },
 
   // Source Modal (only one modal now — camera/library selection)
   modalOverlay: {
@@ -381,17 +370,17 @@ const s = StyleSheet.create({
     justifyContent: "flex-end", alignItems: "center",
   },
   modalSheet: {
-    width: "100%", backgroundColor: T.white, borderTopLeftRadius: 20, borderTopRightRadius: 20,
+    width: "100%", backgroundColor: SharedColors.white, borderTopLeftRadius: 20, borderTopRightRadius: 20,
     paddingHorizontal: 20, paddingTop: 20, paddingBottom: 40,
   },
-  modalTitle: { fontSize: 16, fontWeight: "700", color: T.text, textAlign: "center", marginBottom: 16 },
+  modalTitle: { fontSize: 16, fontWeight: "700", color: SharedColors.navy, textAlign: "center", marginBottom: 16 },
   modalBtn: {
     flexDirection: "row", alignItems: "center", gap: 12,
     paddingVertical: 16, paddingHorizontal: 16,
     borderRadius: 12, backgroundColor: "#f1f5f9", marginBottom: 8,
   },
   modalBtnIcon: { fontSize: 20 },
-  modalBtnText: { fontSize: 15, fontWeight: "600", color: T.text },
+  modalBtnText: { fontSize: 15, fontWeight: "600", color: SharedColors.navy },
   modalBtnCancel: { backgroundColor: "transparent", justifyContent: "center", marginTop: 4 },
-  modalBtnCancelText: { fontSize: 15, fontWeight: "600", color: T.red, textAlign: "center" },
+  modalBtnCancelText: { fontSize: 15, fontWeight: "600", color: SharedColors.red, textAlign: "center" },
 });

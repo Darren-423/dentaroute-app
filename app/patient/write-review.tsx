@@ -10,15 +10,7 @@ import {
 } from "react-native";
 import { Booking, store } from "../../lib/store";
 
-const T = {
-  teal: "#4A0080", tealMid: "#5C10A0", tealLight: "#f0e6f6",
-  navy: "#0f172a", slate: "#64748b", slateLight: "#94a3b8",
-  border: "#e2e8f0", bg: "#f8fafc", white: "#fff",
-  gold: "#f59e0b", goldLight: "#fffbeb",
-  green: "#16a34a", greenLight: "#f0fdf4",
-  red: "#ef4444",
-};
-
+import { PatientTheme, SharedColors } from "../../constants/theme";
 const StarRow = ({ rating, onRate, size = 32 }: { rating: number; onRate: (n: number) => void; size?: number }) => (
   <View style={{ flexDirection: "row", gap: 6 }}>
     {[1, 2, 3, 4, 5].map((n) => (
@@ -96,7 +88,7 @@ export default function WriteReviewScreen() {
   if (!booking) {
     return (
       <View style={[s.container, { justifyContent: "center", alignItems: "center" }]}>
-        <ActivityIndicator color={T.teal} size="large" />
+        <ActivityIndicator color={PatientTheme.primary} size="large" />
       </View>
     );
   }
@@ -136,7 +128,7 @@ export default function WriteReviewScreen() {
 
   return (
     <KeyboardAvoidingView style={s.container} behavior={Platform.OS === "ios" ? "padding" : undefined}>
-      <LinearGradient colors={["#3D0070", "#2F0058", "#220040"]} style={s.header}>
+      <LinearGradient colors={[...PatientTheme.gradient]} style={s.header}>
         <View style={s.headerRow}>
           <TouchableOpacity style={s.backBtn} onPress={() => router.back()}>
             <Text style={s.backArrow}>‹</Text>
@@ -150,7 +142,7 @@ export default function WriteReviewScreen() {
       </LinearGradient>
 
       <ScrollView style={{ flex: 1 }} contentContainerStyle={s.content} showsVerticalScrollIndicator={false}>
-                  <View style={{ backgroundColor: "#f1f5f9", borderRadius: 8, padding: 10, marginBottom: 12, borderWidth: 1, borderColor: "#e2e8f0" }}><Text style={{ fontSize: 11, color: "#64748b", lineHeight: 16 }}>Reviews are published publicly. Fraudulent reviews may result in account restrictions. Concourse does not verify the accuracy of reviews.</Text></View>
+                  <View style={{ backgroundColor: "#f1f5f9", borderRadius: 8, padding: 10, marginBottom: 12, borderWidth: 1, borderColor: SharedColors.border }}><Text style={{ fontSize: 11, color: SharedColors.slate, lineHeight: 16 }}>Reviews are published publicly. Fraudulent reviews may result in account restrictions. Concourse does not verify the accuracy of reviews.</Text></View>
 
           {/* Doctor card */}
         <View style={s.doctorCard}>
@@ -171,7 +163,7 @@ export default function WriteReviewScreen() {
           <View style={s.ratingRow}>
             <StarRow rating={overallRating} onRate={setOverallRating} size={40} />
             {overallRating > 0 && (
-              <Text style={[s.ratingLabel, overallRating >= 4 && { color: T.green }]}>
+              <Text style={[s.ratingLabel, overallRating >= 4 && { color: SharedColors.green }]}>
                 {RATING_LABELS[overallRating]}
               </Text>
             )}
@@ -186,7 +178,7 @@ export default function WriteReviewScreen() {
           <View style={s.categoryRow}>
             <View style={s.categoryLeft}>
               <Text style={s.categoryIcon}>🦷</Text>
-              <Text style={[s.categoryLabel, showErrors && treatmentRating === 0 && { color: T.red }]}>Treatment Quality</Text>
+              <Text style={[s.categoryLabel, showErrors && treatmentRating === 0 && { color: SharedColors.red }]}>Treatment Quality</Text>
             </View>
             <StarRow rating={treatmentRating} onRate={setTreatmentRating} size={24} />
           </View>
@@ -196,7 +188,7 @@ export default function WriteReviewScreen() {
           <View style={s.categoryRow}>
             <View style={s.categoryLeft}>
               <Text style={s.categoryIcon}>🏥</Text>
-              <Text style={[s.categoryLabel, showErrors && clinicRating === 0 && { color: T.red }]}>Clinic & Facilities</Text>
+              <Text style={[s.categoryLabel, showErrors && clinicRating === 0 && { color: SharedColors.red }]}>Clinic & Facilities</Text>
             </View>
             <StarRow rating={clinicRating} onRate={setClinicRating} size={24} />
           </View>
@@ -206,7 +198,7 @@ export default function WriteReviewScreen() {
           <View style={s.categoryRow}>
             <View style={s.categoryLeft}>
               <Text style={s.categoryIcon}>💬</Text>
-              <Text style={[s.categoryLabel, showErrors && communicationRating === 0 && { color: T.red }]}>Communication</Text>
+              <Text style={[s.categoryLabel, showErrors && communicationRating === 0 && { color: SharedColors.red }]}>Communication</Text>
             </View>
             <StarRow rating={communicationRating} onRate={setCommunicationRating} size={24} />
           </View>
@@ -222,7 +214,7 @@ export default function WriteReviewScreen() {
           <TextInput
             style={[s.input, showErrors && !title.trim() && s.errorBorder]}
             placeholder="Summarize your experience"
-            placeholderTextColor={T.slateLight}
+            placeholderTextColor={SharedColors.slateLight}
             value={title}
             onChangeText={setTitle}
             maxLength={60}
@@ -239,7 +231,7 @@ export default function WriteReviewScreen() {
           <TextInput
             style={[s.input, s.textArea, showErrors && comment.trim().length < 10 && s.errorBorder]}
             placeholder="Share details about your treatment, the clinic, staff, and your overall experience..."
-            placeholderTextColor={T.slateLight}
+            placeholderTextColor={SharedColors.slateLight}
             value={comment}
             onChangeText={setComment}
             multiline
@@ -272,7 +264,7 @@ export default function WriteReviewScreen() {
           activeOpacity={0.85}
         >
           {loading ? (
-            <ActivityIndicator color={T.white} size="small" />
+            <ActivityIndicator color={SharedColors.white} size="small" />
           ) : (
             <Text style={s.submitBtnText}>Submit Review ⭐</Text>
           )}
@@ -283,13 +275,13 @@ export default function WriteReviewScreen() {
 }
 
 const s = StyleSheet.create({
-  container: { flex: 1, backgroundColor: T.bg },
+  container: { flex: 1, backgroundColor: SharedColors.bg },
   header: { paddingHorizontal: 20, paddingTop: 60, paddingBottom: 18 },
   headerRow: { flexDirection: "row", alignItems: "center" },
   headerCenter: { flex: 1, alignItems: "center" },
   backBtn: { width: 36, height: 36, borderRadius: 12, backgroundColor: "rgba(255,255,255,0.12)", borderWidth: 1, borderColor: "rgba(255,255,255,0.15)", alignItems: "center", justifyContent: "center" },
-  backArrow: { fontSize: 24, color: "#fff", fontWeight: "600", marginTop: -2 },
-  title: { fontSize: 18, fontWeight: "700", color: "#fff" },
+  backArrow: { fontSize: 24, color: SharedColors.white, fontWeight: "600", marginTop: -2 },
+  title: { fontSize: 18, fontWeight: "700", color: SharedColors.white },
   subtitle: { fontSize: 12, color: "rgba(255,255,255,0.55)", marginTop: 2 },
 
   content: { padding: 20, gap: 16, paddingBottom: 60 },
@@ -297,88 +289,88 @@ const s = StyleSheet.create({
   // Doctor
   doctorCard: {
     flexDirection: "row", alignItems: "center", gap: 14,
-    backgroundColor: T.white, borderRadius: 14, padding: 16,
-    borderWidth: 1, borderColor: T.border,
+    backgroundColor: SharedColors.white, borderRadius: 14, padding: 16,
+    borderWidth: 1, borderColor: SharedColors.border,
   },
   doctorAvatar: {
-    width: 48, height: 48, borderRadius: 24, backgroundColor: T.teal,
+    width: 48, height: 48, borderRadius: 24, backgroundColor: PatientTheme.primary,
     alignItems: "center", justifyContent: "center",
   },
-  doctorAvatarText: { color: T.white, fontSize: 20, fontWeight: "700" },
-  doctorName: { fontSize: 16, fontWeight: "700", color: T.navy },
-  doctorClinic: { fontSize: 13, color: T.slate, marginTop: 2 },
+  doctorAvatarText: { color: SharedColors.white, fontSize: 20, fontWeight: "700" },
+  doctorName: { fontSize: 16, fontWeight: "700", color: SharedColors.navy },
+  doctorClinic: { fontSize: 13, color: SharedColors.slate, marginTop: 2 },
 
   // Overall rating
   ratingSection: {
-    backgroundColor: T.white, borderRadius: 16, padding: 20,
-    borderWidth: 1, borderColor: T.border, alignItems: "center", gap: 12,
+    backgroundColor: SharedColors.white, borderRadius: 16, padding: 20,
+    borderWidth: 1, borderColor: SharedColors.border, alignItems: "center", gap: 12,
   },
-  ratingSectionTitle: { fontSize: 16, fontWeight: "700", color: T.navy },
+  ratingSectionTitle: { fontSize: 16, fontWeight: "700", color: SharedColors.navy },
   ratingRow: { alignItems: "center", gap: 8 },
-  ratingLabel: { fontSize: 14, fontWeight: "600", color: T.gold },
+  ratingLabel: { fontSize: 14, fontWeight: "600", color: SharedColors.amber },
 
   // Categories
   categoriesCard: {
-    backgroundColor: T.white, borderRadius: 16, padding: 18,
-    borderWidth: 1, borderColor: T.border, gap: 14,
+    backgroundColor: SharedColors.white, borderRadius: 16, padding: 18,
+    borderWidth: 1, borderColor: SharedColors.border, gap: 14,
   },
-  categoriesTitle: { fontSize: 14, fontWeight: "700", color: T.navy, marginBottom: 2 },
+  categoriesTitle: { fontSize: 14, fontWeight: "700", color: SharedColors.navy, marginBottom: 2 },
   categoryRow: {
     flexDirection: "row", alignItems: "center", justifyContent: "space-between",
   },
   categoryLeft: { flexDirection: "row", alignItems: "center", gap: 10 },
   categoryIcon: { fontSize: 18 },
-  categoryLabel: { fontSize: 13, fontWeight: "600", color: T.navy },
-  categoryDivider: { height: 1, backgroundColor: T.border },
+  categoryLabel: { fontSize: 13, fontWeight: "600", color: SharedColors.navy },
+  categoryDivider: { height: 1, backgroundColor: SharedColors.border },
 
   // Fields
   field: { gap: 6 },
-  fieldLabel: { fontSize: 13, fontWeight: "600", color: T.navy },
+  fieldLabel: { fontSize: 13, fontWeight: "600", color: SharedColors.navy },
   input: {
-    backgroundColor: T.white, borderRadius: 12, padding: 14,
-    borderWidth: 1, borderColor: T.border,
-    fontSize: 14, color: T.navy,
+    backgroundColor: SharedColors.white, borderRadius: 12, padding: 14,
+    borderWidth: 1, borderColor: SharedColors.border,
+    fontSize: 14, color: SharedColors.navy,
   },
   textArea: { minHeight: 120 },
-  charCount: { fontSize: 11, color: T.slateLight, textAlign: "right" },
+  charCount: { fontSize: 11, color: SharedColors.slateLight, textAlign: "right" },
 
   // Tips
   tipsCard: {
-    backgroundColor: T.goldLight, borderRadius: 12, padding: 14,
+    backgroundColor: SharedColors.amberLight, borderRadius: 12, padding: 14,
     borderWidth: 1, borderColor: "rgba(245,158,11,0.2)",
   },
   tipsTitle: { fontSize: 13, fontWeight: "700", color: "#92400e", marginBottom: 4 },
   tipsText: { fontSize: 12, color: "#78350f", lineHeight: 18 },
 
   // Errors
-  errorBorder: { borderColor: "#ef4444" },
-  errorText: { fontSize: 12, color: "#ef4444", fontWeight: "500", marginTop: 4 },
+  errorBorder: { borderColor: SharedColors.red },
+  errorText: { fontSize: 12, color: SharedColors.red, fontWeight: "500", marginTop: 4 },
 
   // Bottom
   bottomBar: {
     paddingHorizontal: 24, paddingVertical: 16,
-    borderTopWidth: 1, borderTopColor: T.border, backgroundColor: T.white,
+    borderTopWidth: 1, borderTopColor: SharedColors.border, backgroundColor: SharedColors.white,
   },
   submitBtn: {
-    backgroundColor: T.teal, borderRadius: 14,
+    backgroundColor: PatientTheme.primary, borderRadius: 14,
     paddingVertical: 15, alignItems: "center", minHeight: 52,
   },
   submitBtnDisabled: { opacity: 0.5 },
-  submitBtnText: { color: T.white, fontSize: 15, fontWeight: "600" },
+  submitBtnText: { color: SharedColors.white, fontSize: 15, fontWeight: "600" },
 
   // Success
-  successTitle: { fontSize: 24, fontWeight: "700", color: T.navy, marginBottom: 8 },
-  successDesc: { fontSize: 14, color: T.slate, textAlign: "center", lineHeight: 20 },
+  successTitle: { fontSize: 24, fontWeight: "700", color: SharedColors.navy, marginBottom: 8 },
+  successDesc: { fontSize: 14, color: SharedColors.slate, textAlign: "center", lineHeight: 20 },
   successCard: {
-    backgroundColor: T.white, borderRadius: 16, padding: 18,
-    borderWidth: 1, borderColor: T.border, gap: 10,
+    backgroundColor: SharedColors.white, borderRadius: 16, padding: 18,
+    borderWidth: 1, borderColor: SharedColors.border, gap: 10,
     width: "100%", marginTop: 24, alignItems: "center",
   },
-  successReviewTitle: { fontSize: 15, fontWeight: "700", color: T.navy },
-  successReviewComment: { fontSize: 13, color: T.slate, textAlign: "center", lineHeight: 18 },
+  successReviewTitle: { fontSize: 15, fontWeight: "700", color: SharedColors.navy },
+  successReviewComment: { fontSize: 13, color: SharedColors.slate, textAlign: "center", lineHeight: 18 },
   successBtn: {
-    backgroundColor: T.teal, borderRadius: 14,
+    backgroundColor: PatientTheme.primary, borderRadius: 14,
     paddingVertical: 14, paddingHorizontal: 32, marginTop: 24,
   },
-  successBtnText: { color: T.white, fontSize: 15, fontWeight: "600" },
+  successBtnText: { color: SharedColors.white, fontSize: 15, fontWeight: "600" },
 });

@@ -16,17 +16,7 @@ import {
 import { resetNavigationHistory } from "../../lib/navigationHistory";
 import { store } from "../../lib/store";
 
-const T = {
-  teal: "#0f766e",
-  tealLight: "#14b8a6",
-  bg: "#f8fafc",
-  white: "#fff",
-  text: "#0f172a",
-  textSec: "#64748b",
-  textMuted: "#94a3b8",
-  border: "#e2e8f0",
-};
-
+import { DoctorTheme, SharedColors } from "../../constants/theme";
 const DEFAULT_SPECIALTIES = [
   "General",
   "Implants",
@@ -231,7 +221,7 @@ export default function DoctorProfileSetupScreen() {
   return (
     <View style={styles.container}>
       {/* Header */}
-      <LinearGradient colors={["#0f766e", "#134e4a"]} style={styles.header}>
+      <LinearGradient colors={[DoctorTheme.primary, DoctorTheme.primaryDark]} style={styles.header}>
         <TouchableOpacity
           style={styles.backBtn}
           onPress={() => router.back()}
@@ -256,7 +246,7 @@ export default function DoctorProfileSetupScreen() {
           <TextInput
             style={styles.input}
             placeholder="e.g. Seoul Dental Clinic"
-            placeholderTextColor="#94a3b8"
+            placeholderTextColor={SharedColors.slateLight}
             value={formData.clinicName}
             onChangeText={(v) => setFormData({ ...formData, clinicName: v })}
           />
@@ -268,7 +258,7 @@ export default function DoctorProfileSetupScreen() {
           <TextInput
             style={styles.input}
             placeholder="e.g. Gangnam, Seoul"
-            placeholderTextColor="#94a3b8"
+            placeholderTextColor={SharedColors.slateLight}
             value={formData.location}
             onChangeText={(v) => setFormData({ ...formData, location: v })}
           />
@@ -280,7 +270,7 @@ export default function DoctorProfileSetupScreen() {
           <TextInput
             style={styles.input}
             placeholder="e.g. clinic@example.com"
-            placeholderTextColor="#94a3b8"
+            placeholderTextColor={SharedColors.slateLight}
             value={formData.email}
             onChangeText={(v) => setFormData({ ...formData, email: v })}
             keyboardType="email-address"
@@ -294,7 +284,7 @@ export default function DoctorProfileSetupScreen() {
           <TextInput
             style={styles.input}
             placeholder="e.g. +82-2-1234-5678"
-            placeholderTextColor="#94a3b8"
+            placeholderTextColor={SharedColors.slateLight}
             value={formData.phone}
             onChangeText={(v) => setFormData({ ...formData, phone: v })}
             keyboardType="phone-pad"
@@ -351,7 +341,7 @@ export default function DoctorProfileSetupScreen() {
               <TextInput
                 style={styles.addInput}
                 placeholder="Type a specialty..."
-                placeholderTextColor="#94a3b8"
+                placeholderTextColor={SharedColors.slateLight}
                 value={newSpecialty}
                 onChangeText={setNewSpecialty}
                 onSubmitEditing={addCustomSpecialty}
@@ -472,7 +462,7 @@ export default function DoctorProfileSetupScreen() {
           <TextInput
             style={[styles.input, { minHeight: 80, textAlignVertical: "top" }]}
             placeholder="Tell patients about yourself and your practice..."
-            placeholderTextColor="#94a3b8"
+            placeholderTextColor={SharedColors.slateLight}
             value={formData.bio}
             onChangeText={(v) => setFormData({ ...formData, bio: v })}
             multiline
@@ -486,7 +476,7 @@ export default function DoctorProfileSetupScreen() {
           <TextInput
             style={styles.input}
             placeholder="e.g. https://www.mydentalclinic.com"
-            placeholderTextColor="#94a3b8"
+            placeholderTextColor={SharedColors.slateLight}
             value={formData.website}
             onChangeText={(v) => setFormData({ ...formData, website: v })}
             keyboardType="url"
@@ -516,7 +506,7 @@ export default function DoctorProfileSetupScreen() {
           activeOpacity={0.85}
         >
           {loading ? (
-            <ActivityIndicator color={T.white} size="small" />
+            <ActivityIndicator color={SharedColors.white} size="small" />
           ) : (
             <Text style={styles.completeBtnText}>Complete Profile →</Text>
           )}
@@ -527,7 +517,7 @@ export default function DoctorProfileSetupScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: T.bg },
+  container: { flex: 1, backgroundColor: SharedColors.bg },
 
   header: {
     paddingHorizontal: 24,
@@ -541,36 +531,36 @@ const styles = StyleSheet.create({
     alignItems: "center", justifyContent: "center",
     marginBottom: 8,
   },
-  backArrow: { fontSize: 24, color: "#fff", fontWeight: "600", marginTop: -2 },
+  backArrow: { fontSize: 24, color: SharedColors.white, fontWeight: "600", marginTop: -2 },
   title: {
     fontSize: 24,
     fontWeight: "700",
-    color: T.white,
+    color: SharedColors.white,
     marginBottom: 4,
   },
   subtitle: { fontSize: 13, color: "rgba(255,255,255,0.7)" },
 
-  scrollView: { flex: 1, backgroundColor: T.bg },
+  scrollView: { flex: 1, backgroundColor: SharedColors.bg },
   content: { padding: 24, gap: 22, paddingBottom: 60 },
 
   fieldGroup: { gap: 10 },
   label: {
     fontSize: 11,
     fontWeight: "600",
-    color: T.textSec,
+    color: SharedColors.navySec,
     letterSpacing: 0.8,
   },
-  hint: { fontSize: 12, color: T.textMuted, marginTop: -4 },
+  hint: { fontSize: 12, color: SharedColors.navyMuted, marginTop: -4 },
 
   input: {
     borderWidth: 1.5,
-    borderColor: T.border,
-    backgroundColor: T.bg,
+    borderColor: SharedColors.border,
+    backgroundColor: SharedColors.bg,
     borderRadius: 12,
     paddingHorizontal: 16,
     paddingVertical: 13,
     fontSize: 14,
-    color: T.text,
+    color: SharedColors.navy,
     minHeight: 48,
   },
 
@@ -581,19 +571,19 @@ const styles = StyleSheet.create({
     paddingVertical: 9,
     borderRadius: 20,
     borderWidth: 1.5,
-    borderColor: T.border,
+    borderColor: SharedColors.border,
     backgroundColor: "transparent",
   },
   tagSelected: {
-    borderColor: T.tealLight,
-    backgroundColor: T.tealLight,
+    borderColor: DoctorTheme.accentBright,
+    backgroundColor: DoctorTheme.accentBright,
   },
   tagText: {
     fontSize: 13,
-    color: T.textSec,
+    color: SharedColors.navySec,
     fontWeight: "400",
   },
-  tagTextSelected: { color: T.white, fontWeight: "600" },
+  tagTextSelected: { color: SharedColors.white, fontWeight: "600" },
 
   // Custom tags
   customTagsWrap: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
@@ -606,10 +596,10 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     borderRadius: 20,
     borderWidth: 1.5,
-    borderColor: T.tealLight,
-    backgroundColor: T.tealLight,
+    borderColor: DoctorTheme.accentBright,
+    backgroundColor: DoctorTheme.accentBright,
   },
-  customTagText: { fontSize: 13, color: T.white, fontWeight: "600" },
+  customTagText: { fontSize: 13, color: SharedColors.white, fontWeight: "600" },
   customTagRemove: {
     fontSize: 12,
     color: "rgba(255,255,255,0.7)",
@@ -625,32 +615,32 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     paddingHorizontal: 14,
     borderWidth: 1.5,
-    borderColor: T.border,
+    borderColor: SharedColors.border,
     borderRadius: 20,
     borderStyle: "dashed",
     alignSelf: "flex-start",
   },
-  addBtnPlus: { fontSize: 18, color: T.tealLight, fontWeight: "600" },
-  addBtnText: { fontSize: 13, color: T.textSec },
+  addBtnPlus: { fontSize: 18, color: DoctorTheme.accentBright, fontWeight: "600" },
+  addBtnText: { fontSize: 13, color: SharedColors.navySec },
   addInputRow: { flexDirection: "row", alignItems: "center", gap: 8 },
   addInput: {
     flex: 1,
     borderWidth: 1.5,
-    borderColor: T.tealLight,
-    backgroundColor: T.bg,
+    borderColor: DoctorTheme.accentBright,
+    backgroundColor: SharedColors.bg,
     borderRadius: 12,
     paddingHorizontal: 14,
     paddingVertical: 11,
     fontSize: 14,
-    color: T.text,
+    color: SharedColors.navy,
   },
   addConfirmBtn: {
-    backgroundColor: T.tealLight,
+    backgroundColor: DoctorTheme.accentBright,
     borderRadius: 10,
     paddingHorizontal: 16,
     paddingVertical: 11,
   },
-  addConfirmText: { color: T.white, fontSize: 13, fontWeight: "600" },
+  addConfirmText: { color: SharedColors.white, fontSize: 13, fontWeight: "600" },
   addCancelBtn: {
     width: 36,
     height: 36,
@@ -660,7 +650,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   addCancelText: {
-    color: T.textSec,
+    color: SharedColors.navySec,
     fontSize: 14,
     fontWeight: "600",
   },
@@ -677,7 +667,7 @@ const styles = StyleSheet.create({
     borderRadius: 14,
     overflow: "hidden",
     borderWidth: 1.5,
-    borderColor: T.border,
+    borderColor: SharedColors.border,
   },
   photoImage: {
     width: "100%",
@@ -696,7 +686,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   photoRemoveText: {
-    color: "#fff",
+    color: SharedColors.white,
     fontSize: 11,
     fontWeight: "700",
   },
@@ -710,7 +700,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   photoCoverText: {
-    color: "#fff",
+    color: SharedColors.white,
     fontSize: 10,
     fontWeight: "700",
     letterSpacing: 0.5,
@@ -720,22 +710,22 @@ const styles = StyleSheet.create({
     height: 100,
     borderRadius: 14,
     borderWidth: 1.5,
-    borderColor: T.border,
+    borderColor: SharedColors.border,
     borderStyle: "dashed",
     alignItems: "center",
     justifyContent: "center",
     gap: 6,
-    backgroundColor: T.white,
+    backgroundColor: SharedColors.white,
   },
   photoAddIcon: { fontSize: 24 },
   photoAddText: {
     fontSize: 11,
-    color: T.textSec,
+    color: SharedColors.navySec,
     fontWeight: "500",
   },
   photoCount: {
     fontSize: 12,
-    color: T.textMuted,
+    color: SharedColors.navyMuted,
     marginTop: 2,
   },
 
@@ -743,11 +733,11 @@ const styles = StyleSheet.create({
   infoBox: {
     flexDirection: "row",
     gap: 14,
-    backgroundColor: T.white,
+    backgroundColor: SharedColors.white,
     borderRadius: 14,
     padding: 16,
     borderWidth: 1,
-    borderColor: T.border,
+    borderColor: SharedColors.border,
     alignItems: "flex-start",
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 1 },
@@ -759,12 +749,12 @@ const styles = StyleSheet.create({
   infoTitle: {
     fontSize: 14,
     fontWeight: "600",
-    color: T.text,
+    color: SharedColors.navy,
     marginBottom: 4,
   },
   infoDesc: {
     fontSize: 12,
-    color: T.textSec,
+    color: SharedColors.navySec,
     lineHeight: 18,
   },
 
@@ -773,16 +763,16 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
     paddingVertical: 16,
     borderTopWidth: 1,
-    borderTopColor: T.border,
-    backgroundColor: T.white,
+    borderTopColor: SharedColors.border,
+    backgroundColor: SharedColors.white,
   },
   completeBtn: {
-    backgroundColor: T.teal,
+    backgroundColor: DoctorTheme.primary,
     borderRadius: 14,
     paddingVertical: 15,
     alignItems: "center",
     minHeight: 52,
   },
   completeBtnDisabled: { opacity: 0.4 },
-  completeBtnText: { color: T.white, fontSize: 15, fontWeight: "600" },
+  completeBtnText: { color: SharedColors.white, fontSize: 15, fontWeight: "600" },
 });

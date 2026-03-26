@@ -13,18 +13,7 @@ import { getDoctorProfileCache, loadDoctorProfileData } from "../../lib/doctorTa
 import { resetNavigationHistory } from "../../lib/navigationHistory";
 import { store } from "../../lib/store";
 
-const T = {
-  teal: "#0f766e",
-  tealLight: "#14b8a6",
-  bg: "#f8fafc",
-  white: "#fff",
-  text: "#0f172a",
-  textSec: "#64748b",
-  textMuted: "#94a3b8",
-  border: "#e2e8f0",
-  red: "#ef4444",
-};
-
+import { DoctorTheme, SharedColors } from "../../constants/theme";
 export default function DoctorProfileScreen() {
   const initialProfileData = getDoctorProfileCache();
   const [profile, setProfile] = useState<any>(initialProfileData.profile);
@@ -44,7 +33,7 @@ export default function DoctorProfileScreen() {
   return (
     <View style={s.container}>
       {/* Header */}
-      <LinearGradient colors={["#0f766e", "#134e4a"]} style={s.header}>
+      <LinearGradient colors={[DoctorTheme.primary, DoctorTheme.primaryDark]} style={s.header}>
         <TouchableOpacity style={s.backBtn} onPress={() => router.back()}>
           <Text style={s.backArrow}>‹</Text>
         </TouchableOpacity>
@@ -194,8 +183,8 @@ export default function DoctorProfileScreen() {
             }}
           >
             <Text style={s.menuIcon}>🚪</Text>
-            <Text style={[s.menuText, { color: T.red }]}>Log Out</Text>
-            <Text style={[s.menuArrow, { color: T.red }]}>›</Text>
+            <Text style={[s.menuText, { color: SharedColors.red }]}>Log Out</Text>
+            <Text style={[s.menuArrow, { color: SharedColors.red }]}>›</Text>
           </TouchableOpacity>
         </View>
       </ScrollView>
@@ -213,14 +202,14 @@ const InfoRow = ({ icon, label, value, last }: { icon: string; label: string; va
 
 const iStyles = StyleSheet.create({
   row: { flexDirection: "row", alignItems: "center", gap: 10, paddingVertical: 12 },
-  rowBorder: { borderBottomWidth: 1, borderBottomColor: T.border },
+  rowBorder: { borderBottomWidth: 1, borderBottomColor: SharedColors.border },
   icon: { fontSize: 16, width: 24, textAlign: "center" },
-  label: { fontSize: 13, color: T.textSec, width: 90 },
-  value: { flex: 1, fontSize: 13, fontWeight: "600", color: T.text, textAlign: "right" },
+  label: { fontSize: 13, color: SharedColors.navySec, width: 90 },
+  value: { flex: 1, fontSize: 13, fontWeight: "600", color: SharedColors.navy, textAlign: "right" },
 });
 
 const s = StyleSheet.create({
-  container: { flex: 1, backgroundColor: T.bg },
+  container: { flex: 1, backgroundColor: SharedColors.bg },
   header: {
     paddingHorizontal: 24, paddingTop: 60, paddingBottom: 16,
     flexDirection: "row", alignItems: "center", gap: 16,
@@ -231,56 +220,56 @@ const s = StyleSheet.create({
     borderWidth: 1, borderColor: "rgba(255,255,255,0.15)",
     alignItems: "center", justifyContent: "center",
   },
-  backArrow: { fontSize: 24, color: "#fff", fontWeight: "600", marginTop: -2 },
-  headerTitle: { fontSize: 18, fontWeight: "700", color: T.white },
+  backArrow: { fontSize: 24, color: SharedColors.white, fontWeight: "600", marginTop: -2 },
+  headerTitle: { fontSize: 18, fontWeight: "700", color: SharedColors.white },
 
-  scrollView: { flex: 1, backgroundColor: T.bg },
+  scrollView: { flex: 1, backgroundColor: SharedColors.bg },
   content: { padding: 20, gap: 20, paddingBottom: 120 },
 
   // Avatar
   avatarSection: { alignItems: "center", gap: 6 },
   avatar: {
-    width: 80, height: 80, borderRadius: 40, backgroundColor: T.tealLight,
+    width: 80, height: 80, borderRadius: 40, backgroundColor: DoctorTheme.accentBright,
     alignItems: "center", justifyContent: "center", marginBottom: 4,
   },
-  avatarText: { color: T.white, fontSize: 32, fontWeight: "700" },
-  name: { fontSize: 22, fontWeight: "700", color: T.text },
-  clinic: { fontSize: 13, color: T.textSec },
+  avatarText: { color: SharedColors.white, fontSize: 32, fontWeight: "700" },
+  name: { fontSize: 22, fontWeight: "700", color: SharedColors.navy },
+  clinic: { fontSize: 13, color: SharedColors.navySec },
   specialtyBadge: {
     backgroundColor: "rgba(20,184,166,0.1)", borderRadius: 10,
     paddingHorizontal: 14, paddingVertical: 5, marginTop: 4,
   },
-  specialtyText: { fontSize: 12, fontWeight: "600", color: T.teal },
+  specialtyText: { fontSize: 12, fontWeight: "600", color: DoctorTheme.primary },
 
   // Stats
   statsRow: { flexDirection: "row", gap: 10 },
   statCard: {
-    flex: 1, backgroundColor: T.white, borderRadius: 14, padding: 16,
-    alignItems: "center", borderWidth: 1, borderColor: T.border,
+    flex: 1, backgroundColor: SharedColors.white, borderRadius: 14, padding: 16,
+    alignItems: "center", borderWidth: 1, borderColor: SharedColors.border,
     shadowColor: "#000", shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.05, shadowRadius: 4, elevation: 2,
   },
-  statNum: { fontSize: 20, fontWeight: "800", color: T.teal },
-  statLabel: { fontSize: 11, color: T.textSec, marginTop: 2 },
+  statNum: { fontSize: 20, fontWeight: "800", color: DoctorTheme.primary },
+  statLabel: { fontSize: 11, color: SharedColors.navySec, marginTop: 2 },
 
   // Section
   section: { gap: 8 },
   sectionTitle: {
-    fontSize: 11, fontWeight: "700", color: T.textSec, letterSpacing: 0.5,
+    fontSize: 11, fontWeight: "700", color: SharedColors.navySec, letterSpacing: 0.5,
     marginBottom: 2,
   },
   card: {
-    backgroundColor: T.white, borderRadius: 14, paddingHorizontal: 16,
-    borderWidth: 1, borderColor: T.border,
+    backgroundColor: SharedColors.white, borderRadius: 14, paddingHorizontal: 16,
+    borderWidth: 1, borderColor: SharedColors.border,
     shadowColor: "#000", shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.05, shadowRadius: 4, elevation: 2,
   },
-  bioText: { color: T.textSec, fontSize: 13, lineHeight: 20, paddingVertical: 14 },
+  bioText: { color: SharedColors.navySec, fontSize: 13, lineHeight: 20, paddingVertical: 14 },
 
   // Verified badge
   verifiedBadge: {
     width: 22, height: 22, borderRadius: 11, backgroundColor: "#2563eb",
     alignItems: "center", justifyContent: "center",
   },
-  verifiedIcon: { color: "#fff", fontSize: 13, fontWeight: "700" },
+  verifiedIcon: { color: SharedColors.white, fontSize: 13, fontWeight: "700" },
 
   // Certifications
   certCard: {
@@ -294,32 +283,32 @@ const s = StyleSheet.create({
     width: 18, height: 18, borderRadius: 9, backgroundColor: "#2563eb",
     alignItems: "center", justifyContent: "center",
   },
-  certCheckIcon: { color: "#fff", fontSize: 10, fontWeight: "700" },
+  certCheckIcon: { color: SharedColors.white, fontSize: 10, fontWeight: "700" },
 
   // Before/After link card
   baLinkCard: {
     flexDirection: "row", alignItems: "center",
-    backgroundColor: T.white, borderRadius: 14, padding: 16,
-    borderWidth: 1, borderColor: T.border,
+    backgroundColor: SharedColors.white, borderRadius: 14, padding: 16,
+    borderWidth: 1, borderColor: SharedColors.border,
     shadowColor: "#000", shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.05, shadowRadius: 4, elevation: 2,
   },
   baPreviewRow: { flex: 1, flexDirection: "row", alignItems: "center", gap: 10 },
-  baPreviewThumb: { width: 44, height: 44, borderRadius: 10, backgroundColor: T.border },
+  baPreviewThumb: { width: 44, height: 44, borderRadius: 10, backgroundColor: SharedColors.border },
   baPreviewInfo: { flex: 1, gap: 2 },
-  baPreviewCount: { fontSize: 14, fontWeight: "600", color: T.text },
-  baPreviewHint: { fontSize: 11, color: T.textMuted },
+  baPreviewCount: { fontSize: 14, fontWeight: "600", color: SharedColors.navy },
+  baPreviewHint: { fontSize: 11, color: SharedColors.navyMuted },
   baPreviewEmpty: { flex: 1, flexDirection: "row", alignItems: "center", gap: 12 },
   baPreviewEmptyIcon: { fontSize: 24 },
-  baPreviewEmptyText: { fontSize: 14, fontWeight: "600", color: T.text },
+  baPreviewEmptyText: { fontSize: 14, fontWeight: "600", color: SharedColors.navy },
 
   // Menu
   menuItem: {
     flexDirection: "row", alignItems: "center", gap: 12,
-    backgroundColor: T.white, borderRadius: 14, padding: 16,
-    borderWidth: 1, borderColor: T.border,
+    backgroundColor: SharedColors.white, borderRadius: 14, padding: 16,
+    borderWidth: 1, borderColor: SharedColors.border,
     shadowColor: "#000", shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.05, shadowRadius: 4, elevation: 2,
   },
   menuIcon: { fontSize: 18 },
-  menuText: { flex: 1, fontSize: 14, fontWeight: "600", color: T.text },
-  menuArrow: { fontSize: 20, color: T.textMuted },
+  menuText: { flex: 1, fontSize: 14, fontWeight: "600", color: SharedColors.navy },
+  menuArrow: { fontSize: 20, color: SharedColors.navyMuted },
 });

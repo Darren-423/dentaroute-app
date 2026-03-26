@@ -12,13 +12,7 @@ import {
 } from "react-native";
 import { DentistQuote, DoctorProfile, Review, store } from "../../lib/store";
 
-const T = {
-  teal: "#4A0080", tealMid: "#5C10A0", tealLight: "#f0e6f6",
-  navy: "#0f172a", slate: "#64748b", slateLight: "#94a3b8",
-  border: "#e2e8f0", bg: "#f8fafc", white: "#fff",
-  gold: "#f59e0b",
-};
-
+import { PatientTheme, SharedColors } from "../../constants/theme";
 export default function DentistProfileScreen() {
   const { dentistName, clinicName, quoteId, caseId } = useLocalSearchParams<{
     dentistName: string; clinicName: string; quoteId?: string; caseId?: string;
@@ -69,7 +63,7 @@ export default function DentistProfileScreen() {
   if (loading) {
     return (
       <View style={[s.container, { justifyContent: "center", alignItems: "center" }]}>
-        <ActivityIndicator color={T.teal} size="large" />
+        <ActivityIndicator color={PatientTheme.primary} size="large" />
       </View>
     );
   }
@@ -84,7 +78,7 @@ export default function DentistProfileScreen() {
       </View>
 
       <ScrollView contentContainerStyle={s.content} showsVerticalScrollIndicator={false}>
-                  <View style={{ backgroundColor: "#f1f5f9", borderRadius: 8, padding: 10, marginBottom: 12, borderWidth: 1, borderColor: "#e2e8f0" }}><Text style={{ fontSize: 11, color: "#64748b", lineHeight: 16 }}>Dentist profiles are self-reported. Concourse performs basic credential checks but does not guarantee the accuracy of all qualifications.</Text></View>
+                  <View style={{ backgroundColor: "#f1f5f9", borderRadius: 8, padding: 10, marginBottom: 12, borderWidth: 1, borderColor: SharedColors.border }}><Text style={{ fontSize: 11, color: SharedColors.slate, lineHeight: 16 }}>Dentist profiles are self-reported. Concourse performs basic credential checks but does not guarantee the accuracy of all qualifications.</Text></View>
 
           {/* Avatar + Name */}
         <View style={s.profileSection}>
@@ -231,7 +225,7 @@ export default function DentistProfileScreen() {
                   <Image source={{ uri: beforeAfterPhotos[galleryIndex].before }} style={s.modalImg} resizeMode="contain" />
                 </View>
                 <View style={[s.modalPage, { width: screenW }]}>
-                  <Text style={[s.modalLabel, { color: "#16a34a" }]}>After</Text>
+                  <Text style={[s.modalLabel, { color: SharedColors.green }]}>After</Text>
                   <Image source={{ uri: beforeAfterPhotos[galleryIndex].after }} style={s.modalImg} resizeMode="contain" />
                 </View>
               </ScrollView>
@@ -317,15 +311,15 @@ export default function DentistProfileScreen() {
 }
 
 const s = StyleSheet.create({
-  container: { flex: 1, backgroundColor: T.bg },
+  container: { flex: 1, backgroundColor: SharedColors.bg },
   header: {
     paddingHorizontal: 24, paddingTop: 60, paddingBottom: 16,
-    borderBottomWidth: 1, borderBottomColor: T.border, backgroundColor: T.white,
+    borderBottomWidth: 1, borderBottomColor: SharedColors.border, backgroundColor: SharedColors.white,
     flexDirection: "row", alignItems: "center", gap: 16,
   },
   backBtn: { width: 36, height: 36, borderRadius: 12, backgroundColor: "rgba(0,0,0,0.05)", borderWidth: 1, borderColor: "rgba(0,0,0,0.08)", alignItems: "center", justifyContent: "center" },
-  backArrow: { fontSize: 24, color: "#0f172a", fontWeight: "600", marginTop: -2 },
-  headerTitle: { fontSize: 18, fontWeight: "700", color: T.navy },
+  backArrow: { fontSize: 24, color: SharedColors.navy, fontWeight: "600", marginTop: -2 },
+  headerTitle: { fontSize: 18, fontWeight: "700", color: SharedColors.navy },
 
   content: { padding: 20, gap: 16, paddingBottom: 40 },
 
@@ -333,35 +327,35 @@ const s = StyleSheet.create({
   profileSection: { alignItems: "center", gap: 6 },
   nameRow: { flexDirection: "row", alignItems: "center", gap: 8 },
   verifiedBadge: {
-    width: 22, height: 22, borderRadius: 11, backgroundColor: "#2563eb",
+    width: 22, height: 22, borderRadius: 11, backgroundColor: SharedColors.blue,
     alignItems: "center", justifyContent: "center",
   },
-  verifiedIcon: { color: "#fff", fontSize: 13, fontWeight: "700" },
+  verifiedIcon: { color: SharedColors.white, fontSize: 13, fontWeight: "700" },
   avatar: {
-    width: 88, height: 88, borderRadius: 44, backgroundColor: T.teal,
+    width: 88, height: 88, borderRadius: 44, backgroundColor: PatientTheme.primary,
     alignItems: "center", justifyContent: "center", marginBottom: 6,
   },
-  avatarText: { color: T.white, fontSize: 36, fontWeight: "700" },
-  name: { fontSize: 24, fontWeight: "700", color: T.navy },
-  clinic: { fontSize: 14, color: T.slate },
+  avatarText: { color: SharedColors.white, fontSize: 36, fontWeight: "700" },
+  name: { fontSize: 24, fontWeight: "700", color: SharedColors.navy },
+  clinic: { fontSize: 14, color: SharedColors.slate },
   ratingRow: { flexDirection: "row", alignItems: "center", gap: 6, marginTop: 8 },
-  ratingNum: { fontSize: 16, fontWeight: "700", color: T.navy },
-  ratingCount: { fontSize: 13, color: T.slateLight },
-  ratingArrow: { fontSize: 12, color: T.teal, fontWeight: "600", marginLeft: 4 },
+  ratingNum: { fontSize: 16, fontWeight: "700", color: SharedColors.navy },
+  ratingCount: { fontSize: 13, color: SharedColors.slateLight },
+  ratingArrow: { fontSize: 12, color: PatientTheme.primary, fontWeight: "600", marginLeft: 4 },
 
   // Stats
   statsRow: { flexDirection: "row", gap: 10 },
   statCard: {
-    flex: 1, backgroundColor: T.white, borderRadius: 14, padding: 14,
-    alignItems: "center", borderWidth: 1, borderColor: T.border,
+    flex: 1, backgroundColor: SharedColors.white, borderRadius: 14, padding: 14,
+    alignItems: "center", borderWidth: 1, borderColor: SharedColors.border,
   },
   statIcon: { fontSize: 20, marginBottom: 4 },
-  statNum: { fontSize: 20, fontWeight: "800", color: T.teal },
-  statLabel: { fontSize: 11, color: T.slate, marginTop: 2 },
+  statNum: { fontSize: 20, fontWeight: "800", color: PatientTheme.primary },
+  statLabel: { fontSize: 11, color: SharedColors.slate, marginTop: 2 },
 
   // Certifications
   certSection: { gap: 10 },
-  certTitle: { fontSize: 15, fontWeight: "700", color: T.navy },
+  certTitle: { fontSize: 15, fontWeight: "700", color: SharedColors.navy },
   certList: { gap: 8 },
   certCard: {
     flexDirection: "row", alignItems: "center", gap: 10,
@@ -371,42 +365,42 @@ const s = StyleSheet.create({
   certIcon: { fontSize: 18 },
   certText: { fontSize: 13, fontWeight: "600", color: "#1e40af", flex: 1 },
   certCheck: {
-    width: 18, height: 18, borderRadius: 9, backgroundColor: "#2563eb",
+    width: 18, height: 18, borderRadius: 9, backgroundColor: SharedColors.blue,
     alignItems: "center", justifyContent: "center",
   },
-  certCheckIcon: { color: "#fff", fontSize: 10, fontWeight: "700" },
+  certCheckIcon: { color: SharedColors.white, fontSize: 10, fontWeight: "700" },
 
   // Info
   infoCard: {
-    backgroundColor: T.white, borderRadius: 16, padding: 18,
-    borderWidth: 1, borderColor: T.border, gap: 12,
+    backgroundColor: SharedColors.white, borderRadius: 16, padding: 18,
+    borderWidth: 1, borderColor: SharedColors.border, gap: 12,
   },
-  infoCardTitle: { fontSize: 15, fontWeight: "700", color: T.navy },
+  infoCardTitle: { fontSize: 15, fontWeight: "700", color: SharedColors.navy },
   infoRow: { flexDirection: "row", alignItems: "center", gap: 10 },
   infoIcon: { fontSize: 16 },
-  infoText: { fontSize: 13, color: T.slate, flex: 1 },
+  infoText: { fontSize: 13, color: SharedColors.slate, flex: 1 },
 
   // Before/After Gallery
   gallerySection: { gap: 10 },
-  galleryTitle: { fontSize: 15, fontWeight: "700", color: T.navy },
+  galleryTitle: { fontSize: 15, fontWeight: "700", color: SharedColors.navy },
   galleryScroll: { gap: 12 },
   galleryCard: {
-    backgroundColor: T.white, borderRadius: 14, padding: 12,
-    borderWidth: 1, borderColor: T.border, width: 260,
+    backgroundColor: SharedColors.white, borderRadius: 14, padding: 12,
+    borderWidth: 1, borderColor: SharedColors.border, width: 260,
   },
   galleryImages: { flexDirection: "row", alignItems: "center", gap: 6 },
   galleryImgWrap: { flex: 1, position: "relative" },
-  galleryImg: { width: "100%", height: 100, borderRadius: 10, backgroundColor: T.border },
+  galleryImg: { width: "100%", height: 100, borderRadius: 10, backgroundColor: SharedColors.border },
   galleryLabel: {
     position: "absolute", top: 6, left: 6,
     backgroundColor: "rgba(0,0,0,0.6)", borderRadius: 4,
     paddingHorizontal: 6, paddingVertical: 2,
   },
   galleryLabelAfter: { backgroundColor: "rgba(22,163,74,0.8)" },
-  galleryLabelText: { fontSize: 9, fontWeight: "700", color: "#fff" },
+  galleryLabelText: { fontSize: 9, fontWeight: "700", color: SharedColors.white },
   galleryArrow: { paddingHorizontal: 2 },
-  galleryArrowText: { fontSize: 16, color: T.slateLight, fontWeight: "700" },
-  galleryTreatment: { fontSize: 12, fontWeight: "600", color: T.navy, marginTop: 8, textAlign: "center" },
+  galleryArrowText: { fontSize: 16, color: SharedColors.slateLight, fontWeight: "700" },
+  galleryTreatment: { fontSize: 12, fontWeight: "600", color: SharedColors.navy, marginTop: 8, textAlign: "center" },
 
   // Modal
   modalOverlay: {
@@ -418,11 +412,11 @@ const s = StyleSheet.create({
     width: 36, height: 36, borderRadius: 18, backgroundColor: "rgba(255,255,255,0.15)",
     alignItems: "center", justifyContent: "center",
   },
-  modalCloseText: { color: "#fff", fontSize: 18, fontWeight: "600" },
-  modalTreatment: { color: "#fff", fontSize: 16, fontWeight: "700", marginBottom: 16 },
+  modalCloseText: { color: SharedColors.white, fontSize: 18, fontWeight: "600" },
+  modalTreatment: { color: SharedColors.white, fontSize: 16, fontWeight: "700", marginBottom: 16 },
   modalScroll: {},
   modalPage: { alignItems: "center", justifyContent: "center", paddingHorizontal: 20 },
-  modalLabel: { color: "#fff", fontSize: 14, fontWeight: "700", marginBottom: 10 },
+  modalLabel: { color: SharedColors.white, fontSize: 14, fontWeight: "700", marginBottom: 10 },
   modalImg: { width: "100%", height: 300, borderRadius: 16 },
   modalNav: {
     flexDirection: "row", alignItems: "center", gap: 20, marginTop: 20,
@@ -431,44 +425,44 @@ const s = StyleSheet.create({
     backgroundColor: "rgba(255,255,255,0.15)", borderRadius: 10,
     paddingHorizontal: 16, paddingVertical: 8,
   },
-  modalNavBtnText: { color: "#fff", fontSize: 14, fontWeight: "600" },
+  modalNavBtnText: { color: SharedColors.white, fontSize: 14, fontWeight: "600" },
   modalNavCount: { color: "rgba(255,255,255,0.6)", fontSize: 13 },
 
   // Reviews
   reviewsSection: { gap: 10 },
   reviewsHeader: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
-  reviewsTitle: { fontSize: 15, fontWeight: "700", color: T.navy },
-  reviewsSeeAll: { fontSize: 13, color: T.teal, fontWeight: "600" },
+  reviewsTitle: { fontSize: 15, fontWeight: "700", color: SharedColors.navy },
+  reviewsSeeAll: { fontSize: 13, color: PatientTheme.primary, fontWeight: "600" },
   noReviews: {
-    backgroundColor: T.white, borderRadius: 14, padding: 24,
-    borderWidth: 1, borderColor: T.border, alignItems: "center",
+    backgroundColor: SharedColors.white, borderRadius: 14, padding: 24,
+    borderWidth: 1, borderColor: SharedColors.border, alignItems: "center",
   },
-  noReviewsText: { fontSize: 13, color: T.slateLight },
+  noReviewsText: { fontSize: 13, color: SharedColors.slateLight },
   reviewCard: {
-    backgroundColor: T.white, borderRadius: 14, padding: 16,
-    borderWidth: 1, borderColor: T.border, gap: 8,
+    backgroundColor: SharedColors.white, borderRadius: 14, padding: 16,
+    borderWidth: 1, borderColor: SharedColors.border, gap: 8,
   },
   reviewTop: { flexDirection: "row", alignItems: "center", gap: 10 },
   reviewAvatar: {
     width: 32, height: 32, borderRadius: 16,
-    backgroundColor: T.tealLight, alignItems: "center", justifyContent: "center",
+    backgroundColor: PatientTheme.primaryLight, alignItems: "center", justifyContent: "center",
   },
-  reviewAvatarText: { color: T.teal, fontSize: 13, fontWeight: "700" },
-  reviewName: { fontSize: 13, fontWeight: "600", color: T.navy },
-  reviewTitle: { fontSize: 14, fontWeight: "700", color: T.navy },
-  reviewComment: { fontSize: 12, color: T.slate, lineHeight: 17 },
+  reviewAvatarText: { color: PatientTheme.primary, fontSize: 13, fontWeight: "700" },
+  reviewName: { fontSize: 13, fontWeight: "600", color: SharedColors.navy },
+  reviewTitle: { fontSize: 14, fontWeight: "700", color: SharedColors.navy },
+  reviewComment: { fontSize: 12, color: SharedColors.slate, lineHeight: 17 },
 
   // Actions
   actions: { gap: 10 },
   actionPrimary: {
-    backgroundColor: T.teal, borderRadius: 14,
+    backgroundColor: PatientTheme.primary, borderRadius: 14,
     paddingVertical: 15, alignItems: "center",
   },
-  actionPrimaryText: { color: T.white, fontSize: 15, fontWeight: "600" },
+  actionPrimaryText: { color: SharedColors.white, fontSize: 15, fontWeight: "600" },
   actionSecondary: {
-    backgroundColor: T.white, borderRadius: 14,
+    backgroundColor: SharedColors.white, borderRadius: 14,
     paddingVertical: 15, alignItems: "center",
-    borderWidth: 1, borderColor: T.border,
+    borderWidth: 1, borderColor: SharedColors.border,
   },
-  actionSecondaryText: { color: T.navy, fontSize: 15, fontWeight: "600" },
+  actionSecondaryText: { color: SharedColors.navy, fontSize: 15, fontWeight: "600" },
 });

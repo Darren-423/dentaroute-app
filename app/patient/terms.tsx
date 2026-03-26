@@ -3,16 +3,12 @@ import { router } from "expo-router";
 import React from "react";
 import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 
-const C = {
-  plum: "#4A0080", navy: "#0f172a", slate: "#64748b",
-  border: "#e2e8f0", bg: "#f8fafc", white: "#ffffff",
-};
-
+import { PatientTheme, SharedColors } from "../../constants/theme";
 export default function TermsScreen() {
   return (
     <View style={s.container}>
       <LinearGradient
-        colors={["#3D0070", "#2F0058", "#220040"]}
+        colors={[...PatientTheme.gradient]}
         start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}
         style={s.header}
       >
@@ -88,7 +84,7 @@ export default function TermsScreen() {
 }
 
 const s = StyleSheet.create({
-  container: { flex: 1, backgroundColor: C.bg },
+  container: { flex: 1, backgroundColor: SharedColors.bg },
   header: { paddingHorizontal: 20, paddingTop: 60, paddingBottom: 18 },
   headerRow: { flexDirection: "row", alignItems: "center" },
   backBtn: {
@@ -97,15 +93,15 @@ const s = StyleSheet.create({
     borderWidth: 1, borderColor: "rgba(255,255,255,0.15)",
     alignItems: "center", justifyContent: "center",
   },
-  backArrow: { fontSize: 24, color: "#fff", fontWeight: "600", marginTop: -2 },
-  title: { flex: 1, fontSize: 18, fontWeight: "700", color: "#fff", textAlign: "center" },
+  backArrow: { fontSize: 24, color: SharedColors.white, fontWeight: "600", marginTop: -2 },
+  title: { flex: 1, fontSize: 18, fontWeight: "700", color: SharedColors.white, textAlign: "center" },
   scroll: { paddingHorizontal: 24, paddingTop: 20 },
-  updated: { fontSize: 12, color: C.slate, marginBottom: 20 },
-  sectionTitle: { fontSize: 15, fontWeight: "700", color: C.navy, marginTop: 20, marginBottom: 8 },
-  body: { fontSize: 14, color: C.slate, lineHeight: 22 },
+  updated: { fontSize: 12, color: SharedColors.slate, marginBottom: 20 },
+  sectionTitle: { fontSize: 15, fontWeight: "700", color: SharedColors.navy, marginTop: 20, marginBottom: 8 },
+  body: { fontSize: 14, color: SharedColors.slate, lineHeight: 22 },
   placeholder: {
     fontSize: 13, color: "#b45309", fontStyle: "italic",
-    backgroundColor: "#fffbeb", borderRadius: 8, padding: 12, marginTop: 24,
+    backgroundColor: SharedColors.amberLight, borderRadius: 8, padding: 12, marginTop: 24,
     borderWidth: 1, borderColor: "rgba(245,158,11,0.2)",
   },
 });

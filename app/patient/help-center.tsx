@@ -14,15 +14,7 @@ import {
 } from "react-native";
 import { store, SupportInquiry } from "../../lib/store";
 
-const T = {
-  teal: "#4A0080", tealMid: "#5C10A0", tealLight: "#f0e6f6",
-  navy: "#0f172a", slate: "#64748b", slateLight: "#94a3b8",
-  border: "#e2e8f0", bg: "#f8fafc", white: "#fff",
-  green: "#16a34a", greenLight: "#f0fdf4",
-  amber: "#f59e0b", amberLight: "#fffbeb",
-  red: "#ef4444",
-};
-
+import { PatientTheme, SharedColors } from "../../constants/theme";
 const FAQ_DATA = [
   {
     category: "payment",
@@ -151,7 +143,7 @@ export default function HelpCenterScreen() {
   return (
     <View style={s.container}>
       <LinearGradient
-        colors={["#3D0070", "#2F0058", "#220040"]}
+        colors={[...PatientTheme.gradient]}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
         style={s.header}
@@ -182,7 +174,7 @@ export default function HelpCenterScreen() {
             <TextInput
               style={s.searchInput}
               placeholder="Search FAQ..."
-              placeholderTextColor={T.slateLight}
+              placeholderTextColor={SharedColors.slateLight}
               value={searchQuery}
               onChangeText={setSearchQuery}
               returnKeyType="search"
@@ -251,14 +243,14 @@ export default function HelpCenterScreen() {
                       key={cat.value}
                       style={[
                         s.categoryChip,
-                        category === cat.value && { borderColor: T.teal, backgroundColor: T.tealLight },
+                        category === cat.value && { borderColor: PatientTheme.primary, backgroundColor: PatientTheme.primaryLight },
                       ]}
                       onPress={() => { setCategory(cat.value); setErrors((e) => ({ ...e, category: undefined })); }}
                       activeOpacity={0.7}
                     >
                       <Text style={[
                         s.categoryChipText,
-                        category === cat.value && { color: T.teal, fontWeight: "700" },
+                        category === cat.value && { color: PatientTheme.primary, fontWeight: "700" },
                       ]}>
                         {cat.label}
                       </Text>
@@ -272,7 +264,7 @@ export default function HelpCenterScreen() {
                 <TextInput
                   style={[s.formInput, errors.subject && s.formInputError]}
                   placeholder="Brief summary of your issue"
-                  placeholderTextColor={T.slateLight}
+                  placeholderTextColor={SharedColors.slateLight}
                   value={subject}
                   onChangeText={(t) => { setSubject(t); setErrors((e) => ({ ...e, subject: undefined })); }}
                   maxLength={100}
@@ -285,7 +277,7 @@ export default function HelpCenterScreen() {
                 <TextInput
                   style={[s.formInput, s.formTextArea, errors.message && s.formInputError]}
                   placeholder="Describe your issue in detail..."
-                  placeholderTextColor={T.slateLight}
+                  placeholderTextColor={SharedColors.slateLight}
                   value={message}
                   onChangeText={(t) => { setMessage(t); setErrors((e) => ({ ...e, message: undefined })); }}
                   multiline
@@ -305,7 +297,7 @@ export default function HelpCenterScreen() {
                 <TextInput
                   style={s.formInput}
                   placeholder="your@email.com"
-                  placeholderTextColor={T.slateLight}
+                  placeholderTextColor={SharedColors.slateLight}
                   value={email}
                   onChangeText={setEmail}
                   keyboardType="email-address"
@@ -321,7 +313,7 @@ export default function HelpCenterScreen() {
                   activeOpacity={0.85}
                 >
                   {submitting ? (
-                    <ActivityIndicator color={T.white} size="small" />
+                    <ActivityIndicator color={SharedColors.white} size="small" />
                   ) : (
                     <Text style={s.submitBtnText}>Submit Inquiry →</Text>
                   )}
@@ -340,13 +332,13 @@ export default function HelpCenterScreen() {
                     <Text style={s.inquirySubject} numberOfLines={1}>{inq.subject}</Text>
                     <View style={[
                       s.statusBadge,
-                      inq.status === "resolved" && { backgroundColor: T.greenLight },
-                      inq.status === "in_review" && { backgroundColor: T.amberLight },
+                      inq.status === "resolved" && { backgroundColor: SharedColors.greenLight },
+                      inq.status === "in_review" && { backgroundColor: SharedColors.amberLight },
                     ]}>
                       <Text style={[
                         s.statusText,
-                        inq.status === "resolved" && { color: T.green },
-                        inq.status === "in_review" && { color: T.amber },
+                        inq.status === "resolved" && { color: SharedColors.green },
+                        inq.status === "in_review" && { color: SharedColors.amber },
                       ]}>
                         {inq.status === "submitted" ? "Submitted" :
                          inq.status === "in_review" ? "In Review" : "Resolved"}
@@ -377,7 +369,7 @@ export default function HelpCenterScreen() {
 }
 
 const s = StyleSheet.create({
-  container: { flex: 1, backgroundColor: T.bg },
+  container: { flex: 1, backgroundColor: SharedColors.bg },
 
   // Header
   header: {
@@ -390,125 +382,125 @@ const s = StyleSheet.create({
     borderWidth: 1, borderColor: "rgba(255,255,255,0.15)",
     alignItems: "center", justifyContent: "center",
   },
-  backArrow: { fontSize: 24, color: "#fff", fontWeight: "600", marginTop: -2 },
-  headerTitle: { fontSize: 18, fontWeight: "700", color: T.white },
+  backArrow: { fontSize: 24, color: SharedColors.white, fontWeight: "600", marginTop: -2 },
+  headerTitle: { fontSize: 18, fontWeight: "700", color: SharedColors.white },
 
   // Content
   content: { padding: 20, gap: 20, paddingBottom: 40 },
-  subtitle: { fontSize: 15, color: T.slate, marginBottom: -4 },
+  subtitle: { fontSize: 15, color: SharedColors.slate, marginBottom: -4 },
 
   // Search
   searchWrap: {
     flexDirection: "row", alignItems: "center", gap: 8,
-    backgroundColor: T.white, borderRadius: 12,
-    borderWidth: 1, borderColor: T.border,
+    backgroundColor: SharedColors.white, borderRadius: 12,
+    borderWidth: 1, borderColor: SharedColors.border,
     paddingHorizontal: 14, paddingVertical: Platform.OS === "ios" ? 12 : 4,
   },
   searchIcon: { fontSize: 14 },
-  searchInput: { flex: 1, fontSize: 14, color: T.navy },
-  clearBtn: { fontSize: 14, color: T.slateLight, padding: 4 },
+  searchInput: { flex: 1, fontSize: 14, color: SharedColors.navy },
+  clearBtn: { fontSize: 14, color: SharedColors.slateLight, padding: 4 },
 
   // Section
   section: { gap: 10 },
-  sectionTitle: { fontSize: 16, fontWeight: "700", color: T.navy },
+  sectionTitle: { fontSize: 16, fontWeight: "700", color: SharedColors.navy },
 
   // FAQ
   faqCard: {
-    backgroundColor: T.white, borderRadius: 16,
-    borderWidth: 1, borderColor: T.border,
+    backgroundColor: SharedColors.white, borderRadius: 16,
+    borderWidth: 1, borderColor: SharedColors.border,
     overflow: "hidden",
   },
   faqItem: { paddingHorizontal: 16, paddingVertical: 14 },
-  faqItemBorder: { borderBottomWidth: 1, borderBottomColor: T.border },
+  faqItemBorder: { borderBottomWidth: 1, borderBottomColor: SharedColors.border },
   faqHeader: {
     flexDirection: "row", justifyContent: "space-between",
     alignItems: "center", gap: 12,
   },
-  faqQuestion: { flex: 1, fontSize: 14, fontWeight: "600", color: T.navy },
-  faqChevron: { fontSize: 14, color: T.slateLight },
+  faqQuestion: { flex: 1, fontSize: 14, fontWeight: "600", color: SharedColors.navy },
+  faqChevron: { fontSize: 14, color: SharedColors.slateLight },
   faqAnswer: {
-    fontSize: 13, color: T.slate, lineHeight: 20,
+    fontSize: 13, color: SharedColors.slate, lineHeight: 20,
     marginTop: 10, paddingTop: 10,
-    borderTopWidth: 1, borderTopColor: T.border,
+    borderTopWidth: 1, borderTopColor: SharedColors.border,
   },
 
   // Empty FAQ
   emptyFaq: { alignItems: "center", paddingVertical: 28, gap: 6 },
   emptyFaqIcon: { fontSize: 24 },
-  emptyFaqText: { fontSize: 14, fontWeight: "600", color: T.navy },
-  emptyFaqHint: { fontSize: 12, color: T.slateLight },
+  emptyFaqText: { fontSize: 14, fontWeight: "600", color: SharedColors.navy },
+  emptyFaqHint: { fontSize: 12, color: SharedColors.slateLight },
 
   // Form
   formCard: {
-    backgroundColor: T.white, borderRadius: 16,
-    borderWidth: 1, borderColor: T.border,
+    backgroundColor: SharedColors.white, borderRadius: 16,
+    borderWidth: 1, borderColor: SharedColors.border,
     padding: 16, gap: 12,
   },
-  formLabel: { fontSize: 13, fontWeight: "600", color: T.navy, marginTop: 2 },
+  formLabel: { fontSize: 13, fontWeight: "600", color: SharedColors.navy, marginTop: 2 },
   formInput: {
-    backgroundColor: T.bg, borderRadius: 12,
-    borderWidth: 1, borderColor: T.border,
+    backgroundColor: SharedColors.bg, borderRadius: 12,
+    borderWidth: 1, borderColor: SharedColors.border,
     paddingHorizontal: 14, paddingVertical: Platform.OS === "ios" ? 12 : 10,
-    fontSize: 14, color: T.navy,
+    fontSize: 14, color: SharedColors.navy,
   },
-  formInputError: { borderColor: T.red },
+  formInputError: { borderColor: SharedColors.red },
   formTextArea: { minHeight: 100, textAlignVertical: "top" },
   charCountRow: {
     flexDirection: "row", justifyContent: "space-between",
     alignItems: "center", marginTop: -6,
   },
-  charCount: { fontSize: 11, color: T.slateLight },
-  errorText: { fontSize: 12, color: T.red, marginTop: -4 },
+  charCount: { fontSize: 11, color: SharedColors.slateLight },
+  errorText: { fontSize: 12, color: SharedColors.red, marginTop: -4 },
 
   // Categories
   categoryGrid: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
   categoryChip: {
     paddingHorizontal: 14, paddingVertical: 10,
-    borderRadius: 10, borderWidth: 1.5, borderColor: T.border,
-    backgroundColor: T.white,
+    borderRadius: 10, borderWidth: 1.5, borderColor: SharedColors.border,
+    backgroundColor: SharedColors.white,
   },
-  categoryChipText: { fontSize: 13, color: T.slate },
+  categoryChipText: { fontSize: 13, color: SharedColors.slate },
 
   // Submit
   submitBtn: {
-    backgroundColor: T.teal, borderRadius: 14,
+    backgroundColor: PatientTheme.primary, borderRadius: 14,
     paddingVertical: 15, alignItems: "center", marginTop: 4,
   },
-  submitBtnText: { color: T.white, fontSize: 15, fontWeight: "700" },
+  submitBtnText: { color: SharedColors.white, fontSize: 15, fontWeight: "700" },
 
   // Success
   successCard: {
-    backgroundColor: T.greenLight, borderRadius: 16,
+    backgroundColor: SharedColors.greenLight, borderRadius: 16,
     borderWidth: 1, borderColor: "#bbf7d0",
     padding: 28, alignItems: "center", gap: 8,
   },
   successIcon: { fontSize: 32 },
-  successTitle: { fontSize: 17, fontWeight: "700", color: T.green },
-  successDesc: { fontSize: 13, color: T.slate, textAlign: "center", lineHeight: 20 },
+  successTitle: { fontSize: 17, fontWeight: "700", color: SharedColors.green },
+  successDesc: { fontSize: 13, color: SharedColors.slate, textAlign: "center", lineHeight: 20 },
 
   // Inquiries
   inquiryCard: {
-    backgroundColor: T.white, borderRadius: 14,
-    borderWidth: 1, borderColor: T.border,
+    backgroundColor: SharedColors.white, borderRadius: 14,
+    borderWidth: 1, borderColor: SharedColors.border,
     padding: 14, gap: 6,
   },
   inquiryHeader: {
     flexDirection: "row", justifyContent: "space-between",
     alignItems: "center", gap: 10,
   },
-  inquirySubject: { flex: 1, fontSize: 14, fontWeight: "600", color: T.navy },
+  inquirySubject: { flex: 1, fontSize: 14, fontWeight: "600", color: SharedColors.navy },
   statusBadge: {
-    backgroundColor: T.tealLight, borderRadius: 8,
+    backgroundColor: PatientTheme.primaryLight, borderRadius: 8,
     paddingHorizontal: 10, paddingVertical: 4,
   },
-  statusText: { fontSize: 11, fontWeight: "600", color: T.teal },
-  inquiryDate: { fontSize: 12, color: T.slateLight },
+  statusText: { fontSize: 11, fontWeight: "600", color: PatientTheme.primary },
+  inquiryDate: { fontSize: 12, color: SharedColors.slateLight },
 
   // Response
   responseBox: {
-    backgroundColor: T.bg, borderRadius: 10,
+    backgroundColor: SharedColors.bg, borderRadius: 10,
     padding: 12, marginTop: 4, gap: 4,
   },
-  responseLabel: { fontSize: 11, fontWeight: "700", color: T.navy },
-  responseText: { fontSize: 13, color: T.slate, lineHeight: 19 },
+  responseLabel: { fontSize: 11, fontWeight: "700", color: SharedColors.navy },
+  responseText: { fontSize: 13, color: SharedColors.slate, lineHeight: 19 },
 });

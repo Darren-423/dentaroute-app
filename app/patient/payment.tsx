@@ -7,15 +7,7 @@ import {
 } from "react-native";
 import { DentistQuote, SERVICE_TIER_CONFIG, ServiceTier, store } from "../../lib/store";
 
-const T = {
-  teal: "#4A0080", tealMid: "#5C10A0", tealLight: "#f0e6f6",
-  navy: "#0f172a", slate: "#64748b", slateLight: "#94a3b8",
-  border: "#e2e8f0", bg: "#f8fafc", white: "#ffffff",
-  green: "#16a34a", greenLight: "#f0fdf4",
-  amber: "#f59e0b", amberLight: "#fffbeb",
-  red: "#ef4444",
-};
-
+import { PatientTheme, SharedColors } from "../../constants/theme";
 const TIER_DETAILS: Record<ServiceTier, { icon: string; tagline: string; features: string[]; notIncluded?: string[] }> = {
   basic: {
     icon: "🎯",
@@ -139,7 +131,7 @@ export default function PatientPaymentScreen() {
             </View>
             <View style={s.bookingRow}>
               <Text style={s.bookingKey}>Service Plan</Text>
-              <Text style={[s.bookingValue, { color: T.teal, fontWeight: "700" }]}>
+              <Text style={[s.bookingValue, { color: PatientTheme.primary, fontWeight: "700" }]}>
                 {SERVICE_TIER_CONFIG[selectedTier].label} — ${tierConfig.fee}
               </Text>
             </View>
@@ -186,7 +178,7 @@ export default function PatientPaymentScreen() {
     <View style={s.container}>
       <ScrollView showsVerticalScrollIndicator={false}>
         <LinearGradient
-          colors={["#3D0070", "#2F0058", "#220040"]}
+          colors={[...PatientTheme.gradient]}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
           style={s.header}
@@ -320,7 +312,7 @@ export default function PatientPaymentScreen() {
           activeOpacity={0.85}
         >
           {loading ? (
-            <ActivityIndicator color={T.white} size="small" />
+            <ActivityIndicator color={SharedColors.white} size="small" />
           ) : (
             <Text style={s.payBtnText}>
               Pay ${tierConfig.fee} — {SERVICE_TIER_CONFIG[selectedTier].label} →
@@ -334,7 +326,7 @@ export default function PatientPaymentScreen() {
 }
 
 const s = StyleSheet.create({
-  container: { flex: 1, backgroundColor: T.bg },
+  container: { flex: 1, backgroundColor: SharedColors.bg },
 
   header: { paddingHorizontal: 20, paddingTop: 60, paddingBottom: 18 },
   headerRow: { flexDirection: "row", alignItems: "center" },
@@ -344,39 +336,39 @@ const s = StyleSheet.create({
     borderWidth: 1, borderColor: "rgba(255,255,255,0.15)",
     alignItems: "center", justifyContent: "center",
   },
-  backArrow: { fontSize: 24, color: "#fff", fontWeight: "600", marginTop: -2 },
+  backArrow: { fontSize: 24, color: SharedColors.white, fontWeight: "600", marginTop: -2 },
   headerCenter: { flex: 1, alignItems: "center" },
-  title: { fontSize: 18, fontWeight: "700", color: "#fff" },
+  title: { fontSize: 18, fontWeight: "700", color: SharedColors.white },
   subtitle: { fontSize: 12, color: "rgba(255,255,255,0.55)", marginTop: 2 },
 
   content: { padding: 20, gap: 14 },
 
   summaryCard: {
-    backgroundColor: T.white, borderRadius: 16, padding: 16, gap: 10,
-    borderWidth: 1, borderColor: T.border,
+    backgroundColor: SharedColors.white, borderRadius: 16, padding: 16, gap: 10,
+    borderWidth: 1, borderColor: SharedColors.border,
   },
   summaryDentist: { flexDirection: "row", alignItems: "center", gap: 12 },
   summaryAvatar: {
     width: 40, height: 40, borderRadius: 20,
-    backgroundColor: T.tealLight, alignItems: "center", justifyContent: "center",
+    backgroundColor: PatientTheme.primaryLight, alignItems: "center", justifyContent: "center",
   },
-  summaryAvatarText: { fontSize: 16, fontWeight: "700", color: T.teal },
-  summaryDentistName: { fontSize: 15, fontWeight: "700", color: T.navy },
-  summaryClinic: { fontSize: 12, color: T.slate, marginTop: 1 },
-  treatmentTotal: { fontSize: 18, fontWeight: "800", color: T.navy },
-  treatmentLabel: { fontSize: 11, color: T.slate, marginTop: 1 },
+  summaryAvatarText: { fontSize: 16, fontWeight: "700", color: PatientTheme.primary },
+  summaryDentistName: { fontSize: 15, fontWeight: "700", color: SharedColors.navy },
+  summaryClinic: { fontSize: 12, color: SharedColors.slate, marginTop: 1 },
+  treatmentTotal: { fontSize: 18, fontWeight: "800", color: SharedColors.navy },
+  treatmentLabel: { fontSize: 11, color: SharedColors.slate, marginTop: 1 },
   clinicPayNote: {
-    fontSize: 12, color: T.slate, fontStyle: "italic",
-    backgroundColor: T.bg, borderRadius: 8, paddingHorizontal: 10, paddingVertical: 8,
+    fontSize: 12, color: SharedColors.slate, fontStyle: "italic",
+    backgroundColor: SharedColors.bg, borderRadius: 8, paddingHorizontal: 10, paddingVertical: 8,
   },
 
   tierCard: {
-    backgroundColor: T.white, borderRadius: 16, padding: 18, gap: 14,
-    borderWidth: 1.5, borderColor: T.border,
+    backgroundColor: SharedColors.white, borderRadius: 16, padding: 18, gap: 14,
+    borderWidth: 1.5, borderColor: SharedColors.border,
   },
   tierCardSelected: {
-    borderColor: T.teal, backgroundColor: T.tealLight,
-    shadowColor: T.teal, shadowOffset: { width: 0, height: 4 },
+    borderColor: PatientTheme.primary, backgroundColor: PatientTheme.primaryLight,
+    shadowColor: PatientTheme.primary, shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.15, shadowRadius: 12, elevation: 4,
   },
   tierCardPopular: {
@@ -384,118 +376,118 @@ const s = StyleSheet.create({
   },
   popularBadge: {
     position: "absolute", top: -10, right: 16,
-    backgroundColor: T.teal, borderRadius: 8,
+    backgroundColor: PatientTheme.primary, borderRadius: 8,
     paddingHorizontal: 10, paddingVertical: 3,
   },
-  popularBadgeText: { fontSize: 10, fontWeight: "700", color: T.white, letterSpacing: 0.5 },
+  popularBadgeText: { fontSize: 10, fontWeight: "700", color: SharedColors.white, letterSpacing: 0.5 },
 
   tierHeader: { flexDirection: "row", alignItems: "center", gap: 12 },
   tierIcon: { fontSize: 28 },
-  tierName: { fontSize: 17, fontWeight: "700", color: T.navy },
-  tierNameSelected: { color: T.teal },
-  tierTagline: { fontSize: 12, color: T.slate, marginTop: 1 },
+  tierName: { fontSize: 17, fontWeight: "700", color: SharedColors.navy },
+  tierNameSelected: { color: PatientTheme.primary },
+  tierTagline: { fontSize: 12, color: SharedColors.slate, marginTop: 1 },
   tierPriceWrap: {
-    backgroundColor: T.bg, borderRadius: 10, paddingHorizontal: 14, paddingVertical: 8,
-    borderWidth: 1, borderColor: T.border,
+    backgroundColor: SharedColors.bg, borderRadius: 10, paddingHorizontal: 14, paddingVertical: 8,
+    borderWidth: 1, borderColor: SharedColors.border,
   },
-  tierPriceWrapSelected: { backgroundColor: T.teal, borderColor: T.teal },
-  tierPrice: { fontSize: 20, fontWeight: "800", color: T.navy },
-  tierPriceSelected: { color: T.white },
+  tierPriceWrapSelected: { backgroundColor: PatientTheme.primary, borderColor: PatientTheme.primary },
+  tierPrice: { fontSize: 20, fontWeight: "800", color: SharedColors.navy },
+  tierPriceSelected: { color: SharedColors.white },
 
   tierFeatures: { gap: 6, paddingLeft: 4 },
   featureRow: { flexDirection: "row", alignItems: "center", gap: 8 },
-  featureCheck: { fontSize: 14, color: T.green, fontWeight: "700" },
-  featureText: { fontSize: 13, color: T.navy },
-  featureX: { fontSize: 14, color: T.slateLight, fontWeight: "500" },
-  featureTextDim: { fontSize: 13, color: T.slateLight, textDecorationLine: "line-through" },
+  featureCheck: { fontSize: 14, color: SharedColors.green, fontWeight: "700" },
+  featureText: { fontSize: 13, color: SharedColors.navy },
+  featureX: { fontSize: 14, color: SharedColors.slateLight, fontWeight: "500" },
+  featureTextDim: { fontSize: 13, color: SharedColors.slateLight, textDecorationLine: "line-through" },
 
   radioRow: { flexDirection: "row", alignItems: "center", gap: 8, paddingTop: 2 },
   radioOuter: {
     width: 20, height: 20, borderRadius: 10, borderWidth: 2,
-    borderColor: T.slateLight, alignItems: "center", justifyContent: "center",
+    borderColor: SharedColors.slateLight, alignItems: "center", justifyContent: "center",
   },
-  radioOuterSelected: { borderColor: T.teal },
-  radioInner: { width: 10, height: 10, borderRadius: 5, backgroundColor: T.teal },
-  radioLabel: { fontSize: 13, color: T.slateLight, fontWeight: "600" },
-  radioLabelSelected: { color: T.teal },
+  radioOuterSelected: { borderColor: PatientTheme.primary },
+  radioInner: { width: 10, height: 10, borderRadius: 5, backgroundColor: PatientTheme.primary },
+  radioLabel: { fontSize: 13, color: SharedColors.slateLight, fontWeight: "600" },
+  radioLabelSelected: { color: PatientTheme.primary },
 
   infoNote: {
     flexDirection: "row", alignItems: "flex-start", gap: 10,
-    backgroundColor: T.amberLight, borderRadius: 12, padding: 14,
+    backgroundColor: SharedColors.amberLight, borderRadius: 12, padding: 14,
     borderWidth: 1, borderColor: "rgba(245,158,11,0.2)",
   },
   infoIcon: { fontSize: 16, marginTop: 1 },
   infoText: { flex: 1, fontSize: 12, color: "#92400e", lineHeight: 18 },
 
   policyNote: {
-    backgroundColor: T.white, borderRadius: 12, padding: 14, gap: 6,
-    borderWidth: 1, borderColor: T.border,
+    backgroundColor: SharedColors.white, borderRadius: 12, padding: 14, gap: 6,
+    borderWidth: 1, borderColor: SharedColors.border,
   },
-  policyTitle: { fontSize: 12, fontWeight: "700", color: T.navy },
-  policyText: { fontSize: 12, color: T.slate, lineHeight: 18 },
+  policyTitle: { fontSize: 12, fontWeight: "700", color: SharedColors.navy },
+  policyText: { fontSize: 12, color: SharedColors.slate, lineHeight: 18 },
 
   bottom: {
     paddingHorizontal: 24, paddingVertical: 16, paddingBottom: 56,
-    backgroundColor: T.white, borderTopWidth: 1, borderTopColor: T.border,
+    backgroundColor: SharedColors.white, borderTopWidth: 1, borderTopColor: SharedColors.border,
     alignItems: "center", gap: 8,
   },
   payBtn: {
-    width: "100%", backgroundColor: T.teal, borderRadius: 14,
+    width: "100%", backgroundColor: PatientTheme.primary, borderRadius: 14,
     paddingVertical: 16, alignItems: "center",
     shadowColor: "#000", shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.12, shadowRadius: 10, elevation: 4,
   },
   payBtnDisabled: { opacity: 0.5 },
-  payBtnText: { color: T.white, fontSize: 17, fontWeight: "700" },
-  poweredBy: { fontSize: 11, color: T.slateLight },
+  payBtnText: { color: SharedColors.white, fontSize: 17, fontWeight: "700" },
+  poweredBy: { fontSize: 11, color: SharedColors.slateLight },
 
   successContainer: {
-    flex: 1, backgroundColor: T.bg,
+    flex: 1, backgroundColor: SharedColors.bg,
     justifyContent: "center", alignItems: "center", paddingHorizontal: 28,
   },
   successContent: { alignItems: "center", width: "100%" },
   successIconWrap: {
     width: 72, height: 72, borderRadius: 36,
-    backgroundColor: T.green, alignItems: "center", justifyContent: "center",
+    backgroundColor: SharedColors.green, alignItems: "center", justifyContent: "center",
     marginBottom: 20,
-    shadowColor: T.green, shadowOffset: { width: 0, height: 6 },
+    shadowColor: SharedColors.green, shadowOffset: { width: 0, height: 6 },
     shadowOpacity: 0.3, shadowRadius: 12, elevation: 6,
   },
-  successIcon: { color: T.white, fontSize: 36, fontWeight: "700" },
-  successTitle: { fontSize: 26, fontWeight: "700", color: T.navy, marginBottom: 10 },
+  successIcon: { color: SharedColors.white, fontSize: 36, fontWeight: "700" },
+  successTitle: { fontSize: 26, fontWeight: "700", color: SharedColors.navy, marginBottom: 10 },
   successDesc: {
-    fontSize: 14, color: T.slate, textAlign: "center", lineHeight: 22, marginBottom: 24,
+    fontSize: 14, color: SharedColors.slate, textAlign: "center", lineHeight: 22, marginBottom: 24,
   },
 
   bookingSummary: {
-    width: "100%", backgroundColor: T.white, borderRadius: 16, padding: 18, gap: 12,
-    borderWidth: 1, borderColor: T.border, marginBottom: 16,
+    width: "100%", backgroundColor: SharedColors.white, borderRadius: 16, padding: 18, gap: 12,
+    borderWidth: 1, borderColor: SharedColors.border, marginBottom: 16,
   },
   bookingLabel: {
-    fontSize: 11, fontWeight: "700", color: T.green, letterSpacing: 0.8,
+    fontSize: 11, fontWeight: "700", color: SharedColors.green, letterSpacing: 0.8,
   },
   bookingRow: {
     flexDirection: "row", justifyContent: "space-between", alignItems: "center",
   },
-  bookingKey: { fontSize: 13, color: T.slate },
-  bookingValue: { fontSize: 13, fontWeight: "600", color: T.navy },
+  bookingKey: { fontSize: 13, color: SharedColors.slate },
+  bookingValue: { fontSize: 13, fontWeight: "600", color: SharedColors.navy },
 
   nextSteps: {
-    width: "100%", backgroundColor: T.white, borderRadius: 16, padding: 18, gap: 12,
-    borderWidth: 1, borderColor: T.border, marginBottom: 24,
+    width: "100%", backgroundColor: SharedColors.white, borderRadius: 16, padding: 18, gap: 12,
+    borderWidth: 1, borderColor: SharedColors.border, marginBottom: 24,
   },
-  nextStepsTitle: { fontSize: 14, fontWeight: "700", color: T.navy },
+  nextStepsTitle: { fontSize: 14, fontWeight: "700", color: SharedColors.navy },
   stepItem: { flexDirection: "row", alignItems: "center", gap: 10 },
   stepDot: {
     width: 24, height: 24, borderRadius: 12,
-    backgroundColor: T.tealLight, alignItems: "center", justifyContent: "center",
+    backgroundColor: PatientTheme.primaryLight, alignItems: "center", justifyContent: "center",
   },
-  stepDotText: { fontSize: 11, fontWeight: "700", color: T.teal },
-  stepText: { flex: 1, fontSize: 13, color: T.slate, lineHeight: 18 },
+  stepDotText: { fontSize: 11, fontWeight: "700", color: PatientTheme.primary },
+  stepText: { flex: 1, fontSize: 13, color: SharedColors.slate, lineHeight: 18 },
 
   dashboardBtn: {
-    width: "100%", backgroundColor: T.teal, borderRadius: 14,
+    width: "100%", backgroundColor: PatientTheme.primary, borderRadius: 14,
     paddingVertical: 16, alignItems: "center",
   },
-  dashboardBtnText: { color: T.white, fontSize: 16, fontWeight: "700" },
+  dashboardBtnText: { color: SharedColors.white, fontSize: 16, fontWeight: "700" },
 });

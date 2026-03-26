@@ -3,13 +3,9 @@ import { useRouter } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
 import { Animated, Dimensions, Easing, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
+import { PatientTheme, SharedColors } from "../constants/theme";
 const { width } = Dimensions.get('window');
 const CARD_WIDTH = width - 56;
-
-const T = {
-  purple: '#3B0068',
-  white: '#ffffff',
-};
 
 export default function SplashScreen() {
   const router = useRouter();
@@ -34,7 +30,7 @@ export default function SplashScreen() {
 
   return (
     <LinearGradient
-      colors={['#7B2FBE', '#3A0068', '#1A002E']}
+      colors={[...PatientTheme.authGradient]}
       locations={[0, 0.55, 1]}
       start={{ x: 0.2, y: 0 }}
       end={{ x: 0.8, y: 1 }}
@@ -169,7 +165,7 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 42,
     fontWeight: '700',
-    color: T.white,
+    color: SharedColors.white,
     textAlign: 'center',
     letterSpacing: -0.5,
     textShadowColor: 'rgba(0, 0, 0, 0.2)',
@@ -194,7 +190,7 @@ const styles = StyleSheet.create({
   },
   bold: {
     fontWeight: '700',
-    color: T.white,
+    color: SharedColors.white,
   },
   swipeHint: {
     fontSize: 12,
@@ -239,7 +235,7 @@ const styles = StyleSheet.create({
   price: {
     fontSize: 16,
     fontWeight: '700',
-    color: T.white,
+    color: SharedColors.white,
   },
   arrow: {
     fontSize: 18,
@@ -252,7 +248,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   savingsBold: {
-    color: T.white,
+    color: SharedColors.white,
     fontWeight: '700',
   },
   divider: {
@@ -276,11 +272,11 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255,255,255,0.3)',
   },
   dotActive: {
-    backgroundColor: T.white,
+    backgroundColor: SharedColors.white,
     width: 20,
   },
   button: {
-    backgroundColor: T.white,
+    backgroundColor: SharedColors.white,
     borderRadius: 14,
     paddingVertical: 16,
     paddingHorizontal: 24,
@@ -300,7 +296,7 @@ const styles = StyleSheet.create({
   buttonText: {
     fontSize: 17,
     fontWeight: '700',
-    color: T.purple,
+    color: PatientTheme.primary,
     letterSpacing: 0.3,
   },
   arrowCircle: {
@@ -312,7 +308,7 @@ const styles = StyleSheet.create({
     height: 9,
     borderTopWidth: 2.5,
     borderRightWidth: 2.5,
-    borderColor: T.purple,
+    borderColor: PatientTheme.primary,
     transform: [{ rotate: '45deg' }],
   },
   founderText: {

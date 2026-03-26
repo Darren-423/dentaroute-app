@@ -10,13 +10,7 @@ import {
 } from "react-native";
 import { Booking, store } from "../../lib/store";
 
-const T = {
-  teal: "#4A0080", tealMid: "#5C10A0", tealLight: "#f0e6f6",
-  navy: "#0f172a", slate: "#64748b", slateLight: "#94a3b8",
-  border: "#e2e8f0", bg: "#f8fafc", white: "#fff",
-  amber: "#f59e0b", amberLight: "#fffbeb",
-};
-
+import { PatientTheme, SharedColors } from "../../constants/theme";
 export default function StayOrReturnScreen() {
   const { bookingId } = useLocalSearchParams<{ bookingId: string }>();
   const [booking, setBooking] = useState<Booking | null>(null);
@@ -77,7 +71,7 @@ export default function StayOrReturnScreen() {
   if (loading) {
     return (
       <View style={[s.container, { justifyContent: "center", alignItems: "center" }]}>
-        <ActivityIndicator color={T.teal} size="large" />
+        <ActivityIndicator color={PatientTheme.primary} size="large" />
       </View>
     );
   }
@@ -86,7 +80,7 @@ export default function StayOrReturnScreen() {
     <View style={s.container}>
       {/* Header */}
       <LinearGradient
-        colors={["#3D0070", "#2F0058", "#220040"]}
+        colors={[...PatientTheme.gradient]}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
         style={s.header}
@@ -194,7 +188,7 @@ export default function StayOrReturnScreen() {
 }
 
 const s = StyleSheet.create({
-  container: { flex: 1, backgroundColor: T.bg },
+  container: { flex: 1, backgroundColor: SharedColors.bg },
   header: { paddingHorizontal: 20, paddingTop: 60, paddingBottom: 18 },
   headerRow: { flexDirection: "row", alignItems: "center" },
   backBtn: {
@@ -203,72 +197,72 @@ const s = StyleSheet.create({
     borderWidth: 1, borderColor: "rgba(255,255,255,0.15)",
     alignItems: "center", justifyContent: "center",
   },
-  backArrow: { fontSize: 24, color: "#fff", fontWeight: "600", marginTop: -2 },
+  backArrow: { fontSize: 24, color: SharedColors.white, fontWeight: "600", marginTop: -2 },
   headerCenter: { flex: 1, alignItems: "center" },
-  headerTitle: { fontSize: 18, fontWeight: "700", color: "#fff" },
+  headerTitle: { fontSize: 18, fontWeight: "700", color: SharedColors.white },
   headerSub: { fontSize: 12, color: "rgba(255,255,255,0.55)", marginTop: 2 },
   content: { padding: 20, gap: 16 },
 
   // Completed
   completedCard: {
     alignItems: "center", paddingVertical: 24,
-    backgroundColor: T.tealLight, borderRadius: 20,
+    backgroundColor: PatientTheme.primaryLight, borderRadius: 20,
     borderWidth: 1, borderColor: "rgba(74,0,128,0.08)",
   },
-  completedTitle: { fontSize: 22, fontWeight: "800", color: T.navy, marginTop: 8 },
-  completedSub: { fontSize: 13, color: T.slate, marginTop: 4 },
+  completedTitle: { fontSize: 22, fontWeight: "800", color: SharedColors.navy, marginTop: 8 },
+  completedSub: { fontSize: 13, color: SharedColors.slate, marginTop: 4 },
 
   // Next visit
   nextVisitCard: {
-    backgroundColor: T.white, borderRadius: 16, padding: 20,
-    borderWidth: 1, borderColor: T.border, gap: 6,
+    backgroundColor: SharedColors.white, borderRadius: 16, padding: 20,
+    borderWidth: 1, borderColor: SharedColors.border, gap: 6,
   },
-  nextVisitLabel: { fontSize: 10, fontWeight: "700", color: T.slateLight, letterSpacing: 0.5 },
-  nextVisitTitle: { fontSize: 15, fontWeight: "700", color: T.navy },
-  nextVisitDate: { fontSize: 13, fontWeight: "600", color: T.teal },
+  nextVisitLabel: { fontSize: 10, fontWeight: "700", color: SharedColors.slateLight, letterSpacing: 0.5 },
+  nextVisitTitle: { fontSize: 15, fontWeight: "700", color: SharedColors.navy },
+  nextVisitDate: { fontSize: 13, fontWeight: "600", color: PatientTheme.primary },
   gapBanner: {
     flexDirection: "row", alignItems: "center", gap: 8,
-    backgroundColor: T.amberLight, borderRadius: 10, padding: 12, marginTop: 8,
+    backgroundColor: SharedColors.amberLight, borderRadius: 10, padding: 12, marginTop: 8,
     borderWidth: 1, borderColor: "rgba(245,158,11,0.12)",
   },
-  gapText: { fontSize: 13, color: T.navy, flex: 1 },
+  gapText: { fontSize: 13, color: SharedColors.navy, flex: 1 },
 
   // Question
   questionSection: { alignItems: "center", paddingVertical: 8 },
   questionEmoji: { fontSize: 40 },
-  questionTitle: { fontSize: 20, fontWeight: "800", color: T.navy, marginTop: 8 },
-  questionSub: { fontSize: 13, color: T.slate, textAlign: "center", lineHeight: 20, marginTop: 6, paddingHorizontal: 10 },
+  questionTitle: { fontSize: 20, fontWeight: "800", color: SharedColors.navy, marginTop: 8 },
+  questionSub: { fontSize: 13, color: SharedColors.slate, textAlign: "center", lineHeight: 20, marginTop: 6, paddingHorizontal: 10 },
 
   // Stay button
   stayBtn: {
     flexDirection: "row", alignItems: "center", gap: 14,
-    backgroundColor: T.teal, borderRadius: 16, padding: 20,
-    shadowColor: T.teal, shadowOffset: { width: 0, height: 6 }, shadowOpacity: 0.25, shadowRadius: 12,
+    backgroundColor: PatientTheme.primary, borderRadius: 16, padding: 20,
+    shadowColor: PatientTheme.primary, shadowOffset: { width: 0, height: 6 }, shadowOpacity: 0.25, shadowRadius: 12,
     elevation: 6,
   },
-  stayBtnTitle: { fontSize: 16, fontWeight: "700", color: T.white },
+  stayBtnTitle: { fontSize: 16, fontWeight: "700", color: SharedColors.white },
   stayBtnSub: { fontSize: 12, color: "rgba(255,255,255,0.7)", marginTop: 2 },
 
   // Return button
   returnBtn: {
     flexDirection: "row", alignItems: "center", gap: 14,
-    backgroundColor: T.white, borderRadius: 16, padding: 20,
-    borderWidth: 1.5, borderColor: T.border,
+    backgroundColor: SharedColors.white, borderRadius: 16, padding: 20,
+    borderWidth: 1.5, borderColor: SharedColors.border,
   },
-  returnBtnTitle: { fontSize: 16, fontWeight: "700", color: T.navy },
-  returnBtnSub: { fontSize: 12, color: T.slate, marginTop: 2 },
+  returnBtnTitle: { fontSize: 16, fontWeight: "700", color: SharedColors.navy },
+  returnBtnSub: { fontSize: 12, color: SharedColors.slate, marginTop: 2 },
 
-  hint: { fontSize: 12, color: T.amber, textAlign: "center", lineHeight: 18, fontStyle: "italic" },
+  hint: { fontSize: 12, color: SharedColors.amber, textAlign: "center", lineHeight: 18, fontStyle: "italic" },
 
   // Remaining visits
   remainingCard: {
-    backgroundColor: T.white, borderRadius: 16, padding: 18,
-    borderWidth: 1, borderColor: T.border, gap: 12,
+    backgroundColor: SharedColors.white, borderRadius: 16, padding: 18,
+    borderWidth: 1, borderColor: SharedColors.border, gap: 12,
   },
-  remainingTitle: { fontSize: 14, fontWeight: "700", color: T.navy },
+  remainingTitle: { fontSize: 14, fontWeight: "700", color: SharedColors.navy },
   remainingRow: { flexDirection: "row", alignItems: "flex-start", gap: 12 },
-  remainingDot: { width: 10, height: 10, borderRadius: 5, backgroundColor: T.amberLight, borderWidth: 2, borderColor: T.amber, marginTop: 5 },
-  remainingLabel: { fontSize: 13, fontWeight: "700", color: T.navy },
-  remainingDesc: { fontSize: 11, color: T.slate, marginTop: 1 },
-  remainingDate: { fontSize: 11, color: T.teal, fontWeight: "500", marginTop: 1 },
+  remainingDot: { width: 10, height: 10, borderRadius: 5, backgroundColor: SharedColors.amberLight, borderWidth: 2, borderColor: SharedColors.amber, marginTop: 5 },
+  remainingLabel: { fontSize: 13, fontWeight: "700", color: SharedColors.navy },
+  remainingDesc: { fontSize: 11, color: SharedColors.slate, marginTop: 1 },
+  remainingDate: { fontSize: 11, color: PatientTheme.primary, fontWeight: "500", marginTop: 1 },
 });

@@ -25,15 +25,8 @@ import { StatusBar } from "expo-status-bar";
 import { resetNavigationHistory } from "../../lib/navigationHistory";
 import { store } from "../../lib/store";
 
+import { PatientTheme, SharedColors } from "../../constants/theme";
 const { width } = Dimensions.get('window');
-
-const T = {
-  white: "#ffffff",
-  tealDeep: "#064e3b",
-  tealMid: "#0f766e",
-  tealLight: "#14b8a6",
-  coralError: "#ff4d4f",
-};
 
 export default function DoctorLoginScreen() {
   const insets = useSafeAreaInsets();
@@ -79,7 +72,7 @@ export default function DoctorLoginScreen() {
 
       {/* Premium Background */}
       <LinearGradient
-        colors={[T.tealDeep, T.tealMid, T.tealLight]}
+        colors={[PatientTheme.primaryDeep, PatientTheme.primaryMid, PatientTheme.primaryLight]}
         locations={[0, 0.55, 1]}
         start={{ x: 0.5, y: 1 }}
         end={{ x: 0, y: 0 }}
@@ -109,14 +102,14 @@ export default function DoctorLoginScreen() {
               ]}
               hitSlop={{ top: 15, bottom: 15, left: 15, right: 15 }}
             >
-              <Ionicons name="arrow-back" size={24} color={T.white} />
+              <Ionicons name="arrow-back" size={24} color={SharedColors.white} />
             </Pressable>
           </Animated.View>
 
           {/* Header */}
           <Animated.View entering={FadeInDown.duration(800).delay(200)} style={styles.header}>
             <View style={styles.iconBadge}>
-              <Ionicons name="medkit" size={28} color={T.white} />
+              <Ionicons name="medkit" size={28} color={SharedColors.white} />
             </View>
             <Text style={styles.title}>Provider Portal</Text>
             <Text style={styles.subtitle}>Sign in to manage your practice</Text>
@@ -125,7 +118,7 @@ export default function DoctorLoginScreen() {
           {/* Error Banner */}
           {error ? (
             <Animated.View entering={FadeInDown.duration(400)} style={styles.errorBanner}>
-              <Ionicons name="alert-circle" size={18} color={T.coralError} />
+              <Ionicons name="alert-circle" size={18} color={SharedColors.coralError} />
               <Text style={styles.errorBannerText}>{error}</Text>
             </Animated.View>
           ) : null}
@@ -206,11 +199,11 @@ export default function DoctorLoginScreen() {
                   style={styles.signInGradient}
                 />
                 {loading ? (
-                  <ActivityIndicator color={T.white} size="small" />
+                  <ActivityIndicator color={SharedColors.white} size="small" />
                 ) : (
                   <Text style={styles.signInBtnText}>Sign in</Text>
                 )}
-                {!loading && <Ionicons name="arrow-forward" size={20} color={T.white} style={{ marginLeft: 8 }} />}
+                {!loading && <Ionicons name="arrow-forward" size={20} color={SharedColors.white} style={{ marginLeft: 8 }} />}
               </Pressable>
             </Animated.View>
           </Animated.View>
@@ -265,7 +258,7 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 34,
     fontWeight: "800",
-    color: T.white,
+    color: SharedColors.white,
     marginBottom: 8,
     letterSpacing: -0.5,
   },
@@ -287,7 +280,7 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   errorBannerText: {
-    color: T.coralError,
+    color: SharedColors.coralError,
     fontSize: 13,
     fontWeight: '500',
     marginLeft: 8,
@@ -323,7 +316,7 @@ const styles = StyleSheet.create({
     flex: 1,
     height: '100%',
     fontSize: 15,
-    color: T.white,
+    color: SharedColors.white,
     paddingRight: 16,
   },
   eyeBtn: {
@@ -359,7 +352,7 @@ const styles = StyleSheet.create({
     ...StyleSheet.absoluteFillObject,
   },
   signInBtnText: {
-    color: T.white,
+    color: SharedColors.white,
     fontSize: 16,
     fontWeight: "700",
     letterSpacing: 0.5,
@@ -376,7 +369,7 @@ const styles = StyleSheet.create({
   },
   bottomLinkAction: {
     fontSize: 14,
-    color: T.white,
+    color: SharedColors.white,
     fontWeight: "700",
     textDecorationLine: "underline",
   },

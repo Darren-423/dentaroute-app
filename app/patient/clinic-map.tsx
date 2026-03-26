@@ -11,6 +11,7 @@ import {
 } from "react-native";
 import { DentistQuote, store } from "../../lib/store";
 
+import { PatientTheme, SharedColors } from "../../constants/theme";
 let MapView: any = View;
 let Marker: any = View;
 let Callout: any = View;
@@ -27,15 +28,8 @@ if (Platform.OS !== "web") {
   }
 }
 
-const T = {
-  teal: "#4A0080", tealMid: "#5C10A0", tealLight: "#f0e6f6",
-  navy: "#0f172a", slate: "#64748b", slateLight: "#94a3b8",
-  border: "#e2e8f0", bg: "#f8fafc", white: "#fff",
-  green: "#16a34a", greenLight: "#f0fdf4",
-};
-
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
-const MARKER_COLORS = ["#4A0080", "#3b82f6", "#f59e0b", "#ef4444", "#8b5cf6"];
+const MARKER_COLORS = [PatientTheme.primary, "#3b82f6", SharedColors.amber, SharedColors.red, "#8b5cf6"];
 
 export default function ClinicMapScreen() {
   const { caseId, highlightQuoteId } = useLocalSearchParams<{ caseId?: string; highlightQuoteId?: string }>();
@@ -91,7 +85,7 @@ export default function ClinicMapScreen() {
   if (loading) {
     return (
       <View style={[s.container, { justifyContent: "center", alignItems: "center" }]}>
-        <ActivityIndicator color={T.teal} size="large" />
+        <ActivityIndicator color={PatientTheme.primary} size="large" />
       </View>
     );
   }
@@ -126,7 +120,7 @@ export default function ClinicMapScreen() {
               <View style={{ padding: 4, maxWidth: 200 }}>
                 <Text style={{ fontWeight: "700", fontSize: 13 }}>{q.clinicName}</Text>
                 <Text style={{ fontSize: 11, color: "#666" }}>{q.dentistName}</Text>
-                <Text style={{ fontSize: 12, fontWeight: "600", color: T.teal, marginTop: 2 }}>${q.totalPrice.toLocaleString()}</Text>
+                <Text style={{ fontSize: 12, fontWeight: "600", color: PatientTheme.primary, marginTop: 2 }}>${q.totalPrice.toLocaleString()}</Text>
               </View>
             </Callout>
           </Marker>
@@ -195,7 +189,7 @@ export default function ClinicMapScreen() {
                         params: { quoteId: q.id, caseId: q.caseId },
                       })}
                     >
-                      <Text style={[s.cardActionText, { color: T.white }]}>View Quote</Text>
+                      <Text style={[s.cardActionText, { color: SharedColors.white }]}>View Quote</Text>
                     </TouchableOpacity>
                   </View>
                 </View>
@@ -209,7 +203,7 @@ export default function ClinicMapScreen() {
 }
 
 const s = StyleSheet.create({
-  container: { flex: 1, backgroundColor: T.bg },
+  container: { flex: 1, backgroundColor: SharedColors.bg },
   map: { flex: 1 },
 
   // Header
@@ -224,10 +218,10 @@ const s = StyleSheet.create({
     alignItems: "center", justifyContent: "center",
     shadowColor: "#000", shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.1, shadowRadius: 4, elevation: 3,
   },
-  backArrow: { fontSize: 24, color: "#0f172a", fontWeight: "600", marginTop: -2 },
+  backArrow: { fontSize: 24, color: SharedColors.navy, fontWeight: "600", marginTop: -2 },
   headerTitle: {
-    fontSize: 18, fontWeight: "700", color: T.navy,
-    backgroundColor: T.white, borderRadius: 12, paddingHorizontal: 16, paddingVertical: 10,
+    fontSize: 18, fontWeight: "700", color: SharedColors.navy,
+    backgroundColor: SharedColors.white, borderRadius: 12, paddingHorizontal: 16, paddingVertical: 10,
     overflow: "hidden",
     shadowColor: "#000", shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.1, shadowRadius: 4, elevation: 3,
   },
@@ -241,41 +235,41 @@ const s = StyleSheet.create({
 
   // Clinic card
   clinicCard: {
-    width: SCREEN_WIDTH * 0.78, backgroundColor: T.white, borderRadius: 18,
+    width: SCREEN_WIDTH * 0.78, backgroundColor: SharedColors.white, borderRadius: 18,
     padding: 16, gap: 10,
     shadowColor: "#000", shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.12, shadowRadius: 10, elevation: 5,
     borderWidth: 2, borderColor: "transparent",
   },
-  clinicCardSelected: { borderColor: T.teal },
+  clinicCardSelected: { borderColor: PatientTheme.primary },
 
   cardTop: { flexDirection: "row", alignItems: "center", gap: 10 },
   cardMarker: {
     width: 30, height: 30, borderRadius: 15,
     alignItems: "center", justifyContent: "center",
   },
-  cardMarkerText: { color: "#fff", fontSize: 13, fontWeight: "800" },
-  cardClinic: { fontSize: 14, fontWeight: "700", color: T.navy },
-  cardDoctor: { fontSize: 12, color: T.slate },
+  cardMarkerText: { color: SharedColors.white, fontSize: 13, fontWeight: "800" },
+  cardClinic: { fontSize: 14, fontWeight: "700", color: SharedColors.navy },
+  cardDoctor: { fontSize: 12, color: SharedColors.slate },
   cardPrice: {
-    backgroundColor: T.tealLight, borderRadius: 8,
+    backgroundColor: PatientTheme.primaryLight, borderRadius: 8,
     paddingHorizontal: 10, paddingVertical: 5,
   },
-  cardPriceText: { fontSize: 14, fontWeight: "800", color: T.teal },
+  cardPriceText: { fontSize: 14, fontWeight: "800", color: PatientTheme.primary },
 
-  cardAddress: { fontSize: 12, color: T.slate },
+  cardAddress: { fontSize: 12, color: SharedColors.slate },
 
   cardBottom: {
     flexDirection: "row", justifyContent: "space-between", alignItems: "center",
   },
   cardRating: { flexDirection: "row", alignItems: "center", gap: 4 },
-  cardRatingText: { fontSize: 13, fontWeight: "700", color: T.navy },
-  cardReviewCount: { fontSize: 11, color: T.slateLight },
+  cardRatingText: { fontSize: 13, fontWeight: "700", color: SharedColors.navy },
+  cardReviewCount: { fontSize: 11, color: SharedColors.slateLight },
 
   cardActions: { flexDirection: "row", gap: 8 },
   cardActionBtn: {
     borderRadius: 8, paddingHorizontal: 10, paddingVertical: 6,
-    borderWidth: 1, borderColor: T.border,
+    borderWidth: 1, borderColor: SharedColors.border,
   },
-  cardActionPrimary: { backgroundColor: T.teal, borderColor: T.teal },
-  cardActionText: { fontSize: 11, fontWeight: "600", color: T.navy },
+  cardActionPrimary: { backgroundColor: PatientTheme.primary, borderColor: PatientTheme.primary },
+  cardActionText: { fontSize: 11, fontWeight: "600", color: SharedColors.navy },
 });

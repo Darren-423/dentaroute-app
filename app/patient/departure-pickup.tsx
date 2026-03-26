@@ -12,15 +12,7 @@ import {
 } from "react-native";
 import { Booking, DeparturePickup, store } from "../../lib/store";
 
-const T = {
-  teal: "#4A0080", tealMid: "#5C10A0", tealLight: "#f0e6f6",
-  navy: "#0f172a", slate: "#64748b", slateLight: "#94a3b8",
-  border: "#e2e8f0", bg: "#f8fafc", white: "#fff",
-  green: "#10b981", greenLight: "#ecfdf5",
-  blue: "#3b82f6", blueLight: "#eff6ff",
-  amber: "#f59e0b", amberLight: "#fffbeb",
-};
-
+import { PatientTheme, SharedColors } from "../../constants/theme";
 const PICKUP_LOCATIONS = [
   { id: "hotel", icon: "🏨", label: "My Hotel / Accommodation", desc: "We'll pick you up at the lobby" },
   { id: "clinic", icon: "🏥", label: "The Clinic", desc: "Pick up from your last appointment" },
@@ -186,7 +178,7 @@ export default function DeparturePickupScreen() {
   if (loading) {
     return (
       <View style={[s.container, { justifyContent: "center", alignItems: "center" }]}>
-        <ActivityIndicator color={T.teal} size="large" />
+        <ActivityIndicator color={PatientTheme.primary} size="large" />
       </View>
     );
   }
@@ -282,7 +274,7 @@ export default function DeparturePickupScreen() {
           activeOpacity={0.7}
         >
           {cancelling ? (
-            <ActivityIndicator color="#ef4444" size="small" />
+            <ActivityIndicator color={SharedColors.red} size="small" />
           ) : (
             <Text style={s.cancelBtnText}>🇰🇷 Cancel Drop Off — I'll Stay in Korea</Text>
           )}
@@ -295,7 +287,7 @@ export default function DeparturePickupScreen() {
   return (
     <View style={s.container}>
       <LinearGradient
-        colors={["#3D0070", "#2F0058", "#220040"]}
+        colors={[...PatientTheme.gradient]}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
         style={s.header}
@@ -492,7 +484,7 @@ export default function DeparturePickupScreen() {
           disabled={!isValid() || saving}
         >
           {saving ? (
-            <ActivityIndicator color="#fff" size="small" />
+            <ActivityIndicator color={SharedColors.white} size="small" />
           ) : (
             <Text style={s.submitBtnText}>Book Drop Off →</Text>
           )}
@@ -503,7 +495,7 @@ export default function DeparturePickupScreen() {
 }
 
 const s = StyleSheet.create({
-  container: { flex: 1, backgroundColor: T.bg },
+  container: { flex: 1, backgroundColor: SharedColors.bg },
   header: { paddingHorizontal: 20, paddingTop: 60, paddingBottom: 18 },
   headerRow: { flexDirection: "row", alignItems: "center" },
   backBtn: {
@@ -512,147 +504,147 @@ const s = StyleSheet.create({
     borderWidth: 1, borderColor: "rgba(255,255,255,0.15)",
     alignItems: "center", justifyContent: "center",
   },
-  backArrow: { fontSize: 24, color: "#fff", fontWeight: "600", marginTop: -2 },
+  backArrow: { fontSize: 24, color: SharedColors.white, fontWeight: "600", marginTop: -2 },
   headerCenter: { flex: 1, alignItems: "center" },
-  headerTitle: { fontSize: 18, fontWeight: "700", color: "#fff" },
+  headerTitle: { fontSize: 18, fontWeight: "700", color: SharedColors.white },
   headerSub: { fontSize: 12, color: "rgba(255,255,255,0.55)", marginTop: 2 },
   content: { padding: 20, gap: 18 },
 
   // Banner
   banner: {
     flexDirection: "row", alignItems: "center", gap: 14,
-    backgroundColor: T.tealLight, borderRadius: 16, padding: 18,
+    backgroundColor: PatientTheme.primaryLight, borderRadius: 16, padding: 18,
     borderWidth: 1, borderColor: "rgba(74,0,128,0.08)",
   },
-  bannerTitle: { fontSize: 16, fontWeight: "700", color: T.navy },
-  bannerSub: { fontSize: 12, color: T.slate, lineHeight: 17, marginTop: 2 },
+  bannerTitle: { fontSize: 16, fontWeight: "700", color: SharedColors.navy },
+  bannerSub: { fontSize: 12, color: SharedColors.slate, lineHeight: 17, marginTop: 2 },
 
   // Fields
   fieldGroup: { gap: 8 },
-  fieldLabel: { fontSize: 13, fontWeight: "600", color: T.navy },
-  req: { color: "#ef4444" },
-  fieldHint: { fontSize: 11, color: T.slateLight },
+  fieldLabel: { fontSize: 13, fontWeight: "600", color: SharedColors.navy },
+  req: { color: SharedColors.red },
+  fieldHint: { fontSize: 11, color: SharedColors.slateLight },
   input: {
-    backgroundColor: T.white, borderRadius: 12, borderWidth: 1, borderColor: T.border,
-    paddingHorizontal: 16, paddingVertical: 14, fontSize: 15, color: T.navy,
+    backgroundColor: SharedColors.white, borderRadius: 12, borderWidth: 1, borderColor: SharedColors.border,
+    paddingHorizontal: 16, paddingVertical: 14, fontSize: 15, color: SharedColors.navy,
   },
-  datePreview: { fontSize: 12, color: T.teal, fontWeight: "500" },
+  datePreview: { fontSize: 12, color: PatientTheme.primary, fontWeight: "500" },
 
   // Location options
   locOption: {
     flexDirection: "row", alignItems: "center", gap: 14,
-    backgroundColor: T.white, borderRadius: 14, padding: 16,
-    borderWidth: 1.5, borderColor: T.border,
+    backgroundColor: SharedColors.white, borderRadius: 14, padding: 16,
+    borderWidth: 1.5, borderColor: SharedColors.border,
   },
-  locOptionActive: { borderColor: T.teal, backgroundColor: T.tealLight },
+  locOptionActive: { borderColor: PatientTheme.primary, backgroundColor: PatientTheme.primaryLight },
   locIcon: { fontSize: 24 },
-  locLabel: { fontSize: 14, fontWeight: "600", color: T.navy },
-  locLabelActive: { color: T.teal },
-  locDesc: { fontSize: 11, color: T.slateLight, marginTop: 1 },
+  locLabel: { fontSize: 14, fontWeight: "600", color: SharedColors.navy },
+  locLabelActive: { color: PatientTheme.primary },
+  locDesc: { fontSize: 11, color: SharedColors.slateLight, marginTop: 1 },
   radio: {
-    width: 22, height: 22, borderRadius: 11, borderWidth: 2, borderColor: T.border,
+    width: 22, height: 22, borderRadius: 11, borderWidth: 2, borderColor: SharedColors.border,
     alignItems: "center", justifyContent: "center",
   },
-  radioActive: { borderColor: T.teal },
-  radioInner: { width: 12, height: 12, borderRadius: 6, backgroundColor: T.teal },
+  radioActive: { borderColor: PatientTheme.primary },
+  radioInner: { width: 12, height: 12, borderRadius: 6, backgroundColor: PatientTheme.primary },
 
   // Select
   selectBtn: {
     flexDirection: "row", alignItems: "center", justifyContent: "space-between",
-    backgroundColor: T.white, borderRadius: 12, borderWidth: 1, borderColor: T.border,
+    backgroundColor: SharedColors.white, borderRadius: 12, borderWidth: 1, borderColor: SharedColors.border,
     paddingHorizontal: 16, paddingVertical: 14,
   },
-  selectText: { fontSize: 15, color: T.navy, fontWeight: "500" },
+  selectText: { fontSize: 15, color: SharedColors.navy, fontWeight: "500" },
   selectPlaceholder: { fontSize: 15, color: "#c1c9d4" },
-  selectArrow: { fontSize: 10, color: T.slateLight },
+  selectArrow: { fontSize: 10, color: SharedColors.slateLight },
 
   // Time grid
   timeGrid: {
     flexDirection: "row", flexWrap: "wrap", gap: 8,
-    backgroundColor: T.white, borderRadius: 12, borderWidth: 1, borderColor: T.border,
+    backgroundColor: SharedColors.white, borderRadius: 12, borderWidth: 1, borderColor: SharedColors.border,
     padding: 12, maxHeight: 220,
   },
   timeChip: {
     paddingHorizontal: 12, paddingVertical: 9, borderRadius: 10,
     backgroundColor: "#f1f5f9", borderWidth: 1, borderColor: "transparent",
   },
-  timeChipActive: { backgroundColor: T.tealLight, borderColor: T.teal },
-  timeChipText: { fontSize: 12, color: T.slate, fontWeight: "500" },
-  timeChipTextActive: { color: T.teal, fontWeight: "700" },
+  timeChipActive: { backgroundColor: PatientTheme.primaryLight, borderColor: PatientTheme.primary },
+  timeChipText: { fontSize: 12, color: SharedColors.slate, fontWeight: "500" },
+  timeChipTextActive: { color: PatientTheme.primary, fontWeight: "700" },
 
   // Flight
   flightInputRow: {
     flexDirection: "row", alignItems: "center",
-    backgroundColor: T.white, borderRadius: 12, borderWidth: 1, borderColor: T.border,
+    backgroundColor: SharedColors.white, borderRadius: 12, borderWidth: 1, borderColor: SharedColors.border,
     paddingHorizontal: 14,
   },
   flightIcon: { fontSize: 18, marginRight: 8 },
-  flightInput: { flex: 1, fontSize: 18, fontWeight: "700", color: T.navy, paddingVertical: 14, letterSpacing: 1 },
+  flightInput: { flex: 1, fontSize: 18, fontWeight: "700", color: SharedColors.navy, paddingVertical: 14, letterSpacing: 1 },
 
   // Terminal
   terminalRow: { flexDirection: "row", gap: 10 },
   terminalChip: {
     flex: 1, paddingVertical: 14, borderRadius: 12, alignItems: "center",
-    backgroundColor: T.white, borderWidth: 1.5, borderColor: T.border,
+    backgroundColor: SharedColors.white, borderWidth: 1.5, borderColor: SharedColors.border,
   },
-  terminalChipActive: { borderColor: T.teal, backgroundColor: T.tealLight },
-  terminalChipText: { fontSize: 14, fontWeight: "600", color: T.slate },
-  terminalChipTextActive: { color: T.teal },
+  terminalChipActive: { borderColor: PatientTheme.primary, backgroundColor: PatientTheme.primaryLight },
+  terminalChipText: { fontSize: 14, fontWeight: "600", color: SharedColors.slate },
+  terminalChipTextActive: { color: PatientTheme.primary },
 
   // Stepper
   stepperRow: { flexDirection: "row", alignItems: "center", gap: 16 },
   stepperBtn: {
-    width: 44, height: 44, borderRadius: 12, borderWidth: 1.5, borderColor: T.border,
-    alignItems: "center", justifyContent: "center", backgroundColor: T.white,
+    width: 44, height: 44, borderRadius: 12, borderWidth: 1.5, borderColor: SharedColors.border,
+    alignItems: "center", justifyContent: "center", backgroundColor: SharedColors.white,
   },
-  stepperBtnText: { fontSize: 22, fontWeight: "600", color: T.teal },
+  stepperBtnText: { fontSize: 22, fontWeight: "600", color: PatientTheme.primary },
   stepperValue: { alignItems: "center" },
-  stepperNum: { fontSize: 28, fontWeight: "800", color: T.navy },
-  stepperLabel: { fontSize: 11, color: T.slate },
+  stepperNum: { fontSize: 28, fontWeight: "800", color: SharedColors.navy },
+  stepperLabel: { fontSize: 11, color: SharedColors.slate },
 
   // Bottom
   bottomBar: {
     flexDirection: "row", alignItems: "center", gap: 12,
     paddingHorizontal: 20, paddingVertical: 16, paddingBottom: 56,
-    borderTopWidth: 1, borderTopColor: T.border, backgroundColor: T.white,
+    borderTopWidth: 1, borderTopColor: SharedColors.border, backgroundColor: SharedColors.white,
   },
   bottomInfo: { flex: 1 },
-  bottomTitle: { fontSize: 14, fontWeight: "700", color: T.navy },
-  bottomSub: { fontSize: 11, color: T.slate },
-  submitBtn: { backgroundColor: T.teal, borderRadius: 14, paddingHorizontal: 24, paddingVertical: 15 },
-  submitBtnText: { color: T.white, fontSize: 15, fontWeight: "700" },
+  bottomTitle: { fontSize: 14, fontWeight: "700", color: SharedColors.navy },
+  bottomSub: { fontSize: 11, color: SharedColors.slate },
+  submitBtn: { backgroundColor: PatientTheme.primary, borderRadius: 14, paddingHorizontal: 24, paddingVertical: 15 },
+  submitBtnText: { color: SharedColors.white, fontSize: 15, fontWeight: "700" },
 
   // Success
   successIcon: {
-    width: 96, height: 96, borderRadius: 48, backgroundColor: T.tealLight,
+    width: 96, height: 96, borderRadius: 48, backgroundColor: PatientTheme.primaryLight,
     alignItems: "center", justifyContent: "center", marginBottom: 16,
   },
-  successTitle: { fontSize: 24, fontWeight: "800", color: T.navy, marginBottom: 8 },
-  successSub: { fontSize: 14, color: T.slate, textAlign: "center", lineHeight: 21, marginBottom: 16 },
+  successTitle: { fontSize: 24, fontWeight: "800", color: SharedColors.navy, marginBottom: 8 },
+  successSub: { fontSize: 14, color: SharedColors.slate, textAlign: "center", lineHeight: 21, marginBottom: 16 },
   successCard: {
-    backgroundColor: T.white, borderRadius: 16, width: "100%",
-    paddingHorizontal: 20, borderWidth: 1, borderColor: T.border,
+    backgroundColor: SharedColors.white, borderRadius: 16, width: "100%",
+    paddingHorizontal: 20, borderWidth: 1, borderColor: SharedColors.border,
   },
   successRow: {
     flexDirection: "row", justifyContent: "space-between", alignItems: "center",
     paddingVertical: 13, borderBottomWidth: 1, borderBottomColor: "#f1f5f9",
   },
-  successLabel: { fontSize: 13, color: T.slate },
-  successValue: { fontSize: 13, fontWeight: "600", color: T.navy, flex: 1, textAlign: "right" },
+  successLabel: { fontSize: 13, color: SharedColors.slate },
+  successValue: { fontSize: 13, fontWeight: "600", color: SharedColors.navy, flex: 1, textAlign: "right" },
   tipCard: {
-    backgroundColor: T.amberLight, borderRadius: 14, padding: 18, width: "100%", marginTop: 12,
+    backgroundColor: SharedColors.amberLight, borderRadius: 14, padding: 18, width: "100%", marginTop: 12,
     borderWidth: 1, borderColor: "rgba(245,158,11,0.12)", gap: 6,
   },
-  tipTitle: { fontSize: 14, fontWeight: "700", color: T.navy, marginBottom: 4 },
-  tipText: { fontSize: 12, color: T.slate, lineHeight: 18 },
+  tipTitle: { fontSize: 14, fontWeight: "700", color: SharedColors.navy, marginBottom: 4 },
+  tipText: { fontSize: 12, color: SharedColors.slate, lineHeight: 18 },
   successActions: { gap: 10, width: "100%", marginTop: 16 },
-  reviewBtn: { backgroundColor: T.teal, borderRadius: 14, paddingVertical: 16, alignItems: "center" },
-  reviewBtnText: { fontSize: 15, fontWeight: "700", color: T.white },
+  reviewBtn: { backgroundColor: PatientTheme.primary, borderRadius: 14, paddingVertical: 16, alignItems: "center" },
+  reviewBtnText: { fontSize: 15, fontWeight: "700", color: SharedColors.white },
   dashBtn: {
-    backgroundColor: T.white, borderRadius: 14, paddingVertical: 16, alignItems: "center",
-    borderWidth: 1, borderColor: T.border,
+    backgroundColor: SharedColors.white, borderRadius: 14, paddingVertical: 16, alignItems: "center",
+    borderWidth: 1, borderColor: SharedColors.border,
   },
-  dashBtnText: { fontSize: 15, fontWeight: "600", color: T.navy },
+  dashBtnText: { fontSize: 15, fontWeight: "600", color: SharedColors.navy },
 
   // Cancel drop off
   cancelBtn: {
@@ -660,5 +652,5 @@ const s = StyleSheet.create({
     borderRadius: 12, borderWidth: 1.5, borderColor: "rgba(239,68,68,0.2)",
     backgroundColor: "rgba(239,68,68,0.04)",
   },
-  cancelBtnText: { fontSize: 13, fontWeight: "600", color: "#ef4444" },
+  cancelBtnText: { fontSize: 13, fontWeight: "600", color: SharedColors.red },
 });

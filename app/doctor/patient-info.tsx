@@ -12,19 +12,9 @@ import {
 import { store } from "../../lib/store";
 import { toDoctorLabel } from "../../lib/treatmentTerminology";
 
-const T = {
-  teal: "#0f766e",
-  tealLight: "#14b8a6",
-  bg: "#f8fafc",
-  white: "#fff",
-  text: "#0f172a",
-  textSec: "#64748b",
-  textMuted: "#94a3b8",
-  border: "#e2e8f0",
-  amber: "#f59e0b",
-  amberLight: "rgba(245,158,11,0.08)",
-};
 
+
+import { DoctorTheme, SharedColors } from "../../constants/theme";
 export default function PatientInfoScreen() {
   const { patientName, caseId } = useLocalSearchParams<{ patientName: string; caseId?: string }>();
   const [profile, setProfile] = useState<any>(null);
@@ -78,21 +68,21 @@ export default function PatientInfoScreen() {
   if (loading) {
     return (
       <View style={[s.container, { justifyContent: "center", alignItems: "center" }]}>
-        <ActivityIndicator color={T.teal} size="large" />
+        <ActivityIndicator color={DoctorTheme.primary} size="large" />
       </View>
     );
   }
 
   return (
     <View style={s.container}>
-      <LinearGradient colors={["#0f766e", "#134e4a"]} style={s.header}>
+      <LinearGradient colors={[DoctorTheme.primary, DoctorTheme.primaryDark]} style={s.header}>
         <TouchableOpacity style={s.backBtn} onPress={() => router.back()}>
           <Text style={s.backArrow}>‹</Text>
         </TouchableOpacity>
         <Text style={s.headerTitle}>Patient Profile</Text>
       </LinearGradient>
 
-      <ScrollView contentContainerStyle={s.content} showsVerticalScrollIndicator={false} style={{ backgroundColor: T.bg }}>
+      <ScrollView contentContainerStyle={s.content} showsVerticalScrollIndicator={false} style={{ backgroundColor: SharedColors.bg }}>
         {/* Avatar + Name */}
         <View style={s.profileSection}>
           {profile?.profileImage ? (
@@ -140,7 +130,7 @@ export default function PatientInfoScreen() {
               <Text style={s.quickValue}>{profile?.language || "English"}</Text>
             </View>
           </View>
-          <View style={[s.quickCard, { borderLeftColor: T.teal }]}>
+          <View style={[s.quickCard, { borderLeftColor: DoctorTheme.primary }]}>
             <View style={[s.quickIconCircle, { backgroundColor: "rgba(15,118,110,0.1)" }]}>
               <Text style={s.quickIconText}>📎</Text>
             </View>
@@ -217,13 +207,13 @@ const InfoRow = ({ label, value, last }: { label: string; value: string; last?: 
 
 const iS = StyleSheet.create({
   row: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", paddingVertical: 12 },
-  border: { borderBottomWidth: 1, borderBottomColor: T.border },
-  label: { fontSize: 13, color: T.textSec },
-  value: { fontSize: 13, fontWeight: "600", color: T.text, flex: 1, textAlign: "right" },
+  border: { borderBottomWidth: 1, borderBottomColor: SharedColors.border },
+  label: { fontSize: 13, color: SharedColors.navySec },
+  value: { fontSize: 13, fontWeight: "600", color: SharedColors.navy, flex: 1, textAlign: "right" },
 });
 
 const s = StyleSheet.create({
-  container: { flex: 1, backgroundColor: T.bg },
+  container: { flex: 1, backgroundColor: SharedColors.bg },
   header: {
     paddingHorizontal: 24, paddingTop: 60, paddingBottom: 16,
     borderBottomWidth: 1, borderBottomColor: "rgba(255,255,255,0.1)",
@@ -235,41 +225,41 @@ const s = StyleSheet.create({
     borderWidth: 1, borderColor: "rgba(255,255,255,0.15)",
     alignItems: "center", justifyContent: "center",
   },
-  backArrow: { fontSize: 24, color: "#fff", fontWeight: "600", marginTop: -2 },
-  headerTitle: { fontSize: 18, fontWeight: "700", color: T.white },
+  backArrow: { fontSize: 24, color: SharedColors.white, fontWeight: "600", marginTop: -2 },
+  headerTitle: { fontSize: 18, fontWeight: "700", color: SharedColors.white },
   content: { padding: 20, gap: 16, paddingBottom: 40 },
 
   // Profile
   profileSection: { alignItems: "center", gap: 4 },
   avatar: {
-    width: 80, height: 80, borderRadius: 40, backgroundColor: T.tealLight,
+    width: 80, height: 80, borderRadius: 40, backgroundColor: DoctorTheme.accentBright,
     alignItems: "center", justifyContent: "center", marginBottom: 6,
   },
   avatarImg: {
     width: 80, height: 80, borderRadius: 40, marginBottom: 6,
     borderWidth: 2, borderColor: "rgba(15,118,110,0.2)",
   },
-  avatarText: { color: T.white, fontSize: 32, fontWeight: "700" },
-  name: { fontSize: 22, fontWeight: "700", color: T.text },
-  sub: { fontSize: 13, color: T.textSec },
-  age: { fontSize: 12, color: T.textMuted, marginTop: 2 },
+  avatarText: { color: SharedColors.white, fontSize: 32, fontWeight: "700" },
+  name: { fontSize: 22, fontWeight: "700", color: SharedColors.navy },
+  sub: { fontSize: 13, color: SharedColors.navySec },
+  age: { fontSize: 12, color: SharedColors.navyMuted, marginTop: 2 },
 
   // Case
   caseCard: {
-    backgroundColor: T.amberLight, borderRadius: 14, padding: 16,
+    backgroundColor: SharedColors.amberLight, borderRadius: 14, padding: 16,
     borderWidth: 1, borderColor: "rgba(245,158,11,0.15)", gap: 4,
   },
-  caseLabel: { fontSize: 13, fontWeight: "700", color: T.amber },
-  caseTreatments: { fontSize: 13, color: T.text, fontWeight: "500" },
-  caseSub: { fontSize: 11, color: T.textSec },
+  caseLabel: { fontSize: 13, fontWeight: "700", color: SharedColors.amber },
+  caseTreatments: { fontSize: 13, color: SharedColors.navy, fontWeight: "500" },
+  caseSub: { fontSize: 11, color: SharedColors.navySec },
 
   // Quick info cards
   quickGrid: { gap: 10 },
   quickCard: {
     flexDirection: "row", alignItems: "center", gap: 14,
-    backgroundColor: T.white, borderRadius: 14,
+    backgroundColor: SharedColors.white, borderRadius: 14,
     padding: 14, paddingLeft: 16,
-    borderWidth: 1, borderColor: T.border,
+    borderWidth: 1, borderColor: SharedColors.border,
     borderLeftWidth: 3,
     shadowColor: "#000", shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.05, shadowRadius: 4, elevation: 2,
   },
@@ -279,33 +269,33 @@ const s = StyleSheet.create({
   },
   quickIconText: { fontSize: 20 },
   quickTextCol: { flex: 1 },
-  quickLabel: { fontSize: 10, fontWeight: "600", color: T.textMuted, letterSpacing: 0.5, marginBottom: 2 },
-  quickValue: { fontSize: 14, fontWeight: "700", color: T.text },
+  quickLabel: { fontSize: 10, fontWeight: "600", color: SharedColors.navyMuted, letterSpacing: 0.5, marginBottom: 2 },
+  quickValue: { fontSize: 14, fontWeight: "700", color: SharedColors.navy },
 
   // Section
   section: { gap: 8 },
   sectionTitle: {
-    fontSize: 11, fontWeight: "700", color: T.textSec, letterSpacing: 0.5,
+    fontSize: 11, fontWeight: "700", color: SharedColors.navySec, letterSpacing: 0.5,
   },
   card: {
-    backgroundColor: T.white, borderRadius: 14, paddingHorizontal: 16,
-    borderWidth: 1, borderColor: T.border,
+    backgroundColor: SharedColors.white, borderRadius: 14, paddingHorizontal: 16,
+    borderWidth: 1, borderColor: SharedColors.border,
     shadowColor: "#000", shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.05, shadowRadius: 4, elevation: 2,
   },
-  noData: { color: T.textMuted, fontSize: 13, paddingVertical: 16, textAlign: "center" },
+  noData: { color: SharedColors.navyMuted, fontSize: 13, paddingVertical: 16, textAlign: "center" },
 
   // Actions
   actions: { gap: 10, marginTop: 4 },
   actionPrimary: {
-    backgroundColor: T.tealLight, borderRadius: 14,
+    backgroundColor: DoctorTheme.accentBright, borderRadius: 14,
     paddingVertical: 15, alignItems: "center",
   },
-  actionPrimaryText: { color: T.white, fontSize: 15, fontWeight: "600" },
+  actionPrimaryText: { color: SharedColors.white, fontSize: 15, fontWeight: "600" },
   actionSecondary: {
-    backgroundColor: T.white, borderRadius: 14,
+    backgroundColor: SharedColors.white, borderRadius: 14,
     paddingVertical: 15, alignItems: "center",
-    borderWidth: 1, borderColor: T.border,
+    borderWidth: 1, borderColor: SharedColors.border,
     shadowColor: "#000", shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.05, shadowRadius: 4, elevation: 2,
   },
-  actionSecondaryText: { color: T.text, fontSize: 15, fontWeight: "600" },
+  actionSecondaryText: { color: SharedColors.navy, fontSize: 15, fontWeight: "600" },
 });

@@ -9,14 +9,7 @@ import {
 } from "react-native";
 import { Booking, store } from "../../lib/store";
 
-const T = {
-  teal: "#4A0080", tealLight: "#f0e6f6",
-  navy: "#0f172a", slate: "#64748b", slateLight: "#94a3b8",
-  border: "#e2e8f0", bg: "#f8fafc", white: "#fff",
-  green: "#10b981", greenLight: "#ecfdf5",
-  amber: "#f59e0b",
-};
-
+import { PatientTheme, SharedColors } from "../../constants/theme";
 export default function TreatmentCompleteScreen() {
   const { bookingId } = useLocalSearchParams<{ bookingId: string }>();
   const [booking, setBooking] = useState<Booking | null>(null);
@@ -50,7 +43,7 @@ export default function TreatmentCompleteScreen() {
   if (loading) {
     return (
       <View style={[s.container, { justifyContent: "center", alignItems: "center" }]}>
-        <ActivityIndicator color={T.teal} size="large" />
+        <ActivityIndicator color={PatientTheme.primary} size="large" />
       </View>
     );
   }
@@ -79,7 +72,7 @@ export default function TreatmentCompleteScreen() {
           </View>
           <View style={s.row}>
             <Text style={s.label}>Status</Text>
-            <Text style={[s.value, { color: T.green }]}>✅ Fully Paid</Text>
+            <Text style={[s.value, { color: SharedColors.green }]}>✅ Fully Paid</Text>
           </View>
         </View>
 
@@ -123,40 +116,40 @@ export default function TreatmentCompleteScreen() {
 }
 
 const s = StyleSheet.create({
-  container: { flex: 1, backgroundColor: T.bg },
+  container: { flex: 1, backgroundColor: SharedColors.bg },
   header: {
     paddingHorizontal: 24, paddingTop: 60, paddingBottom: 16,
-    borderBottomWidth: 1, borderBottomColor: T.border, backgroundColor: T.white,
+    borderBottomWidth: 1, borderBottomColor: SharedColors.border, backgroundColor: SharedColors.white,
     flexDirection: "row", alignItems: "center", gap: 16,
   },
   backBtn: { width: 36, height: 36, borderRadius: 12, backgroundColor: "rgba(0,0,0,0.05)", borderWidth: 1, borderColor: "rgba(0,0,0,0.08)", alignItems: "center", justifyContent: "center" },
-  backArrow: { fontSize: 24, color: "#0f172a", fontWeight: "600", marginTop: -2 },
-  headerTitle: { fontSize: 18, fontWeight: "700", color: T.navy },
+  backArrow: { fontSize: 24, color: SharedColors.navy, fontWeight: "600", marginTop: -2 },
+  headerTitle: { fontSize: 18, fontWeight: "700", color: SharedColors.navy },
   content: { padding: 24, gap: 16 },
   icon: {
-    width: 100, height: 100, borderRadius: 50, backgroundColor: T.greenLight,
+    width: 100, height: 100, borderRadius: 50, backgroundColor: SharedColors.greenLight,
     alignItems: "center", justifyContent: "center", marginTop: 20, marginBottom: 8,
   },
-  title: { fontSize: 28, fontWeight: "800", color: T.navy },
-  sub: { fontSize: 14, color: T.slate, textAlign: "center", lineHeight: 22 },
+  title: { fontSize: 28, fontWeight: "800", color: SharedColors.navy },
+  sub: { fontSize: 14, color: SharedColors.slate, textAlign: "center", lineHeight: 22 },
   summaryCard: {
-    backgroundColor: T.white, borderRadius: 16, width: "100%", paddingHorizontal: 20,
-    borderWidth: 1, borderColor: T.border,
+    backgroundColor: SharedColors.white, borderRadius: 16, width: "100%", paddingHorizontal: 20,
+    borderWidth: 1, borderColor: SharedColors.border,
   },
   row: {
     flexDirection: "row", justifyContent: "space-between", alignItems: "center",
     paddingVertical: 14, borderBottomWidth: 1, borderBottomColor: "#f1f5f9",
   },
-  label: { fontSize: 13, color: T.slate },
-  value: { fontSize: 14, fontWeight: "600", color: T.navy },
+  label: { fontSize: 13, color: SharedColors.slate },
+  value: { fontSize: 14, fontWeight: "600", color: SharedColors.navy },
   actions: { gap: 10, width: "100%", marginTop: 8 },
-  reviewBtn: { backgroundColor: T.amber, borderRadius: 14, paddingVertical: 16, alignItems: "center" },
-  reviewBtnText: { fontSize: 15, fontWeight: "700", color: T.white },
-  chatBtn: { backgroundColor: T.teal, borderRadius: 14, paddingVertical: 16, alignItems: "center" },
-  chatBtnText: { fontSize: 15, fontWeight: "600", color: T.white },
+  reviewBtn: { backgroundColor: SharedColors.amber, borderRadius: 14, paddingVertical: 16, alignItems: "center" },
+  reviewBtnText: { fontSize: 15, fontWeight: "700", color: SharedColors.white },
+  chatBtn: { backgroundColor: PatientTheme.primary, borderRadius: 14, paddingVertical: 16, alignItems: "center" },
+  chatBtnText: { fontSize: 15, fontWeight: "600", color: SharedColors.white },
   dashBtn: {
-    backgroundColor: T.white, borderRadius: 14, paddingVertical: 16, alignItems: "center",
-    borderWidth: 1, borderColor: T.border,
+    backgroundColor: SharedColors.white, borderRadius: 14, paddingVertical: 16, alignItems: "center",
+    borderWidth: 1, borderColor: SharedColors.border,
   },
-  dashBtnText: { fontSize: 15, fontWeight: "600", color: T.navy },
+  dashBtnText: { fontSize: 15, fontWeight: "600", color: SharedColors.navy },
 });

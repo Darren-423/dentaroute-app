@@ -14,20 +14,7 @@ import {
 import { Booking, DentistQuote, PatientCase, store } from "../../lib/store";
 import { toDoctorLabel } from "../../lib/treatmentTerminology";
 
-const T = {
-  teal: "#0f766e",
-  tealLight: "#14b8a6",
-  bg: "#f8fafc",
-  white: "#fff",
-  text: "#0f172a",
-  textSec: "#64748b",
-  textMuted: "#94a3b8",
-  border: "#e2e8f0",
-  inputBg: "#f8fafc",
-  green: "#16a34a",
-  amber: "#f59e0b",
-};
-
+import { DoctorTheme, SharedColors } from "../../constants/theme";
 const TREATMENT_OPTIONS = [
   "Implant: Whole (Root + Crown)",
   "Implant: Root (Titanium Post) Only",
@@ -252,7 +239,7 @@ export default function DoctorCaseDetailScreen() {
       ? existingQuote.treatments.map((t, i) => ({ id: String(i), treatment: t.name, qty: t.qty, price: String(t.price) }))
       : planItems;
     return (
-      <LinearGradient colors={["#0f766e", "#134e4a"]} style={s.submittedWrap}>
+      <LinearGradient colors={[DoctorTheme.primary, DoctorTheme.primaryDark]} style={s.submittedWrap}>
         <Text style={{ fontSize: 80, marginBottom: 20 }}>✅</Text>
         <Text style={s.submittedTitle}>Quote Sent</Text>
         <Text style={s.submittedDesc}>
@@ -311,7 +298,7 @@ export default function DoctorCaseDetailScreen() {
   return (
     <View style={s.container}>
       {/* Header */}
-      <LinearGradient colors={["#0f766e", "#134e4a"]} style={s.header}>
+      <LinearGradient colors={[DoctorTheme.primary, DoctorTheme.primaryDark]} style={s.header}>
         <TouchableOpacity style={s.backBtn} onPress={() => router.back()}>
           <Text style={s.backArrow}>‹</Text>
         </TouchableOpacity>
@@ -331,7 +318,7 @@ export default function DoctorCaseDetailScreen() {
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
       >
-        <View style={{ backgroundColor: "#f1f5f9", borderRadius: 8, padding: 10, marginBottom: 12, borderWidth: 1, borderColor: "#e2e8f0" }}><Text style={{ fontSize: 11, color: "#64748b", lineHeight: 16 }}>Do not provide specific diagnoses or treatment plans via chat or quotes. Only provide estimates pending in-person examination.</Text></View>
+        <View style={{ backgroundColor: "#f1f5f9", borderRadius: 8, padding: 10, marginBottom: 12, borderWidth: 1, borderColor: SharedColors.border }}><Text style={{ fontSize: 11, color: SharedColors.slate, lineHeight: 16 }}>Do not provide specific diagnoses or treatment plans via chat or quotes. Only provide estimates pending in-person examination.</Text></View>
 
         {/* ════════════════ SECTION: Patient Info ════════════════ */}
         <View style={s.sectionHeader}>
@@ -817,7 +804,7 @@ export default function DoctorCaseDetailScreen() {
                         <TextInput
                           style={s.priceInput}
                           placeholder="0"
-                          placeholderTextColor="#94a3b8"
+                          placeholderTextColor={SharedColors.slateLight}
                           value={item.price}
                           onChangeText={(v) =>
                             updatePlanItem(item.id, "price", v.replace(/[^0-9]/g, ""))
@@ -838,7 +825,7 @@ export default function DoctorCaseDetailScreen() {
                   )}
                   {getPriceFloor(item.treatment) > 0 && Number(item.price) === 0 && (
                     <View style={{ marginTop: 4 }}>
-                      <Text style={{ fontSize: 10, color: T.textMuted }}>
+                      <Text style={{ fontSize: 10, color: SharedColors.navyMuted }}>
                         Min. ${getPriceFloor(item.treatment).toLocaleString()} per unit
                       </Text>
                     </View>
@@ -876,7 +863,7 @@ export default function DoctorCaseDetailScreen() {
                 <TextInput
                   style={s.pickerSearch}
                   placeholder="Search treatments..."
-                  placeholderTextColor="#94a3b8"
+                  placeholderTextColor={SharedColors.slateLight}
                   value={searchTreatment}
                   onChangeText={setSearchTreatment}
                   autoFocus
@@ -1078,7 +1065,7 @@ export default function DoctorCaseDetailScreen() {
             activeOpacity={0.85}
           >
             {loading ? (
-              <ActivityIndicator color={T.white} size="small" />
+              <ActivityIndicator color={SharedColors.white} size="small" />
             ) : (
               <Text style={s.sendBtnText}>
                 Send Quote{totalPrice > 0 ? ` · $${totalPrice.toLocaleString()}` : ""} →
@@ -1092,7 +1079,7 @@ export default function DoctorCaseDetailScreen() {
 }
 
 const s = StyleSheet.create({
-  container: { flex: 1, backgroundColor: T.bg },
+  container: { flex: 1, backgroundColor: SharedColors.bg },
   header: {
     paddingHorizontal: 24, paddingTop: 60, paddingBottom: 16,
   },
@@ -1103,8 +1090,8 @@ const s = StyleSheet.create({
     alignItems: "center", justifyContent: "center",
     marginBottom: 8,
   },
-  backArrow: { fontSize: 24, color: "#fff", fontWeight: "600", marginTop: -2 },
-  title: { fontSize: 24, fontWeight: "700", color: T.white, marginBottom: 4 },
+  backArrow: { fontSize: 24, color: SharedColors.white, fontWeight: "600", marginTop: -2 },
+  title: { fontSize: 24, fontWeight: "700", color: SharedColors.white, marginBottom: 4 },
   subtitleRow: { flexDirection: "row", alignItems: "center", gap: 8 },
   headerAvatar: { width: 24, height: 24, borderRadius: 12, borderWidth: 1, borderColor: "rgba(255,255,255,0.3)" },
   subtitle: { fontSize: 13, color: "rgba(255,255,255,0.7)" },
@@ -1112,32 +1099,32 @@ const s = StyleSheet.create({
   // Section Headers
   sectionHeader: {
     paddingVertical: 10, marginBottom: 4,
-    borderBottomWidth: 1, borderBottomColor: T.border,
+    borderBottomWidth: 1, borderBottomColor: SharedColors.border,
   },
   sectionHeaderText: {
-    fontSize: 16, fontWeight: "700", color: T.teal, letterSpacing: 0.3,
+    fontSize: 16, fontWeight: "700", color: DoctorTheme.primary, letterSpacing: 0.3,
   },
   sectionDivider: {
-    height: 1, backgroundColor: T.border, marginVertical: 10,
+    height: 1, backgroundColor: SharedColors.border, marginVertical: 10,
   },
 
-  content: { padding: 24, gap: 14, paddingBottom: 60, backgroundColor: T.bg },
+  content: { padding: 24, gap: 14, paddingBottom: 60, backgroundColor: SharedColors.bg },
 
   // ── Patient Info Tab ──
   infoCard: {
-    backgroundColor: T.white, borderRadius: 14, padding: 16,
-    gap: 10, borderWidth: 1, borderColor: T.border,
+    backgroundColor: SharedColors.white, borderRadius: 14, padding: 16,
+    gap: 10, borderWidth: 1, borderColor: SharedColors.border,
     shadowColor: "#000", shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.05, shadowRadius: 4, elevation: 2,
   },
   infoLabel: {
-    fontSize: 11, fontWeight: "600", color: T.textMuted,
+    fontSize: 11, fontWeight: "600", color: SharedColors.navyMuted,
     letterSpacing: 0.8, marginBottom: 2,
   },
   infoRow: {
     flexDirection: "row", justifyContent: "space-between", alignItems: "center",
   },
-  infoRowLabel: { fontSize: 13, color: T.textSec },
-  infoRowValue: { fontSize: 13, fontWeight: "600", color: T.text },
+  infoRowLabel: { fontSize: 13, color: SharedColors.navySec },
+  infoRowValue: { fontSize: 13, fontWeight: "600", color: SharedColors.navy },
   nameValueRow: {
     flexDirection: "row", alignItems: "center", gap: 10,
   },
@@ -1147,30 +1134,30 @@ const s = StyleSheet.create({
     paddingHorizontal: 8,
     paddingVertical: 3,
   },
-  viewProfileText: { fontSize: 11, fontWeight: "600", color: T.teal },
-  infoSub: { fontSize: 13, color: T.textSec, lineHeight: 20 },
+  viewProfileText: { fontSize: 11, fontWeight: "600", color: DoctorTheme.primary },
+  infoSub: { fontSize: 13, color: SharedColors.navySec, lineHeight: 20 },
 
   // ── Files Grid ──
   filesCard: {
-    backgroundColor: T.white, borderRadius: 14, padding: 16, gap: 12,
-    borderWidth: 1, borderColor: T.border,
+    backgroundColor: SharedColors.white, borderRadius: 14, padding: 16, gap: 12,
+    borderWidth: 1, borderColor: SharedColors.border,
     shadowColor: "#000", shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.05, shadowRadius: 4, elevation: 2,
   },
   filesHeader: { flexDirection: "row", alignItems: "center", gap: 8 },
   filesIcon: { fontSize: 16 },
   filesTitle: {
-    flex: 1, fontSize: 12, fontWeight: "700", color: T.textSec,
+    flex: 1, fontSize: 12, fontWeight: "700", color: SharedColors.navySec,
     letterSpacing: 0.5,
   },
   filesCountBadge: {
-    backgroundColor: T.tealLight, borderRadius: 10,
+    backgroundColor: DoctorTheme.accentBright, borderRadius: 10,
     paddingHorizontal: 8, paddingVertical: 2,
   },
-  filesCountText: { fontSize: 11, fontWeight: "700", color: T.white },
+  filesCountText: { fontSize: 11, fontWeight: "700", color: SharedColors.white },
   filesGrid: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
   fileThumbWrap: {
     width: 90, height: 90, borderRadius: 10, overflow: "hidden",
-    borderWidth: 1, borderColor: T.border,
+    borderWidth: 1, borderColor: SharedColors.border,
   },
   fileThumb: { width: "100%", height: "100%", backgroundColor: "#f1f5f9" },
   fileThumbOverlay: {
@@ -1194,66 +1181,66 @@ const s = StyleSheet.create({
     backgroundColor: "rgba(255,255,255,0.15)",
     alignItems: "center", justifyContent: "center",
   },
-  viewerCloseText: { color: "#fff", fontSize: 18, fontWeight: "600" },
+  viewerCloseText: { color: SharedColors.white, fontSize: 18, fontWeight: "600" },
   viewerSaveBtn: {
     flexDirection: "row", alignItems: "center",
-    backgroundColor: T.tealLight, borderRadius: 20,
+    backgroundColor: DoctorTheme.accentBright, borderRadius: 20,
     paddingHorizontal: 16, paddingVertical: 10,
   },
-  viewerSaveBtnText: { color: "#fff", fontSize: 14, fontWeight: "600" },
+  viewerSaveBtnText: { color: SharedColors.white, fontSize: 14, fontWeight: "600" },
   viewerImage: {
     width: Dimensions.get("window").width - 32,
     height: Dimensions.get("window").height * 0.7,
   },
   saveAllBtn: {
-    backgroundColor: T.tealLight, borderRadius: 12,
+    backgroundColor: DoctorTheme.accentBright, borderRadius: 12,
     paddingVertical: 14, alignItems: "center",
   },
-  saveAllBtnText: { color: "#fff", fontSize: 14, fontWeight: "700" },
+  saveAllBtnText: { color: SharedColors.white, fontSize: 14, fontWeight: "700" },
 
   // ── Duration Stepper ──
   // Number of visits stepper
   visitsCountCard: {
     flexDirection: "row", alignItems: "center",
     justifyContent: "space-between",
-    backgroundColor: T.white, borderRadius: 14,
-    borderWidth: 1, borderColor: T.border,
+    backgroundColor: SharedColors.white, borderRadius: 14,
+    borderWidth: 1, borderColor: SharedColors.border,
     paddingVertical: 10, paddingHorizontal: 16, marginTop: 8,
   },
   visitsStepBtn: {
     width: 42, height: 42, borderRadius: 12,
     backgroundColor: "#f1f5f9",
     alignItems: "center", justifyContent: "center",
-    borderWidth: 1, borderColor: T.border,
+    borderWidth: 1, borderColor: SharedColors.border,
   },
-  visitsStepText: { color: T.teal, fontSize: 22, fontWeight: "600" },
+  visitsStepText: { color: DoctorTheme.primary, fontSize: 22, fontWeight: "600" },
   visitsValueCenter: {
     alignItems: "center", justifyContent: "center", gap: 2,
   },
   visitsValueNum: {
-    color: T.text, fontSize: 32, fontWeight: "800", lineHeight: 36,
+    color: SharedColors.navy, fontSize: 32, fontWeight: "800", lineHeight: 36,
   },
   visitsValueLabel: {
-    color: T.textMuted, fontSize: 12, fontWeight: "600",
+    color: SharedColors.navyMuted, fontSize: 12, fontWeight: "600",
     letterSpacing: 0.8, textTransform: "lowercase",
   },
-  durationStepText: { color: T.teal, fontSize: 22, fontWeight: "600" },
+  durationStepText: { color: DoctorTheme.primary, fontSize: 22, fontWeight: "600" },
   // Duration triple fields (months/weeks/days) — vertical stack
   durationTripleCol: {
     flexDirection: "column", gap: 0, marginTop: 6,
-    backgroundColor: T.white, borderRadius: 12,
-    borderWidth: 1, borderColor: T.border,
+    backgroundColor: SharedColors.white, borderRadius: 12,
+    borderWidth: 1, borderColor: SharedColors.border,
     overflow: "hidden",
   },
   durationFieldRow: {
     flexDirection: "row", alignItems: "center",
     justifyContent: "space-between",
     paddingVertical: 12, paddingHorizontal: 16,
-    borderBottomWidth: 1, borderBottomColor: T.border,
+    borderBottomWidth: 1, borderBottomColor: SharedColors.border,
   },
   durationFieldLabelInline: {
     fontSize: 14, fontWeight: "600",
-    color: T.textSec,
+    color: SharedColors.navySec,
   },
   durationControlsRow: {
     flexDirection: "row", alignItems: "center", gap: 6,
@@ -1262,75 +1249,75 @@ const s = StyleSheet.create({
     width: 34, height: 34, borderRadius: 10,
     backgroundColor: "#f1f5f9",
     alignItems: "center", justifyContent: "center",
-    borderWidth: 1, borderColor: T.border,
+    borderWidth: 1, borderColor: SharedColors.border,
   },
   durationSmallValueBox: {
     width: 48, height: 34, alignItems: "center", justifyContent: "center",
-    backgroundColor: T.inputBg, borderRadius: 10,
-    borderWidth: 1, borderColor: T.border,
+    backgroundColor: SharedColors.bg, borderRadius: 10,
+    borderWidth: 1, borderColor: SharedColors.border,
   },
   durationSmallInput: {
-    color: T.text, fontSize: 17, fontWeight: "800",
+    color: SharedColors.navy, fontSize: 17, fontWeight: "800",
     textAlign: "center", width: "100%", padding: 0,
   },
 
   // ── Visits ──
-  labelHint: { fontSize: 11, color: T.textMuted, marginTop: 2 },
+  labelHint: { fontSize: 11, color: SharedColors.navyMuted, marginTop: 2 },
   visitCard: {
-    backgroundColor: T.white, borderRadius: 12,
-    borderWidth: 1, borderColor: T.border,
+    backgroundColor: SharedColors.white, borderRadius: 12,
+    borderWidth: 1, borderColor: SharedColors.border,
     padding: 14, gap: 10,
     shadowColor: "#000", shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.05, shadowRadius: 4, elevation: 2,
   },
   visitHeader: { flexDirection: "row", alignItems: "center", gap: 10 },
   visitBadge: {
     width: 28, height: 28, borderRadius: 14,
-    backgroundColor: T.tealLight, alignItems: "center", justifyContent: "center",
+    backgroundColor: DoctorTheme.accentBright, alignItems: "center", justifyContent: "center",
   },
-  visitBadgeText: { color: "#fff", fontSize: 13, fontWeight: "800" },
-  visitTitle: { color: T.text, fontSize: 14, fontWeight: "700" },
+  visitBadgeText: { color: SharedColors.white, fontSize: 13, fontWeight: "800" },
+  visitTitle: { color: SharedColors.navy, fontSize: 14, fontWeight: "700" },
   visitInput: {
-    backgroundColor: T.inputBg, borderRadius: 10,
-    borderWidth: 1, borderColor: T.border,
-    padding: 12, color: T.text, fontSize: 13, minHeight: 44,
+    backgroundColor: SharedColors.bg, borderRadius: 10,
+    borderWidth: 1, borderColor: SharedColors.border,
+    padding: 12, color: SharedColors.navy, fontSize: 13, minHeight: 44,
     textAlignVertical: "top",
   },
 
   // ── Gap between visits ──
   gapSection: { alignItems: "center", marginVertical: 4 },
-  gapLine: { width: 2, height: 8, backgroundColor: T.border },
+  gapLine: { width: 2, height: 8, backgroundColor: SharedColors.border },
   gapCard: {
     backgroundColor: "rgba(217,119,6,0.06)", borderRadius: 12,
     borderWidth: 1, borderColor: "rgba(217,119,6,0.25)",
     padding: 14, width: "100%",
   },
   gapTitle: { fontSize: 13, fontWeight: "700", color: "#d97706" },
-  gapHint: { fontSize: 11, color: T.textMuted, marginTop: 2, marginBottom: 10 },
+  gapHint: { fontSize: 11, color: SharedColors.navyMuted, marginTop: 2, marginBottom: 10 },
   gapInputCol: {
     flexDirection: "column", gap: 0,
-    backgroundColor: T.white, borderRadius: 10,
-    borderWidth: 1, borderColor: T.border,
+    backgroundColor: SharedColors.white, borderRadius: 10,
+    borderWidth: 1, borderColor: SharedColors.border,
     overflow: "hidden",
   },
   gapInputGroupRow: {
     flexDirection: "row", alignItems: "center",
     justifyContent: "space-between",
     paddingVertical: 8, paddingHorizontal: 12,
-    borderBottomWidth: 1, borderBottomColor: T.border,
+    borderBottomWidth: 1, borderBottomColor: SharedColors.border,
   },
-  gapUnitLabel: { fontSize: 13, fontWeight: "600", color: T.textSec },
+  gapUnitLabel: { fontSize: 13, fontWeight: "600", color: SharedColors.navySec },
   gapControlsRow: { flexDirection: "row", alignItems: "center", gap: 5 },
   gapStepBtn: {
     width: 30, height: 30, borderRadius: 8, backgroundColor: "#f1f5f9",
-    alignItems: "center", justifyContent: "center", borderWidth: 1, borderColor: T.border,
+    alignItems: "center", justifyContent: "center", borderWidth: 1, borderColor: SharedColors.border,
   },
   gapStepText: { fontSize: 16, fontWeight: "600", color: "#d97706" },
   gapValueBox: {
     minWidth: 36, height: 30, alignItems: "center", justifyContent: "center",
-    backgroundColor: T.inputBg, borderRadius: 8,
-    borderWidth: 1, borderColor: T.border, paddingHorizontal: 6,
+    backgroundColor: SharedColors.bg, borderRadius: 8,
+    borderWidth: 1, borderColor: SharedColors.border, paddingHorizontal: 6,
   },
-  gapValue: { fontSize: 15, fontWeight: "700", color: T.text },
+  gapValue: { fontSize: 15, fontWeight: "700", color: SharedColors.navy },
   // gapUnit removed — replaced by gapUnitLabel
   gapSummary: {
     fontSize: 11, color: "#d97706", fontWeight: "500", marginTop: 8,
@@ -1361,7 +1348,7 @@ const s = StyleSheet.create({
     borderRadius: 10, padding: 12, borderLeftWidth: 3,
   },
   medicalBlockCondition: {
-    backgroundColor: "rgba(245,158,11,0.05)", borderLeftColor: "#f59e0b",
+    backgroundColor: "rgba(245,158,11,0.05)", borderLeftColor: SharedColors.amber,
   },
   medicalBlockMed: {
     backgroundColor: "rgba(59,130,246,0.05)", borderLeftColor: "#3b82f6",
@@ -1391,38 +1378,38 @@ const s = StyleSheet.create({
     alignItems: "flex-start",
   },
   sectionNoteIcon: { fontSize: 18, marginTop: 1 },
-  sectionNoteText: { flex: 1, fontSize: 13, color: T.textSec, lineHeight: 20 },
+  sectionNoteText: { flex: 1, fontSize: 13, color: SharedColors.navySec, lineHeight: 20 },
 
   requestedCard: {
     flexDirection: "row", justifyContent: "space-between", alignItems: "flex-start",
-    backgroundColor: T.white, borderRadius: 12, padding: 16,
-    borderWidth: 1, borderColor: T.border,
+    backgroundColor: SharedColors.white, borderRadius: 12, padding: 16,
+    borderWidth: 1, borderColor: SharedColors.border,
     shadowColor: "#000", shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.05, shadowRadius: 4, elevation: 2,
   },
   requestedLeft: { flex: 1, paddingRight: 10 },
-  requestedName: { fontSize: 14, fontWeight: "600", color: T.text, flexShrink: 1, lineHeight: 20 },
+  requestedName: { fontSize: 14, fontWeight: "600", color: SharedColors.navy, flexShrink: 1, lineHeight: 20 },
   requestedQtyBadge: {
     backgroundColor: "#f1f5f9", borderRadius: 8,
     paddingHorizontal: 12, paddingVertical: 6,
   },
-  requestedQtyText: { fontSize: 13, fontWeight: "600", color: T.textSec },
+  requestedQtyText: { fontSize: 13, fontWeight: "600", color: SharedColors.navySec },
 
   copyToPlanBtn: {
     backgroundColor: "rgba(15,118,110,0.08)", borderRadius: 12, padding: 16,
     alignItems: "center", borderWidth: 1, borderColor: "rgba(15,118,110,0.2)",
     marginTop: 4,
   },
-  copyToPlanText: { fontSize: 14, fontWeight: "600", color: T.teal },
+  copyToPlanText: { fontSize: 14, fontWeight: "600", color: DoctorTheme.primary },
 
   emptyState: { alignItems: "center", paddingVertical: 40 },
   emptyEmoji: { fontSize: 48, marginBottom: 12 },
-  emptyTitle: { fontSize: 16, fontWeight: "600", color: T.textSec, marginBottom: 4 },
-  emptyDesc: { fontSize: 13, color: T.textMuted },
+  emptyTitle: { fontSize: 16, fontWeight: "600", color: SharedColors.navySec, marginBottom: 4 },
+  emptyDesc: { fontSize: 13, color: SharedColors.navyMuted },
 
   // ── Treatment Plan Tab ──
   planCard: {
-    backgroundColor: T.white, borderRadius: 14, padding: 16,
-    gap: 12, borderWidth: 1, borderColor: T.border,
+    backgroundColor: SharedColors.white, borderRadius: 14, padding: 16,
+    gap: 12, borderWidth: 1, borderColor: SharedColors.border,
     shadowColor: "#000", shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.05, shadowRadius: 4, elevation: 2,
   },
   planCardHeader: {
@@ -1431,14 +1418,14 @@ const s = StyleSheet.create({
   planTreatmentName: {
     fontSize: 15,
     fontWeight: "700",
-    color: T.text,
+    color: SharedColors.navy,
     flex: 1,
     flexShrink: 1,
     paddingRight: 12,
     lineHeight: 21,
   },
   planRemoveBtn: {
-    fontSize: 14, color: T.textMuted, fontWeight: "700",
+    fontSize: 14, color: SharedColors.navyMuted, fontWeight: "700",
     padding: 4, marginTop: 1,
   },
 
@@ -1446,93 +1433,93 @@ const s = StyleSheet.create({
   planQtyWrap: { gap: 6 },
   planPriceWrap: { flex: 1, gap: 6 },
   planInputLabel: {
-    fontSize: 10, fontWeight: "600", color: T.textSec,
+    fontSize: 10, fontWeight: "600", color: SharedColors.navySec,
     letterSpacing: 0.5,
   },
 
   qtyControl: {
     flexDirection: "row", alignItems: "center",
     backgroundColor: "#f1f5f9", borderRadius: 10,
-    borderWidth: 1.5, borderColor: T.border,
+    borderWidth: 1.5, borderColor: SharedColors.border,
   },
   qtyBtn: {
     width: 36, height: 40, alignItems: "center", justifyContent: "center",
   },
-  qtyBtnText: { fontSize: 18, fontWeight: "600", color: T.teal },
+  qtyBtnText: { fontSize: 18, fontWeight: "600", color: DoctorTheme.primary },
   qtyValue: {
-    fontSize: 16, fontWeight: "700", color: T.text,
+    fontSize: 16, fontWeight: "700", color: SharedColors.navy,
     minWidth: 28, textAlign: "center",
   },
 
   priceInputWrap: {
     flexDirection: "row", alignItems: "center",
-    backgroundColor: T.inputBg, borderRadius: 10,
-    borderWidth: 1.5, borderColor: T.border,
+    backgroundColor: SharedColors.bg, borderRadius: 10,
+    borderWidth: 1.5, borderColor: SharedColors.border,
     paddingHorizontal: 12,
   },
-  dollarSign: { fontSize: 16, fontWeight: "700", color: T.teal, marginRight: 4 },
+  dollarSign: { fontSize: 16, fontWeight: "700", color: DoctorTheme.primary, marginRight: 4 },
   priceInput: {
-    flex: 1, fontSize: 16, fontWeight: "700", color: T.text,
+    flex: 1, fontSize: 16, fontWeight: "700", color: SharedColors.navy,
     paddingVertical: 8,
   },
 
   planLineTotalRow: {
     flexDirection: "row", justifyContent: "space-between", alignItems: "center",
-    borderTopWidth: 1, borderTopColor: T.border, paddingTop: 8,
+    borderTopWidth: 1, borderTopColor: SharedColors.border, paddingTop: 8,
   },
-  planLineTotalLabel: { fontSize: 12, color: T.textMuted },
-  planLineTotalValue: { fontSize: 14, fontWeight: "700", color: T.teal },
+  planLineTotalLabel: { fontSize: 12, color: SharedColors.navyMuted },
+  planLineTotalValue: { fontSize: 14, fontWeight: "700", color: DoctorTheme.primary },
 
   // Add treatment
   addTreatmentBtn: {
     flexDirection: "row", alignItems: "center", justifyContent: "center",
     gap: 8, paddingVertical: 14,
-    borderWidth: 1.5, borderColor: T.border,
+    borderWidth: 1.5, borderColor: SharedColors.border,
     borderRadius: 14, borderStyle: "dashed",
-    backgroundColor: T.white,
+    backgroundColor: SharedColors.white,
   },
-  addTreatmentPlus: { fontSize: 20, color: T.teal, fontWeight: "600" },
-  addTreatmentText: { fontSize: 14, color: T.textSec, fontWeight: "500" },
+  addTreatmentPlus: { fontSize: 20, color: DoctorTheme.primary, fontWeight: "600" },
+  addTreatmentText: { fontSize: 14, color: SharedColors.navySec, fontWeight: "500" },
 
   // Treatment Picker
   pickerWrap: {
-    backgroundColor: T.white, borderRadius: 14, padding: 16,
+    backgroundColor: SharedColors.white, borderRadius: 14, padding: 16,
     gap: 10, borderWidth: 1, borderColor: "rgba(15,118,110,0.2)",
     shadowColor: "#000", shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.05, shadowRadius: 4, elevation: 2,
   },
   pickerHeader: {
     flexDirection: "row", justifyContent: "space-between", alignItems: "center",
   },
-  pickerTitle: { fontSize: 14, fontWeight: "700", color: T.text },
-  pickerClose: { fontSize: 16, color: T.textMuted, fontWeight: "700", padding: 4 },
+  pickerTitle: { fontSize: 14, fontWeight: "700", color: SharedColors.navy },
+  pickerClose: { fontSize: 16, color: SharedColors.navyMuted, fontWeight: "700", padding: 4 },
   pickerSearch: {
-    borderWidth: 1.5, borderColor: T.border,
-    backgroundColor: T.inputBg, borderRadius: 10,
+    borderWidth: 1.5, borderColor: SharedColors.border,
+    backgroundColor: SharedColors.bg, borderRadius: 10,
     paddingHorizontal: 14, paddingVertical: 10,
-    fontSize: 14, color: T.text,
+    fontSize: 14, color: SharedColors.navy,
   },
   pickerList: { maxHeight: 220 },
   pickerOption: {
     flexDirection: "row", justifyContent: "space-between", alignItems: "flex-start",
     paddingVertical: 12, paddingHorizontal: 4,
-    borderBottomWidth: 1, borderBottomColor: T.border,
+    borderBottomWidth: 1, borderBottomColor: SharedColors.border,
   },
   pickerOptionText: {
     fontSize: 14,
-    color: T.text,
+    color: SharedColors.navy,
     flex: 1,
     flexShrink: 1,
     paddingRight: 10,
     lineHeight: 20,
   },
-  pickerOptionAdd: { fontSize: 20, color: T.teal, fontWeight: "700", marginTop: -1 },
+  pickerOptionAdd: { fontSize: 20, color: DoctorTheme.primary, fontWeight: "700", marginTop: -1 },
   pickerEmpty: { alignItems: "center", paddingVertical: 20, gap: 10 },
-  pickerEmptyText: { fontSize: 13, color: T.textMuted },
+  pickerEmptyText: { fontSize: 13, color: SharedColors.navyMuted },
   pickerCustomBtn: {
     backgroundColor: "rgba(15,118,110,0.08)", borderRadius: 10,
     paddingHorizontal: 16, paddingVertical: 10,
   },
-  pickerCustomText: { fontSize: 13, color: T.teal, fontWeight: "600" },
+  pickerCustomText: { fontSize: 13, color: DoctorTheme.primary, fontWeight: "600" },
 
   // Total
   totalCard: {
@@ -1542,17 +1529,17 @@ const s = StyleSheet.create({
   totalRow: {
     flexDirection: "row", justifyContent: "space-between", alignItems: "center",
   },
-  totalLabel: { fontSize: 16, fontWeight: "700", color: T.text },
-  totalPrice: { fontSize: 24, fontWeight: "700", color: T.teal },
-  depositNote: { fontSize: 12, color: T.textMuted, textAlign: "right" },
+  totalLabel: { fontSize: 16, fontWeight: "700", color: SharedColors.navy },
+  totalPrice: { fontSize: 24, fontWeight: "700", color: DoctorTheme.primary },
+  depositNote: { fontSize: 12, color: SharedColors.navyMuted, textAlign: "right" },
 
   // Details section
   detailsSection: {
-    backgroundColor: T.white, borderRadius: 16, padding: 20,
-    gap: 16, borderWidth: 1, borderColor: T.border,
+    backgroundColor: SharedColors.white, borderRadius: 16, padding: 20,
+    gap: 16, borderWidth: 1, borderColor: SharedColors.border,
     shadowColor: "#000", shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.05, shadowRadius: 4, elevation: 2,
   },
-  detailsSectionTitle: { fontSize: 13, fontWeight: "700", color: T.teal, letterSpacing: 0.5 },
+  detailsSectionTitle: { fontSize: 13, fontWeight: "700", color: DoctorTheme.primary, letterSpacing: 0.5 },
   differWarning: {
     flexDirection: "row", alignItems: "flex-start", gap: 8,
     backgroundColor: "rgba(245,158,11,0.08)", borderRadius: 10, padding: 12,
@@ -1560,89 +1547,89 @@ const s = StyleSheet.create({
   },
   differWarningIcon: { fontSize: 16, marginTop: 1 },
   differWarningText: { flex: 1, fontSize: 12, color: "#d97706", lineHeight: 18 },
-  inputRequired: { borderColor: T.amber, borderWidth: 1.5 },
+  inputRequired: { borderColor: SharedColors.amber, borderWidth: 1.5 },
   field: { gap: 8 },
   label: {
-    fontSize: 11, fontWeight: "600", color: T.textSec, letterSpacing: 0.8,
+    fontSize: 11, fontWeight: "600", color: SharedColors.navySec, letterSpacing: 0.8,
   },
   input: {
-    borderWidth: 1.5, borderColor: T.border,
-    backgroundColor: T.inputBg, borderRadius: 12,
+    borderWidth: 1.5, borderColor: SharedColors.border,
+    backgroundColor: SharedColors.bg, borderRadius: 12,
     paddingHorizontal: 16, paddingVertical: 13,
-    fontSize: 14, color: T.text, minHeight: 48,
+    fontSize: 14, color: SharedColors.navy, minHeight: 48,
   },
 
   // Bottom
   bottom: {
     paddingHorizontal: 24, paddingVertical: 16,
-    borderTopWidth: 1, borderTopColor: T.border,
-    backgroundColor: T.white,
+    borderTopWidth: 1, borderTopColor: SharedColors.border,
+    backgroundColor: SharedColors.white,
   },
   sendBtn: {
-    backgroundColor: T.teal, borderRadius: 14, paddingVertical: 15,
+    backgroundColor: DoctorTheme.primary, borderRadius: 14, paddingVertical: 15,
     alignItems: "center", minHeight: 52,
   },
   sendBtnDisabled: { opacity: 0.4 },
-  sendBtnText: { color: T.white, fontSize: 15, fontWeight: "600" },
+  sendBtnText: { color: SharedColors.white, fontSize: 15, fontWeight: "600" },
 
   // Submitted
   submittedWrap: { flex: 1, justifyContent: "center", alignItems: "center", paddingHorizontal: 28 },
-  submittedTitle: { fontSize: 28, fontWeight: "700", color: T.white, marginBottom: 12 },
+  submittedTitle: { fontSize: 28, fontWeight: "700", color: SharedColors.white, marginBottom: 12 },
   submittedDesc: {
     fontSize: 14, color: "rgba(255,255,255,0.6)", textAlign: "center",
     lineHeight: 22, marginBottom: 24,
   },
   sentSummary: {
     width: "100%", backgroundColor: "rgba(255,255,255,0.08)", borderRadius: 14,
-    padding: 16, gap: 8, borderWidth: 1, borderColor: T.border, marginBottom: 24,
+    padding: 16, gap: 8, borderWidth: 1, borderColor: SharedColors.border, marginBottom: 24,
   },
   sentRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "flex-end" },
   sentName: { fontSize: 13, color: "rgba(255,255,255,0.6)", flex: 1, marginRight: 12 },
-  sentPrice: { fontSize: 13, fontWeight: "600", color: T.white, flexShrink: 0 },
+  sentPrice: { fontSize: 13, fontWeight: "600", color: SharedColors.white, flexShrink: 0 },
   sentTotalRow: {
     flexDirection: "row", justifyContent: "space-between",
     borderTopWidth: 1, borderTopColor: "rgba(255,255,255,0.15)",
     paddingTop: 8, marginTop: 4,
   },
-  sentTotalLabel: { fontSize: 14, fontWeight: "700", color: T.white },
-  sentTotalPrice: { fontSize: 18, fontWeight: "700", color: T.tealLight },
+  sentTotalLabel: { fontSize: 14, fontWeight: "700", color: SharedColors.white },
+  sentTotalPrice: { fontSize: 18, fontWeight: "700", color: DoctorTheme.accentBright },
   backDashBtn: {
-    width: "100%", backgroundColor: T.white, borderRadius: 14,
+    width: "100%", backgroundColor: SharedColors.white, borderRadius: 14,
     paddingVertical: 15, alignItems: "center",
   },
-  backDashText: { color: T.teal, fontSize: 16, fontWeight: "700" },
+  backDashText: { color: DoctorTheme.primary, fontSize: 16, fontWeight: "700" },
 
   // ── Booking Details ──
   bookingTreatmentRow: {
     flexDirection: "row", justifyContent: "space-between", alignItems: "flex-start",
     paddingVertical: 6,
   },
-  bookingTreatmentName: { fontSize: 13, color: T.text, flex: 1, flexShrink: 1, lineHeight: 19, paddingRight: 10 },
-  bookingTreatmentPrice: { fontSize: 13, fontWeight: "600", color: T.text },
-  bookingDivider: { height: 1, backgroundColor: T.border, marginVertical: 6 },
-  bookingTotalLabel: { fontSize: 14, fontWeight: "700", color: T.text },
-  bookingTotalPrice: { fontSize: 16, fontWeight: "800", color: T.teal },
-  bookingDepositLabel: { fontSize: 13, color: T.green, fontWeight: "600" },
-  bookingDepositPrice: { fontSize: 13, fontWeight: "700", color: T.green },
+  bookingTreatmentName: { fontSize: 13, color: SharedColors.navy, flex: 1, flexShrink: 1, lineHeight: 19, paddingRight: 10 },
+  bookingTreatmentPrice: { fontSize: 13, fontWeight: "600", color: SharedColors.navy },
+  bookingDivider: { height: 1, backgroundColor: SharedColors.border, marginVertical: 6 },
+  bookingTotalLabel: { fontSize: 14, fontWeight: "700", color: SharedColors.navy },
+  bookingTotalPrice: { fontSize: 16, fontWeight: "800", color: DoctorTheme.primary },
+  bookingDepositLabel: { fontSize: 13, color: SharedColors.green, fontWeight: "600" },
+  bookingDepositPrice: { fontSize: 13, fontWeight: "700", color: SharedColors.green },
   bookingVisitRow: {
     flexDirection: "row", alignItems: "flex-start", gap: 10, paddingVertical: 8,
-    borderBottomWidth: 1, borderBottomColor: T.border,
+    borderBottomWidth: 1, borderBottomColor: SharedColors.border,
   },
   bookingVisitBadge: {
     backgroundColor: "rgba(15,118,110,0.1)", borderRadius: 8,
     paddingHorizontal: 10, paddingVertical: 4,
   },
-  bookingVisitBadgeText: { fontSize: 11, fontWeight: "700", color: T.teal },
+  bookingVisitBadgeText: { fontSize: 11, fontWeight: "700", color: DoctorTheme.primary },
   bookingVisitInfo: { flex: 1, gap: 2 },
-  bookingVisitDesc: { fontSize: 13, color: T.text },
-  bookingVisitDate: { fontSize: 12, color: T.textSec },
-  bookingVisitPending: { fontSize: 12, color: T.amber, fontStyle: "italic" },
+  bookingVisitDesc: { fontSize: 13, color: SharedColors.navy },
+  bookingVisitDate: { fontSize: 12, color: SharedColors.navySec },
+  bookingVisitPending: { fontSize: 12, color: SharedColors.amber, fontStyle: "italic" },
 
   // ── Doctor Quote Details ──
-  quoteDetailLabel: { fontSize: 10, fontWeight: "600", color: T.textMuted, letterSpacing: 0.6, marginTop: 2 },
-  quoteDetailText: { fontSize: 13, color: T.textSec, lineHeight: 20 },
-  quoteDuration: { fontSize: 13, fontWeight: "600", color: T.teal, marginBottom: 4 },
-  quoteGapText: { fontSize: 11, color: T.amber, fontStyle: "italic" },
+  quoteDetailLabel: { fontSize: 10, fontWeight: "600", color: SharedColors.navyMuted, letterSpacing: 0.6, marginTop: 2 },
+  quoteDetailText: { fontSize: 13, color: SharedColors.navySec, lineHeight: 20 },
+  quoteDuration: { fontSize: 13, fontWeight: "600", color: DoctorTheme.primary, marginBottom: 4 },
+  quoteGapText: { fontSize: 11, color: SharedColors.amber, fontStyle: "italic" },
 
   // ── Cancelled Banner ──
   cancelledBanner: {
@@ -1652,6 +1639,6 @@ const s = StyleSheet.create({
     marginHorizontal: 20, marginTop: 12,
   },
   cancelledIcon: { fontSize: 24, marginTop: 2 },
-  cancelledTitle: { fontSize: 15, fontWeight: "700", color: "#ef4444", marginBottom: 4 },
+  cancelledTitle: { fontSize: 15, fontWeight: "700", color: SharedColors.red, marginBottom: 4 },
   cancelledDesc: { fontSize: 12, color: "#b91c1c", lineHeight: 18 },
 });

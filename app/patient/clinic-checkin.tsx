@@ -10,26 +10,8 @@ import {
 } from "react-native";
 import { Booking, store } from "../../lib/store";
 
+import { PatientTheme, SharedColors } from "../../constants/theme";
 /* ── palette ── */
-const C = {
-  plum: "#3B0764",
-  violet: "#6B21A8",
-  lavender: "#8b5cf6",
-  lilac: "#c4b5fd",
-  cream: "#faf8ff",
-  card: "#ffffff",
-  navy: "#0f172a",
-  text: "#1e293b",
-  sub: "#64748b",
-  muted: "#94a3b8",
-  faint: "#cbd5e1",
-  border: "#ede9f4",
-  amber: "#f59e0b",
-  amberLight: "#fffbeb",
-  green: "#16a34a",
-  greenSoft: "#dcfce7",
-};
-
 export default function ClinicCheckinScreen() {
   const { bookingId } = useLocalSearchParams<{ bookingId: string }>();
   const [booking, setBooking] = useState<Booking | null>(null);
@@ -124,7 +106,7 @@ export default function ClinicCheckinScreen() {
   if (loading) {
     return (
       <View style={[s.container, { justifyContent: "center", alignItems: "center" }]}>
-        <ActivityIndicator color={C.violet} size="large" />
+        <ActivityIndicator color={PatientTheme.primaryMid} size="large" />
       </View>
     );
   }
@@ -228,8 +210,8 @@ export default function ClinicCheckinScreen() {
                           isPast && s.tlDotDone,
                           isCur && s.tlDotCurrent,
                         ]}>
-                          {isPast && <Text style={{ fontSize: 8, color: "#fff" }}>✓</Text>}
-                          {isCur && <Text style={{ fontSize: 8, color: "#fff" }}>✓</Text>}
+                          {isPast && <Text style={{ fontSize: 8, color: SharedColors.white }}>✓</Text>}
+                          {isCur && <Text style={{ fontSize: 8, color: SharedColors.white }}>✓</Text>}
                         </View>
                       </View>
                       <View style={{ flex: 1 }}>
@@ -287,7 +269,7 @@ export default function ClinicCheckinScreen() {
   return (
     <View style={s.container}>
       {/* Header */}
-      <LinearGradient colors={["#3D0070", "#2F0058", "#220040"]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={s.header}>
+      <LinearGradient colors={[...PatientTheme.gradient]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={s.header}>
         <View style={s.headerRow}>
           <TouchableOpacity style={s.backBtn} onPress={() => router.back()}>
             <Text style={s.backArrow}>‹</Text>
@@ -304,7 +286,7 @@ export default function ClinicCheckinScreen() {
 
         {/* ── Appointment Ticket ── */}
         <View style={s.ticket}>
-          <LinearGradient colors={["#4A0080", "#6B21A8"]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={s.ticketTop}>
+          <LinearGradient colors={[PatientTheme.primary, "#6B21A8"]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={s.ticketTop}>
             <View style={s.ticketTopRow}>
               <View>
                 <Text style={s.ticketLabel}>YOUR APPOINTMENT</Text>
@@ -408,13 +390,13 @@ export default function ClinicCheckinScreen() {
               activeOpacity={0.85}
             >
               <LinearGradient
-                colors={["#6B21A8", "#4A0080", "#3B0764"]}
+                colors={["#6B21A8", PatientTheme.primary, "#3B0764"]}
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 1 }}
                 style={s.checkinGrad}
               >
                 {confirming ? (
-                  <ActivityIndicator color="#fff" size="large" />
+                  <ActivityIndicator color={SharedColors.white} size="large" />
                 ) : (
                   <>
                     <Text style={s.checkinEmoji}>🏥</Text>
@@ -439,7 +421,7 @@ export default function ClinicCheckinScreen() {
 
 /* ═══════════════════════════════════════════════ */
 const s = StyleSheet.create({
-  container: { flex: 1, backgroundColor: C.cream },
+  container: { flex: 1, backgroundColor: SharedColors.cream },
 
   /* Header */
   header: { paddingHorizontal: 20, paddingTop: 60, paddingBottom: 18 },
@@ -450,9 +432,9 @@ const s = StyleSheet.create({
     borderWidth: 1, borderColor: "rgba(255,255,255,0.15)",
     alignItems: "center", justifyContent: "center",
   },
-  backArrow: { fontSize: 24, color: "#fff", fontWeight: "600", marginTop: -2 },
+  backArrow: { fontSize: 24, color: SharedColors.white, fontWeight: "600", marginTop: -2 },
   headerCenter: { flex: 1, alignItems: "center" },
-  headerTitle: { fontSize: 18, fontWeight: "700", color: "#fff" },
+  headerTitle: { fontSize: 18, fontWeight: "700", color: SharedColors.white },
   headerSub: { fontSize: 12, color: "rgba(255,255,255,0.6)", marginTop: 2 },
   content: { padding: 20, gap: 20 },
 
@@ -461,72 +443,72 @@ const s = StyleSheet.create({
   ticketTop: { paddingHorizontal: 20, paddingTop: 18, paddingBottom: 16 },
   ticketTopRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
   ticketLabel: { fontSize: 10, fontWeight: "800", color: "rgba(255,255,255,0.55)", letterSpacing: 1.5 },
-  ticketClinic: { fontSize: 17, fontWeight: "800", color: "#fff", marginTop: 3 },
+  ticketClinic: { fontSize: 17, fontWeight: "800", color: SharedColors.white, marginTop: 3 },
   ticketVisitBadge: {
     backgroundColor: "rgba(255,255,255,0.18)",
     borderRadius: 8, paddingHorizontal: 10, paddingVertical: 5,
     borderWidth: 1, borderColor: "rgba(255,255,255,0.12)",
   },
-  ticketVisitText: { fontSize: 11, fontWeight: "700", color: "#fff" },
+  ticketVisitText: { fontSize: 11, fontWeight: "700", color: SharedColors.white },
 
-  ticketPerfRow: { flexDirection: "row", alignItems: "center", backgroundColor: C.card, marginTop: -1 },
+  ticketPerfRow: { flexDirection: "row", alignItems: "center", backgroundColor: SharedColors.white, marginTop: -1 },
   ticketNotchL: {
     width: 16, height: 16, borderRadius: 8,
-    backgroundColor: C.cream, marginLeft: -8,
+    backgroundColor: SharedColors.cream, marginLeft: -8,
   },
   ticketDashes: {
     flex: 1, height: 1,
-    borderStyle: "dashed", borderWidth: 1, borderColor: C.border,
+    borderStyle: "dashed", borderWidth: 1, borderColor: SharedColors.border,
   },
   ticketNotchR: {
     width: 16, height: 16, borderRadius: 8,
-    backgroundColor: C.cream, marginRight: -8,
+    backgroundColor: SharedColors.cream, marginRight: -8,
   },
 
-  ticketBottom: { backgroundColor: C.card, paddingBottom: 0 },
+  ticketBottom: { backgroundColor: SharedColors.white, paddingBottom: 0 },
   ticketGrid: { flexDirection: "row", paddingHorizontal: 20, paddingVertical: 16, gap: 0 },
   ticketDateBlock: { width: 68, alignItems: "center", justifyContent: "center" },
-  ticketMonth: { fontSize: 11, fontWeight: "800", color: C.violet, letterSpacing: 1.5 },
-  ticketDay: { fontSize: 38, fontWeight: "900", color: C.plum, lineHeight: 44 },
-  ticketDayName: { fontSize: 12, fontWeight: "600", color: C.lavender },
-  ticketDivider: { width: 1, backgroundColor: C.border, marginHorizontal: 16 },
+  ticketMonth: { fontSize: 11, fontWeight: "800", color: PatientTheme.primaryMid, letterSpacing: 1.5 },
+  ticketDay: { fontSize: 38, fontWeight: "900", color: PatientTheme.primary, lineHeight: 44 },
+  ticketDayName: { fontSize: 12, fontWeight: "600", color: PatientTheme.primaryLight },
+  ticketDivider: { width: 1, backgroundColor: SharedColors.border, marginHorizontal: 16 },
   ticketDetails: { flex: 1, gap: 10 },
   ticketDetailRow: { gap: 1 },
-  ticketDetailLabel: { fontSize: 9, fontWeight: "800", color: C.muted, letterSpacing: 1 },
-  ticketDetailValue: { fontSize: 15, fontWeight: "700", color: C.plum },
-  ticketDetailDesc: { fontSize: 12, fontWeight: "500", color: C.sub, lineHeight: 16 },
+  ticketDetailLabel: { fontSize: 9, fontWeight: "800", color: SharedColors.slateLight, letterSpacing: 1 },
+  ticketDetailValue: { fontSize: 15, fontWeight: "700", color: PatientTheme.primary },
+  ticketDetailDesc: { fontSize: 12, fontWeight: "500", color: SharedColors.slate, lineHeight: 16 },
   ticketMapBtn: {
     flexDirection: "row", alignItems: "center", justifyContent: "center",
     paddingVertical: 12, gap: 4,
-    borderTopWidth: 1, borderTopColor: C.border,
+    borderTopWidth: 1, borderTopColor: SharedColors.border,
     backgroundColor: "rgba(107,33,168,0.03)",
   },
-  ticketMapText: { fontSize: 12, fontWeight: "600", color: C.violet },
-  ticketMapChevron: { fontSize: 16, fontWeight: "700", color: C.violet },
+  ticketMapText: { fontSize: 12, fontWeight: "600", color: PatientTheme.primaryMid },
+  ticketMapChevron: { fontSize: 16, fontWeight: "700", color: PatientTheme.primaryMid },
 
   /* ── Checklist ── */
   checklistCard: {
-    backgroundColor: C.card, borderRadius: 18, padding: 20,
-    borderWidth: 1, borderColor: C.border, gap: 12,
+    backgroundColor: SharedColors.white, borderRadius: 18, padding: 20,
+    borderWidth: 1, borderColor: SharedColors.border, gap: 12,
   },
-  checklistTitle: { fontSize: 15, fontWeight: "800", color: C.navy, marginBottom: 2 },
+  checklistTitle: { fontSize: 15, fontWeight: "800", color: SharedColors.navy, marginBottom: 2 },
   checkRow: { flexDirection: "row", alignItems: "center", gap: 12 },
   checkBox: {
     width: 32, height: 32, borderRadius: 10,
-    backgroundColor: C.cream, alignItems: "center", justifyContent: "center",
-    borderWidth: 1, borderColor: C.border,
+    backgroundColor: SharedColors.cream, alignItems: "center", justifyContent: "center",
+    borderWidth: 1, borderColor: SharedColors.border,
   },
-  checkText: { fontSize: 13, color: C.sub, flex: 1, lineHeight: 18 },
+  checkText: { fontSize: 13, color: SharedColors.slate, flex: 1, lineHeight: 18 },
 
   /* Divider */
   divSection: { flexDirection: "row", alignItems: "center", gap: 12 },
-  divLine: { flex: 1, height: 1, backgroundColor: C.border },
-  divText: { fontSize: 11, fontWeight: "600", color: C.muted, letterSpacing: 0.3 },
+  divLine: { flex: 1, height: 1, backgroundColor: SharedColors.border },
+  divText: { fontSize: 11, fontWeight: "600", color: SharedColors.slateLight, letterSpacing: 0.3 },
 
   /* ── Check-in Button ── */
   glowRing: {
     position: "absolute", top: -12, width: 220, height: 220, borderRadius: 110,
-    backgroundColor: C.violet,
+    backgroundColor: PatientTheme.primaryMid,
   },
   checkinBtn: { borderRadius: 100, overflow: "hidden" },
   checkinGrad: {
@@ -534,10 +516,10 @@ const s = StyleSheet.create({
     alignItems: "center", justifyContent: "center", gap: 4,
   },
   checkinEmoji: { fontSize: 36 },
-  checkinTitle: { fontSize: 22, fontWeight: "900", color: "#fff" },
+  checkinTitle: { fontSize: 22, fontWeight: "900", color: SharedColors.white },
   checkinSub: { fontSize: 12, color: "rgba(255,255,255,0.65)", marginTop: 2 },
   checkinHint: {
-    fontSize: 12, color: C.muted, textAlign: "center", lineHeight: 17,
+    fontSize: 12, color: SharedColors.slateLight, textAlign: "center", lineHeight: 17,
     paddingHorizontal: 30, marginTop: -4,
   },
 
@@ -556,13 +538,13 @@ const s = StyleSheet.create({
     alignItems: "center", justifyContent: "center",
     borderWidth: 1.5, borderColor: "rgba(255,255,255,0.15)",
   },
-  doneHeroCheck: { fontSize: 38, color: "#fff", fontWeight: "900" },
-  doneHeroTitle: { fontSize: 25, fontWeight: "900", color: "#fff", marginTop: 16 },
+  doneHeroCheck: { fontSize: 38, color: SharedColors.white, fontWeight: "900" },
+  doneHeroTitle: { fontSize: 25, fontWeight: "900", color: SharedColors.white, marginTop: 16 },
   doneHeroSub: { fontSize: 13, color: "rgba(255,255,255,0.75)", marginTop: 5 },
 
   doneInfoStrip: {
     flexDirection: "row", alignItems: "center", width: "100%", marginTop: 22,
-    backgroundColor: C.card, borderRadius: 16, paddingVertical: 18,
+    backgroundColor: SharedColors.white, borderRadius: 16, paddingVertical: 18,
     borderWidth: 1, borderColor: "rgba(5,150,105,0.1)",
   },
   doneInfoCol: {
@@ -571,7 +553,7 @@ const s = StyleSheet.create({
   doneInfoDivider: {
     width: 1, height: 30, backgroundColor: "rgba(5,150,105,0.12)",
   },
-  doneInfoLabel: { fontSize: 9, fontWeight: "800", color: "#94a3b8", letterSpacing: 1 },
+  doneInfoLabel: { fontSize: 9, fontWeight: "800", color: SharedColors.slateLight, letterSpacing: 1 },
   doneInfoValue: { fontSize: 13, fontWeight: "700", color: "#065f46", textAlign: "center" },
 
   doneWhatCard: {
@@ -586,18 +568,18 @@ const s = StyleSheet.create({
   },
   doneWhatDot: { width: 10, height: 10, borderRadius: 5, backgroundColor: "#059669" },
   doneWhatTitle: { fontSize: 14, fontWeight: "700", color: "#047857" },
-  doneWhatSub: { fontSize: 12, color: "#64748b", marginTop: 3, lineHeight: 17 },
+  doneWhatSub: { fontSize: 12, color: SharedColors.slate, marginTop: 3, lineHeight: 17 },
 
   doneProcCard: {
-    width: "100%", backgroundColor: C.card, borderRadius: 16, padding: 18,
+    width: "100%", backgroundColor: SharedColors.white, borderRadius: 16, padding: 18,
     borderWidth: 1, borderColor: "rgba(5,150,105,0.1)", gap: 6,
   },
   doneProcLabel: { fontSize: 9, fontWeight: "800", color: "#059669", letterSpacing: 1 },
-  doneProcText: { fontSize: 14, fontWeight: "600", color: "#1e293b", lineHeight: 20 },
+  doneProcText: { fontSize: 14, fontWeight: "600", color: SharedColors.text, lineHeight: 20 },
 
   /* Timeline */
   timelineCard: {
-    backgroundColor: C.card, borderRadius: 18, padding: 20, width: "100%",
+    backgroundColor: SharedColors.white, borderRadius: 18, padding: 20, width: "100%",
     borderWidth: 1, borderColor: "rgba(5,150,105,0.1)", gap: 0,
   },
   timelineTitle: { fontSize: 15, fontWeight: "800", color: "#065f46", marginBottom: 16 },
@@ -617,14 +599,14 @@ const s = StyleSheet.create({
   tlLabelDone: { color: "#10b981" },
   tlLabelCur: { color: "#059669" },
   tlDate: { fontSize: 12, fontWeight: "500", color: "#047857", marginTop: 2 },
-  tlDesc: { fontSize: 11, color: "#64748b", marginTop: 2 },
+  tlDesc: { fontSize: 11, color: SharedColors.slate, marginTop: 2 },
   nowBadge: {
     backgroundColor: "#059669", borderRadius: 5,
     paddingHorizontal: 7, paddingVertical: 2,
   },
-  nowBadgeText: { fontSize: 9, fontWeight: "800", color: "#fff", letterSpacing: 0.5 },
+  nowBadgeText: { fontSize: 9, fontWeight: "800", color: SharedColors.white, letterSpacing: 0.5 },
   tlRemaining: {
-    fontSize: 11, color: "#94a3b8", textAlign: "center",
+    fontSize: 11, color: SharedColors.slateLight, textAlign: "center",
     marginTop: 12, fontStyle: "italic",
   },
 
@@ -634,9 +616,9 @@ const s = StyleSheet.create({
     backgroundColor: "#059669", borderRadius: 14,
     paddingVertical: 16, alignItems: "center",
   },
-  actionPrimaryText: { fontSize: 15, fontWeight: "700", color: "#fff" },
+  actionPrimaryText: { fontSize: 15, fontWeight: "700", color: SharedColors.white },
   actionSecondary: {
-    backgroundColor: C.card, borderRadius: 14,
+    backgroundColor: SharedColors.white, borderRadius: 14,
     paddingVertical: 16, alignItems: "center",
     borderWidth: 1, borderColor: "rgba(5,150,105,0.15)",
   },

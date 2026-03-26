@@ -11,18 +11,9 @@ import {
 import { getDoctorChatRoomsCache, loadDoctorChatRooms } from "../../lib/doctorTabDataCache";
 import { ChatRoom } from "../../lib/store";
 
-const T = {
-  teal: "#0f766e",
-  tealLight: "#14b8a6",
-  bg: "#f8fafc",
-  white: "#fff",
-  text: "#0f172a",
-  textSec: "#64748b",
-  textMuted: "#94a3b8",
-  border: "#e2e8f0",
-  red: "#ef4444",
-};
 
+
+import { DoctorTheme, SharedColors } from "../../constants/theme";
 export default function DoctorChatListScreen() {
   const [rooms, setRooms] = useState<ChatRoom[]>(getDoctorChatRoomsCache());
 
@@ -80,7 +71,7 @@ export default function DoctorChatListScreen() {
 
   return (
     <View style={s.container}>
-      <LinearGradient colors={["#0f766e", "#134e4a"]} style={s.header}>
+      <LinearGradient colors={[DoctorTheme.primary, DoctorTheme.primaryDark]} style={s.header}>
         <TouchableOpacity style={s.backBtn} onPress={() => router.back()} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
           <Text style={s.backArrow}>‹</Text>
         </TouchableOpacity>
@@ -110,7 +101,7 @@ export default function DoctorChatListScreen() {
 }
 
 const s = StyleSheet.create({
-  container: { flex: 1, backgroundColor: T.bg },
+  container: { flex: 1, backgroundColor: SharedColors.bg },
   header: {
     paddingHorizontal: 24, paddingTop: 60, paddingBottom: 24,
   },
@@ -121,38 +112,38 @@ const s = StyleSheet.create({
     alignItems: "center", justifyContent: "center",
     marginBottom: 8,
   },
-  backArrow: { fontSize: 24, color: "#fff", fontWeight: "600", marginTop: -2 },
-  title: { fontSize: 24, fontWeight: "700", color: T.white, marginBottom: 4 },
+  backArrow: { fontSize: 24, color: SharedColors.white, fontWeight: "600", marginTop: -2 },
+  title: { fontSize: 24, fontWeight: "700", color: SharedColors.white, marginBottom: 4 },
   subtitle: { fontSize: 13, color: "rgba(255,255,255,0.7)" },
 
   list: { padding: 16, gap: 8 },
 
   roomCard: {
     flexDirection: "row", alignItems: "center", gap: 14,
-    backgroundColor: T.white, borderRadius: 14, padding: 16,
-    borderWidth: 1, borderColor: T.border,
+    backgroundColor: SharedColors.white, borderRadius: 14, padding: 16,
+    borderWidth: 1, borderColor: SharedColors.border,
     shadowColor: "#000", shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.05, shadowRadius: 4, elevation: 2,
   },
   avatar: {
     width: 48, height: 48, borderRadius: 24,
     backgroundColor: "rgba(20,184,166,0.1)", alignItems: "center", justifyContent: "center",
   },
-  avatarText: { fontSize: 18, fontWeight: "700", color: T.teal },
+  avatarText: { fontSize: 18, fontWeight: "700", color: DoctorTheme.primary },
   roomInfo: { flex: 1, gap: 3 },
   roomTop: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
-  roomName: { fontSize: 15, fontWeight: "700", color: T.text, flex: 1 },
-  roomTime: { fontSize: 11, color: T.textMuted },
-  roomCase: { fontSize: 11, color: T.textMuted },
-  roomLastMsg: { fontSize: 13, color: T.textSec, marginTop: 2 },
+  roomName: { fontSize: 15, fontWeight: "700", color: SharedColors.navy, flex: 1 },
+  roomTime: { fontSize: 11, color: SharedColors.navyMuted },
+  roomCase: { fontSize: 11, color: SharedColors.navyMuted },
+  roomLastMsg: { fontSize: 13, color: SharedColors.navySec, marginTop: 2 },
 
   badge: {
     width: 22, height: 22, borderRadius: 11,
-    backgroundColor: T.red, alignItems: "center", justifyContent: "center",
+    backgroundColor: SharedColors.red, alignItems: "center", justifyContent: "center",
   },
-  badgeText: { color: T.white, fontSize: 11, fontWeight: "700" },
+  badgeText: { color: SharedColors.white, fontSize: 11, fontWeight: "700" },
 
   empty: { flex: 1, alignItems: "center", justifyContent: "center", paddingHorizontal: 40 },
   emptyIcon: { fontSize: 56, marginBottom: 16 },
-  emptyTitle: { fontSize: 18, fontWeight: "700", color: T.text, marginBottom: 8 },
-  emptyDesc: { fontSize: 14, color: T.textSec, textAlign: "center", lineHeight: 22 },
+  emptyTitle: { fontSize: 18, fontWeight: "700", color: SharedColors.navy, marginBottom: 8 },
+  emptyDesc: { fontSize: 14, color: SharedColors.navySec, textAlign: "center", lineHeight: 22 },
 });

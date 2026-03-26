@@ -10,13 +10,7 @@ import {
 } from "react-native";
 import { ChatRoom, store } from "../../lib/store";
 
-const T = {
-  teal: "#4A0080", tealMid: "#5C10A0", tealLight: "#f0e6f6",
-  navy: "#0f172a", slate: "#64748b", slateLight: "#94a3b8",
-  border: "#e2e8f0", bg: "#f8fafc", white: "#ffffff",
-  red: "#ef4444",
-};
-
+import { PatientTheme, SharedColors } from "../../constants/theme";
 export default function PatientChatListScreen() {
   const [rooms, setRooms] = useState<ChatRoom[]>([]);
   useFocusEffect(
@@ -80,7 +74,7 @@ export default function PatientChatListScreen() {
   return (
     <View style={s.container}>
       {/* Header */}
-      <LinearGradient colors={["#3D0070", "#2F0058", "#220040"]} style={s.header}>
+      <LinearGradient colors={[...PatientTheme.gradient]} style={s.header}>
         <View style={s.headerRow}>
           <TouchableOpacity style={s.backBtn} onPress={() => router.back()} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
             <Text style={s.backArrow}>‹</Text>
@@ -115,42 +109,42 @@ export default function PatientChatListScreen() {
 }
 
 const s = StyleSheet.create({
-  container: { flex: 1, backgroundColor: T.bg },
+  container: { flex: 1, backgroundColor: SharedColors.bg },
   header: { paddingHorizontal: 20, paddingTop: 60, paddingBottom: 18 },
   headerRow: { flexDirection: "row", alignItems: "center" },
   headerCenter: { flex: 1, alignItems: "center" },
   backBtn: { width: 36, height: 36, borderRadius: 12, backgroundColor: "rgba(255,255,255,0.12)", borderWidth: 1, borderColor: "rgba(255,255,255,0.15)", alignItems: "center", justifyContent: "center" },
-  backArrow: { fontSize: 24, color: "#fff", fontWeight: "600", marginTop: -2 },
-  title: { fontSize: 18, fontWeight: "700", color: "#fff" },
+  backArrow: { fontSize: 24, color: SharedColors.white, fontWeight: "600", marginTop: -2 },
+  title: { fontSize: 18, fontWeight: "700", color: SharedColors.white },
   subtitle: { fontSize: 12, color: "rgba(255,255,255,0.55)", marginTop: 2 },
 
   list: { padding: 16, gap: 8 },
 
   roomCard: {
     flexDirection: "row", alignItems: "center", gap: 14,
-    backgroundColor: T.white, borderRadius: 14, padding: 16,
-    borderWidth: 1, borderColor: T.border,
+    backgroundColor: SharedColors.white, borderRadius: 14, padding: 16,
+    borderWidth: 1, borderColor: SharedColors.border,
   },
   avatar: {
     width: 48, height: 48, borderRadius: 24,
-    backgroundColor: T.tealLight, alignItems: "center", justifyContent: "center",
+    backgroundColor: PatientTheme.primaryLight, alignItems: "center", justifyContent: "center",
   },
-  avatarText: { fontSize: 18, fontWeight: "700", color: T.teal },
+  avatarText: { fontSize: 18, fontWeight: "700", color: PatientTheme.primary },
   roomInfo: { flex: 1, gap: 3 },
   roomTop: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
-  roomName: { fontSize: 15, fontWeight: "700", color: T.navy, flex: 1 },
-  roomTime: { fontSize: 11, color: T.slateLight },
-  roomClinic: { fontSize: 12, color: T.slate },
-  roomLastMsg: { fontSize: 13, color: T.slateLight, marginTop: 2 },
+  roomName: { fontSize: 15, fontWeight: "700", color: SharedColors.navy, flex: 1 },
+  roomTime: { fontSize: 11, color: SharedColors.slateLight },
+  roomClinic: { fontSize: 12, color: SharedColors.slate },
+  roomLastMsg: { fontSize: 13, color: SharedColors.slateLight, marginTop: 2 },
 
   badge: {
     width: 22, height: 22, borderRadius: 11,
-    backgroundColor: T.red, alignItems: "center", justifyContent: "center",
+    backgroundColor: SharedColors.red, alignItems: "center", justifyContent: "center",
   },
-  badgeText: { color: T.white, fontSize: 11, fontWeight: "700" },
+  badgeText: { color: SharedColors.white, fontSize: 11, fontWeight: "700" },
 
   empty: { flex: 1, alignItems: "center", justifyContent: "center", paddingHorizontal: 40 },
   emptyIcon: { fontSize: 56, marginBottom: 16 },
-  emptyTitle: { fontSize: 18, fontWeight: "700", color: T.navy, marginBottom: 8 },
-  emptyDesc: { fontSize: 14, color: T.slate, textAlign: "center", lineHeight: 22 },
+  emptyTitle: { fontSize: 18, fontWeight: "700", color: SharedColors.navy, marginBottom: 8 },
+  emptyDesc: { fontSize: 14, color: SharedColors.slate, textAlign: "center", lineHeight: 22 },
 });

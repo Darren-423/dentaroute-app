@@ -12,24 +12,7 @@ import {
 } from "react-native";
 import { Booking, DoctorTier, FinalInvoice, TIER_CONFIG, VisitInvoice, store } from "../../lib/store";
 
-const T = {
-  teal: "#0f766e",
-  tealDeep: "#064e3b",
-  tealLight: "#14b8a6",
-  cream: "#f0fdfa",
-  card: "#ffffff",
-  bg: "#f0fdfa",
-  white: "#fff",
-  text: "#0f172a",
-  navy: "#0f172a",
-  textSec: "#64748b",
-  textMuted: "#94a3b8",
-  border: "#e2e8f0",
-  amber: "#f59e0b",
-  green: "#10b981",
-  red: "#ef4444",
-};
-
+import { DoctorTheme, SharedColors } from "../../constants/theme";
 const TREATMENTS = [
   "Implant: Whole (Root + Crown)", "Implant: Root (Titanium Post) Only", "Implant: Crown Only",
   "Veneers", "Smile Makeover", "Fillings", "Crowns", "Root Canals",
@@ -296,8 +279,8 @@ export default function DoctorFinalInvoiceScreen() {
   // ══════ LOADING ══════
   if (loading) {
     return (
-      <View style={[s.container, { justifyContent: "center", alignItems: "center", backgroundColor: T.bg }]}>
-        <ActivityIndicator color={T.teal} size="large" />
+      <View style={[s.container, { justifyContent: "center", alignItems: "center", backgroundColor: SharedColors.bg }]}>
+        <ActivityIndicator color={DoctorTheme.primary} size="large" />
       </View>
     );
   }
@@ -307,7 +290,7 @@ export default function DoctorFinalInvoiceScreen() {
     return (
       <View style={s.container}>
         <LinearGradient
-          colors={["#0f766e", "#0d5c56", "#064e3b"]}
+          colors={[DoctorTheme.primary, DoctorTheme.primaryDark, DoctorTheme.primaryForest]}
           start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}
           style={s.successHeader}
         >
@@ -344,8 +327,8 @@ export default function DoctorFinalInvoiceScreen() {
             )}
             {prevCarryForward > 0 && (
               <View style={s.receiptRow}>
-                <Text style={[s.receiptLabel, { color: T.amber }]}>Previous Carry-forward</Text>
-                <Text style={[s.receiptValue, { color: T.amber }]}>+${prevCarryForward.toLocaleString()}</Text>
+                <Text style={[s.receiptLabel, { color: SharedColors.amber }]}>Previous Carry-forward</Text>
+                <Text style={[s.receiptValue, { color: SharedColors.amber }]}>+${prevCarryForward.toLocaleString()}</Text>
               </View>
             )}
             {payableBase !== billedAmount && (
@@ -362,8 +345,8 @@ export default function DoctorFinalInvoiceScreen() {
                 </View>
                 {deferredAmount > 0 && (
                   <View style={s.receiptRow}>
-                    <Text style={[s.receiptLabel, { color: T.amber }]}>Deferred to next</Text>
-                    <Text style={[s.receiptValue, { color: T.amber }]}>${deferredAmount.toLocaleString()}</Text>
+                    <Text style={[s.receiptLabel, { color: SharedColors.amber }]}>Deferred to next</Text>
+                    <Text style={[s.receiptValue, { color: SharedColors.amber }]}>${deferredAmount.toLocaleString()}</Text>
                   </View>
                 )}
               </>
@@ -371,12 +354,12 @@ export default function DoctorFinalInvoiceScreen() {
             {/* Deposit removed — patient pays clinic directly */}
             <View style={s.receiptDivider} />
             <View style={s.receiptRow}>
-              <Text style={[s.receiptLabel, { fontWeight: "700", color: T.text }]}>Patient Pays</Text>
-              <Text style={[s.receiptValue, { fontSize: 18, fontWeight: "900", color: T.teal }]}>${doctorViewDue.toLocaleString()}</Text>
+              <Text style={[s.receiptLabel, { fontWeight: "700", color: SharedColors.navy }]}>Patient Pays</Text>
+              <Text style={[s.receiptValue, { fontSize: 18, fontWeight: "900", color: DoctorTheme.primary }]}>${doctorViewDue.toLocaleString()}</Text>
             </View>
             <View style={[s.receiptRow, { backgroundColor: "rgba(16,185,129,0.06)", marginHorizontal: -16, paddingHorizontal: 16, paddingVertical: 8, borderRadius: 8 }]}>
-              <Text style={[s.receiptLabel, { color: T.green, fontWeight: "600" }]}>💰 Your Earnings</Text>
-              <Text style={[s.receiptValue, { color: T.green, fontWeight: "700" }]}>${doctorEarnings.toLocaleString()}</Text>
+              <Text style={[s.receiptLabel, { color: SharedColors.green, fontWeight: "600" }]}>💰 Your Earnings</Text>
+              <Text style={[s.receiptValue, { color: SharedColors.green, fontWeight: "700" }]}>${doctorEarnings.toLocaleString()}</Text>
             </View>
           </View>
 
@@ -395,7 +378,7 @@ export default function DoctorFinalInvoiceScreen() {
           </Text>
 
           <TouchableOpacity onPress={() => router.replace("/doctor/dashboard" as any)}>
-            <LinearGradient colors={["#14b8a6", "#0f766e"]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={s.successBtnGrad}>
+            <LinearGradient colors={[DoctorTheme.accentBright, DoctorTheme.primary]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={s.successBtnGrad}>
               <Text style={s.successBtnText}>Go to Dashboard →</Text>
             </LinearGradient>
           </TouchableOpacity>
@@ -408,7 +391,7 @@ export default function DoctorFinalInvoiceScreen() {
   // ══════ FORM ══════
   return (
     <View style={s.container}>
-      <LinearGradient colors={["#0f766e", "#0d5c56", "#064e3b"]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={s.headerGrad}>
+      <LinearGradient colors={[DoctorTheme.primary, DoctorTheme.primaryDark, DoctorTheme.primaryForest]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={s.headerGrad}>
         <View style={s.headerRow}>
           <TouchableOpacity style={s.backBtn} onPress={() => router.back()}>
             <Text style={s.backArrow}>‹</Text>
@@ -421,7 +404,7 @@ export default function DoctorFinalInvoiceScreen() {
         </View>
       </LinearGradient>
 
-      <KeyboardAvoidingView style={{ flex: 1, backgroundColor: T.bg }} behavior={Platform.OS === "ios" ? "padding" : undefined}>
+      <KeyboardAvoidingView style={{ flex: 1, backgroundColor: SharedColors.bg }} behavior={Platform.OS === "ios" ? "padding" : undefined}>
         <ScrollView contentContainerStyle={s.content} showsVerticalScrollIndicator={false}>
 
           {/* Visit progress banner */}
@@ -535,7 +518,7 @@ export default function DoctorFinalInvoiceScreen() {
                       value={item.treatment}
                       onChangeText={(t) => updateItem(item.id, "treatment", t)}
                       placeholder="Type or select treatment..."
-                      placeholderTextColor="#94a3b8"
+                      placeholderTextColor={SharedColors.slateLight}
                     />
                     <TouchableOpacity
                       style={s.comboDropdownBtn}
@@ -562,7 +545,7 @@ export default function DoctorFinalInvoiceScreen() {
                       <View style={s.pickerModalHeader}>
                         <Text style={s.pickerModalTitle}>Select Treatment</Text>
                         <TouchableOpacity onPress={() => setShowPicker(null)}>
-                          <Text style={{ fontSize: 16, color: T.textSec, padding: 4 }}>✕</Text>
+                          <Text style={{ fontSize: 16, color: SharedColors.navySec, padding: 4 }}>✕</Text>
                         </TouchableOpacity>
                       </View>
                       <ScrollView style={s.pickerModalList} showsVerticalScrollIndicator>
@@ -580,7 +563,7 @@ export default function DoctorFinalInvoiceScreen() {
                               setShowPicker(null);
                             }}
                           >
-                            <Text style={[s.pickerItemText, item.treatment === t && { color: T.teal, fontWeight: "700" }]}>{t}</Text>
+                            <Text style={[s.pickerItemText, item.treatment === t && { color: DoctorTheme.primary, fontWeight: "700" }]}>{t}</Text>
                           </TouchableOpacity>
                         ))}
                       </ScrollView>
@@ -610,7 +593,7 @@ export default function DoctorFinalInvoiceScreen() {
                       value={item.price > 0 ? String(item.price) : ""}
                       onChangeText={(t) => updateItem(item.id, "price", parseInt(t.replace(/\D/g, "")) || 0)}
                       placeholder="0"
-                      placeholderTextColor="#94a3b8"
+                      placeholderTextColor={SharedColors.slateLight}
                       keyboardType="number-pad"
                     />
                   </View>
@@ -622,13 +605,13 @@ export default function DoctorFinalInvoiceScreen() {
                 {/* Price floor warning */}
                 {PRICE_FLOORS[item.treatment] && item.price > 0 && item.price < PRICE_FLOORS[item.treatment] && (
                   <View style={{ backgroundColor: "rgba(239,68,68,0.08)", borderRadius: 8, padding: 8, borderWidth: 1, borderColor: "rgba(239,68,68,0.2)" }}>
-                    <Text style={{ fontSize: 11, color: T.red, fontWeight: "600" }}>
+                    <Text style={{ fontSize: 11, color: SharedColors.red, fontWeight: "600" }}>
                       ⚠️ Min. price for {item.treatment}: ${PRICE_FLOORS[item.treatment].toLocaleString()}
                     </Text>
                   </View>
                 )}
                 {PRICE_FLOORS[item.treatment] && item.price === 0 && (
-                  <Text style={{ fontSize: 10, color: T.textMuted, marginTop: 2 }}>
+                  <Text style={{ fontSize: 10, color: SharedColors.navyMuted, marginTop: 2 }}>
                     Min. ${PRICE_FLOORS[item.treatment].toLocaleString()} per unit
                   </Text>
                 )}
@@ -655,7 +638,7 @@ export default function DoctorFinalInvoiceScreen() {
                 {visitTotal > 0 && prevCarryForward > 0 && (
                   <View style={[s.minBillingNotice, { backgroundColor: "rgba(245,158,11,0.08)", borderColor: "rgba(245,158,11,0.2)" }]}>
                     <Text style={{ fontSize: 14 }}>📋</Text>
-                    <Text style={[s.minBillingText, { color: T.amber }]}>
+                    <Text style={[s.minBillingText, { color: SharedColors.amber }]}>
                       New treatments ${visitTotal.toLocaleString()} + carry-forward ${prevCarryForward.toLocaleString()} = ${payableBase.toLocaleString()} total available
                     </Text>
                   </View>
@@ -718,8 +701,8 @@ export default function DoctorFinalInvoiceScreen() {
                   </View>
                   {deferredAmount > 0 && (
                     <View style={s.billingBreakdownRow}>
-                      <Text style={[s.billingBreakdownLabel, { color: T.amber }]}>Deferred to next visit</Text>
-                      <Text style={[s.billingBreakdownValue, { color: T.amber }]}>${deferredAmount.toLocaleString()}</Text>
+                      <Text style={[s.billingBreakdownLabel, { color: SharedColors.amber }]}>Deferred to next visit</Text>
+                      <Text style={[s.billingBreakdownValue, { color: SharedColors.amber }]}>${deferredAmount.toLocaleString()}</Text>
                     </View>
                   )}
                 </View>
@@ -744,7 +727,7 @@ export default function DoctorFinalInvoiceScreen() {
               value={notes}
               onChangeText={setNotes}
               placeholder="Post-treatment instructions, follow-up notes..."
-              placeholderTextColor="#94a3b8"
+              placeholderTextColor={SharedColors.slateLight}
               multiline
               maxLength={500}
             />
@@ -752,7 +735,7 @@ export default function DoctorFinalInvoiceScreen() {
 
           {/* ── Summary ── */}
           <View style={s.summaryCard}>
-            <Text style={{ fontSize: 11, fontWeight: "700", color: T.textSec, letterSpacing: 0.5, marginBottom: 4 }}>
+            <Text style={{ fontSize: 11, fontWeight: "700", color: SharedColors.navySec, letterSpacing: 0.5, marginBottom: 4 }}>
               VISIT {currentVisitNum} SUMMARY
             </Text>
             {visitTotal > 0 && (
@@ -763,8 +746,8 @@ export default function DoctorFinalInvoiceScreen() {
             )}
             {prevCarryForward > 0 && (
               <View style={s.summaryRow}>
-                <Text style={[s.summaryLabel, { color: T.amber }]}>Previous Carry-forward</Text>
-                <Text style={[s.summaryValue, { color: T.amber }]}>+${prevCarryForward.toLocaleString()}</Text>
+                <Text style={[s.summaryLabel, { color: SharedColors.amber }]}>Previous Carry-forward</Text>
+                <Text style={[s.summaryValue, { color: SharedColors.amber }]}>+${prevCarryForward.toLocaleString()}</Text>
               </View>
             )}
             {(visitTotal > 0 && prevCarryForward > 0) && (
@@ -781,8 +764,8 @@ export default function DoctorFinalInvoiceScreen() {
                 </View>
                 {deferredAmount > 0 && (
                   <View style={s.summaryRow}>
-                    <Text style={[s.summaryLabel, { color: T.amber }]}>Deferred to later</Text>
-                    <Text style={[s.summaryValue, { color: T.amber }]}>${deferredAmount.toLocaleString()}</Text>
+                    <Text style={[s.summaryLabel, { color: SharedColors.amber }]}>Deferred to later</Text>
+                    <Text style={[s.summaryValue, { color: SharedColors.amber }]}>${deferredAmount.toLocaleString()}</Text>
                   </View>
                 )}
               </>
@@ -801,13 +784,13 @@ export default function DoctorFinalInvoiceScreen() {
                 <View style={[s.tierBadgeSm, { backgroundColor: tierColor }]}>
                   <Text style={s.tierBadgeSmText}>{tierLabel}</Text>
                 </View>
-                <Text style={[s.summaryLabel, { color: T.textSec }]}>Platform Fee ({Math.round(feeRate * 100)}%)</Text>
+                <Text style={[s.summaryLabel, { color: SharedColors.navySec }]}>Platform Fee ({Math.round(feeRate * 100)}%)</Text>
               </View>
-              <Text style={[s.summaryValue, { color: T.red }]}>- ${platformFee.toLocaleString()}</Text>
+              <Text style={[s.summaryValue, { color: SharedColors.red }]}>- ${platformFee.toLocaleString()}</Text>
             </View>
             <View style={[s.summaryRow, { backgroundColor: "rgba(16,185,129,0.06)", marginHorizontal: -12, paddingHorizontal: 12, paddingVertical: 8, borderRadius: 8, marginTop: 4 }]}>
-              <Text style={[s.balanceLabel, { color: T.green }]}>💰 Your Earnings</Text>
-              <Text style={[s.balanceValue, { color: T.green }]}>${doctorEarnings.toLocaleString()}</Text>
+              <Text style={[s.balanceLabel, { color: SharedColors.green }]}>💰 Your Earnings</Text>
+              <Text style={[s.balanceValue, { color: SharedColors.green }]}>${doctorEarnings.toLocaleString()}</Text>
             </View>
 
             {/* Remaining visits info */}
@@ -840,12 +823,12 @@ export default function DoctorFinalInvoiceScreen() {
           activeOpacity={0.85}
         >
           <LinearGradient
-            colors={isValid() ? ["#14b8a6", "#0f766e"] : ["#cbd5e1", "#94a3b8"]}
+            colors={isValid() ? [DoctorTheme.accentBright, DoctorTheme.primary] : ["#cbd5e1", SharedColors.slateLight]}
             start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}
             style={s.sendBtnGrad}
           >
             {sending ? (
-              <ActivityIndicator color="#fff" size="small" />
+              <ActivityIndicator color={SharedColors.white} size="small" />
             ) : (
               <Text style={s.sendBtnText}>Send Invoice →</Text>
             )}
@@ -857,7 +840,7 @@ export default function DoctorFinalInvoiceScreen() {
 }
 
 const s = StyleSheet.create({
-  container: { flex: 1, backgroundColor: T.cream },
+  container: { flex: 1, backgroundColor: DoctorTheme.primaryLight },
   headerGrad: { paddingHorizontal: 20, paddingTop: 60, paddingBottom: 18 },
   headerRow: { flexDirection: "row", alignItems: "center" },
   backBtn: {
@@ -866,9 +849,9 @@ const s = StyleSheet.create({
     borderWidth: 1, borderColor: "rgba(255,255,255,0.15)",
     alignItems: "center", justifyContent: "center",
   },
-  backArrow: { fontSize: 24, color: "#fff", fontWeight: "600", marginTop: -2 },
+  backArrow: { fontSize: 24, color: SharedColors.white, fontWeight: "600", marginTop: -2 },
   headerCenter: { flex: 1, alignItems: "center" },
-  headerTitle: { fontSize: 18, fontWeight: "700", color: T.white },
+  headerTitle: { fontSize: 18, fontWeight: "700", color: SharedColors.white },
   headerSub: { fontSize: 12, color: "rgba(255,255,255,0.6)", marginTop: 2 },
   content: { padding: 20, gap: 16 },
 
@@ -880,60 +863,60 @@ const s = StyleSheet.create({
   },
   visitBannerLeft: { flexDirection: "row", alignItems: "center", gap: 12 },
   visitBadge: {
-    width: 36, height: 36, borderRadius: 18, backgroundColor: T.teal,
+    width: 36, height: 36, borderRadius: 18, backgroundColor: DoctorTheme.primary,
     alignItems: "center", justifyContent: "center",
   },
-  visitBadgeText: { color: T.white, fontSize: 14, fontWeight: "800" },
-  visitBannerTitle: { fontSize: 14, fontWeight: "700", color: T.text },
-  visitBannerSub: { fontSize: 11, color: T.textSec, marginTop: 1 },
+  visitBadgeText: { color: SharedColors.white, fontSize: 14, fontWeight: "800" },
+  visitBannerTitle: { fontSize: 14, fontWeight: "700", color: SharedColors.navy },
+  visitBannerSub: { fontSize: 11, color: SharedColors.navySec, marginTop: 1 },
   prevPaidBadge: {
     backgroundColor: "rgba(16,185,129,0.1)", borderRadius: 8, paddingHorizontal: 10, paddingVertical: 5,
   },
-  prevPaidText: { fontSize: 10, fontWeight: "600", color: T.green },
+  prevPaidText: { fontSize: 10, fontWeight: "600", color: SharedColors.green },
 
   // Patient
   patientCard: {
     flexDirection: "row", alignItems: "center", gap: 12,
-    backgroundColor: T.white, borderRadius: 14, padding: 16,
-    borderWidth: 1, borderColor: T.border,
+    backgroundColor: SharedColors.white, borderRadius: 14, padding: 16,
+    borderWidth: 1, borderColor: SharedColors.border,
     shadowColor: "#000", shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.05, shadowRadius: 4, elevation: 2,
   },
   patientAvatar: {
-    width: 40, height: 40, borderRadius: 20, backgroundColor: T.tealLight,
+    width: 40, height: 40, borderRadius: 20, backgroundColor: DoctorTheme.accentBright,
     alignItems: "center", justifyContent: "center",
   },
-  patientAvatarText: { color: T.white, fontSize: 16, fontWeight: "700" },
-  patientName: { fontSize: 15, fontWeight: "700", color: T.text },
-  patientCase: { fontSize: 12, color: T.textSec },
+  patientAvatarText: { color: SharedColors.white, fontSize: 16, fontWeight: "700" },
+  patientName: { fontSize: 15, fontWeight: "700", color: SharedColors.navy },
+  patientCase: { fontSize: 12, color: SharedColors.navySec },
   depositBadge: {
     backgroundColor: "rgba(16,185,129,0.1)", borderRadius: 8, paddingHorizontal: 10, paddingVertical: 5,
   },
-  depositBadgeText: { fontSize: 10, fontWeight: "600", color: T.green },
+  depositBadgeText: { fontSize: 10, fontWeight: "600", color: SharedColors.green },
 
   // Original Treatment Plan (Visit 2+)
   origPlanCard: {
-    backgroundColor: T.card, borderRadius: 16, padding: 16,
+    backgroundColor: SharedColors.white, borderRadius: 16, padding: 16,
     borderWidth: 1, borderColor: "rgba(15,118,110,0.12)", gap: 6,
-    borderLeftWidth: 3, borderLeftColor: T.teal,
+    borderLeftWidth: 3, borderLeftColor: DoctorTheme.primary,
     shadowColor: "#000", shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.05, shadowRadius: 6, elevation: 2,
   },
   origPlanTitle: {
-    fontSize: 10, fontWeight: "800", color: T.textMuted, letterSpacing: 1,
+    fontSize: 10, fontWeight: "800", color: SharedColors.navyMuted, letterSpacing: 1,
     marginBottom: 6,
   },
   origPlanRow: {
     flexDirection: "row", alignItems: "center", paddingVertical: 6,
     borderBottomWidth: 1, borderBottomColor: "#f1f5f9",
   },
-  origPlanName: { flex: 1, fontSize: 13, fontWeight: "500", color: T.textSec },
-  origPlanQty: { fontSize: 12, color: T.textMuted, marginHorizontal: 12, minWidth: 24 },
-  origPlanPrice: { fontSize: 13, fontWeight: "600", color: T.textSec },
+  origPlanName: { flex: 1, fontSize: 13, fontWeight: "500", color: SharedColors.navySec },
+  origPlanQty: { fontSize: 12, color: SharedColors.navyMuted, marginHorizontal: 12, minWidth: 24 },
+  origPlanPrice: { fontSize: 13, fontWeight: "600", color: SharedColors.navySec },
   origPlanTotalRow: {
     flexDirection: "row", justifyContent: "space-between",
     paddingTop: 8, marginTop: 4,
   },
-  origPlanTotalLabel: { fontSize: 12, fontWeight: "700", color: T.textSec },
-  origPlanTotalValue: { fontSize: 13, fontWeight: "800", color: T.text },
+  origPlanTotalLabel: { fontSize: 12, fontWeight: "700", color: SharedColors.navySec },
+  origPlanTotalValue: { fontSize: 13, fontWeight: "800", color: SharedColors.navy },
 
   // Toggle (Any new treatments?)
   toggleRow: {
@@ -941,55 +924,55 @@ const s = StyleSheet.create({
   },
   toggleBtn: {
     flex: 1, paddingVertical: 14, borderRadius: 14, alignItems: "center",
-    backgroundColor: T.card, borderWidth: 1.5, borderColor: T.border,
+    backgroundColor: SharedColors.white, borderWidth: 1.5, borderColor: SharedColors.border,
     shadowColor: "#000", shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.03, shadowRadius: 3, elevation: 1,
   },
   toggleBtnActive: {
-    backgroundColor: "rgba(15,118,110,0.08)", borderColor: T.teal,
-    shadowColor: T.teal, shadowOpacity: 0.1,
+    backgroundColor: "rgba(15,118,110,0.08)", borderColor: DoctorTheme.primary,
+    shadowColor: DoctorTheme.primary, shadowOpacity: 0.1,
   },
-  toggleBtnText: { fontSize: 15, fontWeight: "700", color: T.textMuted },
-  toggleBtnTextActive: { color: T.teal },
+  toggleBtnText: { fontSize: 15, fontWeight: "700", color: SharedColors.navyMuted },
+  toggleBtnTextActive: { color: DoctorTheme.primary },
   noNewTreatmentsInfo: {
     flexDirection: "row", alignItems: "center", gap: 12,
     backgroundColor: "rgba(15,118,110,0.04)", borderRadius: 14, padding: 16,
     borderWidth: 1, borderColor: "rgba(15,118,110,0.1)",
   },
-  noNewTreatmentsText: { fontSize: 13, color: T.textSec, flex: 1, lineHeight: 20 },
+  noNewTreatmentsText: { fontSize: 13, color: SharedColors.navySec, flex: 1, lineHeight: 20 },
 
   // Section
   section: { gap: 10 },
-  sectionTitle: { fontSize: 11, fontWeight: "700", color: T.textSec, letterSpacing: 0.5 },
+  sectionTitle: { fontSize: 11, fontWeight: "700", color: SharedColors.navySec, letterSpacing: 0.5 },
 
   // Item card
   itemCard: {
-    backgroundColor: T.card, borderRadius: 16, padding: 16,
-    borderWidth: 1, borderColor: T.border, gap: 12,
+    backgroundColor: SharedColors.white, borderRadius: 16, padding: 16,
+    borderWidth: 1, borderColor: SharedColors.border, gap: 12,
     shadowColor: "#000", shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.06, shadowRadius: 8, elevation: 3,
   },
   itemHeader: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
-  itemNum: { fontSize: 12, fontWeight: "700", color: T.textSec },
-  removeBtn: { fontSize: 16, color: T.red, fontWeight: "700", padding: 4 },
+  itemNum: { fontSize: 12, fontWeight: "700", color: SharedColors.navySec },
+  removeBtn: { fontSize: 16, color: SharedColors.red, fontWeight: "700", padding: 4 },
 
   // Combo input (icon + TextInput + dropdown button)
   comboRow: {
     flexDirection: "row", alignItems: "center",
-    backgroundColor: T.bg, borderRadius: 10, borderWidth: 1,
-    borderColor: T.border, overflow: "hidden",
+    backgroundColor: SharedColors.bg, borderRadius: 10, borderWidth: 1,
+    borderColor: SharedColors.border, overflow: "hidden",
   },
   comboIcon: {
     fontSize: 15, paddingLeft: 14,
   },
   comboInput: {
-    flex: 1, fontSize: 14, color: T.text, fontWeight: "500",
+    flex: 1, fontSize: 14, color: SharedColors.navy, fontWeight: "500",
     paddingLeft: 10, paddingRight: 8, paddingVertical: 13,
   },
   comboDropdownBtn: {
     paddingHorizontal: 16, paddingVertical: 13,
-    borderLeftWidth: 1, borderLeftColor: T.border,
+    borderLeftWidth: 1, borderLeftColor: SharedColors.border,
     backgroundColor: "rgba(241,245,249,0.6)",
   },
-  comboDropdownArrow: { fontSize: 10, color: T.textSec },
+  comboDropdownArrow: { fontSize: 10, color: SharedColors.navySec },
 
   // Picker modal
   pickerOverlay: {
@@ -997,164 +980,164 @@ const s = StyleSheet.create({
     justifyContent: "center", alignItems: "center", padding: 32,
   },
   pickerModal: {
-    backgroundColor: T.white, borderRadius: 16, width: "100%", maxHeight: "70%",
+    backgroundColor: SharedColors.white, borderRadius: 16, width: "100%", maxHeight: "70%",
     overflow: "hidden",
     shadowColor: "#000", shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.15, shadowRadius: 12, elevation: 8,
   },
   pickerModalHeader: {
     flexDirection: "row", justifyContent: "space-between", alignItems: "center",
     paddingHorizontal: 18, paddingVertical: 14,
-    borderBottomWidth: 1, borderBottomColor: T.border,
+    borderBottomWidth: 1, borderBottomColor: SharedColors.border,
   },
-  pickerModalTitle: { fontSize: 15, fontWeight: "700", color: T.text },
+  pickerModalTitle: { fontSize: 15, fontWeight: "700", color: SharedColors.navy },
   pickerModalList: { maxHeight: 400 },
   pickerModalHint: {
-    fontSize: 11, color: T.textMuted, textAlign: "center",
+    fontSize: 11, color: SharedColors.navyMuted, textAlign: "center",
     paddingVertical: 12, paddingHorizontal: 16,
-    borderTopWidth: 1, borderTopColor: T.border,
+    borderTopWidth: 1, borderTopColor: SharedColors.border,
   },
   pickerItem: {
     paddingHorizontal: 18, paddingVertical: 13,
-    borderBottomWidth: 1, borderBottomColor: T.border,
+    borderBottomWidth: 1, borderBottomColor: SharedColors.border,
   },
   pickerItemActive: { backgroundColor: "rgba(20,184,166,0.08)" },
-  pickerItemText: { fontSize: 14, color: T.textSec },
+  pickerItemText: { fontSize: 14, color: SharedColors.navySec },
 
   // Qty + Price row
   itemRow: { flexDirection: "row", gap: 12 },
   qtySection: { gap: 4 },
   priceSection: { flex: 1, gap: 4 },
   lineTotal: { gap: 4, alignItems: "flex-end", justifyContent: "flex-end" },
-  fieldLabel: { fontSize: 10, color: T.textSec, fontWeight: "600" },
+  fieldLabel: { fontSize: 10, color: SharedColors.navySec, fontWeight: "600" },
   stepperRow: { flexDirection: "row", alignItems: "center", gap: 8 },
   stepperBtn: {
     width: 32, height: 32, borderRadius: 8,
     backgroundColor: "#f1f5f9", alignItems: "center", justifyContent: "center",
-    borderWidth: 1, borderColor: T.border,
+    borderWidth: 1, borderColor: SharedColors.border,
   },
-  stepperBtnText: { fontSize: 18, fontWeight: "600", color: T.teal },
-  stepperValue: { fontSize: 18, fontWeight: "800", color: T.text, width: 24, textAlign: "center" },
+  stepperBtnText: { fontSize: 18, fontWeight: "600", color: DoctorTheme.primary },
+  stepperValue: { fontSize: 18, fontWeight: "800", color: SharedColors.navy, width: 24, textAlign: "center" },
   priceInput: {
-    backgroundColor: T.bg, borderRadius: 10, borderWidth: 1,
-    borderColor: T.border, paddingHorizontal: 12, paddingVertical: 10,
-    fontSize: 16, fontWeight: "700", color: T.text,
+    backgroundColor: SharedColors.bg, borderRadius: 10, borderWidth: 1,
+    borderColor: SharedColors.border, paddingHorizontal: 12, paddingVertical: 10,
+    fontSize: 16, fontWeight: "700", color: SharedColors.navy,
   },
-  lineTotalText: { fontSize: 16, fontWeight: "800", color: T.teal },
+  lineTotalText: { fontSize: 16, fontWeight: "800", color: DoctorTheme.primary },
 
   // Add item
   addItemBtn: {
-    borderWidth: 1.5, borderColor: T.border, borderStyle: "dashed",
+    borderWidth: 1.5, borderColor: SharedColors.border, borderStyle: "dashed",
     borderRadius: 12, paddingVertical: 14, alignItems: "center",
   },
-  addItemBtnText: { fontSize: 14, fontWeight: "600", color: T.teal },
+  addItemBtnText: { fontSize: 14, fontWeight: "600", color: DoctorTheme.primary },
 
   // Billing %
   billingSection: { gap: 10 },
   billingCard: {
-    backgroundColor: T.card, borderRadius: 16, padding: 18,
-    borderWidth: 1, borderColor: T.border, gap: 14,
+    backgroundColor: SharedColors.white, borderRadius: 16, padding: 18,
+    borderWidth: 1, borderColor: SharedColors.border, gap: 14,
     shadowColor: "#000", shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.06, shadowRadius: 8, elevation: 3,
   },
-  billingHint: { fontSize: 12, color: T.textSec, lineHeight: 18 },
+  billingHint: { fontSize: 12, color: SharedColors.navySec, lineHeight: 18 },
   billingInputRow: {
     flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 16,
   },
   billingStepBtn: {
     width: 40, height: 40, borderRadius: 12,
     backgroundColor: "#f1f5f9", alignItems: "center", justifyContent: "center",
-    borderWidth: 1, borderColor: T.border,
+    borderWidth: 1, borderColor: SharedColors.border,
   },
-  billingStepBtnText: { fontSize: 20, fontWeight: "700", color: T.teal },
+  billingStepBtnText: { fontSize: 20, fontWeight: "700", color: DoctorTheme.primary },
   billingInputWrap: {
     flexDirection: "row", alignItems: "center",
-    backgroundColor: T.bg, borderRadius: 12, borderWidth: 1.5, borderColor: T.teal,
+    backgroundColor: SharedColors.bg, borderRadius: 12, borderWidth: 1.5, borderColor: DoctorTheme.primary,
     paddingHorizontal: 16, paddingVertical: 8,
   },
   billingInput: {
-    fontSize: 28, fontWeight: "900", color: T.text, textAlign: "center",
+    fontSize: 28, fontWeight: "900", color: SharedColors.navy, textAlign: "center",
     minWidth: 60, paddingVertical: 0,
   },
-  billingInputSuffix: { fontSize: 20, fontWeight: "700", color: T.textSec, marginLeft: 2 },
+  billingInputSuffix: { fontSize: 20, fontWeight: "700", color: SharedColors.navySec, marginLeft: 2 },
   billingPresets: { flexDirection: "row", justifyContent: "center", gap: 8 },
   billingPresetBtn: {
     paddingHorizontal: 16, paddingVertical: 8, borderRadius: 20,
-    backgroundColor: "#f1f5f9", borderWidth: 1, borderColor: T.border,
+    backgroundColor: "#f1f5f9", borderWidth: 1, borderColor: SharedColors.border,
   },
   billingPresetBtnActive: {
-    backgroundColor: T.teal, borderColor: T.teal,
+    backgroundColor: DoctorTheme.primary, borderColor: DoctorTheme.primary,
   },
-  billingPresetText: { fontSize: 13, fontWeight: "600", color: T.textSec },
-  billingPresetTextActive: { color: T.white },
+  billingPresetText: { fontSize: 13, fontWeight: "600", color: SharedColors.navySec },
+  billingPresetTextActive: { color: SharedColors.white },
   billingBreakdown: {
     backgroundColor: "rgba(20,184,166,0.04)", borderRadius: 10, padding: 12, gap: 6,
   },
   billingBreakdownRow: { flexDirection: "row", justifyContent: "space-between" },
-  billingBreakdownLabel: { fontSize: 13, color: T.textSec },
-  billingBreakdownValue: { fontSize: 13, fontWeight: "700", color: T.teal },
+  billingBreakdownLabel: { fontSize: 13, color: SharedColors.navySec },
+  billingBreakdownValue: { fontSize: 13, fontWeight: "700", color: DoctorTheme.primary },
   billingFinalNotice: {
     flexDirection: "row", alignItems: "center", gap: 10,
     backgroundColor: "rgba(245,158,11,0.08)", borderRadius: 12, padding: 14,
     borderWidth: 1, borderColor: "rgba(245,158,11,0.2)",
   },
-  billingFinalText: { fontSize: 12, color: T.amber, flex: 1, fontWeight: "600", lineHeight: 18 },
+  billingFinalText: { fontSize: 12, color: SharedColors.amber, flex: 1, fontWeight: "600", lineHeight: 18 },
   minBillingNotice: {
     flexDirection: "row", alignItems: "center", gap: 10,
     backgroundColor: "rgba(20,184,166,0.08)", borderRadius: 12, padding: 14,
     borderWidth: 1, borderColor: "rgba(20,184,166,0.2)",
   },
-  minBillingText: { fontSize: 12, color: T.teal, flex: 1, fontWeight: "600", lineHeight: 18 },
+  minBillingText: { fontSize: 12, color: DoctorTheme.primary, flex: 1, fontWeight: "600", lineHeight: 18 },
   depositWarning: {
     flexDirection: "row", alignItems: "center", gap: 10,
     backgroundColor: "rgba(239,68,68,0.08)", borderRadius: 12, padding: 14,
     borderWidth: 1, borderColor: "rgba(239,68,68,0.2)",
   },
-  depositWarningText: { fontSize: 12, color: T.red, flex: 1, fontWeight: "600", lineHeight: 18 },
+  depositWarningText: { fontSize: 12, color: SharedColors.red, flex: 1, fontWeight: "600", lineHeight: 18 },
 
   // Notes
   notesInput: {
-    backgroundColor: T.card, borderRadius: 14, borderWidth: 1,
-    borderColor: T.border, paddingHorizontal: 16, paddingVertical: 14,
-    fontSize: 13, color: T.text, height: 80, textAlignVertical: "top",
+    backgroundColor: SharedColors.white, borderRadius: 14, borderWidth: 1,
+    borderColor: SharedColors.border, paddingHorizontal: 16, paddingVertical: 14,
+    fontSize: 13, color: SharedColors.navy, height: 80, textAlignVertical: "top",
     shadowColor: "#000", shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.03, shadowRadius: 4, elevation: 1,
   },
 
   // Summary
   summaryCard: {
-    backgroundColor: T.card, borderRadius: 18, padding: 22,
-    borderWidth: 1, borderColor: T.border, gap: 10,
+    backgroundColor: SharedColors.white, borderRadius: 18, padding: 22,
+    borderWidth: 1, borderColor: SharedColors.border, gap: 10,
     shadowColor: "#000", shadowOffset: { width: 0, height: 3 }, shadowOpacity: 0.08, shadowRadius: 12, elevation: 4,
   },
   summaryRow: { flexDirection: "row", justifyContent: "space-between" },
-  summaryLabel: { fontSize: 14, color: T.textSec },
-  summaryValue: { fontSize: 14, fontWeight: "600", color: T.text },
-  summaryDivider: { height: 1, backgroundColor: T.border, marginVertical: 4 },
-  balanceLabel: { fontSize: 16, fontWeight: "700", color: T.text },
-  balanceValue: { fontSize: 20, fontWeight: "900", color: T.amber },
+  summaryLabel: { fontSize: 14, color: SharedColors.navySec },
+  summaryValue: { fontSize: 14, fontWeight: "600", color: SharedColors.navy },
+  summaryDivider: { height: 1, backgroundColor: SharedColors.border, marginVertical: 4 },
+  balanceLabel: { fontSize: 16, fontWeight: "700", color: SharedColors.navy },
+  balanceValue: { fontSize: 20, fontWeight: "900", color: SharedColors.amber },
   tierBadgeSm: {
     borderRadius: 4, paddingHorizontal: 6, paddingVertical: 2,
   },
-  tierBadgeSmText: { fontSize: 9, fontWeight: "800", color: "#fff", letterSpacing: 0.5 },
+  tierBadgeSmText: { fontSize: 9, fontWeight: "800", color: SharedColors.white, letterSpacing: 0.5 },
   remainingInfo: {
     flexDirection: "row", alignItems: "center", gap: 8,
     backgroundColor: "rgba(59,130,246,0.06)", borderRadius: 10, padding: 12,
   },
   remainingInfoIcon: { fontSize: 16 },
-  remainingInfoText: { fontSize: 12, color: T.textSec, flex: 1 },
+  remainingInfoText: { fontSize: 12, color: SharedColors.navySec, flex: 1 },
 
   // Bottom
   bottomBar: {
     position: "absolute", bottom: 0, left: 0, right: 0,
     flexDirection: "row", alignItems: "center", justifyContent: "space-between",
     paddingHorizontal: 20, paddingTop: 16, paddingBottom: 40,
-    backgroundColor: T.card,
-    borderTopWidth: 1, borderTopColor: T.border,
+    backgroundColor: SharedColors.white,
+    borderTopWidth: 1, borderTopColor: SharedColors.border,
     shadowColor: "#000", shadowOffset: { width: 0, height: -4 },
     shadowOpacity: 0.06, shadowRadius: 12, elevation: 8,
   },
-  bottomLabel: { fontSize: 11, color: T.textMuted, fontWeight: "500" },
-  bottomAmount: { fontSize: 24, fontWeight: "900", color: T.teal },
+  bottomLabel: { fontSize: 11, color: SharedColors.navyMuted, fontWeight: "500" },
+  bottomAmount: { fontSize: 24, fontWeight: "900", color: DoctorTheme.primary },
   sendBtnGrad: { borderRadius: 14, paddingHorizontal: 26, paddingVertical: 16 },
-  sendBtnText: { color: T.white, fontSize: 15, fontWeight: "700" },
+  sendBtnText: { color: SharedColors.white, fontSize: 15, fontWeight: "700" },
 
   // Success
   successHeader: { paddingHorizontal: 20, paddingTop: 60, paddingBottom: 36 },
@@ -1171,13 +1154,13 @@ const s = StyleSheet.create({
     alignItems: "center", justifyContent: "center",
     borderWidth: 1.5, borderColor: "rgba(255,255,255,0.15)",
   },
-  successHeroIcon: { fontSize: 38, color: "#fff", fontWeight: "900" },
-  successHeroTitle: { fontSize: 25, fontWeight: "900", color: "#fff", marginTop: 16 },
+  successHeroIcon: { fontSize: 38, color: SharedColors.white, fontWeight: "900" },
+  successHeroTitle: { fontSize: 25, fontWeight: "900", color: SharedColors.white, marginTop: 16 },
   successHeroAmount: { fontSize: 16, color: "rgba(255,255,255,0.8)", marginTop: 5 },
 
   receiptCard: {
-    backgroundColor: T.card, borderRadius: 18, padding: 20,
-    borderWidth: 1, borderColor: T.border, gap: 4,
+    backgroundColor: SharedColors.white, borderRadius: 18, padding: 20,
+    borderWidth: 1, borderColor: SharedColors.border, gap: 4,
     shadowColor: "#000", shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.06, shadowRadius: 8, elevation: 3,
     marginTop: 16,
   },
@@ -1185,8 +1168,8 @@ const s = StyleSheet.create({
     flexDirection: "row", justifyContent: "space-between", alignItems: "center",
     paddingVertical: 10,
   },
-  receiptLabel: { fontSize: 13, color: T.textSec },
-  receiptValue: { fontSize: 14, fontWeight: "600", color: T.text },
+  receiptLabel: { fontSize: 13, color: SharedColors.navySec },
+  receiptValue: { fontSize: 14, fontWeight: "600", color: SharedColors.navy },
   receiptDivider: { height: 1, backgroundColor: "#f1f5f9" },
 
   nextVisitCard: {
@@ -1195,15 +1178,15 @@ const s = StyleSheet.create({
     borderWidth: 1, borderColor: "rgba(15,118,110,0.08)",
   },
   nextVisitDot: {
-    width: 10, height: 10, borderRadius: 5, backgroundColor: T.tealLight,
+    width: 10, height: 10, borderRadius: 5, backgroundColor: DoctorTheme.accentBright,
   },
-  nextVisitTitle: { fontSize: 14, fontWeight: "700", color: T.text },
-  nextVisitSubText: { fontSize: 11, color: T.textSec, marginTop: 2 },
+  nextVisitTitle: { fontSize: 14, fontWeight: "700", color: SharedColors.navy },
+  nextVisitSubText: { fontSize: 11, color: SharedColors.navySec, marginTop: 2 },
 
   successNotice: {
-    fontSize: 13, color: T.textSec, textAlign: "center", lineHeight: 20,
+    fontSize: 13, color: SharedColors.navySec, textAlign: "center", lineHeight: 20,
     paddingHorizontal: 8,
   },
   successBtnGrad: { borderRadius: 14, paddingVertical: 16, alignItems: "center" },
-  successBtnText: { color: T.white, fontSize: 16, fontWeight: "700" },
+  successBtnText: { color: SharedColors.white, fontSize: 16, fontWeight: "700" },
 });

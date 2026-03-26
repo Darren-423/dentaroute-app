@@ -15,6 +15,7 @@ import {
   View
 } from "react-native";
 
+import { PatientTheme, SharedColors } from "../../constants/theme";
 const API_URL = "https://concourse-api.onrender.com/api";
 
 // 국가코드 리스트
@@ -289,7 +290,7 @@ export default function PatientCreateAccountScreen() {
           disabled={codes.join("").length !== 6 || verifying}
         >
           {verifying ? (
-            <ActivityIndicator color="#4A0080" size="small" />
+            <ActivityIndicator color={PatientTheme.primary} size="small" />
           ) : (
             <Text style={styles.verifyBtnText}>Verify</Text>
           )}
@@ -304,7 +305,7 @@ export default function PatientCreateAccountScreen() {
 
   return (
     <LinearGradient
-      colors={["#4A0080", "#2A0048"]}
+      colors={[...PatientTheme.authGradientAlt]}
       start={{ x: 0.2, y: 0 }}
       end={{ x: 0.8, y: 1 }}
       style={styles.container}
@@ -413,7 +414,7 @@ export default function PatientCreateAccountScreen() {
                     disabled={emailVerifying}
                   >
                     {emailVerifying ? (
-                      <ActivityIndicator color="#ffffff" size="small" />
+                      <ActivityIndicator color={SharedColors.white} size="small" />
                     ) : (
                       <Text style={styles.sendCodeBtnText}>
                         {emailCodeSent ? "Resend" : "Send Code"}
@@ -486,7 +487,7 @@ export default function PatientCreateAccountScreen() {
                     disabled={phoneVerifying}
                   >
                     {phoneVerifying ? (
-                      <ActivityIndicator color="#ffffff" size="small" />
+                      <ActivityIndicator color={SharedColors.white} size="small" />
                     ) : (
                       <Text style={styles.sendCodeBtnText}>
                         {phoneCodeSent ? "Resend" : "Send"}
@@ -593,7 +594,7 @@ export default function PatientCreateAccountScreen() {
             activeOpacity={0.85}
           >
             {loading ? (
-              <ActivityIndicator color="#4A0080" size="small" />
+              <ActivityIndicator color={PatientTheme.primary} size="small" />
             ) : (
               <Text style={styles.createBtnText}>Create Account →</Text>
             )}
@@ -674,23 +675,23 @@ const styles = StyleSheet.create({
     alignItems: "center", justifyContent: "center",
     marginBottom: 8,
   },
-  backArrow: { fontSize: 24, color: "#fff", fontWeight: "600", marginTop: -2 },
+  backArrow: { fontSize: 24, color: SharedColors.white, fontWeight: "600", marginTop: -2 },
 
   // Header
   header: { marginBottom: 28 },
   emoji: { fontSize: 36, marginBottom: 10 },
-  title: { fontSize: 30, fontWeight: "700", color: "#ffffff", marginBottom: 6 },
+  title: { fontSize: 30, fontWeight: "700", color: SharedColors.white, marginBottom: 6 },
   subtitle: { fontSize: 14, color: "rgba(255,255,255,0.45)", fontWeight: "300" },
 
   // Error banner
   errorBanner: {
-    backgroundColor: "#fef2ee",
+    backgroundColor: SharedColors.coralLight,
     borderRadius: 8,
     paddingHorizontal: 12,
     paddingVertical: 12,
     marginBottom: 16,
   },
-  errorBannerText: { color: "#e05a3a", fontSize: 12 },
+  errorBannerText: { color: SharedColors.coral, fontSize: 12 },
 
   // Form
   formArea: { gap: 16 },
@@ -710,11 +711,11 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 13,
     fontSize: 14,
-    color: "#ffffff",
+    color: SharedColors.white,
   },
-  inputError: { borderColor: "#e05a3a" },
-  inputVerified: { borderColor: "#16a34a", backgroundColor: "rgba(22,163,74,0.1)" },
-  fieldError: { fontSize: 11, color: "#e05a3a", marginTop: 2 },
+  inputError: { borderColor: SharedColors.coral },
+  inputVerified: { borderColor: SharedColors.green, backgroundColor: "rgba(22,163,74,0.1)" },
+  fieldError: { fontSize: 11, color: SharedColors.coral, marginTop: 2 },
   helpText: { fontSize: 11, color: "rgba(255,255,255,0.4)" },
 
   // Passport notice
@@ -743,7 +744,7 @@ const styles = StyleSheet.create({
 
   // Send code button
   sendCodeBtn: {
-    backgroundColor: "#5C10A0",
+    backgroundColor: PatientTheme.primaryMid,
     borderRadius: 12,
     paddingHorizontal: 14,
     paddingVertical: 13,
@@ -752,7 +753,7 @@ const styles = StyleSheet.create({
     minWidth: 80,
   },
   sendCodeBtnResend: { backgroundColor: "rgba(255,255,255,0.15)" },
-  sendCodeBtnText: { color: "#ffffff", fontSize: 13, fontWeight: "600" },
+  sendCodeBtnText: { color: SharedColors.white, fontSize: 13, fontWeight: "600" },
 
   // Country code
   countryCodeBtn: {
@@ -767,7 +768,7 @@ const styles = StyleSheet.create({
     paddingVertical: 13,
   },
   countryFlag: { fontSize: 18 },
-  countryCodeText: { color: "#ffffff", fontSize: 14, fontWeight: "500" },
+  countryCodeText: { color: SharedColors.white, fontSize: 14, fontWeight: "500" },
   dropdownArrow: { color: "rgba(255,255,255,0.4)", fontSize: 8, marginLeft: 2 },
 
   // Verification section
@@ -796,14 +797,14 @@ const styles = StyleSheet.create({
     textAlign: "center",
     fontSize: 20,
     fontWeight: "700",
-    color: "#ffffff",
+    color: SharedColors.white,
   },
-  codeInputFilled: { borderColor: "#5C10A0", backgroundColor: "rgba(92,16,160,0.15)" },
-  codeInputVerified: { borderColor: "#16a34a", backgroundColor: "rgba(22,163,74,0.15)" },
+  codeInputFilled: { borderColor: PatientTheme.primaryMid, backgroundColor: "rgba(92,16,160,0.15)" },
+  codeInputVerified: { borderColor: SharedColors.green, backgroundColor: "rgba(22,163,74,0.15)" },
 
   // Verify button
   verifyBtn: {
-    backgroundColor: "#ffffff",
+    backgroundColor: SharedColors.white,
     borderRadius: 10,
     paddingHorizontal: 28,
     paddingVertical: 10,
@@ -811,7 +812,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   verifyBtnDisabled: { opacity: 0.4 },
-  verifyBtnText: { color: "#4A0080", fontSize: 14, fontWeight: "600" },
+  verifyBtnText: { color: PatientTheme.primary, fontSize: 14, fontWeight: "600" },
 
   // Verified badge
   verifiedBadge: {
@@ -822,7 +823,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: "rgba(22,163,74,0.3)",
   },
-  verifiedText: { color: "#16a34a", fontSize: 13, fontWeight: "700" },
+  verifiedText: { color: SharedColors.green, fontSize: 13, fontWeight: "700" },
 
   // Terms
   termsRow: {
@@ -842,15 +843,15 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     marginTop: 2,
   },
-  checkboxChecked: { backgroundColor: "#5C10A0", borderColor: "#5C10A0" },
-  checkboxError: { borderColor: "#e05a3a" },
-  checkmark: { color: "#ffffff", fontSize: 12, fontWeight: "700" },
+  checkboxChecked: { backgroundColor: PatientTheme.primaryMid, borderColor: PatientTheme.primaryMid },
+  checkboxError: { borderColor: SharedColors.coral },
+  checkmark: { color: SharedColors.white, fontSize: 12, fontWeight: "700" },
   termsText: { flex: 1, fontSize: 13, color: "rgba(255,255,255,0.8)", lineHeight: 20 },
-  termsLink: { color: "#5C10A0", fontWeight: "600", textDecorationLine: "underline" },
+  termsLink: { color: PatientTheme.primaryMid, fontWeight: "600", textDecorationLine: "underline" },
 
   // Create button
   createBtn: {
-    backgroundColor: "#ffffff",
+    backgroundColor: SharedColors.white,
     borderRadius: 14,
     paddingVertical: 15,
     alignItems: "center",
@@ -863,7 +864,7 @@ const styles = StyleSheet.create({
     shadowRadius: 24,
     elevation: 8,
   },
-  createBtnText: { color: "#4A0080", fontSize: 15, fontWeight: "600" },
+  createBtnText: { color: PatientTheme.primary, fontSize: 15, fontWeight: "600" },
 
   // Bottom link
   bottomLink: {
@@ -873,7 +874,7 @@ const styles = StyleSheet.create({
     paddingBottom: 8,
   },
   bottomLinkText: { fontSize: 13, color: "rgba(255,255,255,0.35)" },
-  bottomLinkAction: { fontSize: 13, color: "#5C10A0", fontWeight: "600" },
+  bottomLinkAction: { fontSize: 13, color: PatientTheme.primaryMid, fontWeight: "600" },
 
   // ── Country Picker Modal ──
   modalOverlay: {
@@ -882,7 +883,7 @@ const styles = StyleSheet.create({
     justifyContent: "flex-end",
   },
   modalContent: {
-    backgroundColor: "#1e293b",
+    backgroundColor: SharedColors.text,
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
     maxHeight: "60%",
@@ -896,7 +897,7 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: "rgba(255,255,255,0.1)",
   },
-  modalTitle: { fontSize: 18, fontWeight: "700", color: "#ffffff" },
+  modalTitle: { fontSize: 18, fontWeight: "700", color: SharedColors.white },
   modalClose: { fontSize: 20, color: "rgba(255,255,255,0.5)", padding: 4 },
   countryItem: {
     flexDirection: "row",
@@ -909,6 +910,6 @@ const styles = StyleSheet.create({
   },
   countryItemSelected: { backgroundColor: "rgba(92,16,160,0.15)" },
   countryItemFlag: { fontSize: 24 },
-  countryItemName: { flex: 1, fontSize: 15, color: "#ffffff" },
+  countryItemName: { flex: 1, fontSize: 15, color: SharedColors.white },
   countryItemCode: { fontSize: 15, color: "rgba(255,255,255,0.5)", fontWeight: "500" },
 });

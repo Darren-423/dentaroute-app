@@ -14,18 +14,9 @@ import { getDoctorDashboardCache, loadDoctorDashboardData } from "../../lib/doct
 import { Booking, PatientCase } from "../../lib/store";
 import { toDoctorLabel } from "../../lib/treatmentTerminology";
 
-const T = {
-  teal: "#0f766e",
-  tealLight: "#14b8a6",
-  bg: "#f8fafc",
-  white: "#fff",
-  text: "#0f172a",
-  textSec: "#64748b",
-  textMuted: "#94a3b8",
-  border: "#e2e8f0",
-  borderLight: "rgba(255,255,255,0.15)",
-};
 
+
+import { DoctorTheme, SharedColors } from "../../constants/theme";
 // Country code → flag + name
 const countryMap: Record<string, { flag: string; name: string }> = {
   US: { flag: "🇺🇸", name: "USA" },
@@ -45,18 +36,18 @@ const getCountryDisplay = (code: string) => {
 
 // ── Status sections (action-required first) ──
 const SECTION_ORDER = [
-  { key: "pending", label: "New — Send Quote", emoji: "🆕", color: "#16a34a", colorBg: "rgba(22,163,74,0.15)" },
-  { key: "checked_in_clinic", label: "At Clinic — Send Invoice", emoji: "🏥", color: "#16a34a", colorBg: "rgba(22,163,74,0.15)" },
-  { key: "confirmed", label: "Deposit Paid & Booked", emoji: "📅", color: "#16a34a", colorBg: "rgba(22,163,74,0.15)" },
-  { key: "flight_submitted", label: "Flight Submitted", emoji: "✈️", color: "#16a34a", colorBg: "rgba(22,163,74,0.15)" },
-  { key: "arrived_korea", label: "Arrived in Korea", emoji: "🛬", color: "#16a34a", colorBg: "rgba(22,163,74,0.15)" },
-  { key: "treatment_done", label: "Awaiting Payment", emoji: "💰", color: "#16a34a", colorBg: "rgba(22,163,74,0.15)" },
-  { key: "between_visits", label: "Between Visits", emoji: "🔄", color: "#16a34a", colorBg: "rgba(22,163,74,0.15)" },
-  { key: "returning_home", label: "Patient Returning Home", emoji: "🛫", color: "#16a34a", colorBg: "rgba(22,163,74,0.15)" },
-  { key: "payment_complete", label: "Payment Complete", emoji: "💵", color: "#16a34a", colorBg: "rgba(22,163,74,0.15)" },
-  { key: "departure_set", label: "Pickup Arranged", emoji: "🚗", color: "#16a34a", colorBg: "rgba(22,163,74,0.15)" },
-  { key: "quotes_received", label: "Quote Sent", emoji: "📨", color: "#16a34a", colorBg: "rgba(22,163,74,0.15)" },
-  { key: "cancelled", label: "Cancelled", emoji: "❌", color: "#16a34a", colorBg: "rgba(22,163,74,0.15)" },
+  { key: "pending", label: "New — Send Quote", emoji: "🆕", color: SharedColors.green, colorBg: "rgba(22,163,74,0.15)" },
+  { key: "checked_in_clinic", label: "At Clinic — Send Invoice", emoji: "🏥", color: SharedColors.green, colorBg: "rgba(22,163,74,0.15)" },
+  { key: "confirmed", label: "Deposit Paid & Booked", emoji: "📅", color: SharedColors.green, colorBg: "rgba(22,163,74,0.15)" },
+  { key: "flight_submitted", label: "Flight Submitted", emoji: "✈️", color: SharedColors.green, colorBg: "rgba(22,163,74,0.15)" },
+  { key: "arrived_korea", label: "Arrived in Korea", emoji: "🛬", color: SharedColors.green, colorBg: "rgba(22,163,74,0.15)" },
+  { key: "treatment_done", label: "Awaiting Payment", emoji: "💰", color: SharedColors.green, colorBg: "rgba(22,163,74,0.15)" },
+  { key: "between_visits", label: "Between Visits", emoji: "🔄", color: SharedColors.green, colorBg: "rgba(22,163,74,0.15)" },
+  { key: "returning_home", label: "Patient Returning Home", emoji: "🛫", color: SharedColors.green, colorBg: "rgba(22,163,74,0.15)" },
+  { key: "payment_complete", label: "Payment Complete", emoji: "💵", color: SharedColors.green, colorBg: "rgba(22,163,74,0.15)" },
+  { key: "departure_set", label: "Pickup Arranged", emoji: "🚗", color: SharedColors.green, colorBg: "rgba(22,163,74,0.15)" },
+  { key: "quotes_received", label: "Quote Sent", emoji: "📨", color: SharedColors.green, colorBg: "rgba(22,163,74,0.15)" },
+  { key: "cancelled", label: "Cancelled", emoji: "❌", color: SharedColors.green, colorBg: "rgba(22,163,74,0.15)" },
 ];
 
 const getResolvedStatus = (c: PatientCase, bks: Booking[]): string => {
@@ -171,20 +162,20 @@ export default function DoctorDashboardScreen() {
       const bk = bookings.find((b) => b.caseId === caseId);
       if (bk?.status === "flight_submitted") return { label: "✈️ Flight Submitted", bg: "rgba(59,130,246,0.15)", color: "#3b82f6", border: "rgba(59,130,246,0.25)" };
       if (bk?.status === "arrived_korea") return { label: "🛬 Arrived in Korea", bg: "rgba(124,58,237,0.15)", color: "#7c3aed", border: "rgba(124,58,237,0.25)" };
-      if (bk?.status === "checked_in_clinic") return { label: "🏥 At Clinic — Send Invoice", bg: "rgba(245,158,11,0.15)", color: "#f59e0b", border: "rgba(245,158,11,0.25)" };
-      if (bk?.status === "treatment_done") return { label: "💰 Awaiting Payment", bg: "rgba(245,158,11,0.15)", color: "#f59e0b", border: "rgba(245,158,11,0.25)" };
-      if (bk?.status === "payment_complete") return { label: "💵 Payment Complete", bg: "rgba(22,163,74,0.15)", color: "#16a34a", border: "rgba(22,163,74,0.25)" };
+      if (bk?.status === "checked_in_clinic") return { label: "🏥 At Clinic — Send Invoice", bg: "rgba(245,158,11,0.15)", color: SharedColors.amber, border: "rgba(245,158,11,0.25)" };
+      if (bk?.status === "treatment_done") return { label: "💰 Awaiting Payment", bg: "rgba(245,158,11,0.15)", color: SharedColors.amber, border: "rgba(245,158,11,0.25)" };
+      if (bk?.status === "payment_complete") return { label: "💵 Payment Complete", bg: "rgba(22,163,74,0.15)", color: SharedColors.green, border: "rgba(22,163,74,0.25)" };
       if (bk?.status === "departure_set") return { label: "🚗 Pickup Arranged", bg: "rgba(59,130,246,0.15)", color: "#3b82f6", border: "rgba(59,130,246,0.25)" };
     }
     switch (status) {
       case "pending":
-        return { label: "🆕 New — Send Quote", bg: "rgba(245,158,11,0.15)", color: "#f59e0b", border: "rgba(245,158,11,0.25)" };
+        return { label: "🆕 New — Send Quote", bg: "rgba(245,158,11,0.15)", color: SharedColors.amber, border: "rgba(245,158,11,0.25)" };
       case "quotes_received":
-        return { label: "📨 Quote Sent", bg: "rgba(22,163,74,0.15)", color: "#16a34a", border: "rgba(22,163,74,0.25)" };
+        return { label: "📨 Quote Sent", bg: "rgba(22,163,74,0.15)", color: SharedColors.green, border: "rgba(22,163,74,0.25)" };
       case "booked":
         return { label: "📅 Booked", bg: "rgba(59,130,246,0.15)", color: "#3b82f6", border: "rgba(59,130,246,0.25)" };
       default:
-        return { label: "📋 Open", bg: "#f1f5f9", color: T.textSec, border: T.border };
+        return { label: "📋 Open", bg: "#f1f5f9", color: SharedColors.navySec, border: SharedColors.border };
     }
   };
 
@@ -206,7 +197,7 @@ export default function DoctorDashboardScreen() {
   return (
     <View style={s.container}>
       {/* ── Header ── */}
-      <LinearGradient colors={["#0f766e", "#134e4a"]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={s.headerGradient}>
+      <LinearGradient colors={[DoctorTheme.primary, DoctorTheme.primaryDark]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={s.headerGradient}>
         <View style={s.headerTop}>
           <View style={{ flex: 1 }}>
             <Text style={s.welcome}>Welcome back 👋</Text>
@@ -435,19 +426,19 @@ export default function DoctorDashboardScreen() {
 }
 
 const s = StyleSheet.create({
-  container: { flex: 1, backgroundColor: T.bg },
+  container: { flex: 1, backgroundColor: SharedColors.bg },
 
   // ── Header ──
   headerGradient: { paddingHorizontal: 24, paddingTop: 60, paddingBottom: 8 },
   headerTop: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 20 },
   welcome: { fontSize: 12, color: "rgba(255,255,255,0.6)", marginBottom: 2 },
-  userName: { fontSize: 24, fontWeight: "700", color: T.white },
+  userName: { fontSize: 24, fontWeight: "700", color: SharedColors.white },
   headerIcons: { flexDirection: "row", alignItems: "center", gap: 4 },
   iconBtn: { position: "relative", width: 36, height: 36, alignItems: "center", justifyContent: "center", borderRadius: 18 },
   iconBtnEmoji: { fontSize: 18 },
-  iconBadge: { position: "absolute", top: 2, right: 2, backgroundColor: "#ef4444", borderRadius: 8, minWidth: 16, height: 16, alignItems: "center", justifyContent: "center", paddingHorizontal: 4 },
-  iconBadgeText: { color: "#fff", fontSize: 9, fontWeight: "800" },
-  notifDot: { position: "absolute", top: 6, right: 6, width: 7, height: 7, borderRadius: 3.5, backgroundColor: "#ef4444", borderWidth: 1.5, borderColor: "rgba(15,118,110,0.8)" },
+  iconBadge: { position: "absolute", top: 2, right: 2, backgroundColor: SharedColors.red, borderRadius: 8, minWidth: 16, height: 16, alignItems: "center", justifyContent: "center", paddingHorizontal: 4 },
+  iconBadgeText: { color: SharedColors.white, fontSize: 9, fontWeight: "800" },
+  notifDot: { position: "absolute", top: 6, right: 6, width: 7, height: 7, borderRadius: 3.5, backgroundColor: SharedColors.red, borderWidth: 1.5, borderColor: "rgba(15,118,110,0.8)" },
   statsToggleWrapper: { overflow: "hidden" },
   statsClip: {},
   statsRow: { flexDirection: "row", gap: 8 },
@@ -456,16 +447,16 @@ const s = StyleSheet.create({
   statsToggleIcon: { fontSize: 8, color: "rgba(255,255,255,0.7)" },
   stat: { flex: 1, backgroundColor: "rgba(255,255,255,0.1)", borderRadius: 12, paddingVertical: 14, paddingHorizontal: 6, alignItems: "center", borderWidth: 1.5, borderColor: "transparent" },
   statActive: { backgroundColor: "rgba(255,255,255,0.25)", borderColor: "rgba(255,255,255,0.4)" },
-  statNum: { fontSize: 22, fontWeight: "700", color: T.white, marginBottom: 2 },
-  statNumActive: { color: T.white },
+  statNum: { fontSize: 22, fontWeight: "700", color: SharedColors.white, marginBottom: 2 },
+  statNumActive: { color: SharedColors.white },
   statLabel: { fontSize: 10, color: "rgba(255,255,255,0.55)", fontWeight: "500" },
   statLabelActive: { color: "rgba(255,255,255,0.9)", fontWeight: "600" },
 
   // ── Filter Tabs ──
   filterContainer: {
     borderBottomWidth: 1,
-    borderBottomColor: T.border,
-    backgroundColor: T.white,
+    borderBottomColor: SharedColors.border,
+    backgroundColor: SharedColors.white,
   },
   filterScroll: {
     paddingHorizontal: 20,
@@ -481,7 +472,7 @@ const s = StyleSheet.create({
     borderRadius: 20,
     backgroundColor: "#f1f5f9",
     borderWidth: 1,
-    borderColor: T.border,
+    borderColor: SharedColors.border,
   },
   filterTabActive: {
     backgroundColor: "rgba(15,118,110,0.08)",
@@ -492,11 +483,11 @@ const s = StyleSheet.create({
   },
   filterTabText: {
     fontSize: 13,
-    color: T.textSec,
+    color: SharedColors.navySec,
     fontWeight: "500",
   },
   filterTabTextActive: {
-    color: T.teal,
+    color: DoctorTheme.primary,
     fontWeight: "600",
   },
   filterCount: {
@@ -514,10 +505,10 @@ const s = StyleSheet.create({
   filterCountText: {
     fontSize: 11,
     fontWeight: "700",
-    color: T.textMuted,
+    color: SharedColors.navyMuted,
   },
   filterCountTextActive: {
-    color: T.teal,
+    color: DoctorTheme.primary,
   },
 
   // ── Case List ──
@@ -532,17 +523,17 @@ const s = StyleSheet.create({
   sectionTitle: {
     fontSize: 11,
     fontWeight: "700",
-    color: T.textSec,
+    color: SharedColors.navySec,
     letterSpacing: 0.8,
   },
   sectionDesc: {
     fontSize: 11,
-    color: T.textMuted,
+    color: SharedColors.navyMuted,
     marginTop: 3,
   },
   sectionCount: {
     fontSize: 12,
-    color: T.textMuted,
+    color: SharedColors.navyMuted,
   },
 
   // ── Status Sections ──
@@ -557,7 +548,7 @@ const s = StyleSheet.create({
     marginBottom: 10,
     paddingBottom: 8,
     borderBottomWidth: 1,
-    borderBottomColor: T.border,
+    borderBottomColor: SharedColors.border,
   },
   statusSectionLeft: {
     flexDirection: "row",
@@ -570,7 +561,7 @@ const s = StyleSheet.create({
   statusSectionLabel: {
     fontSize: 13,
     fontWeight: "700",
-    color: T.text,
+    color: SharedColors.navy,
     letterSpacing: 0.3,
   },
   statusSectionCount: {
@@ -587,7 +578,7 @@ const s = StyleSheet.create({
   },
   collapseChevron: {
     fontSize: 14,
-    color: T.textMuted,
+    color: SharedColors.navyMuted,
   },
   collapseChevronClosed: {
     transform: [{ rotate: "-90deg" }],
@@ -595,12 +586,12 @@ const s = StyleSheet.create({
 
   // ── Empty ──
   empty: { alignItems: "center", paddingVertical: 40 },
-  emptyTitle: { fontSize: 16, fontWeight: "600", color: T.textSec, marginBottom: 4 },
-  emptyDesc: { fontSize: 13, color: T.textMuted, textAlign: "center", paddingHorizontal: 20 },
+  emptyTitle: { fontSize: 16, fontWeight: "600", color: SharedColors.navySec, marginBottom: 4 },
+  emptyDesc: { fontSize: 13, color: SharedColors.navyMuted, textAlign: "center", paddingHorizontal: 20 },
 
   // ── Case Card — Clean Floating ──
   caseCard: {
-    backgroundColor: T.white,
+    backgroundColor: SharedColors.white,
     borderRadius: 16,
     overflow: "hidden",
     borderWidth: 1.5,
@@ -640,7 +631,7 @@ const s = StyleSheet.create({
   avatarText: {
     fontSize: 16,
     fontWeight: "700",
-    color: T.teal,
+    color: DoctorTheme.primary,
   },
   cardContent: {
     flex: 1,
@@ -654,17 +645,17 @@ const s = StyleSheet.create({
   patientName: {
     fontSize: 14,
     fontWeight: "700",
-    color: T.text,
+    color: SharedColors.navy,
     flex: 1,
   },
   cardMeta: {
     fontSize: 11,
-    color: T.textMuted,
+    color: SharedColors.navyMuted,
     marginLeft: 8,
   },
   treatmentLine: {
     fontSize: 12,
-    color: T.textSec,
+    color: SharedColors.navySec,
     fontWeight: "500",
   },
   cardBottom: {
@@ -687,7 +678,7 @@ const s = StyleSheet.create({
   },
   cardArrow: {
     fontSize: 22,
-    color: T.textMuted,
+    color: SharedColors.navyMuted,
     fontWeight: "300",
   },
 

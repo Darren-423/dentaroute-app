@@ -9,13 +9,7 @@ import {
 } from "react-native";
 import { Review, store } from "../../lib/store";
 
-const T = {
-  teal: "#4A0080", tealMid: "#5C10A0", tealLight: "#f0e6f6",
-  navy: "#0f172a", slate: "#64748b", slateLight: "#94a3b8",
-  border: "#e2e8f0", bg: "#f8fafc", white: "#fff",
-  gold: "#f59e0b", goldLight: "#fffbeb",
-};
-
+import { PatientTheme, SharedColors } from "../../constants/theme";
 const Stars = ({ rating, size = 14 }: { rating: number; size?: number }) => (
   <Text style={{ fontSize: size }}>
     {"⭐".repeat(Math.round(rating))}{"☆".repeat(5 - Math.round(rating))}
@@ -76,7 +70,7 @@ export default function DentistReviewsScreen() {
 
       {loading ? (
         <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
-          <ActivityIndicator color={T.teal} size="large" />
+          <ActivityIndicator color={PatientTheme.primary} size="large" />
         </View>
       ) : (
         <ScrollView contentContainerStyle={s.content} showsVerticalScrollIndicator={false}>
@@ -165,71 +159,71 @@ export default function DentistReviewsScreen() {
 }
 
 const s = StyleSheet.create({
-  container: { flex: 1, backgroundColor: T.bg },
+  container: { flex: 1, backgroundColor: SharedColors.bg },
   header: {
     paddingHorizontal: 24, paddingTop: 60, paddingBottom: 18,
-    borderBottomWidth: 1, borderBottomColor: T.border, backgroundColor: T.white,
+    borderBottomWidth: 1, borderBottomColor: SharedColors.border, backgroundColor: SharedColors.white,
   },
   backBtn: { width: 36, height: 36, borderRadius: 12, backgroundColor: "rgba(0,0,0,0.05)", borderWidth: 1, borderColor: "rgba(0,0,0,0.08)", alignItems: "center", justifyContent: "center", marginBottom: 8 },
-  backArrow: { fontSize: 24, color: "#0f172a", fontWeight: "600", marginTop: -2 },
-  title: { fontSize: 22, fontWeight: "700", color: T.navy, marginBottom: 4 },
-  subtitle: { fontSize: 13, color: T.slate },
+  backArrow: { fontSize: 24, color: SharedColors.navy, fontWeight: "600", marginTop: -2 },
+  title: { fontSize: 22, fontWeight: "700", color: SharedColors.navy, marginBottom: 4 },
+  subtitle: { fontSize: 13, color: SharedColors.slate },
 
   content: { padding: 20, gap: 14, paddingBottom: 60 },
 
   // Summary
   summaryCard: {
-    flexDirection: "row", backgroundColor: T.white, borderRadius: 16,
-    padding: 20, borderWidth: 1, borderColor: T.border, gap: 20,
+    flexDirection: "row", backgroundColor: SharedColors.white, borderRadius: 16,
+    padding: 20, borderWidth: 1, borderColor: SharedColors.border, gap: 20,
   },
   summaryLeft: { alignItems: "center", justifyContent: "center", gap: 4 },
-  summaryRating: { fontSize: 40, fontWeight: "800", color: T.navy },
-  summaryCount: { fontSize: 12, color: T.slate },
+  summaryRating: { fontSize: 40, fontWeight: "800", color: SharedColors.navy },
+  summaryCount: { fontSize: 12, color: SharedColors.slate },
   summaryRight: { flex: 1, gap: 5, justifyContent: "center" },
   distRow: { flexDirection: "row", alignItems: "center", gap: 6 },
-  distLabel: { fontSize: 12, color: T.slate, width: 12, textAlign: "right" },
+  distLabel: { fontSize: 12, color: SharedColors.slate, width: 12, textAlign: "right" },
   distBar: { flex: 1, height: 6, backgroundColor: "#f1f5f9", borderRadius: 3, overflow: "hidden" },
-  distFill: { height: "100%", backgroundColor: T.gold, borderRadius: 3 },
-  distCount: { fontSize: 11, color: T.slateLight, width: 18 },
+  distFill: { height: "100%", backgroundColor: SharedColors.amber, borderRadius: 3 },
+  distCount: { fontSize: 11, color: SharedColors.slateLight, width: 18 },
 
   // Categories
   catCard: {
-    backgroundColor: T.white, borderRadius: 14, padding: 16,
-    borderWidth: 1, borderColor: T.border, gap: 10,
+    backgroundColor: SharedColors.white, borderRadius: 14, padding: 16,
+    borderWidth: 1, borderColor: SharedColors.border, gap: 10,
   },
   catRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
-  catLabel: { fontSize: 13, color: T.navy },
-  catScore: { fontSize: 14, fontWeight: "700", color: T.teal },
+  catLabel: { fontSize: 13, color: SharedColors.navy },
+  catScore: { fontSize: 14, fontWeight: "700", color: PatientTheme.primary },
 
   // Empty
   emptyCard: {
-    backgroundColor: T.white, borderRadius: 16, padding: 32,
-    borderWidth: 1, borderColor: T.border, alignItems: "center",
+    backgroundColor: SharedColors.white, borderRadius: 16, padding: 32,
+    borderWidth: 1, borderColor: SharedColors.border, alignItems: "center",
   },
-  emptyTitle: { fontSize: 16, fontWeight: "700", color: T.navy },
-  emptyDesc: { fontSize: 13, color: T.slate, marginTop: 4 },
+  emptyTitle: { fontSize: 16, fontWeight: "700", color: SharedColors.navy },
+  emptyDesc: { fontSize: 13, color: SharedColors.slate, marginTop: 4 },
 
   // Review card
   reviewCard: {
-    backgroundColor: T.white, borderRadius: 16, padding: 18,
-    borderWidth: 1, borderColor: T.border, gap: 10,
+    backgroundColor: SharedColors.white, borderRadius: 16, padding: 18,
+    borderWidth: 1, borderColor: SharedColors.border, gap: 10,
   },
   reviewTop: { flexDirection: "row", alignItems: "center", gap: 12 },
   reviewAvatar: {
     width: 36, height: 36, borderRadius: 18,
-    backgroundColor: T.tealLight, alignItems: "center", justifyContent: "center",
+    backgroundColor: PatientTheme.primaryLight, alignItems: "center", justifyContent: "center",
   },
-  reviewAvatarText: { color: T.teal, fontSize: 14, fontWeight: "700" },
-  reviewName: { fontSize: 13, fontWeight: "600", color: T.navy },
-  reviewDate: { fontSize: 11, color: T.slateLight },
-  reviewTitle: { fontSize: 15, fontWeight: "700", color: T.navy },
-  reviewComment: { fontSize: 13, color: T.slate, lineHeight: 19 },
+  reviewAvatarText: { color: PatientTheme.primary, fontSize: 14, fontWeight: "700" },
+  reviewName: { fontSize: 13, fontWeight: "600", color: SharedColors.navy },
+  reviewDate: { fontSize: 11, color: SharedColors.slateLight },
+  reviewTitle: { fontSize: 15, fontWeight: "700", color: SharedColors.navy },
+  reviewComment: { fontSize: 13, color: SharedColors.slate, lineHeight: 19 },
   reviewTags: { flexDirection: "row", flexWrap: "wrap", gap: 6 },
   reviewTag: {
-    backgroundColor: T.tealLight, borderRadius: 8,
+    backgroundColor: PatientTheme.primaryLight, borderRadius: 8,
     paddingHorizontal: 10, paddingVertical: 4,
   },
-  reviewTagText: { fontSize: 11, fontWeight: "600", color: T.teal },
+  reviewTagText: { fontSize: 11, fontWeight: "600", color: PatientTheme.primary },
   miniRatings: { flexDirection: "row", gap: 16 },
-  miniRating: { fontSize: 12, color: T.slateLight },
+  miniRating: { fontSize: 12, color: SharedColors.slateLight },
 });

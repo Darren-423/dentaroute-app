@@ -14,18 +14,7 @@ import {
 } from "react-native";
 import { store } from "../../lib/store";
 
-const T = {
-  teal: "#4A0080",
-  tealMid: "#5C10A0",
-  tealLight: "#f0e6f6",
-  navy: "#0f172a",
-  slate: "#64748b",
-  slateLight: "#94a3b8",
-  border: "#e2e8f0",
-  bg: "#f8fafc",
-  white: "#ffffff",
-};
-
+import { PatientTheme, SharedColors } from "../../constants/theme";
 // 전 세계 국가 리스트
 const ALL_COUNTRIES = [
   { code: "AF", name: "Afghanistan", flag: "🇦🇫" },
@@ -258,7 +247,7 @@ export default function PatientBasicInfoScreen() {
 
   const PickerButton = ({ label, value, onPress }: { label: string; value: string; onPress: () => void }) => (
     <TouchableOpacity style={s.pickerBtn} onPress={onPress} activeOpacity={0.7}>
-      <Text style={[s.pickerBtnText, !value && { color: T.slateLight }]}>{value || label}</Text>
+      <Text style={[s.pickerBtnText, !value && { color: SharedColors.slateLight }]}>{value || label}</Text>
       <Text style={s.pickerArrow}>▾</Text>
     </TouchableOpacity>
   );
@@ -280,7 +269,7 @@ export default function PatientBasicInfoScreen() {
   return (
     <View style={s.container}>
       {/* Header */}
-      <LinearGradient colors={["#3D0070", "#2F0058", "#220040"]} style={s.header}>
+      <LinearGradient colors={[...PatientTheme.gradient]} style={s.header}>
         <View style={s.headerRow}>
           <TouchableOpacity style={s.backBtn} onPress={() => router.back()} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
             <Text style={s.backArrow}>‹</Text>
@@ -371,7 +360,7 @@ export default function PatientBasicInfoScreen() {
           activeOpacity={0.85}
         >
           {loading ? (
-            <ActivityIndicator color={T.white} size="small" />
+            <ActivityIndicator color={SharedColors.white} size="small" />
           ) : (
             <Text style={s.nextBtnText}>Next: Medical History →</Text>
           )}
@@ -394,7 +383,7 @@ export default function PatientBasicInfoScreen() {
               <TextInput
                 style={s.searchInput}
                 placeholder="Search country..."
-                placeholderTextColor={T.slateLight}
+                placeholderTextColor={SharedColors.slateLight}
                 value={countrySearch}
                 onChangeText={setCountrySearch}
                 autoCorrect={false}
@@ -467,77 +456,77 @@ export default function PatientBasicInfoScreen() {
 }
 
 const s = StyleSheet.create({
-  container: { flex: 1, backgroundColor: T.bg },
+  container: { flex: 1, backgroundColor: SharedColors.bg },
   header: { paddingHorizontal: 20, paddingTop: 60, paddingBottom: 18 },
   headerRow: { flexDirection: "row", alignItems: "center" },
   headerCenter: { flex: 1, alignItems: "center" },
   backBtn: { width: 36, height: 36, borderRadius: 12, backgroundColor: "rgba(255,255,255,0.12)", borderWidth: 1, borderColor: "rgba(255,255,255,0.15)", alignItems: "center", justifyContent: "center" },
-  backArrow: { fontSize: 24, color: "#fff", fontWeight: "600", marginTop: -2 },
-  title: { fontSize: 18, fontWeight: "700", color: "#fff" },
+  backArrow: { fontSize: 24, color: SharedColors.white, fontWeight: "600", marginTop: -2 },
+  title: { fontSize: 18, fontWeight: "700", color: SharedColors.white },
   subtitle: { fontSize: 12, color: "rgba(255,255,255,0.55)", marginTop: 2 },
   progressRow: { flexDirection: "row", alignItems: "center", marginTop: 14, paddingHorizontal: 20 },
   progressDot: { width: 8, height: 8, borderRadius: 4, backgroundColor: "rgba(255,255,255,0.25)" },
-  progressDotActive: { backgroundColor: "#f59e0b", width: 10, height: 10, borderRadius: 5 },
+  progressDotActive: { backgroundColor: SharedColors.amber, width: 10, height: 10, borderRadius: 5 },
   progressLine: { flex: 1, height: 2, backgroundColor: "rgba(255,255,255,0.15)", marginHorizontal: 6 },
 
   content: { padding: 24, gap: 24, paddingBottom: 60 },
-  passportNotice: { flexDirection: "row", alignItems: "center", gap: 10, backgroundColor: "#fffbeb", borderRadius: 12, padding: 14, borderWidth: 1, borderColor: "rgba(245,158,11,0.2)" },
+  passportNotice: { flexDirection: "row", alignItems: "center", gap: 10, backgroundColor: SharedColors.amberLight, borderRadius: 12, padding: 14, borderWidth: 1, borderColor: "rgba(245,158,11,0.2)" },
   passportIcon: { fontSize: 20 },
   passportText: { flex: 1, fontSize: 13, color: "#78350f", lineHeight: 18 },
   section: { gap: 10 },
-  label: { fontSize: 11, fontWeight: "600", color: T.slate, letterSpacing: 0.8 },
+  label: { fontSize: 11, fontWeight: "600", color: SharedColors.slate, letterSpacing: 0.8 },
   tagWrap: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
-  tag: { paddingHorizontal: 14, paddingVertical: 9, borderRadius: 20, borderWidth: 1.5, borderColor: T.border, backgroundColor: T.white },
-  tagSelected: { borderColor: T.tealMid, backgroundColor: T.tealLight },
-  tagText: { fontSize: 13, color: T.slate, fontWeight: "400" },
-  tagTextSelected: { color: T.teal, fontWeight: "600" },
+  tag: { paddingHorizontal: 14, paddingVertical: 9, borderRadius: 20, borderWidth: 1.5, borderColor: SharedColors.border, backgroundColor: SharedColors.white },
+  tagSelected: { borderColor: PatientTheme.primaryMid, backgroundColor: PatientTheme.primaryLight },
+  tagText: { fontSize: 13, color: SharedColors.slate, fontWeight: "400" },
+  tagTextSelected: { color: PatientTheme.primary, fontWeight: "600" },
 
   // Country picker btn
-  countryPickerBtn: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", borderWidth: 1.5, borderColor: T.border, backgroundColor: T.white, borderRadius: 12, paddingHorizontal: 16, paddingVertical: 13 },
-  countryPickerBtnSelected: { borderColor: T.tealMid, backgroundColor: T.tealLight },
-  countryPickerBtnText: { fontSize: 14, color: T.slate },
-  countryPickerBtnTextSelected: { fontSize: 14, color: T.teal, fontWeight: "600" },
-  chevron: { fontSize: 20, color: T.slateLight },
+  countryPickerBtn: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", borderWidth: 1.5, borderColor: SharedColors.border, backgroundColor: SharedColors.white, borderRadius: 12, paddingHorizontal: 16, paddingVertical: 13 },
+  countryPickerBtnSelected: { borderColor: PatientTheme.primaryMid, backgroundColor: PatientTheme.primaryLight },
+  countryPickerBtnText: { fontSize: 14, color: SharedColors.slate },
+  countryPickerBtnTextSelected: { fontSize: 14, color: PatientTheme.primary, fontWeight: "600" },
+  chevron: { fontSize: 20, color: SharedColors.slateLight },
 
   // DOB
   dobRow: { flexDirection: "row", gap: 10 },
-  pickerBtn: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", borderWidth: 1.5, borderColor: T.border, backgroundColor: T.white, borderRadius: 12, paddingHorizontal: 14, paddingVertical: 12, minHeight: 46 },
-  pickerBtnText: { fontSize: 14, color: T.navy, fontWeight: "500" },
-  pickerArrow: { fontSize: 12, color: T.slateLight, marginLeft: 4 },
-  ageDisplay: { backgroundColor: T.tealLight, borderRadius: 10, paddingHorizontal: 14, paddingVertical: 8, alignSelf: "flex-start" },
-  ageText: { fontSize: 13, color: T.teal, fontWeight: "600" },
+  pickerBtn: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", borderWidth: 1.5, borderColor: SharedColors.border, backgroundColor: SharedColors.white, borderRadius: 12, paddingHorizontal: 14, paddingVertical: 12, minHeight: 46 },
+  pickerBtnText: { fontSize: 14, color: SharedColors.navy, fontWeight: "500" },
+  pickerArrow: { fontSize: 12, color: SharedColors.slateLight, marginLeft: 4 },
+  ageDisplay: { backgroundColor: PatientTheme.primaryLight, borderRadius: 10, paddingHorizontal: 14, paddingVertical: 8, alignSelf: "flex-start" },
+  ageText: { fontSize: 13, color: PatientTheme.primary, fontWeight: "600" },
 
   // Bottom
-  bottomBar: { paddingHorizontal: 24, paddingVertical: 16, borderTopWidth: 1, borderTopColor: T.border, backgroundColor: T.white },
-  nextBtn: { backgroundColor: T.teal, borderRadius: 14, paddingVertical: 15, alignItems: "center", minHeight: 52 },
+  bottomBar: { paddingHorizontal: 24, paddingVertical: 16, borderTopWidth: 1, borderTopColor: SharedColors.border, backgroundColor: SharedColors.white },
+  nextBtn: { backgroundColor: PatientTheme.primary, borderRadius: 14, paddingVertical: 15, alignItems: "center", minHeight: 52 },
   nextBtnDisabled: { opacity: 0.5 },
-  nextBtnText: { color: T.white, fontSize: 15, fontWeight: "600" },
+  nextBtnText: { color: SharedColors.white, fontSize: 15, fontWeight: "600" },
 
   // ── Modals ──
   modalOverlay: { flex: 1, backgroundColor: "rgba(0,0,0,0.5)", justifyContent: "flex-end" },
-  modalContent: { backgroundColor: T.white, borderTopLeftRadius: 24, borderTopRightRadius: 24, maxHeight: "75%", paddingBottom: 30 },
-  modalHandle: { width: 40, height: 4, borderRadius: 2, backgroundColor: T.border, alignSelf: "center", marginTop: 12, marginBottom: 8 },
+  modalContent: { backgroundColor: SharedColors.white, borderTopLeftRadius: 24, borderTopRightRadius: 24, maxHeight: "75%", paddingBottom: 30 },
+  modalHandle: { width: 40, height: 4, borderRadius: 2, backgroundColor: SharedColors.border, alignSelf: "center", marginTop: 12, marginBottom: 8 },
   modalHeader: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", paddingHorizontal: 20, paddingVertical: 12 },
-  modalTitle: { fontSize: 18, fontWeight: "700", color: T.navy },
-  modalClose: { fontSize: 20, color: T.slateLight, padding: 4 },
+  modalTitle: { fontSize: 18, fontWeight: "700", color: SharedColors.navy },
+  modalClose: { fontSize: 20, color: SharedColors.slateLight, padding: 4 },
 
   // Search
-  searchBox: { flexDirection: "row", alignItems: "center", marginHorizontal: 20, marginBottom: 12, borderWidth: 1.5, borderColor: T.border, borderRadius: 12, paddingHorizontal: 14, backgroundColor: T.bg, gap: 8 },
-  searchInput: { flex: 1, paddingVertical: 12, fontSize: 15, color: T.navy },
-  searchClear: { fontSize: 16, color: T.slateLight, padding: 4 },
+  searchBox: { flexDirection: "row", alignItems: "center", marginHorizontal: 20, marginBottom: 12, borderWidth: 1.5, borderColor: SharedColors.border, borderRadius: 12, paddingHorizontal: 14, backgroundColor: SharedColors.bg, gap: 8 },
+  searchInput: { flex: 1, paddingVertical: 12, fontSize: 15, color: SharedColors.navy },
+  searchClear: { fontSize: 16, color: SharedColors.slateLight, padding: 4 },
 
   // Country list
   countryItem: { flexDirection: "row", alignItems: "center", paddingHorizontal: 20, paddingVertical: 14, gap: 14, borderBottomWidth: 1, borderBottomColor: "#f1f5f9" },
-  countryItemSelected: { backgroundColor: T.tealLight },
+  countryItemSelected: { backgroundColor: PatientTheme.primaryLight },
   countryItemFlag: { fontSize: 24 },
-  countryItemName: { flex: 1, fontSize: 15, color: T.navy },
-  countryItemCheck: { fontSize: 16, color: T.teal, fontWeight: "700" },
+  countryItemName: { flex: 1, fontSize: 15, color: SharedColors.navy },
+  countryItemCheck: { fontSize: 16, color: PatientTheme.primary, fontWeight: "700" },
 
   // DOB modal
-  dobModalContent: { backgroundColor: T.white, borderTopLeftRadius: 20, borderTopRightRadius: 20, maxHeight: "50%", paddingBottom: 34 },
+  dobModalContent: { backgroundColor: SharedColors.white, borderTopLeftRadius: 20, borderTopRightRadius: 20, maxHeight: "50%", paddingBottom: 34 },
   dobItem: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingHorizontal: 16, paddingVertical: 13, borderRadius: 10, height: 48 },
-  dobItemSelected: { backgroundColor: T.tealLight },
-  dobItemText: { fontSize: 15, color: T.navy },
-  dobItemTextSelected: { color: T.teal, fontWeight: "600" },
-  dobCheck: { fontSize: 16, color: T.teal, fontWeight: "700" },
+  dobItemSelected: { backgroundColor: PatientTheme.primaryLight },
+  dobItemText: { fontSize: 15, color: SharedColors.navy },
+  dobItemTextSelected: { color: PatientTheme.primary, fontWeight: "600" },
+  dobCheck: { fontSize: 16, color: PatientTheme.primary, fontWeight: "700" },
 });

@@ -13,21 +13,9 @@ import {
 } from "react-native";
 import { ArrivalInfo, Booking, SavedTrip, store } from "../../lib/store";
 
+import { PatientTheme, SharedColors } from "../../constants/theme";
 /* ── Unified palette ── */
-const C = {
-  purple: "#4A0080",
-  purpleSoft: "rgba(74,0,128,0.08)",
-  purpleMid: "rgba(74,0,128,0.15)",
-  navy: "#0f172a",
-  text: "#1e293b",
-  sub: "#64748b",
-  muted: "#94a3b8",
-  faint: "#cbd5e1",
-  border: "#e8ecf1",
-  bg: "#f6f7f9",
-  card: "#ffffff",
-  inputBg: "#f8fafc",
-};
+
 
 const AIRLINES = [
   // ── South Korea ──
@@ -343,7 +331,7 @@ export default function ArrivalInfoScreen() {
   if (loading) {
     return (
       <View style={[st.container, { justifyContent: "center", alignItems: "center" }]}>
-        <ActivityIndicator color={C.sub} size="large" />
+        <ActivityIndicator color={SharedColors.slate} size="large" />
       </View>
     );
   }
@@ -352,7 +340,7 @@ export default function ArrivalInfoScreen() {
   if (success) {
     return (
       <View style={st.container}>
-        <LinearGradient colors={["#3D0070", "#2F0058", "#220040"]} style={st.header}>
+        <LinearGradient colors={[...PatientTheme.gradient]} style={st.header}>
           <View style={st.headerRow}>
             <View style={{ width: 36 }} />
             <View style={st.headerCenter}>
@@ -410,7 +398,7 @@ export default function ArrivalInfoScreen() {
   return (
     <View style={st.container}>
       {/* ── Gradient header ── */}
-      <LinearGradient colors={["#3D0070", "#2F0058", "#220040"]} style={st.header}>
+      <LinearGradient colors={[...PatientTheme.gradient]} style={st.header}>
         <View style={st.headerRow}>
           <TouchableOpacity style={st.backBtn} onPress={() => router.back()} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
             <Text style={st.backArrow}>{"<"}</Text>
@@ -489,7 +477,7 @@ export default function ArrivalInfoScreen() {
                 value={flightNumber}
                 onChangeText={(t) => setFlightNumber(formatFlightNumber(t))}
                 placeholder="e.g. KE001"
-                placeholderTextColor={C.faint}
+                placeholderTextColor={SharedColors.faint}
                 autoCapitalize="characters"
                 maxLength={8}
               />
@@ -505,7 +493,7 @@ export default function ArrivalInfoScreen() {
               onChangeText={(t) => { setAirline(t); setShowAirlines(true); }}
               onFocus={() => setShowAirlines(true)}
               placeholder="e.g. Korean Air"
-              placeholderTextColor={C.faint}
+              placeholderTextColor={SharedColors.faint}
             />
             {showAirlines && airline.length > 0 && (() => {
               const q = airline.toLowerCase();
@@ -546,7 +534,7 @@ export default function ArrivalInfoScreen() {
                 else setArrivalDate(digits.slice(0,4) + "-" + digits.slice(4,6) + "-" + digits.slice(6,8));
               }}
               placeholder="YYYY-MM-DD"
-              placeholderTextColor={C.faint}
+              placeholderTextColor={SharedColors.faint}
               keyboardType="number-pad"
               maxLength={10}
             />
@@ -572,7 +560,7 @@ export default function ArrivalInfoScreen() {
                   else setArrivalTime(digits.slice(0, 2) + ":" + digits.slice(2, 4));
                 }}
                 placeholder="HH:MM (e.g. 14:30)"
-                placeholderTextColor={C.faint}
+                placeholderTextColor={SharedColors.faint}
                 keyboardType="number-pad"
                 maxLength={5}
               />
@@ -648,7 +636,7 @@ export default function ArrivalInfoScreen() {
               value={depAirline}
               onChangeText={setDepAirline}
               placeholder="e.g. Korean Air"
-              placeholderTextColor={C.faint}
+              placeholderTextColor={SharedColors.faint}
             />
           </View>
 
@@ -661,7 +649,7 @@ export default function ArrivalInfoScreen() {
                 value={depFlightNumber}
                 onChangeText={(t) => setDepFlightNumber(formatFlightNumber(t))}
                 placeholder="e.g. KE002"
-                placeholderTextColor={C.faint}
+                placeholderTextColor={SharedColors.faint}
                 autoCapitalize="characters"
                 maxLength={8}
               />
@@ -680,7 +668,7 @@ export default function ArrivalInfoScreen() {
                 else setDepFlightDate(digits.slice(0,4) + "-" + digits.slice(4,6) + "-" + digits.slice(6,8));
               }}
               placeholder="YYYY-MM-DD"
-              placeholderTextColor={C.faint}
+              placeholderTextColor={SharedColors.faint}
               keyboardType="number-pad"
               maxLength={10}
             />
@@ -697,7 +685,7 @@ export default function ArrivalInfoScreen() {
                 else setDepFlightTime(digits.slice(0, 2) + ":" + digits.slice(2, 4));
               }}
               placeholder="HH:MM"
-              placeholderTextColor={C.faint}
+              placeholderTextColor={SharedColors.faint}
               keyboardType="number-pad"
               maxLength={5}
             />
@@ -710,7 +698,7 @@ export default function ArrivalInfoScreen() {
               value={depTerminal}
               onChangeText={setDepTerminal}
               placeholder="e.g. Terminal 2"
-              placeholderTextColor={C.faint}
+              placeholderTextColor={SharedColors.faint}
             />
           </View>
 
@@ -742,7 +730,7 @@ export default function ArrivalInfoScreen() {
               value={hotelName}
               onChangeText={setHotelName}
               placeholder="e.g. Lotte Hotel Seoul"
-              placeholderTextColor={C.faint}
+              placeholderTextColor={SharedColors.faint}
             />
           </View>
 
@@ -753,7 +741,7 @@ export default function ArrivalInfoScreen() {
               value={hotelAddress}
               onChangeText={setHotelAddress}
               placeholder="Hotel address"
-              placeholderTextColor={C.faint}
+              placeholderTextColor={SharedColors.faint}
             />
           </View>
 
@@ -769,7 +757,7 @@ export default function ArrivalInfoScreen() {
                 else setCheckInDate(digits.slice(0,4) + "-" + digits.slice(4,6) + "-" + digits.slice(6,8));
               }}
               placeholder="YYYY-MM-DD"
-              placeholderTextColor={C.faint}
+              placeholderTextColor={SharedColors.faint}
               keyboardType="number-pad"
               maxLength={10}
             />
@@ -787,7 +775,7 @@ export default function ArrivalInfoScreen() {
                 else setCheckOutDate(digits.slice(0,4) + "-" + digits.slice(4,6) + "-" + digits.slice(6,8));
               }}
               placeholder="YYYY-MM-DD"
-              placeholderTextColor={C.faint}
+              placeholderTextColor={SharedColors.faint}
               keyboardType="number-pad"
               maxLength={10}
             />
@@ -800,7 +788,7 @@ export default function ArrivalInfoScreen() {
               value={confirmationNumber}
               onChangeText={setConfirmationNumber}
               placeholder="Booking confirmation #"
-              placeholderTextColor={C.faint}
+              placeholderTextColor={SharedColors.faint}
             />
           </View>
 
@@ -851,7 +839,7 @@ export default function ArrivalInfoScreen() {
                 onPress={() => setPickupRequested(false)}
               >
                 <Text style={{ fontSize: 18 }}>🚶</Text>
-                <Text style={[st.toggleLabel, !pickupRequested && { color: C.navy }]}>
+                <Text style={[st.toggleLabel, !pickupRequested && { color: SharedColors.navy }]}>
                   No thanks
                 </Text>
                 <Text style={st.toggleSub}>
@@ -876,7 +864,7 @@ export default function ArrivalInfoScreen() {
               value={notes}
               onChangeText={setNotes}
               placeholder="Special requests, wheelchair assistance, heavy luggage, etc."
-              placeholderTextColor={C.faint}
+              placeholderTextColor={SharedColors.faint}
               multiline
               maxLength={300}
             />
@@ -951,7 +939,7 @@ export default function ArrivalInfoScreen() {
           disabled={!isValid() || saving}
         >
           {saving ? (
-            <ActivityIndicator color="#fff" size="small" />
+            <ActivityIndicator color={SharedColors.white} size="small" />
           ) : (
             <Text style={st.submitBtnText}>
               {booking?.arrivalInfo ? "Update" : "Submit"}
@@ -1012,7 +1000,7 @@ export default function ArrivalInfoScreen() {
 
 /* ═══════════════════════════════════════ */
 const st = StyleSheet.create({
-  container: { flex: 1, backgroundColor: C.bg },
+  container: { flex: 1, backgroundColor: SharedColors.bg },
 
   /* ── Header ── */
   header: { paddingHorizontal: 20, paddingTop: 60, paddingBottom: 18 },
@@ -1024,8 +1012,8 @@ const st = StyleSheet.create({
     borderWidth: 1, borderColor: "rgba(255,255,255,0.15)",
     alignItems: "center", justifyContent: "center",
   },
-  backArrow: { fontSize: 20, color: "#fff", fontWeight: "600" },
-  headerTitle: { fontSize: 17, fontWeight: "700", color: "#fff", letterSpacing: 0.1 },
+  backArrow: { fontSize: 20, color: SharedColors.white, fontWeight: "600" },
+  headerTitle: { fontSize: 17, fontWeight: "700", color: SharedColors.white, letterSpacing: 0.1 },
   headerSub: { fontSize: 11, color: "rgba(255,255,255,0.5)", marginTop: 2 },
 
   /* ── Content ── */
@@ -1034,125 +1022,125 @@ const st = StyleSheet.create({
   /* ── Banner ── */
   banner: {
     flexDirection: "row", alignItems: "center", gap: 14,
-    backgroundColor: C.purpleSoft, borderRadius: 14, padding: 16,
-    borderWidth: 1, borderColor: C.purpleMid,
+    backgroundColor: PatientTheme.accentSoft, borderRadius: 14, padding: 16,
+    borderWidth: 1, borderColor: PatientTheme.primaryMid,
   },
-  bannerTitle: { fontSize: 15, fontWeight: "700", color: C.navy },
-  bannerSub: { fontSize: 12, color: C.sub, lineHeight: 17, marginTop: 2 },
+  bannerTitle: { fontSize: 15, fontWeight: "700", color: SharedColors.navy },
+  bannerSub: { fontSize: 12, color: SharedColors.slate, lineHeight: 17, marginTop: 2 },
 
   /* ── Booking context ── */
   contextCard: {
-    backgroundColor: C.card, borderRadius: 14, paddingHorizontal: 16,
-    borderWidth: 1, borderColor: C.border,
+    backgroundColor: SharedColors.white, borderRadius: 14, paddingHorizontal: 16,
+    borderWidth: 1, borderColor: SharedColors.border,
   },
   contextRow: {
     flexDirection: "row", justifyContent: "space-between", alignItems: "center",
     paddingVertical: 13,
   },
-  contextDivider: { height: 1, backgroundColor: C.border },
-  contextLabel: { fontSize: 13, color: C.sub },
-  contextVal: { fontSize: 13, fontWeight: "600", color: C.navy },
+  contextDivider: { height: 1, backgroundColor: SharedColors.border },
+  contextLabel: { fontSize: 13, color: SharedColors.slate },
+  contextVal: { fontSize: 13, fontWeight: "600", color: SharedColors.navy },
 
   /* ── Fields ── */
   field: { gap: 6 },
-  fieldLabel: { fontSize: 13, fontWeight: "600", color: C.navy },
+  fieldLabel: { fontSize: 13, fontWeight: "600", color: SharedColors.navy },
   req: { color: "#b91c1c" },
   timeError: { fontSize: 11, color: "#dc2626", fontWeight: "600" },
-  hint: { fontSize: 11, color: C.muted },
+  hint: { fontSize: 11, color: SharedColors.slateLight },
   input: {
-    backgroundColor: C.card, borderRadius: 12, borderWidth: 1, borderColor: C.border,
-    paddingHorizontal: 16, paddingVertical: 14, fontSize: 15, color: C.navy,
+    backgroundColor: SharedColors.white, borderRadius: 12, borderWidth: 1, borderColor: SharedColors.border,
+    paddingHorizontal: 16, paddingVertical: 14, fontSize: 15, color: SharedColors.navy,
   },
-  charCount: { fontSize: 11, color: C.muted, textAlign: "right" },
-  sectionTitle: { fontSize: 15, fontWeight: "700", color: C.navy, marginBottom: 4 },
-  optionalTag: { fontSize: 12, fontWeight: "400", color: C.muted },
+  charCount: { fontSize: 11, color: SharedColors.slateLight, textAlign: "right" },
+  sectionTitle: { fontSize: 15, fontWeight: "700", color: SharedColors.navy, marginBottom: 4 },
+  optionalTag: { fontSize: 12, fontWeight: "400", color: SharedColors.slateLight },
 
   /* Flight input */
   flightInputRow: {
     flexDirection: "row", alignItems: "center",
-    backgroundColor: C.card, borderRadius: 12, borderWidth: 1, borderColor: C.border,
+    backgroundColor: SharedColors.white, borderRadius: 12, borderWidth: 1, borderColor: SharedColors.border,
     paddingHorizontal: 14,
   },
   flightIcon: { fontSize: 18, marginRight: 8 },
-  flightInput: { flex: 1, fontSize: 18, fontWeight: "700", color: C.navy, paddingVertical: 14, letterSpacing: 1 },
-  datePreview: { fontSize: 12, color: C.purple, fontWeight: "500", marginTop: 4 },
+  flightInput: { flex: 1, fontSize: 18, fontWeight: "700", color: SharedColors.navy, paddingVertical: 14, letterSpacing: 1 },
+  datePreview: { fontSize: 12, color: PatientTheme.primary, fontWeight: "500", marginTop: 4 },
 
   /* Select */
   selectBtn: {
     flexDirection: "row", alignItems: "center", justifyContent: "space-between",
-    backgroundColor: C.card, borderRadius: 12, borderWidth: 1, borderColor: C.border,
+    backgroundColor: SharedColors.white, borderRadius: 12, borderWidth: 1, borderColor: SharedColors.border,
     paddingHorizontal: 16, paddingVertical: 14,
   },
-  selectText: { fontSize: 15, color: C.navy, fontWeight: "500" },
-  selectPlaceholder: { fontSize: 15, color: C.faint },
-  selectArrow: { fontSize: 10, color: C.muted },
+  selectText: { fontSize: 15, color: SharedColors.navy, fontWeight: "500" },
+  selectPlaceholder: { fontSize: 15, color: SharedColors.faint },
+  selectArrow: { fontSize: 10, color: SharedColors.slateLight },
 
   /* Dropdown */
   dropList: {
-    backgroundColor: C.card, borderRadius: 12, borderWidth: 1, borderColor: C.border,
+    backgroundColor: SharedColors.white, borderRadius: 12, borderWidth: 1, borderColor: SharedColors.border,
     maxHeight: 250, overflow: "hidden",
   },
   dropItem: {
     flexDirection: "row", justifyContent: "space-between", alignItems: "center",
-    paddingHorizontal: 16, paddingVertical: 13, borderBottomWidth: 1, borderBottomColor: C.border,
+    paddingHorizontal: 16, paddingVertical: 13, borderBottomWidth: 1, borderBottomColor: SharedColors.border,
   },
-  dropItemActive: { backgroundColor: C.purpleSoft },
-  dropText: { fontSize: 14, color: C.navy },
-  dropTextActive: { fontWeight: "600", color: C.purple },
+  dropItemActive: { backgroundColor: PatientTheme.accentSoft },
+  dropText: { fontSize: 14, color: SharedColors.navy },
+  dropTextActive: { fontWeight: "600", color: PatientTheme.primary },
 
   /* Terminal */
   termRow: { flexDirection: "row", gap: 10 },
   termChip: {
     flex: 1, paddingVertical: 14, borderRadius: 12, alignItems: "center",
-    backgroundColor: C.card, borderWidth: 1.5, borderColor: C.border,
+    backgroundColor: SharedColors.white, borderWidth: 1.5, borderColor: SharedColors.border,
   },
-  termChipActive: { borderColor: C.purple, backgroundColor: C.purpleSoft },
-  termText: { fontSize: 14, fontWeight: "600", color: C.sub },
-  termTextActive: { color: C.purple },
+  termChipActive: { borderColor: PatientTheme.primary, backgroundColor: PatientTheme.accentSoft },
+  termText: { fontSize: 14, fontWeight: "600", color: SharedColors.slate },
+  termTextActive: { color: PatientTheme.primary },
 
   /* Stepper */
   stepperRow: { flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 16 },
   stepperBtn: {
-    width: 44, height: 44, borderRadius: 12, borderWidth: 1.5, borderColor: C.border,
-    alignItems: "center", justifyContent: "center", backgroundColor: C.card,
+    width: 44, height: 44, borderRadius: 12, borderWidth: 1.5, borderColor: SharedColors.border,
+    alignItems: "center", justifyContent: "center", backgroundColor: SharedColors.white,
   },
-  stepperBtnText: { fontSize: 22, fontWeight: "600", color: C.navy },
+  stepperBtnText: { fontSize: 22, fontWeight: "600", color: SharedColors.navy },
   stepperVal: { alignItems: "center" },
-  stepperNum: { fontSize: 28, fontWeight: "800", color: C.navy },
-  stepperLabel: { fontSize: 11, color: C.sub },
+  stepperNum: { fontSize: 28, fontWeight: "800", color: SharedColors.navy },
+  stepperLabel: { fontSize: 11, color: SharedColors.slate },
 
   /* Toggle */
   toggleRow: { flexDirection: "row", gap: 10 },
   toggleOpt: {
     flex: 1, paddingVertical: 16, borderRadius: 14, alignItems: "center", gap: 5,
-    backgroundColor: C.card, borderWidth: 1.5, borderColor: C.border,
+    backgroundColor: SharedColors.white, borderWidth: 1.5, borderColor: SharedColors.border,
   },
-  toggleOptActive: { borderColor: C.purple, backgroundColor: C.purpleSoft },
-  toggleOptInactive: { borderColor: C.border, backgroundColor: C.inputBg },
-  toggleLabel: { fontSize: 13, fontWeight: "700", color: C.sub },
-  toggleLabelActive: { color: C.purple },
-  toggleSub: { fontSize: 10, color: C.muted },
+  toggleOptActive: { borderColor: PatientTheme.primary, backgroundColor: PatientTheme.accentSoft },
+  toggleOptInactive: { borderColor: SharedColors.border, backgroundColor: SharedColors.bg },
+  toggleLabel: { fontSize: 13, fontWeight: "700", color: SharedColors.slate },
+  toggleLabelActive: { color: PatientTheme.primary },
+  toggleSub: { fontSize: 10, color: SharedColors.slateLight },
   pickupNote: {
-    backgroundColor: C.purpleSoft, borderRadius: 12, padding: 14,
-    borderWidth: 1, borderColor: C.purpleMid,
+    backgroundColor: PatientTheme.accentSoft, borderRadius: 12, padding: 14,
+    borderWidth: 1, borderColor: PatientTheme.primaryMid,
   },
-  pickupNoteText: { fontSize: 12, color: C.text, lineHeight: 18 },
+  pickupNoteText: { fontSize: 12, color: SharedColors.text, lineHeight: 18 },
 
   /* Bottom bar */
   bottomBar: {
     flexDirection: "row", alignItems: "center", gap: 12,
     paddingHorizontal: 20, paddingVertical: 16,
-    borderTopWidth: 1, borderTopColor: C.border, backgroundColor: C.card,
+    borderTopWidth: 1, borderTopColor: SharedColors.border, backgroundColor: SharedColors.white,
     paddingBottom: 36,
   },
-  bottomFlight: { fontSize: 14, fontWeight: "700", color: C.navy },
-  bottomEta: { fontSize: 11, color: C.sub, marginTop: 2 },
+  bottomFlight: { fontSize: 14, fontWeight: "700", color: SharedColors.navy },
+  bottomEta: { fontSize: 11, color: SharedColors.slate, marginTop: 2 },
   submitBtn: {
-    backgroundColor: C.purple, borderRadius: 14,
+    backgroundColor: PatientTheme.primary, borderRadius: 14,
     paddingHorizontal: 24, paddingVertical: 15,
     alignItems: "center" as const,
   },
-  submitBtnText: { color: "#fff", fontSize: 15, fontWeight: "700", textAlign: "center" as const },
+  submitBtnText: { color: SharedColors.white, fontSize: 15, fontWeight: "700", textAlign: "center" as const },
 
   /* Success */
   successWrap: {
@@ -1160,33 +1148,33 @@ const st = StyleSheet.create({
   },
   successIcon: {
     width: 80, height: 80, borderRadius: 40,
-    backgroundColor: C.purpleSoft, alignItems: "center", justifyContent: "center",
-    marginBottom: 20, borderWidth: 2, borderColor: C.purpleMid,
+    backgroundColor: PatientTheme.accentSoft, alignItems: "center", justifyContent: "center",
+    marginBottom: 20, borderWidth: 2, borderColor: PatientTheme.primaryMid,
   },
-  successTitle: { fontSize: 22, fontWeight: "700", color: C.navy, marginBottom: 6 },
-  successDesc: { fontSize: 14, color: C.sub, textAlign: "center", lineHeight: 22, marginBottom: 20 },
+  successTitle: { fontSize: 22, fontWeight: "700", color: SharedColors.navy, marginBottom: 6 },
+  successDesc: { fontSize: 14, color: SharedColors.slate, textAlign: "center", lineHeight: 22, marginBottom: 20 },
   successCard: {
-    backgroundColor: C.card, borderRadius: 16, width: "100%",
-    paddingHorizontal: 20, borderWidth: 1, borderColor: C.border,
+    backgroundColor: SharedColors.white, borderRadius: 16, width: "100%",
+    paddingHorizontal: 20, borderWidth: 1, borderColor: SharedColors.border,
   },
   successRow: {
     flexDirection: "row", justifyContent: "space-between", alignItems: "center",
-    paddingVertical: 14, borderBottomWidth: 1, borderBottomColor: C.border,
+    paddingVertical: 14, borderBottomWidth: 1, borderBottomColor: SharedColors.border,
   },
-  successLabel: { fontSize: 13, color: C.sub },
-  successValue: { fontSize: 14, fontWeight: "600", color: C.navy },
+  successLabel: { fontSize: 13, color: SharedColors.slate },
+  successValue: { fontSize: 14, fontWeight: "600", color: SharedColors.navy },
   tipCard: {
     backgroundColor: "rgba(15,23,42,0.03)", borderRadius: 14, padding: 18,
     width: "100%", marginTop: 16,
-    borderWidth: 1, borderColor: C.border, gap: 5,
+    borderWidth: 1, borderColor: SharedColors.border, gap: 5,
   },
-  tipTitle: { fontSize: 14, fontWeight: "700", color: C.navy, marginBottom: 4 },
-  tipText: { fontSize: 12, color: C.sub, lineHeight: 18 },
+  tipTitle: { fontSize: 14, fontWeight: "700", color: SharedColors.navy, marginBottom: 4 },
+  tipText: { fontSize: 12, color: SharedColors.slate, lineHeight: 18 },
   successBtn: {
-    backgroundColor: C.purple, borderRadius: 14, paddingVertical: 16,
+    backgroundColor: PatientTheme.primary, borderRadius: 14, paddingVertical: 16,
     paddingHorizontal: 40, marginTop: 24, width: "100%", alignItems: "center",
   },
-  successBtnText: { color: "#fff", fontSize: 15, fontWeight: "700" },
+  successBtnText: { color: SharedColors.white, fontSize: 15, fontWeight: "700" },
 
   /* Reschedule link */
   rescheduleLink: {
@@ -1194,12 +1182,12 @@ const st = StyleSheet.create({
     backgroundColor: "rgba(74,0,128,0.06)", borderRadius: 14,
     borderWidth: 1, borderColor: "rgba(74,0,128,0.12)",
   },
-  rescheduleLinkText: { fontSize: 13, color: C.purple, fontWeight: "600" },
+  rescheduleLinkText: { fontSize: 13, color: PatientTheme.primary, fontWeight: "600" },
 
   /* Cancel link */
   cancelLink: {
     alignItems: "center", paddingVertical: 14,
-    backgroundColor: "#fef2f2", borderRadius: 14,
+    backgroundColor: SharedColors.redLight, borderRadius: 14,
     borderWidth: 1, borderColor: "rgba(185,28,28,0.12)",
   },
   cancelLinkText: { fontSize: 13, color: "#b91c1c", fontWeight: "600" },
@@ -1207,50 +1195,50 @@ const st = StyleSheet.create({
   /* Load from My Trips */
   loadTripBtn: {
     flexDirection: "row", alignItems: "center", gap: 8,
-    backgroundColor: C.purpleSoft, borderRadius: 12, padding: 14,
+    backgroundColor: PatientTheme.accentSoft, borderRadius: 12, padding: 14,
     marginBottom: 16, borderWidth: 1, borderColor: "rgba(74,0,128,0.12)",
   },
-  loadTripText: { flex: 1, fontSize: 14, fontWeight: "600", color: C.purple },
-  loadTripCount: { fontSize: 12, color: C.sub, fontWeight: "500" },
+  loadTripText: { flex: 1, fontSize: 14, fontWeight: "600", color: PatientTheme.primary },
+  loadTripCount: { fontSize: 12, color: SharedColors.slate, fontWeight: "500" },
 
   /* Trip picker modal */
   tripModalOverlay: { flex: 1, backgroundColor: "rgba(0,0,0,0.5)", justifyContent: "flex-end" },
   tripModalContent: {
-    backgroundColor: "#fff", borderTopLeftRadius: 24, borderTopRightRadius: 24,
+    backgroundColor: SharedColors.white, borderTopLeftRadius: 24, borderTopRightRadius: 24,
     maxHeight: "60%", paddingBottom: Platform.OS === "ios" ? 34 : 20,
   },
   tripModalHeader: {
     flexDirection: "row", justifyContent: "space-between", alignItems: "center",
-    padding: 20, borderBottomWidth: 1, borderBottomColor: C.border,
+    padding: 20, borderBottomWidth: 1, borderBottomColor: SharedColors.border,
   },
-  tripModalTitle: { fontSize: 18, fontWeight: "700", color: C.navy },
-  tripModalClose: { fontSize: 20, color: C.sub, padding: 4 },
+  tripModalTitle: { fontSize: 18, fontWeight: "700", color: SharedColors.navy },
+  tripModalClose: { fontSize: 20, color: SharedColors.slate, padding: 4 },
   tripPickerCard: {
-    backgroundColor: C.inputBg, borderRadius: 12, padding: 14,
-    marginTop: 10, borderWidth: 1, borderColor: C.border,
+    backgroundColor: SharedColors.bg, borderRadius: 12, padding: 14,
+    marginTop: 10, borderWidth: 1, borderColor: SharedColors.border,
   },
-  tripPickerMain: { fontSize: 15, fontWeight: "600", color: C.navy },
-  tripPickerSub: { fontSize: 13, color: C.sub, marginTop: 2 },
+  tripPickerMain: { fontSize: 15, fontWeight: "600", color: SharedColors.navy },
+  tripPickerSub: { fontSize: 13, color: SharedColors.slate, marginTop: 2 },
 
   /* ── Screenshot Upload ── */
   ssCard: {
-    borderWidth: 1.5, borderColor: C.faint, borderStyle: "dashed",
+    borderWidth: 1.5, borderColor: SharedColors.faint, borderStyle: "dashed",
     borderRadius: 12, padding: 16, alignItems: "center",
     backgroundColor: "rgba(74,0,128,0.03)", marginBottom: 10,
   },
   ssGuide: {
-    fontSize: 13, color: C.sub, textAlign: "center", marginBottom: 12, lineHeight: 18,
+    fontSize: 13, color: SharedColors.slate, textAlign: "center", marginBottom: 12, lineHeight: 18,
   },
   ssUploadBtn: {
-    backgroundColor: C.purpleSoft, borderRadius: 8,
+    backgroundColor: PatientTheme.accentSoft, borderRadius: 8,
     paddingHorizontal: 20, paddingVertical: 10,
   },
   ssUploadBtnText: {
-    fontSize: 14, fontWeight: "600", color: C.purple,
+    fontSize: 14, fontWeight: "600", color: PatientTheme.primary,
   },
   ssUploaded: {
     flexDirection: "row", alignItems: "center",
-    backgroundColor: "#f0fdf4", borderWidth: 1, borderColor: "#bbf7d0",
+    backgroundColor: SharedColors.greenLight, borderWidth: 1, borderColor: "#bbf7d0",
     borderRadius: 12, paddingHorizontal: 14, paddingVertical: 12,
     marginBottom: 10,
   },
@@ -1259,10 +1247,10 @@ const st = StyleSheet.create({
     flex: 1, fontSize: 14, fontWeight: "500", color: "#15803d",
   },
   ssReuploadBtn: {
-    backgroundColor: "#dcfce7", borderRadius: 6,
+    backgroundColor: SharedColors.greenLight, borderRadius: 6,
     paddingHorizontal: 12, paddingVertical: 6,
   },
   ssReuploadText: {
-    fontSize: 12, fontWeight: "600", color: "#16a34a",
+    fontSize: 12, fontWeight: "600", color: SharedColors.green,
   },
 });

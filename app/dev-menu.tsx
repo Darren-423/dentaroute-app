@@ -9,13 +9,7 @@ import {
 } from "react-native";
 import { DoctorTier, TIER_CONFIG, store } from "../lib/store";
 
-const T = {
-  teal: "#0d7a6e", tealMid: "#1a9e8f", tealLight: "#e6f4f2",
-  navy: "#0f172a", slate: "#64748b", slateLight: "#94a3b8",
-  border: "#e2e8f0", bg: "#f8fafc", white: "#ffffff",
-  red: "#ef4444", amber: "#f59e0b",
-};
-
+import { PatientTheme, SharedColors } from "../constants/theme";
 export default function DevMenuScreen() {
   const [seeded, setSeeded] = useState(false);
   const [currentTier, setCurrentTier] = useState<DoctorTier>("standard");
@@ -165,14 +159,14 @@ export default function DevMenuScreen() {
         {/* Demo Status Override */}
         <View style={s.section}>
           <Text style={s.sectionTitle}>⚡ DEMO: FORCE BOOKING STATUS</Text>
-          <Text style={{ fontSize: 11, color: "#94a3b8", marginBottom: 8 }}>
+          <Text style={{ fontSize: 11, color: SharedColors.slateLight, marginBottom: 8 }}>
             Tap to jump booking bk_demo_001 to any stage
           </Text>
           {([
             { status: "confirmed", label: "✅ Confirmed", color: "#0d7a6e" },
             { status: "flight_submitted", label: "✈️ Flight Submitted", color: "#3b82f6" },
             { status: "arrived_korea", label: "🇰🇷 Arrived in Korea", color: "#7c3aed" },
-            { status: "checked_in_clinic", label: "🏥 Checked in at Clinic", color: "#f59e0b" },
+            { status: "checked_in_clinic", label: "🏥 Checked in at Clinic", color: SharedColors.amber },
             { status: "treatment_done", label: "💳 Treatment Done (Invoice Sent)", color: "#d97706" },
             { status: "payment_complete", label: "💰 Payment Complete", color: "#10b981" },
             { status: "departure_set", label: "🚗 Departure Set", color: "#059669" },
@@ -198,7 +192,7 @@ export default function DevMenuScreen() {
               activeOpacity={0.7}
             >
               <Text style={[s.statusBtnText, { color: item.color }]}>{item.label}</Text>
-              <Text style={{ fontSize: 10, color: "#94a3b8" }}>→ {item.status}</Text>
+              <Text style={{ fontSize: 10, color: SharedColors.slateLight }}>→ {item.status}</Text>
             </TouchableOpacity>
           ))}
         </View>
@@ -206,7 +200,7 @@ export default function DevMenuScreen() {
         {/* Doctor Tier Override */}
         <View style={s.section}>
           <Text style={s.sectionTitle}>🏷️ SET DOCTOR TIER</Text>
-          <Text style={{ fontSize: 11, color: "#94a3b8", marginBottom: 8 }}>
+          <Text style={{ fontSize: 11, color: SharedColors.slateLight, marginBottom: 8 }}>
             Changes platform fee rate for doctor profile
           </Text>
           {(["gold", "silver", "standard"] as DoctorTier[]).map((tier) => {
@@ -240,7 +234,7 @@ export default function DevMenuScreen() {
                   <View style={{ width: 10, height: 10, borderRadius: 5, backgroundColor: cfg.color }} />
                   <Text style={[s.statusBtnText, { color: cfg.color }]}>{cfg.label}</Text>
                 </View>
-                <Text style={{ fontSize: 10, color: "#94a3b8" }}>Fee: {Math.round(cfg.feeRate * 100)}%</Text>
+                <Text style={{ fontSize: 10, color: SharedColors.slateLight }}>Fee: {Math.round(cfg.feeRate * 100)}%</Text>
               </TouchableOpacity>
             );
           })}
@@ -251,47 +245,47 @@ export default function DevMenuScreen() {
 }
 
 const s = StyleSheet.create({
-  container: { flex: 1, backgroundColor: T.bg },
+  container: { flex: 1, backgroundColor: SharedColors.bg },
   header: {
     paddingHorizontal: 24, paddingTop: 60, paddingBottom: 20,
-    backgroundColor: T.white, borderBottomWidth: 1, borderBottomColor: T.border,
+    backgroundColor: SharedColors.white, borderBottomWidth: 1, borderBottomColor: SharedColors.border,
   },
-  title: { fontSize: 24, fontWeight: "700", color: T.navy, marginBottom: 4 },
-  subtitle: { fontSize: 13, color: T.slate },
+  title: { fontSize: 24, fontWeight: "700", color: SharedColors.navy, marginBottom: 4 },
+  subtitle: { fontSize: 13, color: SharedColors.slate },
 
   content: { padding: 20, gap: 20, paddingBottom: 40 },
 
   section: { gap: 8 },
   sectionTitle: {
-    fontSize: 11, fontWeight: "700", color: T.slate,
+    fontSize: 11, fontWeight: "700", color: SharedColors.slate,
     letterSpacing: 0.8, marginBottom: 4,
   },
 
   btn: {
     borderRadius: 12, paddingVertical: 14, alignItems: "center",
   },
-  btnTeal: { backgroundColor: T.teal },
-  btnRed: { backgroundColor: T.red },
-  btnSlate: { backgroundColor: T.slate },
-  btnText: { color: T.white, fontSize: 14, fontWeight: "600" },
+  btnTeal: { backgroundColor: PatientTheme.primary },
+  btnRed: { backgroundColor: SharedColors.red },
+  btnSlate: { backgroundColor: SharedColors.slate },
+  btnText: { color: SharedColors.white, fontSize: 14, fontWeight: "600" },
 
   navBtn: {
     flexDirection: "row", alignItems: "center", justifyContent: "space-between",
-    backgroundColor: T.white, borderRadius: 10, paddingHorizontal: 16, paddingVertical: 13,
-    borderWidth: 1, borderColor: T.border,
+    backgroundColor: SharedColors.white, borderRadius: 10, paddingHorizontal: 16, paddingVertical: 13,
+    borderWidth: 1, borderColor: SharedColors.border,
   },
-  navBtnText: { fontSize: 14, color: T.navy, fontWeight: "500" },
-  chevron: { fontSize: 18, color: T.slateLight },
+  navBtnText: { fontSize: 14, color: SharedColors.navy, fontWeight: "500" },
+  chevron: { fontSize: 18, color: SharedColors.slateLight },
 
   navBtnDark: {
     flexDirection: "row", alignItems: "center", justifyContent: "space-between",
-    backgroundColor: T.navy, borderRadius: 10, paddingHorizontal: 16, paddingVertical: 13,
+    backgroundColor: SharedColors.navy, borderRadius: 10, paddingHorizontal: 16, paddingVertical: 13,
   },
-  navBtnDarkText: { fontSize: 14, color: "#e2e8f0", fontWeight: "500" },
+  navBtnDarkText: { fontSize: 14, color: SharedColors.border, fontWeight: "500" },
   chevronDark: { fontSize: 18, color: "rgba(255,255,255,0.3)" },
   statusBtn: {
-    backgroundColor: "#fff", borderRadius: 12, padding: 14, marginBottom: 6,
-    borderWidth: 1.5, borderColor: "#e2e8f0",
+    backgroundColor: SharedColors.white, borderRadius: 12, padding: 14, marginBottom: 6,
+    borderWidth: 1.5, borderColor: SharedColors.border,
     flexDirection: "row", justifyContent: "space-between", alignItems: "center",
   },
   statusBtnText: { fontSize: 14, fontWeight: "700" },

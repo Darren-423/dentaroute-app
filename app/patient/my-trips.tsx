@@ -11,22 +11,11 @@ import {
 } from "react-native";
 import { SavedTrip, store } from "../../lib/store";
 
-const T = {
-  purple: "#4A0080",
-  purpleMid: "#5C10A0",
-  purpleLight: "#f0e6f6",
-  navy: "#0f172a",
-  slate: "#64748b",
-  slateLight: "#94a3b8",
-  border: "#e2e8f0",
-  bg: "#f8fafc",
-  white: "#ffffff",
-  red: "#ef4444",
-  green: "#16a34a",
-};
 
 
 
+
+import { PatientTheme, SharedColors } from "../../constants/theme";
 export default function MyTripsScreen() {
   const [trips, setTrips] = useState<SavedTrip[]>([]);
 
@@ -61,7 +50,7 @@ export default function MyTripsScreen() {
   const renderTrip = ({ item, index }: { item: SavedTrip; index: number }) => (
     <View style={s.card}>
       {/* 카드 상단 헤더 */}
-      <LinearGradient colors={[T.purple, T.purpleMid]} style={s.cardHeader}>
+      <LinearGradient colors={[PatientTheme.primary, PatientTheme.primaryMid]} style={s.cardHeader}>
         <Text style={s.cardHeaderText}>
           {item.caseId ? `Case ${item.caseId} · Trip ${(item.tripIndex ?? 0) + 1}` : `Trip #${index + 1}`}
         </Text>
@@ -132,7 +121,7 @@ export default function MyTripsScreen() {
 
   return (
     <View style={s.container}>
-      <LinearGradient colors={[T.purple, T.purpleMid]} style={s.header}>
+      <LinearGradient colors={[PatientTheme.primary, PatientTheme.primaryMid]} style={s.header}>
         <View style={s.headerCenter}>
           <Text style={s.headerTitle}>My Trips</Text>
           <Text style={s.headerSub}>{trips.length} trip{trips.length !== 1 ? "s" : ""} saved</Text>
@@ -160,16 +149,16 @@ export default function MyTripsScreen() {
 }
 
 const s = StyleSheet.create({
-  container: { flex: 1, backgroundColor: T.bg },
+  container: { flex: 1, backgroundColor: SharedColors.bg },
   header: { paddingTop: 56, paddingBottom: 20, paddingHorizontal: 20 },
   headerCenter: { alignItems: "center" },
-  headerTitle: { color: T.white, fontSize: 20, fontWeight: "700" },
+  headerTitle: { color: SharedColors.white, fontSize: 20, fontWeight: "700" },
   headerSub: { color: "rgba(255,255,255,0.7)", fontSize: 13, marginTop: 2 },
   list: { padding: 16, paddingBottom: 100 },
 
   card: {
-    backgroundColor: T.white, borderRadius: 16, overflow: "hidden",
-    marginBottom: 16, borderWidth: 1, borderColor: T.border,
+    backgroundColor: SharedColors.white, borderRadius: 16, overflow: "hidden",
+    marginBottom: 16, borderWidth: 1, borderColor: SharedColors.border,
     shadowColor: "#000", shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.1, shadowRadius: 12, elevation: 5,
   },
@@ -177,41 +166,41 @@ const s = StyleSheet.create({
     flexDirection: "row", justifyContent: "space-between", alignItems: "center",
     paddingHorizontal: 18, paddingVertical: 12,
   },
-  cardHeaderText: { color: T.white, fontSize: 15, fontWeight: "700" },
+  cardHeaderText: { color: SharedColors.white, fontSize: 15, fontWeight: "700" },
   cardHeaderDate: { color: "rgba(255,255,255,0.8)", fontSize: 13, fontWeight: "500" },
   cardBody: { padding: 18 },
   flightRow: { flexDirection: "row", marginBottom: 12 },
   flightCol: { flex: 1 },
-  flightDivider: { width: 1, backgroundColor: T.border, marginHorizontal: 12 },
-  infoPlaceholder: { fontSize: 13, color: T.slateLight, fontStyle: "italic", marginTop: 4 },
+  flightDivider: { width: 1, backgroundColor: SharedColors.border, marginHorizontal: 12 },
+  infoPlaceholder: { fontSize: 13, color: SharedColors.slateLight, fontStyle: "italic", marginTop: 4 },
   hotelSection: {
-    borderTopWidth: 1, borderTopColor: T.border, paddingTop: 14, marginBottom: 12,
+    borderTopWidth: 1, borderTopColor: SharedColors.border, paddingTop: 14, marginBottom: 12,
     backgroundColor: "#faf5ff", marginHorizontal: -18, paddingHorizontal: 18, paddingBottom: 14,
   },
   sectionBadge: {
-    flexDirection: "row", alignItems: "center", backgroundColor: T.purpleLight,
+    flexDirection: "row", alignItems: "center", backgroundColor: PatientTheme.primaryLight,
     alignSelf: "flex-start", borderRadius: 8, paddingHorizontal: 8, paddingVertical: 3,
     marginBottom: 8,
   },
   sectionBadgeIcon: { fontSize: 12, marginRight: 4 },
-  sectionBadgeText: { fontSize: 12, fontWeight: "700", color: T.purple },
-  infoMain: { fontSize: 16, fontWeight: "600", color: T.navy, marginBottom: 2 },
-  infoSub: { fontSize: 13, color: T.slate, marginBottom: 1 },
+  sectionBadgeText: { fontSize: 12, fontWeight: "700", color: PatientTheme.primary },
+  infoMain: { fontSize: 16, fontWeight: "600", color: SharedColors.navy, marginBottom: 2 },
+  infoSub: { fontSize: 13, color: SharedColors.slate, marginBottom: 1 },
 
   cardActions: { flexDirection: "row", gap: 10, marginTop: 4, alignItems: "center" },
   autoSavedBadge: {
-    flex: 1, backgroundColor: "#f0fdf4", borderRadius: 10,
+    flex: 1, backgroundColor: SharedColors.greenLight, borderRadius: 10,
     paddingVertical: 10, alignItems: "center",
   },
-  autoSavedText: { color: "#16a34a", fontSize: 12, fontWeight: "600", fontStyle: "italic" },
+  autoSavedText: { color: SharedColors.green, fontSize: 12, fontWeight: "600", fontStyle: "italic" },
   deleteBtn: {
-    flex: 1, backgroundColor: "#fef2f2", borderRadius: 10,
+    flex: 1, backgroundColor: SharedColors.redLight, borderRadius: 10,
     paddingVertical: 10, alignItems: "center",
   },
-  deleteBtnText: { color: T.red, fontSize: 14, fontWeight: "600" },
+  deleteBtnText: { color: SharedColors.red, fontSize: 14, fontWeight: "600" },
 
   empty: { alignItems: "center", paddingTop: 80 },
   emptyIcon: { fontSize: 48, marginBottom: 12 },
-  emptyTitle: { fontSize: 18, fontWeight: "700", color: T.navy },
-  emptySub: { fontSize: 14, color: T.slate, marginTop: 4, textAlign: "center", paddingHorizontal: 20 },
+  emptyTitle: { fontSize: 18, fontWeight: "700", color: SharedColors.navy },
+  emptySub: { fontSize: 14, color: SharedColors.slate, marginTop: 4, textAlign: "center", paddingHorizontal: 20 },
 });
