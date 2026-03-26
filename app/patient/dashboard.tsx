@@ -17,6 +17,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { resetNavigationHistory } from "../../lib/navigationHistory";
 import { Booking, PatientCase, store } from "../../lib/store";
 
+import JourneyChecklist from "../../components/JourneyChecklist";
 import { PatientTheme, SharedColors } from "../../constants/theme";
 // ── Treatment → Emoji mapping (keyword-based) ──
 const TREATMENT_EMOJI_RULES: [string, string][] = [
@@ -55,6 +56,7 @@ export default function PatientDashboardScreen() {
   const [statusFilter, setStatusFilter] = useState<"all" | "with_quotes" | "bookings" | "in_treatment" | "completed">("all");
   const [manageBooking, setManageBooking] = useState<Booking | null>(null);
   const [deleteCaseId, setDeleteCaseId] = useState<string | null>(null);
+  const [expandedCaseId, setExpandedCaseId] = useState<string | null>(null);
   const [menuOpen, setMenuOpen] = useState(false);
 
   // Stats toggle
@@ -201,43 +203,13 @@ export default function PatientDashboardScreen() {
   const handleCasePress = (c: PatientCase) => {
     if (c.status === "booked") {
       const bk = bookings.find((b) => b.caseId === c.id);
-      // TODO(server): flight_submitted should go to case-hub once date/time validation is implemented
-      if (bk?.status === "confirmed") {
-        router.push(`/patient/case-hub?bookingId=${bk.id}&caseId=${c.id}` as any);
-        return;
-      }
-      if (bk?.status === "flight_submitted") {
-        router.push(`/patient/hotel-arrived?bookingId=${bk.id}` as any);
-        return;
-      } else if (bk?.status === "arrived_korea") {
-        router.push(`/patient/clinic-checkin?bookingId=${bk.id}` as any);
-        return;
-      } else if (bk?.status === "checked_in_clinic") {
-        router.push(`/patient/clinic-checkin?bookingId=${bk.id}` as any);
-        return;
-      } else if (bk?.status === "treatment_done") {
-        router.push(`/patient/visit-checkout?bookingId=${bk.id}` as any);
-        return;
-      } else if (bk?.status === "between_visits") {
-        router.push(`/patient/stay-or-return?bookingId=${bk.id}` as any);
-        return;
-      } else if (bk?.status === "returning_home") {
-        router.push(`/patient/departure-pickup?bookingId=${bk.id}` as any);
-        return;
-      } else if (bk?.status === "payment_complete") {
-        if (bk.dropOffUnlocked) {
-          router.push(`/patient/departure-pickup?bookingId=${bk.id}` as any);
-        } else {
-          router.push(`/patient/write-review?bookingId=${bk.id}` as any);
-        }
-        return;
-      } else if (bk?.status === "departure_set") {
-        router.push(`/patient/write-review?bookingId=${bk.id}` as any);
-        return;
-      } else if (bk?.status === "cancelled") {
+      if (bk?.status === "cancelled") {
         router.push(`/patient/quotes?caseId=${c.id}` as any);
         return;
       }
+      // Toggle journey checklist expansion
+      setExpandedCaseId(prev => prev === c.id ? null : c.id);
+      return;
     }
     router.push(`/patient/quotes?caseId=${c.id}` as any);
   };
@@ -502,8 +474,14 @@ export default function PatientDashboardScreen() {
                   <View style={s.nextSection}>
                     <Text style={s.nextLabel}>Next:</Text>
                     <Text style={s.nextAction}>{progress.next}</Text>
-                    <Text style={s.nextArrow}>›</Text>
+                    <Text style={s.nextArrow}>{c.status === "booked" && expandedCaseId === c.id ? "▼" : "›"}</Text>
                   </View>
+
+                  {/* Journey Checklist — inline expansion for booked cases */}
+                  {c.status === "booked" && expandedCaseId === c.id && (() => {
+                    const bk = bookings.find((b) => b.caseId === c.id);
+                    return bk && bk.status !== "cancelled" ? <JourneyChecklist booking={bk} /> : null;
+                  })()}
                 </View>
               </TouchableOpacity>
             );
