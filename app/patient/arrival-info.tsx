@@ -821,6 +821,14 @@ export default function ArrivalInfoScreen() {
           {/* ── Pickup toggle ── */}
           <View style={st.field}>
             <Text style={st.fieldLabel}>Airport Pickup Service</Text>
+            {booking?.serviceTier === "basic" ? (
+              <View style={{ backgroundColor: SharedColors.amberLight, borderRadius: 10, padding: 14, gap: 4 }}>
+                <Text style={{ fontSize: 13, fontWeight: "600", color: "#92400e" }}>Not included in Basic plan</Text>
+                <Text style={{ fontSize: 12, color: "#92400e", lineHeight: 18 }}>
+                  Upgrade to Standard or Premium for airport pickup service.
+                </Text>
+              </View>
+            ) : (
             <View style={st.toggleRow}>
               <TouchableOpacity
                 style={[st.toggleOpt, pickupRequested && st.toggleOptActive]}
@@ -831,7 +839,7 @@ export default function ArrivalInfoScreen() {
                   Yes, pick me up
                 </Text>
                 <Text style={[st.toggleSub, pickupRequested && { color: "rgba(74,0,128,0.6)" }]}>
-                  Free service
+                  Included in your plan
                 </Text>
               </TouchableOpacity>
               <TouchableOpacity
@@ -847,7 +855,8 @@ export default function ArrivalInfoScreen() {
                 </Text>
               </TouchableOpacity>
             </View>
-            {pickupRequested && (
+            )}
+            {pickupRequested && booking?.serviceTier !== "basic" && (
               <View style={st.pickupNote}>
                 <Text style={st.pickupNoteText}>
                   Our driver will meet you at the arrivals gate with a sign. Completely free!

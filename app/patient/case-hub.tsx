@@ -181,7 +181,14 @@ export default function CaseHubScreen() {
             <Text style={s.sectionTitle}>Pickup Service</Text>
           </View>
 
-          {trips.length > 0 ? (
+          {booking.serviceTier === "basic" ? (
+            <View style={{ backgroundColor: SharedColors.amberLight, borderRadius: 10, padding: 14, gap: 4 }}>
+              <Text style={{ fontSize: 13, fontWeight: "600", color: "#92400e" }}>Not included in Basic plan</Text>
+              <Text style={{ fontSize: 12, color: "#92400e", lineHeight: 18 }}>
+                Upgrade to Standard ($99) or Premium ($199) to get airport pickup and drop-off service.
+              </Text>
+            </View>
+          ) : trips.length > 0 ? (
             trips.map((trip, idx) => (
               <View key={idx} style={[idx > 0 && { borderTopWidth: 1, borderTopColor: SharedColors.border, paddingTop: 10, marginTop: 10 }]}>
                 <Text style={s.pickupTripLabel}>Trip {idx + 1}</Text>
