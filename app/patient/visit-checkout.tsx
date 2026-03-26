@@ -13,6 +13,7 @@ export default function VisitCheckoutScreen() {
   const { bookingId } = useLocalSearchParams<{ bookingId: string }>();
   const [booking, setBooking] = useState<Booking | null>(null);
   const [loading, setLoading] = useState(true);
+  const [paymentMethod, setPaymentMethod] = useState<"cash" | "card" | null>(null);
   const [confirmedPayment, setConfirmedPayment] = useState(false);
   const [receiptImage, setReceiptImage] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
@@ -40,10 +41,10 @@ export default function VisitCheckoutScreen() {
     ? SERVICE_TIER_CONFIG[booking.serviceTier]?.label || "Standard"
     : "Standard";
 
-  const handleConfirmPayment = async () => {
+  const handleSelectPayment = async (method: "cash" | "card") => {
     if (!booking) return;
+    setPaymentMethod(method);
     setConfirmedPayment(true);
-    // Update booking status
     await store.updateBooking(booking.id, { status: "payment_complete" });
     setBooking({ ...booking, status: "payment_complete" });
   };
@@ -172,20 +173,49 @@ export default function VisitCheckoutScreen() {
                     Final amount may vary based on actual treatment
                   </Text>
                 </View>
-                <TouchableOpacity style={s.confirmBtn} onPress={handleConfirmPayment} accessibilityRole="button" accessibilityLabel="Confirm clinic payment">
-                  <Text style={s.confirmBtnText}>Yes, I've Paid the Clinic ✓</Text>
-                </TouchableOpacity>
+                <Text style={s.methodPrompt}>How did you pay?</Text>
+                <View style={s.methodRow}>
+                  <TouchableOpacity
+                    style={s.methodBtn}
+                    onPress={() => handleSelectPayment("cash")}
+                    accessibilityRole="button"
+                    accessibilityLabel="Paid with cash"
+                  >
+                    <Text style={s.methodIcon}>💵</Text>
+                    <Text style={s.methodLabel}>Cash</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={s.methodBtn}
+                    onPress={() => handleSelectPayment("card")}
+                    accessibilityRole="button"
+                    accessibilityLabel="Paid with credit card"
+                  >
+                    <Text style={s.methodIcon}>💳</Text>
+                    <Text style={s.methodLabel}>Credit Card</Text>
+                  </TouchableOpacity>
+                </View>
               </>
             ) : (
               <View style={s.confirmedBanner}>
                 <Text style={s.confirmedIcon}>✓</Text>
-                <Text style={s.confirmedText}>Clinic payment confirmed</Text>
+                <Text style={s.confirmedText}>
+                  Paid by {paymentMethod === "cash" ? "Cash 💵" : "Credit Card 💳"}
+                </Text>
               </View>
             )}
           </View>
 
           {/* Section B: Receipt upload for free drop-off */}
-          <View style={s.sectionCard}>
+          <View style={[s.sectionCard, !dropOffUnlocked && s.sectionCardHighlight]}>
+            {!dropOffUnlocked && (
+              <View style={s.dropOffPromo}>
+                <Text style={s.dropOffPromoIcon}>🚗✨</Text>
+                <Text style={s.dropOffPromoTitle}>Get a FREE Airport Drop-off!</Text>
+                <Text style={s.dropOffPromoDesc}>
+                  Upload your clinic receipt below and we'll arrange a complimentary ride to the airport — included with every plan.
+                </Text>
+              </View>
+            )}
             <View style={s.sectionHeader}>
               <Text style={s.sectionIcon}>🧾</Text>
               <Text style={s.sectionTitle}>Upload Receipt</Text>
@@ -193,9 +223,6 @@ export default function VisitCheckoutScreen() {
                 <Text style={s.freeBadgeText}>FREE DROP-OFF</Text>
               </View>
             </View>
-            <Text style={s.sectionDesc}>
-              Upload your hospital receipt to unlock a free airport drop-off — available with all plans!
-            </Text>
 
             {dropOffUnlocked ? (
               <View style={s.unlockedBanner}>
@@ -360,10 +387,15 @@ const s = StyleSheet.create({
   paymentAmount: { fontSize: 28, fontWeight: "800", color: PatientTheme.primary },
   paymentNote: { fontSize: 11, color: SharedColors.slateLight, marginTop: 2 },
 
-  confirmBtn: {
-    backgroundColor: PatientTheme.primary, borderRadius: 12, paddingVertical: 14, alignItems: "center",
+  methodPrompt: { fontSize: 14, fontWeight: "700", color: SharedColors.navy },
+  methodRow: { flexDirection: "row", gap: 12 },
+  methodBtn: {
+    flex: 1, backgroundColor: SharedColors.white, borderRadius: 14, paddingVertical: 18,
+    alignItems: "center", gap: 6,
+    borderWidth: 1.5, borderColor: PatientTheme.primaryBorder,
   },
-  confirmBtnText: { color: SharedColors.white, fontSize: 15, fontWeight: "700" },
+  methodIcon: { fontSize: 28 },
+  methodLabel: { fontSize: 14, fontWeight: "700", color: SharedColors.navy },
 
   confirmedBanner: {
     flexDirection: "row", alignItems: "center", gap: 8,
@@ -371,6 +403,20 @@ const s = StyleSheet.create({
   },
   confirmedIcon: { fontSize: 18, color: SharedColors.green, fontWeight: "700" },
   confirmedText: { fontSize: 14, fontWeight: "600", color: "#166534" },
+
+  // Highlight card
+  sectionCardHighlight: {
+    borderColor: PatientTheme.primary, borderWidth: 1.5,
+    shadowColor: PatientTheme.primary, shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.12, shadowRadius: 8, elevation: 3,
+  },
+  dropOffPromo: {
+    backgroundColor: PatientTheme.primaryLight, borderRadius: 12,
+    padding: 16, alignItems: "center", gap: 6, marginBottom: 4,
+  },
+  dropOffPromoIcon: { fontSize: 32 },
+  dropOffPromoTitle: { fontSize: 17, fontWeight: "800", color: PatientTheme.primary, textAlign: "center" },
+  dropOffPromoDesc: { fontSize: 13, color: SharedColors.slate, textAlign: "center", lineHeight: 19 },
 
   // Receipt upload
   freeBadge: {
