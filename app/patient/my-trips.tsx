@@ -189,10 +189,10 @@ const s = StyleSheet.create({
 
   cardActions: { flexDirection: "row", gap: 10, marginTop: 4, alignItems: "center" },
   autoSavedBadge: {
-    flex: 1, backgroundColor: SharedColors.greenLight, borderRadius: 10,
+    flex: 1, backgroundColor: PatientTheme.primaryLight, borderRadius: 10,
     paddingVertical: 10, alignItems: "center",
   },
-  autoSavedText: { color: SharedColors.green, fontSize: 12, fontWeight: "600", fontStyle: "italic" },
+  autoSavedText: { color: PatientTheme.primary, fontSize: 12, fontWeight: "600", fontStyle: "italic" },
   deleteBtn: {
     flex: 1, backgroundColor: SharedColors.redLight, borderRadius: 10,
     paddingVertical: 10, alignItems: "center",
