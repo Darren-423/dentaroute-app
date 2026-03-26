@@ -253,12 +253,61 @@ ANY → cancelled                    (취소 가능, 환불 계산)
 - 번역 결과 캐싱 (DB 저장)
 - 원문/번역문 동시 표시
 
-#### 7.2 Admin API
+#### 7.2 Admin Web Dashboard (별도 웹 앱)
 
-- 의사 라이센스 검증 워크플로우
-- Tier 월별 재계산 (Cron Job)
-- 사용자 관리 (차단, 삭제)
-- 플랫폼 통계 대시보드
+> **기술 스택**: React (Next.js 또는 Vite) + TailwindCSS, 별도 도메인 (admin.concourseapp.com)
+> **인증**: 관리자 전용 계정 (role: "admin"), JWT + IP 화이트리스트 권장
+
+**7.2.1 환자 채팅 (Customer Support)**
+- 환자 목록에서 선택 → 실시간 채팅 (WebSocket)
+- 기존 채팅방 히스토리 열람 (환자↔의사 대화 포함)
+- 관리자가 환자에게 직접 메시지 전송 (sender: "admin")
+- 문의(Inquiry) 내역 확인 + 상태 변경 (submitted → in_review → resolved)
+- 푸시 알림 트리거 (중요 공지 등)
+
+**7.2.2 병원/의사 등급 관리 (Tier Management)**
+- 의사 전체 목록 + 현재 Tier 뱃지 (Gold/Silver/Standard)
+- 수동 Tier 오버라이드: `tierOverride` 플래그로 자동 계산 무시
+- 라이센스 검증 워크플로우 (업로드된 면허 사진 확인 → 승인/거절)
+- 의사별 매출/리뷰 통계 요약
+- "Recalculate All Tiers" 버튼 (수동 월별 재계산 트리거)
+
+**7.2.3 환자 서비스 관리 (Service Management)**
+- 환자별 현재 서비스 플랜 확인 (Basic/Standard/Premium)
+- 서비스 티어 수동 변경 (업그레이드/다운그레이드)
+- 무료 업그레이드 쿠폰 발급 (프로모션용)
+- 서비스 이용 내역 (결제 히스토리, 영수증 업로드 여부)
+
+**7.2.4 예약 관리 (Booking Management)**
+- 전체 예약 목록 + 상태 필터 (10단계)
+- 예약 상태 강제 변경 (ex: 문제 발생 시 수동 롤백)
+- 예약 이전(Transfer): 환자 요청 시 다른 의사/클리닉으로 예약 이동
+- 취소/환불 수동 처리 (자동 환불 정책 오버라이드)
+- 예약별 타임라인 로그 (상태 변경 이력)
+
+**7.2.5 플랫폼 통계 대시보드**
+- 실시간 KPI: 신규 케이스, 활성 예약, 매출, 전환율
+- 기간별 차트 (일/주/월)
+- 의사별 매출 랭킹
+- 국가별 환자 분포
+
+**7.2.6 Admin API 엔드포인트**
+
+| 엔드포인트 | 메서드 | 설명 |
+|-----------|--------|------|
+| `/admin/users` | GET | 환자/의사 목록 (필터, 페이징) |
+| `/admin/users/:id` | PATCH | 사용자 정보 수정, 차단/해제 |
+| `/admin/doctors/:id/tier` | PATCH | Tier 수동 오버라이드 |
+| `/admin/doctors/:id/license` | PATCH | 라이센스 승인/거절 |
+| `/admin/tiers/recalculate` | POST | 전체 Tier 재계산 트리거 |
+| `/admin/bookings` | GET | 전체 예약 목록 |
+| `/admin/bookings/:id` | PATCH | 예약 상태 변경, 이전(transfer) |
+| `/admin/bookings/:id/refund` | POST | 수동 환불 처리 |
+| `/admin/patients/:id/service` | PATCH | 서비스 티어 변경 |
+| `/admin/patients/:id/coupon` | POST | 업그레이드 쿠폰 발급 |
+| `/admin/chat/:userId` | GET/POST | 관리자↔환자 채팅 |
+| `/admin/stats` | GET | 플랫폼 통계 |
+| `/admin/inquiries` | GET/PATCH | 고객 문의 관리 |
 
 #### 7.3 의사 Tier 자동 계산
 
@@ -562,7 +611,8 @@ EXPO_PUBLIC_WS_URL=wss://api.dentaroute.com
 | **Phase 4** | 2주 | Bookings + Payments API | 예약/결제 서버 완성 |
 | **Phase 5** | 2주 | Chat WebSocket + Push Notifications | 실시간 통신 |
 | **Phase 6** | 1주 | File Upload + Reviews API | 파일/리뷰 |
-| **Phase 7** | 1주 | Translation + Admin + Tier Cron | 부가 기능 |
+| **Phase 7a** | 1주 | Translation + Tier Cron | 번역/자동 등급 |
+| **Phase 7b** | 2주 | Admin Web Dashboard | 관리자 웹 앱 (채팅, 등급, 예약, 서비스 관리) |
 | **Phase 8** | 2주 | 프론트엔드 API 연동 마이그레이션 | AsyncStorage → API 전환 |
 | **Phase 9** | 1주 | 테스트 + 보안 감사 + 배포 준비 | 프로덕션 배포 |
 
