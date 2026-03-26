@@ -153,26 +153,6 @@ export default function PatientQuotesScreen() {
               );
             })}
           </View>
-          {quotes.length >= 2 && (
-            <View style={s.compareRow}>
-              <TouchableOpacity
-                style={[s.compareBtn, compareMode && s.compareBtnActive]}
-                onPress={() => { setCompareMode(!compareMode); setSelectedIds([]); }}
-              >
-                <Text style={[s.compareBtnText, compareMode && s.compareBtnTextActive]}>
-                  {compareMode ? "Cancel" : "⚖ Compare"}
-                </Text>
-              </TouchableOpacity>
-              {compareMode && selectedIds.length >= 2 && (
-                <TouchableOpacity style={s.compareGoBtn} onPress={goCompare}>
-                  <Text style={s.compareGoBtnText}>Compare {selectedIds.length} →</Text>
-                </TouchableOpacity>
-              )}
-              {compareMode && (
-                <Text style={s.compareHint}>Select 2-3 quotes</Text>
-              )}
-            </View>
-          )}
         </View>
       )}
 
@@ -337,8 +317,30 @@ export default function PatientQuotesScreen() {
           </>
         )}
 
-        <View style={{ height: 40 }} />
+        <View style={{ height: 80 }} />
       </ScrollView>
+
+      {/* Compare bar — pinned to bottom */}
+      {quotes.length >= 2 && (
+        <View style={s.compareBar}>
+          <TouchableOpacity
+            style={[s.compareBtn, compareMode && s.compareBtnActive]}
+            onPress={() => { setCompareMode(!compareMode); setSelectedIds([]); }}
+          >
+            <Text style={[s.compareBtnText, compareMode && s.compareBtnTextActive]}>
+              {compareMode ? "Cancel" : "⚖ Compare"}
+            </Text>
+          </TouchableOpacity>
+          {compareMode && selectedIds.length >= 2 && (
+            <TouchableOpacity style={s.compareGoBtn} onPress={goCompare}>
+              <Text style={s.compareGoBtnText}>Compare {selectedIds.length} →</Text>
+            </TouchableOpacity>
+          )}
+          {compareMode && (
+            <Text style={s.compareHint}>Select 2-3 quotes</Text>
+          )}
+        </View>
+      )}
     </View>
   );
 }
@@ -418,10 +420,13 @@ const s = StyleSheet.create({
     borderTopColor: SharedColors.white,
   },
 
-  /* Compare */
-  compareRow: {
+  /* Compare — bottom bar */
+  compareBar: {
+    position: "absolute", bottom: 0, left: 0, right: 0,
     flexDirection: "row", alignItems: "center", gap: 10,
-    paddingHorizontal: 16, paddingBottom: 10,
+    paddingHorizontal: 16, paddingVertical: 12,
+    backgroundColor: SharedColors.white,
+    borderTopWidth: 1, borderTopColor: SharedColors.border,
   },
   compareBtn: {
     borderRadius: 10, paddingHorizontal: 14, paddingVertical: 8,
