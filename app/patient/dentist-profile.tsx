@@ -84,7 +84,9 @@ export default function DentistProfileScreen() {
       </View>
 
       <ScrollView contentContainerStyle={s.content} showsVerticalScrollIndicator={false}>
-        {/* Avatar + Name */}
+                  <View style={{ backgroundColor: "#f1f5f9", borderRadius: 8, padding: 10, marginBottom: 12, borderWidth: 1, borderColor: "#e2e8f0" }}><Text style={{ fontSize: 11, color: "#64748b", lineHeight: 16 }}>Dentist profiles are self-reported. Concourse performs basic credential checks but does not guarantee the accuracy of all qualifications.</Text></View>
+
+          {/* Avatar + Name */}
         <View style={s.profileSection}>
           <View style={s.avatar}>
             <Text style={s.avatarText}>{initial}</Text>

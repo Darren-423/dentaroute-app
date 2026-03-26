@@ -304,6 +304,13 @@ export default function DoctorChatScreen() {
         data={messages}
         keyExtractor={(item) => item.id}
         renderItem={renderMessage}
+        ListHeaderComponent={
+          <View style={{ backgroundColor: "#f1f5f9", borderRadius: 8, padding: 10, margin: 12, marginBottom: 4, borderWidth: 1, borderColor: "#e2e8f0" }}>
+            <Text style={{ fontSize: 11, color: "#64748b", lineHeight: 16, textAlign: "center" }}>
+              채팅은 견적 논의 및 일반 상담 전용입니다. 구체적 진단/치료계획을 제공하지 마십시오.
+            </Text>
+          </View>
+        }
         contentContainerStyle={s.messageList}
         showsVerticalScrollIndicator={false}
         style={s.messageArea}

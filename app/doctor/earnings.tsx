@@ -30,7 +30,7 @@ interface EarningEntry {
   bookingId: string;
   caseId: string;
   patientName: string;
-  type: "deposit" | "payment";
+  type: "payment";
   amount: number;
   fee: number;
   date: string;
@@ -114,8 +114,7 @@ export default function DoctorEarningsScreen() {
     [allEntries, selMonth, selYear]
   );
   const monthTotal = monthEntries.reduce((sum, e) => sum + e.amount, 0);
-  const monthDeposits = monthEntries.filter(e => e.type === "deposit").reduce((sum, e) => sum + e.amount, 0);
-  const monthPayments = monthEntries.filter(e => e.type === "payment").reduce((sum, e) => sum + e.amount, 0);
+  const monthPayments = monthEntries.reduce((sum, e) => sum + e.amount, 0);
   const monthFees = monthEntries.reduce((sum, e) => sum + e.fee, 0);
 
   const isCurrentMonth = selMonth === now.getMonth() && selYear === now.getFullYear();
@@ -187,14 +186,8 @@ export default function DoctorEarningsScreen() {
           <Text style={s.sectionTitle}>BREAKDOWN</Text>
           <View style={s.breakdownCard}>
             <View style={s.breakdownRow}>
-              <Text style={s.breakdownIcon}>💳</Text>
-              <Text style={s.breakdownLabel}>Deposits Received</Text>
-              <Text style={[s.breakdownVal, { color: T.green }]}>${monthDeposits.toLocaleString()}</Text>
-            </View>
-            <View style={s.divider} />
-            <View style={s.breakdownRow}>
               <Text style={s.breakdownIcon}>🏦</Text>
-              <Text style={s.breakdownLabel}>Treatment Payments</Text>
+              <Text style={s.breakdownLabel}>Treatment Revenue</Text>
               <Text style={[s.breakdownVal, { color: T.green }]}>${monthPayments.toLocaleString()}</Text>
             </View>
             <View style={s.divider} />
@@ -225,13 +218,13 @@ export default function DoctorEarningsScreen() {
           ) : (
             monthEntries.map((e, i) => (
               <View key={`${e.bookingId}_${e.type}_${i}`} style={s.txCard}>
-                <View style={[s.txIcon, e.type === "deposit" ? { backgroundColor: T.amberBg } : { backgroundColor: T.greenBg }]}>
-                  <Text style={{ fontSize: 16 }}>{e.type === "deposit" ? "💳" : "🏦"}</Text>
+                <View style={[s.txIcon, { backgroundColor: T.greenBg }]}>
+                  <Text style={{ fontSize: 16 }}>🏦</Text>
                 </View>
                 <View style={s.txInfo}>
                   <Text style={s.txName}>{e.patientName}</Text>
                   <Text style={s.txMeta}>
-                    Case #{e.caseId} • {e.type === "deposit" ? "Deposit" : "Payment"}
+                    Case #{e.caseId} • Treatment Payment
                   </Text>
                   <Text style={s.txDate}>{formatDate(e.date)}</Text>
                 </View>

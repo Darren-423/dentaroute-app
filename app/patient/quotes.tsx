@@ -183,6 +183,8 @@ export default function PatientQuotesScreen() {
       )}
 
       <ScrollView contentContainerStyle={s.content} showsVerticalScrollIndicator={false}>
+        <View style={{ backgroundColor: "#f1f5f9", borderRadius: 8, padding: 10, marginBottom: 12, borderWidth: 1, borderColor: "#e2e8f0" }}><Text style={{ fontSize: 11, color: "#64748b", lineHeight: 16 }}>Quotes are estimates only. Actual treatment costs may change after in-person examination. Concourse does not guarantee treatment outcomes.</Text></View>
+
         {quotes.length === 0 ? (
           /* Waiting State */
           <View style={s.waitingCard}>

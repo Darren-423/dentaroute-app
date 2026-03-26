@@ -265,7 +265,9 @@ export default function PatientMedicalHistoryScreen() {
       {/* Content */}
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
 
-        {/* Medical Conditions */}
+                  <View style={{ backgroundColor: "#f1f5f9", borderRadius: 8, padding: 10, marginBottom: 16, borderWidth: 1, borderColor: "#e2e8f0" }}><Text style={{ fontSize: 11, color: "#64748b", lineHeight: 16 }}>Your health information is used solely for treatment quotes and is protected under Korean data protection law (PIPA).</Text></View>
+
+          {/* Medical Conditions */}
         {renderSection(
           "MEDICAL CONDITIONS", "Select all that apply",
           DEFAULT_CONDITIONS, conditions, setConditions,

@@ -574,8 +574,8 @@ export default function PatientCreateAccountScreen() {
               </View>
               <Text style={styles.termsText}>
                 I agree to the{" "}
-                <Text style={styles.termsLink}>Terms of Service</Text> and{" "}
-                <Text style={styles.termsLink}>Privacy Policy</Text>
+                <Text style={styles.termsLink} onPress={() => router.push("/patient/terms" as any)}>Terms of Service</Text> and{" "}
+                <Text style={styles.termsLink} onPress={() => router.push("/patient/privacy-policy" as any)}>Privacy Policy</Text>
               </Text>
             </TouchableOpacity>
             {errors.agreeTerms ? (

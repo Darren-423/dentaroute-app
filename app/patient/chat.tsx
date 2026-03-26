@@ -305,6 +305,13 @@ export default function PatientChatScreen() {
         data={messages}
         keyExtractor={(item) => item.id}
         renderItem={renderMessage}
+        ListHeaderComponent={
+          <View style={{ backgroundColor: "#f1f5f9", borderRadius: 8, padding: 10, margin: 12, marginBottom: 4, borderWidth: 1, borderColor: "#e2e8f0" }}>
+            <Text style={{ fontSize: 11, color: "#64748b", lineHeight: 16, textAlign: "center" }}>
+              This chat is for general inquiries and quote discussion only. It does not replace an in-person medical consultation.
+            </Text>
+          </View>
+        }
         contentContainerStyle={s.messageList}
         showsVerticalScrollIndicator={false}
         onContentSizeChange={() => flatListRef.current?.scrollToEnd({ animated: false })}

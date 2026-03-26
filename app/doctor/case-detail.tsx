@@ -331,6 +331,8 @@ export default function DoctorCaseDetailScreen() {
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
       >
+        <View style={{ backgroundColor: "#f1f5f9", borderRadius: 8, padding: 10, marginBottom: 12, borderWidth: 1, borderColor: "#e2e8f0" }}><Text style={{ fontSize: 11, color: "#64748b", lineHeight: 16 }}>Do not provide specific diagnoses or treatment plans via chat or quotes. Only provide estimates pending in-person examination.</Text></View>
+
         {/* ════════════════ SECTION: Patient Info ════════════════ */}
         <View style={s.sectionHeader}>
           <Text style={s.sectionHeaderText}>Patient Info</Text>

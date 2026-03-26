@@ -155,7 +155,9 @@ export default function PatientUploadScreen() {
       {/* Content */}
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
 
-        {/* Recommendation Banner */}
+                  <View style={{ backgroundColor: "#f1f5f9", borderRadius: 8, padding: 10, marginBottom: 12, borderWidth: 1, borderColor: "#e2e8f0" }}><Text style={{ fontSize: 11, color: "#64748b", lineHeight: 16 }}>Uploaded files are shared with dentists for quoting purposes only, not for diagnosis. Concourse does not verify the accuracy of uploaded files.</Text></View>
+
+          {/* Recommendation Banner */}
         <View style={styles.recBanner}>
           <Text style={styles.recBannerIcon}>📸</Text>
           <View style={{ flex: 1 }}>

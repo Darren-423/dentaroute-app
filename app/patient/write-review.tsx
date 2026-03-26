@@ -150,7 +150,9 @@ export default function WriteReviewScreen() {
       </LinearGradient>
 
       <ScrollView style={{ flex: 1 }} contentContainerStyle={s.content} showsVerticalScrollIndicator={false}>
-        {/* Doctor card */}
+                  <View style={{ backgroundColor: "#f1f5f9", borderRadius: 8, padding: 10, marginBottom: 12, borderWidth: 1, borderColor: "#e2e8f0" }}><Text style={{ fontSize: 11, color: "#64748b", lineHeight: 16 }}>Reviews are published publicly. Fraudulent reviews may result in account restrictions. Concourse does not verify the accuracy of reviews.</Text></View>
+
+          {/* Doctor card */}
         <View style={s.doctorCard}>
           <View style={s.doctorAvatar}>
             <Text style={s.doctorAvatarText}>
