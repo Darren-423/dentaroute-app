@@ -8,6 +8,7 @@ import {
   View,
 } from "react-native";
 import { DentistQuote, store } from "../../lib/store";
+import { formatKRW } from "../../lib/currency";
 
 import { PatientTheme, SharedColors } from "../../constants/theme";
 type SortOption = "price" | "reviews" | "stars" | "duration";
@@ -292,9 +293,12 @@ export default function PatientQuotesScreen() {
                       <Text style={s.dentistName}>{q.dentistName || "Doctor"}</Text>
                       <Text style={s.clinicName}>{q.clinicName || "Clinic"}</Text>
                     </View>
-                    <Text style={[s.price, isLowest && { color: PatientTheme.primary }]}>
-                      ${(q.totalPrice || 0).toLocaleString()}
-                    </Text>
+                    <View style={{ alignItems: "flex-end" }}>
+                      <Text style={[s.price, isLowest && { color: PatientTheme.primary }]}>
+                        ${(q.totalPrice || 0).toLocaleString()}
+                      </Text>
+                      <Text style={{ fontSize: 10, color: SharedColors.slateLight }}>≈ {formatKRW(q.totalPrice || 0)}</Text>
+                    </View>
                   </View>
 
                   {/* Meta row */}

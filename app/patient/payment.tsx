@@ -6,6 +6,7 @@ import {
   StyleSheet, Text, TouchableOpacity, View,
 } from "react-native";
 import { DentistQuote, SERVICE_TIER_CONFIG, ServiceTier, store } from "../../lib/store";
+import { formatKRW } from "../../lib/currency";
 
 import { PatientTheme, SharedColors } from "../../constants/theme";
 const TIER_DETAILS: Record<ServiceTier, { icon: string; tagline: string; features: string[]; notIncluded?: string[] }> = {
@@ -165,6 +166,8 @@ export default function PatientPaymentScreen() {
             style={s.dashboardBtn}
             onPress={() => router.replace("/patient/dashboard" as any)}
             activeOpacity={0.85}
+            accessibilityRole="button"
+            accessibilityLabel="Go to Dashboard"
           >
             <Text style={s.dashboardBtnText}>Go to Dashboard →</Text>
           </TouchableOpacity>
@@ -184,7 +187,7 @@ export default function PatientPaymentScreen() {
           style={s.header}
         >
           <View style={s.headerRow}>
-            <TouchableOpacity onPress={() => router.back()} style={s.backBtn}>
+            <TouchableOpacity onPress={() => router.back()} style={s.backBtn} accessibilityRole="button" accessibilityLabel="Go back">
               <Text style={s.backArrow}>‹</Text>
             </TouchableOpacity>
             <View style={s.headerCenter}>
@@ -211,7 +214,7 @@ export default function PatientPaymentScreen() {
                 </View>
                 <View style={{ alignItems: "flex-end" }}>
                   <Text style={s.treatmentTotal}>${totalPrice.toLocaleString()}</Text>
-                  <Text style={s.treatmentLabel}>Treatment cost</Text>
+                  <Text style={s.treatmentLabel}>≈ {formatKRW(totalPrice)}</Text>
                 </View>
               </View>
               <Text style={s.clinicPayNote}>
@@ -237,6 +240,8 @@ export default function PatientPaymentScreen() {
                 ]}
                 onPress={() => setSelectedTier(tier)}
                 activeOpacity={0.8}
+                accessibilityRole="button"
+                accessibilityLabel={`${config.label} plan, ${details.tagline}, $${config.fee}${isSelected ? ", selected" : ""}`}
               >
                 {isPopular && (
                   <View style={s.popularBadge}>
@@ -310,6 +315,8 @@ export default function PatientPaymentScreen() {
           onPress={handlePay}
           disabled={loading}
           activeOpacity={0.85}
+          accessibilityRole="button"
+          accessibilityLabel={`Pay $${tierConfig.fee} for ${SERVICE_TIER_CONFIG[selectedTier].label} plan`}
         >
           {loading ? (
             <ActivityIndicator color={SharedColors.white} size="small" />

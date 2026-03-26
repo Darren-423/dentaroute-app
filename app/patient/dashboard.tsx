@@ -248,6 +248,8 @@ export default function PatientDashboardScreen() {
             style={s.profileRow}
             onPress={() => router.push("/patient/profile" as any)}
             activeOpacity={0.7}
+            accessibilityRole="button"
+            accessibilityLabel="View profile"
           >
             {profileImage ? (
               <Image source={{ uri: profileImage }} style={s.avatarImg} />
@@ -266,12 +268,16 @@ export default function PatientDashboardScreen() {
             <TouchableOpacity
               style={s.headerIconBtn}
               onPress={() => router.push("/dev-menu" as any)}
+              accessibilityRole="button"
+              accessibilityLabel="Settings"
             >
               <Feather name="settings" size={18} color="rgba(255,255,255,0.85)" />
             </TouchableOpacity>
             <TouchableOpacity
               style={s.headerIconBtn}
               onPress={() => router.push("/patient/alerts" as any)}
+              accessibilityRole="button"
+              accessibilityLabel={`Notifications${unreadCount > 0 ? `, ${unreadCount} unread` : ""}`}
             >
               <Feather name="bell" size={18} color="rgba(255,255,255,0.85)" />
               {unreadCount > 0 && (
@@ -281,6 +287,8 @@ export default function PatientDashboardScreen() {
             <TouchableOpacity
               style={s.headerIconBtn}
               onPress={() => setMenuOpen(!menuOpen)}
+              accessibilityRole="button"
+              accessibilityLabel="More options"
             >
               <Feather name="more-vertical" size={18} color="rgba(255,255,255,0.85)" />
             </TouchableOpacity>
@@ -353,6 +361,8 @@ export default function PatientDashboardScreen() {
             style={s.newCaseBtn}
             onPress={() => router.push("/patient/treatment-select" as any)}
             activeOpacity={0.7}
+            accessibilityRole="button"
+            accessibilityLabel="Create new case"
           >
             <Text style={s.newCasePlus}>+</Text>
             <Text style={s.newCaseText}>New Case</Text>
@@ -373,6 +383,8 @@ export default function PatientDashboardScreen() {
               style={s.createBtn}
               onPress={() => router.push("/patient/treatment-select" as any)}
               activeOpacity={0.85}
+              accessibilityRole="button"
+              accessibilityLabel="Create first case"
             >
               <Text style={s.createBtnText}>Create First Case</Text>
             </TouchableOpacity>
@@ -399,6 +411,8 @@ export default function PatientDashboardScreen() {
                 style={s.caseCard}
                 onPress={() => handleCasePress(c)}
                 activeOpacity={0.75}
+                accessibilityRole="button"
+                accessibilityLabel={`Case ${c.id}, ${progress.label}, ${c.treatments.map(t => t.name).join(", ")}`}
               >
                 {/* Status strip + badge */}
                 <View style={[s.statusStrip, { backgroundColor: progress.color }]} />
@@ -492,6 +506,8 @@ export default function PatientDashboardScreen() {
         {/* Logout */}
         <TouchableOpacity
           style={s.logoutBtn}
+          accessibilityRole="button"
+          accessibilityLabel="Log out"
           onPress={() => {
             Alert.alert(
               "Log Out",

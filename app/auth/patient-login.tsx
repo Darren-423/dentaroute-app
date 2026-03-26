@@ -103,6 +103,8 @@ export default function PatientLoginScreen() {
                 pressed && { opacity: 0.7 }
               ]}
               hitSlop={{ top: 15, bottom: 15, left: 15, right: 15 }}
+              accessibilityRole="button"
+              accessibilityLabel="Go back"
             >
               <Ionicons name="arrow-back" size={24} color={SharedColors.white} />
             </Pressable>
@@ -142,6 +144,7 @@ export default function PatientLoginScreen() {
                   autoCapitalize="none"
                   autoCorrect={false}
                   editable={!loading}
+                  accessibilityLabel="Email address"
                 />
               </View>
             </Animated.View>
@@ -160,11 +163,14 @@ export default function PatientLoginScreen() {
                   secureTextEntry={!showPassword}
                   autoCapitalize="none"
                   editable={!loading}
+                  accessibilityLabel="Password"
                 />
                 <Pressable
                   style={styles.eyeBtn}
                   onPress={() => setShowPassword(!showPassword)}
                   hitSlop={{ top: 15, bottom: 15, left: 15, right: 15 }}
+                  accessibilityRole="button"
+                  accessibilityLabel={showPassword ? "Hide password" : "Show password"}
                 >
                   <Ionicons name={showPassword ? "eye-off-outline" : "eye-outline"} size={22} color="rgba(255,255,255,0.7)" />
                 </Pressable>
@@ -193,6 +199,8 @@ export default function PatientLoginScreen() {
                 onPressOut={() => { buttonScale.value = withSpring(1, { damping: 15, stiffness: 300 }); }}
                 onPress={handleLogin}
                 disabled={loading}
+                accessibilityRole="button"
+                accessibilityLabel="Sign in"
               >
                 <LinearGradient
                   colors={['rgba(255,255,255,0.25)', 'rgba(255,255,255,0.1)']}
@@ -216,6 +224,8 @@ export default function PatientLoginScreen() {
             <Pressable
               onPress={() => router.push("/auth/patient-create-account" as any)}
               style={({ pressed }) => [pressed && { opacity: 0.6 }]}
+              accessibilityRole="button"
+              accessibilityLabel="Create account"
             >
               <Text style={styles.bottomLinkAction}>Create account</Text>
             </Pressable>

@@ -13,6 +13,7 @@ import {
 import { DentistQuote, store } from "../../lib/store";
 import { toPatientLabel } from "../../lib/treatmentTerminology";
 import { buildQuoteVisitsForTreatments } from "../../lib/treatmentVisitRules";
+import { formatKRW } from "../../lib/currency";
 
 
 
@@ -64,7 +65,7 @@ export default function QuoteDetailScreen() {
           end={{ x: 1, y: 1 }}
           style={s.header}
         >
-          <TouchableOpacity style={s.backBtn} onPress={() => router.back()}>
+          <TouchableOpacity style={s.backBtn} onPress={() => router.back()} accessibilityRole="button" accessibilityLabel="Go back">
             <Text style={s.backArrow}>‹</Text>
           </TouchableOpacity>
           <Text style={s.headerTitle}>Quote Details</Text>
@@ -128,6 +129,8 @@ export default function QuoteDetailScreen() {
                   pathname: "/patient/dentist-profile" as any,
                   params: { dentistName: quote.dentistName, clinicName: quote.clinicName, quoteId: quote.id, caseId },
                 })}
+                accessibilityRole="button"
+                accessibilityLabel={`View ${quote.dentistName} profile`}
               >
                 <Text style={s.profileViewBtnText}>Profile</Text>
                 <View style={s.miniChevron} />
@@ -180,6 +183,8 @@ export default function QuoteDetailScreen() {
                 params: { caseId, highlightQuoteId: quote.id },
               })}
               activeOpacity={0.7}
+              accessibilityRole="button"
+              accessibilityLabel="View clinic on map"
             >
               <Text style={s.locationPin}>📍</Text>
               <Text style={s.locationText} numberOfLines={1}>{quote.address || quote.location}</Text>
@@ -204,6 +209,7 @@ export default function QuoteDetailScreen() {
             <View style={s.priceTop}>
               <Text style={s.priceSectionLabel}>Total Estimate</Text>
               <Text style={s.priceTotal}>${totalPrice.toLocaleString()}</Text>
+              <Text style={{ fontSize: 12, color: SharedColors.slate, marginTop: 2 }}>≈ {formatKRW(totalPrice)}</Text>
             </View>
             <View style={s.priceBreakdown}>
               {quote.treatments?.map((t, i) => (
@@ -265,7 +271,7 @@ export default function QuoteDetailScreen() {
       <View style={s.bottom}>
         <View style={s.bottomLeft}>
           <Text style={s.bottomPrice}>${totalPrice.toLocaleString()}</Text>
-          <Text style={s.bottomDeposit}>Treatment cost (pay at clinic)</Text>
+          <Text style={s.bottomDeposit}>≈ {formatKRW(totalPrice)} · Pay at clinic</Text>
         </View>
         <TouchableOpacity
           style={s.selectBtn}
@@ -290,6 +296,8 @@ export default function QuoteDetailScreen() {
             });
           }}
           activeOpacity={0.85}
+          accessibilityRole="button"
+          accessibilityLabel="Schedule visits"
         >
           <Text style={s.selectBtnText}>
             Schedule Visits →

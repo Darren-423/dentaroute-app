@@ -324,6 +324,8 @@ export default function PatientCreateAccountScreen() {
             style={styles.backBtn}
             onPress={() => router.back()}
             hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+            accessibilityRole="button"
+            accessibilityLabel="Go back"
           >
             <Text style={styles.backArrow}>‹</Text>
           </TouchableOpacity>
@@ -356,6 +358,7 @@ export default function PatientCreateAccountScreen() {
                   value={formData.firstName}
                   onChangeText={(v) => updateField("firstName", v)}
                   editable={!loading}
+                  accessibilityLabel="First name"
                 />
               </View>
               <View style={[styles.fieldGroup, { flex: 1 }]}>
@@ -367,6 +370,7 @@ export default function PatientCreateAccountScreen() {
                   value={formData.lastName}
                   onChangeText={(v) => updateField("lastName", v)}
                   editable={!loading}
+                  accessibilityLabel="Last name"
                 />
               </View>
             </View>
@@ -403,6 +407,7 @@ export default function PatientCreateAccountScreen() {
                   autoCapitalize="none"
                   autoCorrect={false}
                   editable={!loading && !emailVerified}
+                  accessibilityLabel="Email address"
                 />
                 {!emailVerified && (
                   <TouchableOpacity
@@ -412,6 +417,8 @@ export default function PatientCreateAccountScreen() {
                     ]}
                     onPress={handleSendEmailCode}
                     disabled={emailVerifying}
+                    accessibilityRole="button"
+                    accessibilityLabel={emailCodeSent ? "Resend email verification code" : "Send email verification code"}
                   >
                     {emailVerifying ? (
                       <ActivityIndicator color={SharedColors.white} size="small" />
@@ -454,6 +461,8 @@ export default function PatientCreateAccountScreen() {
                   style={styles.countryCodeBtn}
                   onPress={() => setShowCountryPicker(true)}
                   disabled={phoneVerified}
+                  accessibilityRole="button"
+                  accessibilityLabel={`Country code ${selectedCountry.name} ${selectedCountry.code}`}
                 >
                   <Text style={styles.countryFlag}>{selectedCountry.flag}</Text>
                   <Text style={styles.countryCodeText}>{selectedCountry.code}</Text>
@@ -474,6 +483,7 @@ export default function PatientCreateAccountScreen() {
                   onChangeText={(v) => updateField("phone", v.replace(/\D/g, ""))}
                   keyboardType="phone-pad"
                   editable={!loading && !phoneVerified}
+                  accessibilityLabel="Phone number"
                 />
 
                 {/* Send Code 버튼 */}
@@ -485,6 +495,8 @@ export default function PatientCreateAccountScreen() {
                     ]}
                     onPress={handleSendPhoneCode}
                     disabled={phoneVerifying}
+                    accessibilityRole="button"
+                    accessibilityLabel={phoneCodeSent ? "Resend phone verification code" : "Send phone verification code"}
                   >
                     {phoneVerifying ? (
                       <ActivityIndicator color={SharedColors.white} size="small" />
@@ -530,6 +542,7 @@ export default function PatientCreateAccountScreen() {
                 secureTextEntry
                 autoCapitalize="none"
                 editable={!loading}
+                accessibilityLabel="Password"
               />
               {errors.password ? (
                 <Text style={styles.fieldError}>⚠️ {errors.password}</Text>
@@ -550,6 +563,7 @@ export default function PatientCreateAccountScreen() {
                 secureTextEntry
                 autoCapitalize="none"
                 editable={!loading}
+                accessibilityLabel="Confirm password"
               />
               {errors.confirmPassword ? (
                 <Text style={styles.fieldError}>⚠️ {errors.confirmPassword}</Text>
@@ -561,6 +575,9 @@ export default function PatientCreateAccountScreen() {
               style={styles.termsRow}
               onPress={() => updateField("agreeTerms", !formData.agreeTerms)}
               activeOpacity={0.7}
+              accessibilityRole="checkbox"
+              accessibilityLabel="Agree to Terms of Service and Privacy Policy"
+              accessibilityState={{ checked: formData.agreeTerms }}
             >
               <View
                 style={[
@@ -592,6 +609,8 @@ export default function PatientCreateAccountScreen() {
             onPress={handleCreateAccount}
             disabled={loading}
             activeOpacity={0.85}
+            accessibilityRole="button"
+            accessibilityLabel="Create account"
           >
             {loading ? (
               <ActivityIndicator color={PatientTheme.primary} size="small" />

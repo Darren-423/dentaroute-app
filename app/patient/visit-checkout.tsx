@@ -109,7 +109,7 @@ export default function VisitCheckoutScreen() {
           style={s.header}
         >
           <View style={s.headerRow}>
-            <TouchableOpacity onPress={() => router.back()} style={s.backBtn}>
+            <TouchableOpacity onPress={() => router.back()} style={s.backBtn} accessibilityRole="button" accessibilityLabel="Go back">
               <Text style={s.backArrow}>‹</Text>
             </TouchableOpacity>
             <View style={s.headerCenter}>
@@ -172,7 +172,7 @@ export default function VisitCheckoutScreen() {
                     Final amount may vary based on actual treatment
                   </Text>
                 </View>
-                <TouchableOpacity style={s.confirmBtn} onPress={handleConfirmPayment}>
+                <TouchableOpacity style={s.confirmBtn} onPress={handleConfirmPayment} accessibilityRole="button" accessibilityLabel="Confirm clinic payment">
                   <Text style={s.confirmBtnText}>Yes, I've Paid the Clinic ✓</Text>
                 </TouchableOpacity>
               </>
@@ -219,6 +219,8 @@ export default function VisitCheckoutScreen() {
                   style={[s.uploadBtn, !confirmedPayment && s.uploadBtnDisabled]}
                   onPress={handleUploadReceipt}
                   disabled={!confirmedPayment}
+                  accessibilityRole="button"
+                  accessibilityLabel={receiptImage ? "Replace receipt photo" : "Upload receipt photo"}
                 >
                   <Text style={s.uploadBtnText}>
                     📸 {receiptImage ? "Replace Receipt" : "Upload Receipt Photo"}
@@ -291,6 +293,8 @@ export default function VisitCheckoutScreen() {
           onPress={handleContinue}
           disabled={!confirmedPayment}
           activeOpacity={0.85}
+          accessibilityRole="button"
+          accessibilityLabel={isLastVisit ? "Write a review" : "Back to dashboard"}
         >
           <Text style={s.continueBtnText}>
             {isLastVisit ? "Write a Review →" : "Back to Dashboard →"}
