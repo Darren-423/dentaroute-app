@@ -170,7 +170,7 @@ export const getDefaultFallbackRoute = (pathname: string): string | null => {
     pathname.startsWith("/patient/cancel-booking") ||
     pathname.startsWith("/patient/clinic-checkin") ||
     pathname.startsWith("/patient/departure-pickup") ||
-    pathname.startsWith("/patient/final-payment") ||
+    pathname.startsWith("/patient/visit-checkout") ||
     pathname.startsWith("/patient/hotel-arrived") ||
     pathname.startsWith("/patient/pickup-review") ||
     pathname.startsWith("/patient/stay-or-return") ||

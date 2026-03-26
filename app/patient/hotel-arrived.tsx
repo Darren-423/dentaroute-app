@@ -394,7 +394,7 @@ export default function HotelArrivedScreen() {
             {booking.arrivalInfo.pickupRequested && (
               <View style={s.pickupBanner}>
                 <Text style={{ fontSize: 13 }}>🚗</Text>
-                <Text style={s.pickupText}>Airport pickup arranged — look for the DentaRoute sign!</Text>
+                <Text style={s.pickupText}>Airport pickup arranged — look for the Concourse sign!</Text>
               </View>
             )}
           </View>

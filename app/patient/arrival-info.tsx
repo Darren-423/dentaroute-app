@@ -369,7 +369,7 @@ export default function ArrivalInfoScreen() {
           <Text style={st.successTitle}>Arrival Info Submitted</Text>
           <Text style={st.successDesc}>
             {pickupRequested
-              ? "Our team will be at the airport to pick you up. Look for the DentaRoute sign!"
+              ? "Our team will be at the airport to pick you up. Look for the Concourse sign!"
               : "Your arrival details have been shared with your dentist."}
           </Text>
 

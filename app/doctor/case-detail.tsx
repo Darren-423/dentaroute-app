@@ -617,8 +617,8 @@ export default function DoctorCaseDetailScreen() {
                 <Text style={s.bookingTotalPrice}>${booking.totalPrice.toLocaleString()}</Text>
               </View>
               <View style={s.bookingTreatmentRow}>
-                <Text style={s.bookingDepositLabel}>Deposit Paid (10%)</Text>
-                <Text style={s.bookingDepositPrice}>${booking.depositPaid.toLocaleString()}</Text>
+                <Text style={s.bookingDepositLabel}>Service Plan</Text>
+                <Text style={s.bookingDepositPrice}>{booking.serviceTier?.charAt(0).toUpperCase()}{booking.serviceTier?.slice(1)} — ${booking.serviceFee}</Text>
               </View>
             </View>
 

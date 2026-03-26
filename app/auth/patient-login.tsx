@@ -121,7 +121,7 @@ export default function PatientLoginScreen() {
               <Ionicons name="person" size={28} color={T.white} />
             </View>
             <Text style={styles.title}>Welcome back</Text>
-            <Text style={styles.subtitle}>Sign in to continue to DentaRoute</Text>
+            <Text style={styles.subtitle}>Sign in to continue to Concourse</Text>
           </Animated.View>
 
           {/* Error Banner */}

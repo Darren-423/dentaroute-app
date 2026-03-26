@@ -1,5 +1,5 @@
 // ══════════════════════════════════════════
-//  DentaRoute Chat Contact Filter
+//  Concourse Chat Contact Filter
 //  예약 확정 전까지 연락처 공유 차단 (Airbnb 모델)
 // ══════════════════════════════════════════
 
@@ -88,9 +88,9 @@ const MASK = "[contact info hidden]";
 
 // ── 경고 메시지 ──
 const WARNINGS: Record<1 | 2 | 3, string> = {
-  1: "For your protection, personal contact information cannot be shared before booking confirmation. All communication should stay within DentaRoute.",
+  1: "For your protection, personal contact information cannot be shared before booking confirmation. All communication should stay within Concourse.",
   2: "Contact sharing is restricted to protect both parties. Once your booking is confirmed, you'll be able to share contact details directly.",
-  3: "Repeated attempts to share contact information have been detected. This activity is logged. Please use DentaRoute's secure messaging.",
+  3: "Repeated attempts to share contact information have been detected. This activity is logged. Please use Concourse's secure messaging.",
 };
 
 // ── 위반 카운트 (세션 메모리) ──

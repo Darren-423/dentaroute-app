@@ -15,7 +15,7 @@ import {
   View
 } from "react-native";
 
-const API_URL = "https://dentaroute-api.onrender.com/api";
+const API_URL = "https://concourse-api.onrender.com/api";
 
 // 국가코드 리스트
 const COUNTRY_CODES = [

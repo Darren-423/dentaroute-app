@@ -25,44 +25,54 @@ const T = {
 
 const FAQ_DATA = [
   {
-    category: "booking",
-    question: "How do I cancel or reschedule my appointment?",
-    answer: "You can cancel up to 7 days before your visit for a full refund. Within 3-7 days, you'll receive a 50% refund. To reschedule, contact your dentist through the chat feature or submit an inquiry below.",
-  },
-  {
-    category: "payment",
-    question: "Is my deposit refundable?",
-    answer: "Yes, your 10% deposit is fully refundable if you cancel more than 7 days before your scheduled visit. The deposit secures your appointment and is applied to your first visit payment.",
-  },
-  {
-    category: "travel",
-    question: "Do I need a visa to visit South Korea for dental treatment?",
-    answer: "Most US passport holders can enter South Korea visa-free for up to 90 days under the K-ETA (Korea Electronic Travel Authorization) program. We recommend applying for K-ETA at least 72 hours before departure.",
-  },
-  {
     category: "payment",
     question: "How does payment work?",
-    answer: "Payment is split into two parts: a 10% deposit paid through the app to confirm your booking, and the remaining 90% paid directly at the clinic. We accept all major credit cards. Paying through DentaRoute saves you an additional 5%.",
+    answer: "Concourse charges a one-time service fee ($49–$199 depending on your plan) to confirm your booking. Treatment costs are paid directly to the clinic during your visit — Concourse never handles your treatment payment.",
+  },
+  {
+    category: "payment",
+    question: "What do I get with each service plan?",
+    answer: "Basic ($49): Doctor matching, chat, and quotes. Standard ($99): Everything in Basic plus airport pickup and drop-off. Premium ($199): Everything in Standard plus daily hotel-to-clinic transport.",
+  },
+  {
+    category: "payment",
+    question: "Is the service fee refundable?",
+    answer: "Yes. Full refund if cancelled 7+ days before your visit, 50% refund within 3–7 days, and no refund within 3 days. To cancel, go to your booking details.",
+  },
+  {
+    category: "payment",
+    question: "How do I unlock the free airport drop-off?",
+    answer: "After your treatment, upload your hospital receipt on the Visit Checkout screen. The receipt is processed for verification only (image is not stored). Once verified, a free airport drop-off is added to your booking — available with all plans!",
   },
   {
     category: "treatment",
-    question: "Are the dentists really US-licensed?",
-    answer: "Yes, all dentists on DentaRoute hold valid US dental licenses and practice in South Korea. They are fluent in English and trained in American dental standards. You can view their credentials on their profile page.",
+    question: "Are the dentists verified?",
+    answer: "Concourse performs basic credential verification on all dentists. Profiles are provided by the dentists themselves. We recommend verifying credentials independently before your visit.",
   },
   {
     category: "treatment",
-    question: "What if I need follow-up care after returning to the US?",
-    answer: "Your DentaRoute dentist will provide detailed treatment records and aftercare instructions. Many of our dentists also offer virtual follow-up consultations. For in-person follow-ups, we can recommend partner dentists in your area.",
+    question: "What if I need follow-up care after returning home?",
+    answer: "Your dentist will provide treatment records and aftercare instructions. For in-person follow-ups, consult a local dentist with your treatment documentation. Concourse does not provide medical advice.",
+  },
+  {
+    category: "booking",
+    question: "How do I cancel or reschedule my appointment?",
+    answer: "You can cancel from your booking details. Refund amounts depend on timing (see refund policy). To reschedule, contact your dentist through the in-app chat.",
   },
   {
     category: "travel",
-    question: "Does DentaRoute help with travel arrangements?",
-    answer: "We provide hotel recommendations near your clinic and can arrange airport pickup. Some clinics also offer accommodation packages. Your dentist will share all the details after booking.",
+    question: "Do I need a visa to visit South Korea?",
+    answer: "Most US passport holders can enter South Korea visa-free for up to 90 days under the K-ETA program. Apply at least 72 hours before departure.",
+  },
+  {
+    category: "travel",
+    question: "Does Concourse help with travel arrangements?",
+    answer: "Standard and Premium plans include airport pickup and drop-off. We also provide hotel recommendations near your clinic. Premium plans include daily hotel-to-clinic transport.",
   },
   {
     category: "technical",
     question: "I'm having trouble with the app. What should I do?",
-    answer: "Try closing and reopening the app first. If the issue persists, submit an inquiry below with details about what you're experiencing. Include screenshots if possible. Our support team typically responds within 24 hours.",
+    answer: "Try closing and reopening the app. If the issue persists, submit an inquiry below with details and screenshots. Our support team typically responds within 24 hours.",
   },
 ];
 

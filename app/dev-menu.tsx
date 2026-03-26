@@ -96,7 +96,7 @@ export default function DevMenuScreen() {
             ["/patient/arrival-info?bookingId=bk_demo_001", "18. Arrival Info"],
             ["/patient/hotel-arrived?bookingId=bk_demo_001", "19. Hotel Arrived"],
             ["/patient/clinic-checkin?bookingId=bk_demo_001", "20. Clinic Check-in"],
-            ["/patient/final-payment?bookingId=bk_demo_001", "21. Final Payment"],
+            ["/patient/visit-checkout?bookingId=bk_demo_001", "21. Visit Checkout"],
             ["/patient/departure-pickup?bookingId=bk_demo_001", "22. Departure Pickup"],
             ["/patient/stay-or-return?bookingId=bk_demo_001", "23. Stay or Return"],
           ].map(([path, label]) => (

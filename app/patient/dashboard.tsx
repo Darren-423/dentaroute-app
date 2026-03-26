@@ -221,7 +221,7 @@ export default function PatientDashboardScreen() {
         router.push(`/patient/clinic-checkin?bookingId=${bk.id}` as any);
         return;
       } else if (bk?.status === "treatment_done") {
-        router.push(`/patient/final-payment?bookingId=${bk.id}` as any);
+        router.push(`/patient/visit-checkout?bookingId=${bk.id}` as any);
         return;
       } else if (bk?.status === "between_visits") {
         router.push(`/patient/stay-or-return?bookingId=${bk.id}` as any);

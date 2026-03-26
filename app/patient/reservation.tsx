@@ -61,7 +61,7 @@ function navigateToBookingStep(booking: Booking, caseId: string) {
   if (st === "confirmed") router.push(`/patient/arrival-info?bookingId=${booking.id}` as any);
   else if (st === "flight_submitted") router.push(`/patient/hotel-arrived?bookingId=${booking.id}` as any);
   else if (st === "arrived_korea" || st === "checked_in_clinic") router.push(`/patient/clinic-checkin?bookingId=${booking.id}` as any);
-  else if (st === "treatment_done") router.push(`/patient/final-payment?bookingId=${booking.id}` as any);
+  else if (st === "treatment_done") router.push(`/patient/visit-checkout?bookingId=${booking.id}` as any);
   else if (st === "between_visits") router.push(`/patient/stay-or-return?bookingId=${booking.id}` as any);
   else if (st === "returning_home" || st === "payment_complete") router.push(`/patient/departure-pickup?bookingId=${booking.id}` as any);
   else if (st === "departure_set") router.push(`/patient/treatment-complete?bookingId=${booking.id}` as any);

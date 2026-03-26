@@ -58,7 +58,6 @@ export default function QuoteDetailScreen() {
 
   const clinicPhotos = quote.clinicPhotos || [];
   const totalPrice = quote.totalPrice || 0;
-  const depositAmount = Math.round(totalPrice * 0.10);
   const dentistInitial = (quote.dentistName || "D").split(" ").pop()?.[0] || "D";
 
   return (
@@ -222,10 +221,10 @@ export default function QuoteDetailScreen() {
             </View>
             <View style={s.depositRow}>
               <View>
-                <Text style={s.depositLabel}>Deposit (10%)</Text>
-                <Text style={s.depositSub}>Applied to your first visit payment</Text>
+                <Text style={s.depositLabel}>Treatment Cost</Text>
+                <Text style={s.depositSub}>Paid directly at the clinic</Text>
               </View>
-              <Text style={s.depositValue}>${depositAmount.toLocaleString()}</Text>
+              <Text style={s.depositValue}>${totalPrice.toLocaleString()}</Text>
             </View>
           </View>
 
@@ -247,11 +246,11 @@ export default function QuoteDetailScreen() {
 
           {/* Payment info */}
           <View style={s.paymentSection}>
-            <Text style={s.paymentTitle}>How payment works</Text>
+            <Text style={s.paymentTitle}>How it works</Text>
             {[
-              "Pay 10% deposit now to confirm booking",
-              "Pay per visit as scheduled by your dentist",
-              "Final balance after treatment completion",
+              "Choose a Concourse service plan ($49–$199)",
+              "Schedule your visit dates",
+              "Pay treatment cost directly at the clinic",
             ].map((text, i) => (
               <View key={i} style={s.paymentStep}>
                 <View style={s.paymentStepNum}>
@@ -262,17 +261,6 @@ export default function QuoteDetailScreen() {
             ))}
           </View>
 
-          {/* Promo */}
-          <View style={s.promoCard}>
-            <View style={s.promoLeft}>
-              <Text style={s.promoTitle}>Save 5%</Text>
-              <Text style={s.promoDesc}>Pay through DentaRoute for an exclusive discount applied to your final invoice.</Text>
-            </View>
-            <View style={s.promoBadge}>
-              <Text style={s.promoBadgeText}>-5%</Text>
-            </View>
-          </View>
-
           <View style={{ height: 20 }} />
         </View>
       </ScrollView>
@@ -281,7 +269,7 @@ export default function QuoteDetailScreen() {
       <View style={s.bottom}>
         <View style={s.bottomLeft}>
           <Text style={s.bottomPrice}>${totalPrice.toLocaleString()}</Text>
-          <Text style={s.bottomDeposit}>Deposit ${depositAmount.toLocaleString()}</Text>
+          <Text style={s.bottomDeposit}>Treatment cost (pay at clinic)</Text>
         </View>
         <TouchableOpacity
           style={s.selectBtn}
@@ -297,7 +285,6 @@ export default function QuoteDetailScreen() {
               pathname: "/patient/visit-schedule" as any,
               params: {
                 quoteId: quote.id, caseId,
-                amount: String(depositAmount),
                 totalPrice: String(totalPrice),
                 dentistName: quote.dentistName,
                 clinicName: quote.clinicName,

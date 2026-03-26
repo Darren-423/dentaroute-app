@@ -24,15 +24,15 @@ export default function RootLayout() {
 
   useEffect(() => {
     const patchedRouter = router as typeof router & {
-      __dentaroutePatched?: boolean;
+      __concoursePatched?: boolean;
       dismissAll?: () => void;
     };
 
-    if (patchedRouter.__dentaroutePatched) {
+    if (patchedRouter.__concoursePatched) {
       return;
     }
 
-    patchedRouter.__dentaroutePatched = true;
+    patchedRouter.__concoursePatched = true;
 
     const originalPush = router.push.bind(router);
     const originalReplace = router.replace.bind(router);

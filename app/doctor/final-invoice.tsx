@@ -78,7 +78,7 @@ export default function DoctorFinalInvoiceScreen() {
 
   // Previous invoices data
   const prevInvoices = booking?.finalInvoice?.visitInvoices || [];
-  const prevPaidTotal = prevInvoices.filter((vi) => vi.paid).reduce((s, vi) => s + (vi.preDiscountPayment || vi.paymentAmount), 0);
+  const prevPaidTotal = prevInvoices.filter((vi) => vi.paid).reduce((s, vi) => s + vi.paymentAmount, 0);
   const prevCarryForward = prevInvoices.length > 0
     ? prevInvoices[prevInvoices.length - 1].carryForward || 0
     : 0;
@@ -128,7 +128,7 @@ export default function DoctorFinalInvoiceScreen() {
     return map;
   }, [booking]);
 
-  // ── Calculations (payableBase billing, discount hidden from doctor) ──
+  // ── Calculations (patient pays treatment directly at clinic) ──
   const visitTotal = useMemo(() => {
     if (!hasNewTreatments) return 0;
     return items.reduce((s, i) => s + i.qty * i.price, 0);
@@ -137,34 +137,19 @@ export default function DoctorFinalInvoiceScreen() {
   // Payable base = new treatments + carry from previous visit
   const payableBase = visitTotal + prevCarryForward;
 
-  // Minimum billing % for Visit 1 — must cover the patient's deposit after 5% discount
-  const minBillingPct = useMemo(() => {
-    if (!isFirstVisit || isLastVisit || payableBase <= 0) return 1;
-    const deposit = booking?.depositPaid || 0;
-    if (deposit <= 0) return 1;
-    // afterDiscount = billedAmount × 0.95 >= deposit  →  billedAmount >= deposit / 0.95
-    const min = Math.ceil((deposit / 0.95) / payableBase * 100);
-    return Math.min(min, 100);
-  }, [isFirstVisit, isLastVisit, payableBase, booking]);
-
-  // Deposit exceeds Visit 1 even at 100% billing after discount?
-  const depositExceedsVisit = isFirstVisit && !isLastVisit && payableBase > 0
-    && Math.round(payableBase * 0.95) < (booking?.depositPaid || 0);
+  const minBillingPct = 1;
+  const depositExceedsVisit = false;
 
   const effectiveBillingPct = isLastVisit ? 100 : Math.max(minBillingPct, billingPercent);
   const billedAmount = Math.round(payableBase * effectiveBillingPct / 100);
   const deferredAmount = payableBase - billedAmount;
-  const carryForward = deferredAmount;  // pre-discount amount carried forward
+  const carryForward = deferredAmount;
 
-  // 5% discount applied to billedAmount (stored for patient, hidden from doctor)
-  const preDiscountPayment = billedAmount;
-  const appDiscount = Math.round(preDiscountPayment * 0.05);
-  const afterDiscount = preDiscountPayment - appDiscount;
-  const depositDeducted = isFirstVisit ? (booking?.depositPaid || 0) : 0;
-  const patientPayment = Math.max(0, afterDiscount - depositDeducted);  // patient actually pays
+  // Patient pays the billed amount directly at the clinic
+  const patientPayment = billedAmount;
 
-  // Doctor sees full amount (no discount)
-  const doctorViewDue = Math.max(0, preDiscountPayment - depositDeducted);
+  // Doctor view — same as patient payment (no hidden discount)
+  const doctorViewDue = billedAmount;
 
   // ── Platform fee & doctor earnings (based on undiscounted amount) ──
   const platformFee = Math.round(doctorViewDue * feeRate);
@@ -218,7 +203,6 @@ export default function DoctorFinalInvoiceScreen() {
     } else {
       alertLines.push("No new treatments this visit.");
     }
-    if (isFirstVisit) alertLines.push(`Deposit paid: -$${depositDeducted.toLocaleString()}`);
     alertLines.push("");
     alertLines.push(`Patient Pays: $${doctorViewDue.toLocaleString()}`);
     alertLines.push(`Platform Fee (${tierLabel} ${Math.round(feeRate * 100)}%): -$${platformFee.toLocaleString()}`);
@@ -253,12 +237,7 @@ export default function DoctorFinalInvoiceScreen() {
               billedAmount,
               deferredAmount,
               carryForward,
-              preDiscountPayment,
-              appDiscount,
-              afterDiscount,
-              paymentPercent: 0, // legacy field
               paymentAmount: patientPayment,
-              depositDeducted: isFirstVisit ? depositDeducted : 0,
               paid: false,
             };
 
@@ -267,18 +246,10 @@ export default function DoctorFinalInvoiceScreen() {
             const allVisitInvoices = [...prevInvoices, newVisitInvoice];
             const allFlatItems = allVisitInvoices.flatMap((vi) => vi.items);
             const cumTotal = allFlatItems.reduce((s, i) => s + i.qty * i.price, 0);
-            const cumDiscount = allVisitInvoices.reduce((s, vi) => s + vi.appDiscount, 0);
-            const cumDiscounted = cumTotal - cumDiscount;
-            const deposit = booking.depositPaid || 0;
-            const cumBalance = Math.max(0, cumDiscounted - deposit);
 
             const invoice: FinalInvoice = {
               items: allFlatItems,
               totalAmount: cumTotal,
-              appDiscount: cumDiscount,
-              discountedTotal: cumDiscounted,
-              depositPaid: deposit,
-              balanceDue: cumBalance,
               notes: existingInvoice?.notes ? `${existingInvoice.notes}\n\nVisit ${currentVisitNum}: ${notes}` : notes,
               createdAt: existingInvoice?.createdAt || new Date().toISOString(),
               visitInvoices: allVisitInvoices,
@@ -311,7 +282,7 @@ export default function DoctorFinalInvoiceScreen() {
               title: "💳 Visit Invoice Ready",
               body: `${booking.dentistName} sent your Visit ${currentVisitNum} invoice. Amount due: $${patientPayment.toLocaleString()}.${remainingVisits > 0 ? ` ${remainingVisits} visit${remainingVisits > 1 ? "s" : ""} remaining.` : ""}`,
               icon: "💳",
-              route: `/patient/final-payment?bookingId=${booking.id}`,
+              route: `/patient/visit-checkout?bookingId=${booking.id}`,
             });
 
             setSending(false);
@@ -397,12 +368,7 @@ export default function DoctorFinalInvoiceScreen() {
                 )}
               </>
             )}
-            {depositDeducted > 0 && (
-              <View style={s.receiptRow}>
-                <Text style={[s.receiptLabel, { color: T.green }]}>Deposit Applied</Text>
-                <Text style={[s.receiptValue, { color: T.green }]}>-${depositDeducted.toLocaleString()}</Text>
-              </View>
-            )}
+            {/* Deposit removed — patient pays clinic directly */}
             <View style={s.receiptDivider} />
             <View style={s.receiptRow}>
               <Text style={[s.receiptLabel, { fontWeight: "700", color: T.text }]}>Patient Pays</Text>
@@ -695,25 +661,7 @@ export default function DoctorFinalInvoiceScreen() {
                   </View>
                 )}
 
-                {/* Visit 1 minimum billing notice */}
-                {isFirstVisit && minBillingPct > 1 && !depositExceedsVisit && (
-                  <View style={s.minBillingNotice}>
-                    <Text style={{ fontSize: 14 }}>💰</Text>
-                    <Text style={s.minBillingText}>
-                      Minimum {minBillingPct}% required — covers the patient's ${(booking?.depositPaid || 0).toLocaleString()} deposit
-                    </Text>
-                  </View>
-                )}
-
-                {/* Deposit exceeds visit total warning */}
-                {depositExceedsVisit && (
-                  <View style={s.depositWarning}>
-                    <Text style={{ fontSize: 14 }}>⚠️</Text>
-                    <Text style={s.depositWarningText}>
-                      Visit 1 treatments (${Math.round(payableBase * 0.95).toLocaleString()}) must total at least ${(booking?.depositPaid || 0).toLocaleString()} to cover the patient's deposit. Add more treatments or increase prices.
-                    </Text>
-                  </View>
-                )}
+                {/* Deposit/minimum billing notices removed — patient pays clinic directly */}
 
                 <View style={s.billingInputRow}>
                   <TouchableOpacity
@@ -840,12 +788,7 @@ export default function DoctorFinalInvoiceScreen() {
               </>
             )}
             <View style={s.summaryDivider} />
-            {isFirstVisit && (
-              <View style={s.summaryRow}>
-                <Text style={s.summaryLabel}>Deposit Paid (10%)</Text>
-                <Text style={[s.summaryValue, { color: T.green }]}>-${depositDeducted.toLocaleString()}</Text>
-              </View>
-            )}
+            {/* Deposit row removed — patient pays clinic directly */}
             <View style={s.summaryRow}>
               <Text style={s.balanceLabel}>Patient Pays</Text>
               <Text style={s.balanceValue}>${doctorViewDue.toLocaleString()}</Text>

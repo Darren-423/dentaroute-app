@@ -76,20 +76,9 @@ export default function DoctorEarningsScreen() {
           const feeRate = bk.platformFeeRate || profileFeeRate;
           const doctorShare = 1 - feeRate;
 
-          // Deposit (doctor receives tier-based share)
-          if (bk.depositPaid > 0) {
-            const doctorAmt = Math.round(bk.depositPaid * doctorShare);
-            const fee = bk.depositPaid - doctorAmt;
-            allTotal += doctorAmt;
-            earningList.push({
-              bookingId: bk.id, caseId: bk.caseId, patientName: name,
-              type: "deposit", amount: doctorAmt, fee, date: bk.createdAt,
-            });
-          }
-
-          // Final payment (doctor sees undiscounted amount, platform absorbs 5% discount)
+          // Treatment payment (doctor receives tier-based share of total treatment cost)
           if (bk.finalInvoice) {
-            const rawAmt = bk.finalInvoice.totalAmount - (bk.depositPaid || 0);
+            const rawAmt = bk.finalInvoice.totalAmount;
             if (rawAmt > 0) {
               const doctorAmt = Math.round(rawAmt * doctorShare);
               const fee = rawAmt - doctorAmt;

@@ -2,13 +2,10 @@ import { LinearGradient } from "expo-linear-gradient";
 import { router, useLocalSearchParams } from "expo-router";
 import React, { useEffect, useState } from "react";
 import {
-  ActivityIndicator, Alert, KeyboardAvoidingView, Platform,
-  ScrollView,
-  StyleSheet,
-  Text, TextInput, TouchableOpacity,
-  View,
+  ActivityIndicator, Alert, ScrollView,
+  StyleSheet, Text, TouchableOpacity, View,
 } from "react-native";
-import { DentistQuote, store } from "../../lib/store";
+import { DentistQuote, SERVICE_TIER_CONFIG, ServiceTier, store } from "../../lib/store";
 
 const T = {
   teal: "#4A0080", tealMid: "#5C10A0", tealLight: "#f0e6f6",
@@ -19,14 +16,45 @@ const T = {
   red: "#ef4444",
 };
 
+const TIER_DETAILS: Record<ServiceTier, { icon: string; tagline: string; features: string[]; notIncluded?: string[] }> = {
+  basic: {
+    icon: "🎯",
+    tagline: "Essential matching",
+    features: [
+      "Doctor matching & quotes",
+      "In-app chat with dentist",
+      "Booking confirmation",
+    ],
+    notIncluded: ["Airport pickup", "Airport drop-off", "Hotel ↔ clinic transport"],
+  },
+  standard: {
+    icon: "✈️",
+    tagline: "Most popular",
+    features: [
+      "Everything in Basic",
+      "Airport pickup on arrival",
+      "Airport drop-off on departure",
+    ],
+    notIncluded: ["Hotel ↔ clinic transport"],
+  },
+  premium: {
+    icon: "👑",
+    tagline: "Full concierge",
+    features: [
+      "Everything in Standard",
+      "Daily hotel ↔ clinic transport",
+      "Priority support",
+    ],
+  },
+};
+
 export default function PatientPaymentScreen() {
   const params = useLocalSearchParams<{
-    quoteId: string; caseId: string; amount: string;
+    quoteId: string; caseId: string;
     totalPrice?: string; dentistName?: string; clinicName?: string;
     visitDatesJson?: string;
   }>();
 
-  // expo-router can return string[] — always extract first value
   const getParam = (key: string): string => {
     const v = (params as any)[key];
     if (Array.isArray(v)) return v[0] || "";
@@ -35,7 +63,6 @@ export default function PatientPaymentScreen() {
 
   const quoteId = getParam("quoteId");
   const caseId = getParam("caseId");
-  const amountStr = getParam("amount");
   const totalPriceStr = getParam("totalPrice");
   const dentistNameStr = getParam("dentistName");
   const clinicNameStr = getParam("clinicName");
@@ -43,16 +70,11 @@ export default function PatientPaymentScreen() {
   const visitDates = (() => {
     try { return JSON.parse(getParam("visitDatesJson") || "[]"); } catch { return []; }
   })();
+
   const [quote, setQuote] = useState<DentistQuote | null>(null);
   const [loading, setLoading] = useState(false);
   const [paid, setPaid] = useState(false);
-
-  const [card, setCard] = useState({
-    number: "",
-    expiry: "",
-    cvc: "",
-    name: "",
-  });
+  const [selectedTier, setSelectedTier] = useState<ServiceTier>("standard");
 
   useEffect(() => {
     const load = async () => {
@@ -66,60 +88,24 @@ export default function PatientPaymentScreen() {
   }, [quoteId, caseId]);
 
   const totalPrice = quote?.totalPrice || parseInt(totalPriceStr) || 0;
-  const depositAmount = parseInt(amountStr) || Math.round(totalPrice * 0.10);
-
-  const formatCardNumber = (raw: string) => {
-    const digits = raw.replace(/\D/g, "").slice(0, 16);
-    return digits.replace(/(.{4})/g, "$1 ").trim();
-  };
-
-  const formatExpiry = (raw: string) => {
-    const digits = raw.replace(/\D/g, "").slice(0, 4);
-    if (digits.length > 2) return digits.slice(0, 2) + "/" + digits.slice(2);
-    return digits;
-  };
-
-  const isCardValid =
-    card.number.replace(/\s/g, "").length === 16 &&
-    card.expiry.length === 5 &&
-    card.cvc.length >= 3 &&
-    card.name.trim().length > 0;
-
-  const getCardBrand = (num: string) => {
-    const n = num.replace(/\s/g, "");
-    if (/^4/.test(n)) return "Visa";
-    if (/^5[1-5]/.test(n) || /^2[2-7]/.test(n)) return "Mastercard";
-    if (/^3[47]/.test(n)) return "Amex";
-    if (/^6(?:011|5)/.test(n)) return "Discover";
-    return "Card";
-  };
+  const tierConfig = SERVICE_TIER_CONFIG[selectedTier];
 
   const handlePay = async () => {
-    if (!isCardValid) {
-      Alert.alert("Incomplete", "Please fill in all card details.");
-      return;
-    }
     setLoading(true);
     setTimeout(async () => {
       if (caseId) {
         await store.updateCaseStatus(caseId, "booked");
-        const rawNum = card.number.replace(/\s/g, "");
         await store.createBooking({
           caseId,
           quoteId: quoteId || "",
           dentistName: quote?.dentistName || dentistNameStr || "",
           clinicName: quote?.clinicName || clinicNameStr || "",
-          depositPaid: depositAmount,
+          serviceTier: selectedTier,
+          serviceFee: tierConfig.fee,
           totalPrice: quote?.totalPrice || parseInt(totalPriceStr) || 0,
           treatments: quote?.treatments || [],
-          visitDates: visitDates,
+          visitDates,
           status: "confirmed",
-          savedCard: {
-            last4: rawNum.slice(-4),
-            brand: getCardBrand(rawNum),
-            name: card.name.trim(),
-            expiry: card.expiry,
-          },
         });
       }
       setLoading(false);
@@ -135,10 +121,10 @@ export default function PatientPaymentScreen() {
           <View style={s.successIconWrap}>
             <Text style={s.successIcon}>✓</Text>
           </View>
-          <Text style={s.successTitle}>Payment Successful!</Text>
+          <Text style={s.successTitle}>Booking Confirmed!</Text>
           <Text style={s.successDesc}>
-            Your deposit of ${depositAmount.toLocaleString()} has been processed.{"\n"}
-            Your booking is confirmed!
+            Your {SERVICE_TIER_CONFIG[selectedTier].label} plan (${tierConfig.fee}) has been processed.{"\n"}
+            You're all set!
           </Text>
 
           <View style={s.bookingSummary}>
@@ -152,15 +138,15 @@ export default function PatientPaymentScreen() {
               <Text style={s.bookingValue}>{quote?.clinicName || clinicNameStr}</Text>
             </View>
             <View style={s.bookingRow}>
-              <Text style={s.bookingKey}>Deposit Paid</Text>
-              <Text style={[s.bookingValue, { color: T.green, fontWeight: "700" }]}>
-                ${depositAmount.toLocaleString()}
+              <Text style={s.bookingKey}>Service Plan</Text>
+              <Text style={[s.bookingValue, { color: T.teal, fontWeight: "700" }]}>
+                {SERVICE_TIER_CONFIG[selectedTier].label} — ${tierConfig.fee}
               </Text>
             </View>
             <View style={s.bookingRow}>
-              <Text style={s.bookingKey}>Remaining</Text>
+              <Text style={s.bookingKey}>Treatment Cost</Text>
               <Text style={s.bookingValue}>
-                ${(totalPrice - depositAmount).toLocaleString()} (pay at clinic)
+                ${totalPrice.toLocaleString()} (pay directly at clinic)
               </Text>
             </View>
           </View>
@@ -169,15 +155,17 @@ export default function PatientPaymentScreen() {
             <Text style={s.nextStepsTitle}>What's next?</Text>
             <View style={s.stepItem}>
               <View style={s.stepDot}><Text style={s.stepDotText}>1</Text></View>
-              <Text style={s.stepText}>You'll receive a confirmation email</Text>
+              <Text style={s.stepText}>Submit your flight & hotel details</Text>
             </View>
+            {selectedTier !== "basic" && (
+              <View style={s.stepItem}>
+                <View style={s.stepDot}><Text style={s.stepDotText}>2</Text></View>
+                <Text style={s.stepText}>We'll arrange your airport pickup</Text>
+              </View>
+            )}
             <View style={s.stepItem}>
-              <View style={s.stepDot}><Text style={s.stepDotText}>2</Text></View>
-              <Text style={s.stepText}>The clinic will contact you with visit details</Text>
-            </View>
-            <View style={s.stepItem}>
-              <View style={s.stepDot}><Text style={s.stepDotText}>3</Text></View>
-              <Text style={s.stepText}>Pay the remaining balance at the clinic</Text>
+              <View style={s.stepDot}><Text style={s.stepDotText}>{selectedTier !== "basic" ? "3" : "2"}</Text></View>
+              <Text style={s.stepText}>Pay the treatment cost directly at the clinic</Text>
             </View>
           </View>
 
@@ -193,12 +181,9 @@ export default function PatientPaymentScreen() {
     );
   }
 
-  // ── Payment Form ──
+  // ── Tier Selection ──
   return (
-    <KeyboardAvoidingView
-      style={s.container}
-      behavior={Platform.OS === "ios" ? "padding" : undefined}
-    >
+    <View style={s.container}>
       <ScrollView showsVerticalScrollIndicator={false}>
         <LinearGradient
           colors={["#3D0070", "#2F0058", "#220040"]}
@@ -211,117 +196,110 @@ export default function PatientPaymentScreen() {
               <Text style={s.backArrow}>‹</Text>
             </TouchableOpacity>
             <View style={s.headerCenter}>
-              <Text style={s.title}>Pay Deposit</Text>
-              <Text style={s.subtitle}>Secure payment to confirm your booking</Text>
+              <Text style={s.title}>Choose Your Plan</Text>
+              <Text style={s.subtitle}>Select a concierge service tier</Text>
             </View>
             <View style={{ width: 36 }} />
           </View>
         </LinearGradient>
 
         <View style={s.content}>
-          <View style={s.summaryCard}>
-            <Text style={s.summaryLabel}>ORDER SUMMARY</Text>
-
-            {(quote || dentistNameStr) && (
+          {/* Booking summary */}
+          {(quote || dentistNameStr) && (
+            <View style={s.summaryCard}>
               <View style={s.summaryDentist}>
                 <View style={s.summaryAvatar}>
                   <Text style={s.summaryAvatarText}>
                     {((quote?.dentistName || dentistNameStr || "D").split(" ").pop() || "D")[0]}
                   </Text>
                 </View>
-                <View>
+                <View style={{ flex: 1 }}>
                   <Text style={s.summaryDentistName}>{quote?.dentistName || dentistNameStr}</Text>
                   <Text style={s.summaryClinic}>{quote?.clinicName || clinicNameStr}</Text>
                 </View>
+                <View style={{ alignItems: "flex-end" }}>
+                  <Text style={s.treatmentTotal}>${totalPrice.toLocaleString()}</Text>
+                  <Text style={s.treatmentLabel}>Treatment cost</Text>
+                </View>
               </View>
-            )}
-
-            <View style={s.summaryDivider} />
-
-            <View style={s.summaryRow}>
-              <Text style={s.summaryKey}>Treatment Total</Text>
-              <Text style={s.summaryValue}>${totalPrice.toLocaleString()}</Text>
-            </View>
-            <View style={s.summaryRow}>
-              <Text style={s.summaryKey}>Deposit (10%)</Text>
-              <Text style={[s.summaryValue, { color: T.teal, fontWeight: "700" }]}>
-                ${depositAmount.toLocaleString()}
+              <Text style={s.clinicPayNote}>
+                Treatment cost is paid directly to the clinic — not through Concourse.
               </Text>
             </View>
-            <View style={s.summaryRow}>
-              <Text style={s.summaryKey}>Pay at clinic</Text>
-              <Text style={[s.summaryValue, { color: T.slateLight }]}>
-                ${(totalPrice - depositAmount).toLocaleString()}
-              </Text>
-            </View>
-          </View>
+          )}
 
-          <View style={s.depositHighlight}>
-            <Text style={s.depositLabel}>Amount Due Now</Text>
-            <Text style={s.depositAmount}>${depositAmount.toLocaleString()}</Text>
-          </View>
+          {/* Tier cards */}
+          {(["basic", "standard", "premium"] as ServiceTier[]).map((tier) => {
+            const config = SERVICE_TIER_CONFIG[tier];
+            const details = TIER_DETAILS[tier];
+            const isSelected = selectedTier === tier;
+            const isPopular = tier === "standard";
 
-          <View style={s.cardForm}>
-            <Text style={s.cardFormTitle}>💳 CARD DETAILS</Text>
+            return (
+              <TouchableOpacity
+                key={tier}
+                style={[
+                  s.tierCard,
+                  isSelected && s.tierCardSelected,
+                  isPopular && !isSelected && s.tierCardPopular,
+                ]}
+                onPress={() => setSelectedTier(tier)}
+                activeOpacity={0.8}
+              >
+                {isPopular && (
+                  <View style={s.popularBadge}>
+                    <Text style={s.popularBadgeText}>MOST POPULAR</Text>
+                  </View>
+                )}
 
-            <View style={s.field}>
-              <Text style={s.fieldLabel}>CARDHOLDER NAME</Text>
-              <TextInput
-                style={s.input}
-                placeholder="John Doe"
-                placeholderTextColor={T.slateLight}
-                value={card.name}
-                onChangeText={(v) => setCard({ ...card, name: v })}
-                autoCapitalize="words"
-              />
-            </View>
+                <View style={s.tierHeader}>
+                  <Text style={s.tierIcon}>{details.icon}</Text>
+                  <View style={{ flex: 1 }}>
+                    <Text style={[s.tierName, isSelected && s.tierNameSelected]}>
+                      {config.label}
+                    </Text>
+                    <Text style={s.tierTagline}>{details.tagline}</Text>
+                  </View>
+                  <View style={[s.tierPriceWrap, isSelected && s.tierPriceWrapSelected]}>
+                    <Text style={[s.tierPrice, isSelected && s.tierPriceSelected]}>
+                      ${config.fee}
+                    </Text>
+                  </View>
+                </View>
 
-            <View style={s.field}>
-              <Text style={s.fieldLabel}>CARD NUMBER</Text>
-              <TextInput
-                style={s.input}
-                placeholder="1234 5678 9012 3456"
-                placeholderTextColor={T.slateLight}
-                value={card.number}
-                onChangeText={(v) => setCard({ ...card, number: formatCardNumber(v) })}
-                keyboardType="number-pad"
-                maxLength={19}
-              />
-            </View>
+                <View style={s.tierFeatures}>
+                  {details.features.map((f, i) => (
+                    <View key={i} style={s.featureRow}>
+                      <Text style={s.featureCheck}>✓</Text>
+                      <Text style={s.featureText}>{f}</Text>
+                    </View>
+                  ))}
+                  {details.notIncluded?.map((f, i) => (
+                    <View key={`no-${i}`} style={s.featureRow}>
+                      <Text style={s.featureX}>✗</Text>
+                      <Text style={s.featureTextDim}>{f}</Text>
+                    </View>
+                  ))}
+                </View>
 
-            <View style={s.fieldRow}>
-              <View style={[s.field, { flex: 1 }]}>
-                <Text style={s.fieldLabel}>EXPIRY</Text>
-                <TextInput
-                  style={s.input}
-                  placeholder="MM/YY"
-                  placeholderTextColor={T.slateLight}
-                  value={card.expiry}
-                  onChangeText={(v) => setCard({ ...card, expiry: formatExpiry(v) })}
-                  keyboardType="number-pad"
-                  maxLength={5}
-                />
-              </View>
-              <View style={[s.field, { flex: 1 }]}>
-                <Text style={s.fieldLabel}>CVC</Text>
-                <TextInput
-                  style={s.input}
-                  placeholder="123"
-                  placeholderTextColor={T.slateLight}
-                  value={card.cvc}
-                  onChangeText={(v) => setCard({ ...card, cvc: v.replace(/\D/g, "").slice(0, 4) })}
-                  keyboardType="number-pad"
-                  maxLength={4}
-                  secureTextEntry
-                />
-              </View>
-            </View>
-          </View>
+                {/* Radio indicator */}
+                <View style={s.radioRow}>
+                  <View style={[s.radioOuter, isSelected && s.radioOuterSelected]}>
+                    {isSelected && <View style={s.radioInner} />}
+                  </View>
+                  <Text style={[s.radioLabel, isSelected && s.radioLabelSelected]}>
+                    {isSelected ? "Selected" : "Select"}
+                  </Text>
+                </View>
+              </TouchableOpacity>
+            );
+          })}
 
-          <View style={s.securityNote}>
-            <Text style={s.securityIcon}>🔒</Text>
-            <Text style={s.securityText}>
-              Your payment is secured with 256-bit SSL encryption. We never store your card details.
+          {/* Info note */}
+          <View style={s.infoNote}>
+            <Text style={s.infoIcon}>💡</Text>
+            <Text style={s.infoText}>
+              Upload your hospital receipt after treatment to unlock a free airport drop-off — available with all plans!
             </Text>
           </View>
 
@@ -336,34 +314,30 @@ export default function PatientPaymentScreen() {
 
       <View style={s.bottom}>
         <TouchableOpacity
-          style={[s.payBtn, (!isCardValid || loading) && s.payBtnDisabled]}
+          style={[s.payBtn, loading && s.payBtnDisabled]}
           onPress={handlePay}
-          disabled={!isCardValid || loading}
+          disabled={loading}
           activeOpacity={0.85}
         >
           {loading ? (
             <ActivityIndicator color={T.white} size="small" />
           ) : (
             <Text style={s.payBtnText}>
-              Pay ${depositAmount.toLocaleString()} →
+              Pay ${tierConfig.fee} — {SERVICE_TIER_CONFIG[selectedTier].label} →
             </Text>
           )}
         </TouchableOpacity>
-        <Text style={s.poweredBy}>Powered by Stripe</Text>
+        <Text style={s.poweredBy}>Secure payment · Powered by Stripe</Text>
       </View>
-    </KeyboardAvoidingView>
+    </View>
   );
 }
 
 const s = StyleSheet.create({
   container: { flex: 1, backgroundColor: T.bg },
 
-  header: {
-    paddingHorizontal: 20, paddingTop: 60, paddingBottom: 18,
-  },
-  headerRow: {
-    flexDirection: "row", alignItems: "center",
-  },
+  header: { paddingHorizontal: 20, paddingTop: 60, paddingBottom: 18 },
+  headerRow: { flexDirection: "row", alignItems: "center" },
   backBtn: {
     width: 36, height: 36, borderRadius: 12,
     backgroundColor: "rgba(255,255,255,0.12)",
@@ -375,14 +349,11 @@ const s = StyleSheet.create({
   title: { fontSize: 18, fontWeight: "700", color: "#fff" },
   subtitle: { fontSize: 12, color: "rgba(255,255,255,0.55)", marginTop: 2 },
 
-  content: { padding: 24, gap: 16 },
+  content: { padding: 20, gap: 14 },
 
   summaryCard: {
-    backgroundColor: T.white, borderRadius: 16, padding: 18, gap: 12,
+    backgroundColor: T.white, borderRadius: 16, padding: 16, gap: 10,
     borderWidth: 1, borderColor: T.border,
-  },
-  summaryLabel: {
-    fontSize: 11, fontWeight: "700", color: T.slate, letterSpacing: 0.8,
   },
   summaryDentist: { flexDirection: "row", alignItems: "center", gap: 12 },
   summaryAvatar: {
@@ -392,46 +363,69 @@ const s = StyleSheet.create({
   summaryAvatarText: { fontSize: 16, fontWeight: "700", color: T.teal },
   summaryDentistName: { fontSize: 15, fontWeight: "700", color: T.navy },
   summaryClinic: { fontSize: 12, color: T.slate, marginTop: 1 },
-  summaryDivider: { height: 1, backgroundColor: T.border },
-  summaryRow: {
-    flexDirection: "row", justifyContent: "space-between", alignItems: "center",
+  treatmentTotal: { fontSize: 18, fontWeight: "800", color: T.navy },
+  treatmentLabel: { fontSize: 11, color: T.slate, marginTop: 1 },
+  clinicPayNote: {
+    fontSize: 12, color: T.slate, fontStyle: "italic",
+    backgroundColor: T.bg, borderRadius: 8, paddingHorizontal: 10, paddingVertical: 8,
   },
-  summaryKey: { fontSize: 13, color: T.slate },
-  summaryValue: { fontSize: 14, fontWeight: "600", color: T.navy },
 
-  depositHighlight: {
-    backgroundColor: T.tealLight, borderRadius: 16, padding: 20,
-    alignItems: "center", gap: 6,
-    borderWidth: 1.5, borderColor: "rgba(74,0,128,0.2)",
-  },
-  depositLabel: { fontSize: 12, fontWeight: "600", color: T.teal },
-  depositAmount: { fontSize: 36, fontWeight: "800", color: T.teal },
-
-  cardForm: {
+  tierCard: {
     backgroundColor: T.white, borderRadius: 16, padding: 18, gap: 14,
-    borderWidth: 1, borderColor: T.border,
+    borderWidth: 1.5, borderColor: T.border,
   },
-  cardFormTitle: {
-    fontSize: 12, fontWeight: "700", color: T.navy, letterSpacing: 0.5,
+  tierCardSelected: {
+    borderColor: T.teal, backgroundColor: T.tealLight,
+    shadowColor: T.teal, shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.15, shadowRadius: 12, elevation: 4,
   },
-  field: { gap: 6 },
-  fieldLabel: {
-    fontSize: 11, fontWeight: "600", color: T.slate, letterSpacing: 0.5,
+  tierCardPopular: {
+    borderColor: "#c4b5fd",
   },
-  fieldRow: { flexDirection: "row", gap: 12 },
-  input: {
-    backgroundColor: T.bg, borderRadius: 12, paddingHorizontal: 16,
-    paddingVertical: 13, fontSize: 15, color: T.navy,
-    borderWidth: 1, borderColor: T.border,
+  popularBadge: {
+    position: "absolute", top: -10, right: 16,
+    backgroundColor: T.teal, borderRadius: 8,
+    paddingHorizontal: 10, paddingVertical: 3,
   },
+  popularBadgeText: { fontSize: 10, fontWeight: "700", color: T.white, letterSpacing: 0.5 },
 
-  securityNote: {
-    flexDirection: "row", alignItems: "flex-start", gap: 10,
-    backgroundColor: T.greenLight, borderRadius: 12, padding: 14,
-    borderWidth: 1, borderColor: "rgba(22,163,74,0.15)",
+  tierHeader: { flexDirection: "row", alignItems: "center", gap: 12 },
+  tierIcon: { fontSize: 28 },
+  tierName: { fontSize: 17, fontWeight: "700", color: T.navy },
+  tierNameSelected: { color: T.teal },
+  tierTagline: { fontSize: 12, color: T.slate, marginTop: 1 },
+  tierPriceWrap: {
+    backgroundColor: T.bg, borderRadius: 10, paddingHorizontal: 14, paddingVertical: 8,
+    borderWidth: 1, borderColor: T.border,
   },
-  securityIcon: { fontSize: 16, marginTop: 1 },
-  securityText: { flex: 1, fontSize: 12, color: "#166534", lineHeight: 18 },
+  tierPriceWrapSelected: { backgroundColor: T.teal, borderColor: T.teal },
+  tierPrice: { fontSize: 20, fontWeight: "800", color: T.navy },
+  tierPriceSelected: { color: T.white },
+
+  tierFeatures: { gap: 6, paddingLeft: 4 },
+  featureRow: { flexDirection: "row", alignItems: "center", gap: 8 },
+  featureCheck: { fontSize: 14, color: T.green, fontWeight: "700" },
+  featureText: { fontSize: 13, color: T.navy },
+  featureX: { fontSize: 14, color: T.slateLight, fontWeight: "500" },
+  featureTextDim: { fontSize: 13, color: T.slateLight, textDecorationLine: "line-through" },
+
+  radioRow: { flexDirection: "row", alignItems: "center", gap: 8, paddingTop: 2 },
+  radioOuter: {
+    width: 20, height: 20, borderRadius: 10, borderWidth: 2,
+    borderColor: T.slateLight, alignItems: "center", justifyContent: "center",
+  },
+  radioOuterSelected: { borderColor: T.teal },
+  radioInner: { width: 10, height: 10, borderRadius: 5, backgroundColor: T.teal },
+  radioLabel: { fontSize: 13, color: T.slateLight, fontWeight: "600" },
+  radioLabelSelected: { color: T.teal },
+
+  infoNote: {
+    flexDirection: "row", alignItems: "flex-start", gap: 10,
+    backgroundColor: T.amberLight, borderRadius: 12, padding: 14,
+    borderWidth: 1, borderColor: "rgba(245,158,11,0.2)",
+  },
+  infoIcon: { fontSize: 16, marginTop: 1 },
+  infoText: { flex: 1, fontSize: 12, color: "#92400e", lineHeight: 18 },
 
   policyNote: {
     backgroundColor: T.white, borderRadius: 12, padding: 14, gap: 6,

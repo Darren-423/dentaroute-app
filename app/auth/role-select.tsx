@@ -150,7 +150,7 @@ export default function RoleSelectScreen() {
         {/* Header Section */}
         <Animated.View style={[styles.header, headerAnimatedStyle]}>
           <View style={styles.badgeContainer}>
-            <Text style={styles.badgeText}>DentaRoute</Text>
+            <Text style={styles.badgeText}>Concourse</Text>
           </View>
           <Text style={styles.title}>Welcome!</Text>
           <Text style={styles.subtitle}>How would you like to continue?</Text>

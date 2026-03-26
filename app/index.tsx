@@ -45,7 +45,7 @@ export default function SplashScreen() {
       {/* Logo Area */}
       <View style={styles.logoArea}>
         <Text style={styles.logo}>🦷</Text>
-        <Text style={styles.title}>DentaRoute</Text>
+        <Text style={styles.title}>Concourse</Text>
       </View>
 
       {/* Swipeable Cards */}

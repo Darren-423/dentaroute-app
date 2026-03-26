@@ -222,7 +222,7 @@ export default function DoctorLoginScreen() {
               onPress={() => router.push("/auth/doctor-create-account" as any)}
               style={({ pressed }) => [pressed && { opacity: 0.6 }]}
             >
-              <Text style={styles.bottomLinkAction}>Join DentaRoute</Text>
+              <Text style={styles.bottomLinkAction}>Join Concourse</Text>
             </Pressable>
           </Animated.View>
         </ScrollView>

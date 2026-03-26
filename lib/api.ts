@@ -2,7 +2,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Platform } from "react-native";
 
 // ══════════════════════════════════════════
-//  DentaRoute API Client
+//  Concourse API Client
 //  서버 연동을 위한 HTTP 클라이언트 + JWT 토큰 관리
 // ══════════════════════════════════════════
 

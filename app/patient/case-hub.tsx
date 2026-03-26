@@ -245,12 +245,12 @@ export default function CaseHubScreen() {
             <Text style={s.paymentValue}>${booking.totalPrice?.toLocaleString()}</Text>
           </View>
           <View style={s.paymentRow}>
-            <Text style={s.paymentLabel}>Deposit Paid</Text>
-            <Text style={[s.paymentValue, { color: T.green }]}>${booking.depositPaid?.toLocaleString()}</Text>
+            <Text style={s.paymentLabel}>Service Plan</Text>
+            <Text style={[s.paymentValue, { color: T.green }]}>{booking.serviceTier?.charAt(0).toUpperCase()}{booking.serviceTier?.slice(1)} — ${booking.serviceFee}</Text>
           </View>
           <View style={[s.paymentRow, { borderBottomWidth: 0 }]}>
-            <Text style={s.paymentLabel}>Remaining</Text>
-            <Text style={s.paymentValue}>${((booking.totalPrice || 0) - (booking.depositPaid || 0)).toLocaleString()}</Text>
+            <Text style={s.paymentLabel}>Treatment Cost</Text>
+            <Text style={s.paymentValue}>${booking.totalPrice?.toLocaleString()} (pay at clinic)</Text>
           </View>
         </View>
 

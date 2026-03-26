@@ -66,8 +66,8 @@ export default function CancelBookingScreen() {
     }
 
     const msg = refund.amount > 0
-      ? `You will receive a $${refund.amount} refund (${refund.percent}% of your $${booking?.depositPaid} deposit). This action cannot be undone.`
-      : `No refund is available for this cancellation. Your $${booking?.depositPaid} deposit will not be returned. This action cannot be undone.`;
+      ? `You will receive a $${refund.amount} refund (${refund.percent}% of your $${booking?.serviceFee} service fee). This action cannot be undone.`
+      : `No refund is available for this cancellation. Your $${booking?.serviceFee} service fee will not be returned. This action cannot be undone.`;
 
     Alert.alert(
       "Confirm Cancellation",
@@ -211,8 +211,8 @@ export default function CancelBookingScreen() {
           <View style={s.divider} />
           <View style={s.detailGrid}>
             <View style={s.detailCell}>
-              <Text style={s.detailLabel}>Deposit</Text>
-              <Text style={s.detailVal}>${booking.depositPaid}</Text>
+              <Text style={s.detailLabel}>Service Fee</Text>
+              <Text style={s.detailVal}>${booking.serviceFee}</Text>
             </View>
             <View style={s.detailCell}>
               <Text style={s.detailLabel}>Total</Text>
@@ -258,7 +258,7 @@ export default function CancelBookingScreen() {
             <Text style={s.refundSummaryLabel}>Your refund</Text>
             <Text style={s.refundSummaryVal}>
               ${refund.amount}{" "}
-              <Text style={s.refundSummaryOf}>of ${booking.depositPaid}</Text>
+              <Text style={s.refundSummaryOf}>of ${booking.serviceFee}</Text>
             </Text>
           </View>
         </View>

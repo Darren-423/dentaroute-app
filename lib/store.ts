@@ -1,7 +1,7 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
 // ══════════════════════════════════════════
-//  DentaRoute Local Data Store
+//  Concourse Local Data Store
 //  Patient와 Doctor가 한 폰에서 quote 주고받기
 // ══════════════════════════════════════════
 
@@ -190,32 +190,23 @@ export interface VisitInvoice {
   visit: number;              // matches VisitDate.visit
   description: string;
   items: { treatment: string; qty: number; price: number }[];
-  visitTotal: number;         // sum of NEW items for this visit (no discount applied)
+  visitTotal: number;         // sum of items for this visit
   prevCarryForward: number;   // carry received from previous visit (0 for Visit 1)
-  billingPercent: number;     // % of payableBase (visitTotal + prevCarry) billed now
+  billingPercent: number;     // % of payableBase billed now
   billedAmount: number;       // (visitTotal + prevCarry) * billingPercent / 100
   deferredAmount: number;     // (visitTotal + prevCarry) - billedAmount
-  carryForward: number;       // = deferredAmount (pre-discount amount carried to next visit)
-  preDiscountPayment: number; // = billedAmount (before 5% discount)
-  appDiscount: number;        // preDiscountPayment * 5% (this visit's discount, hidden from doctor)
-  afterDiscount: number;      // preDiscountPayment - appDiscount
-  paymentPercent: number;     // legacy (kept for compat, set to 0 in new flow)
-  paymentAmount: number;      // patient actual payment (afterDiscount - deposit)
-  depositDeducted?: number;   // deposit deducted (Visit 1 only)
+  carryForward: number;       // = deferredAmount carried to next visit
+  paymentAmount: number;      // amount patient pays directly to clinic for this visit
   paid: boolean;
   paidAt?: string;
 }
 
 export interface FinalInvoice {
-  items: { treatment: string; qty: number; price: number }[];  // all items flat (backward compat)
-  totalAmount: number;
-  appDiscount: number;       // 5% app payment discount
-  discountedTotal: number;   // totalAmount - appDiscount
-  depositPaid: number;
-  balanceDue: number;        // discountedTotal - depositPaid
+  items: { treatment: string; qty: number; price: number }[];
+  totalAmount: number;       // total treatment cost (paid directly to clinic)
   notes?: string;
   createdAt: string;
-  visitInvoices?: VisitInvoice[];  // per-visit breakdown (optional for backward compat)
+  visitInvoices?: VisitInvoice[];  // per-visit breakdown
 }
 
 export interface DeparturePickup {
@@ -237,14 +228,23 @@ export interface PickupReview {
   createdAt: string;
 }
 
+export type ServiceTier = "basic" | "standard" | "premium";
+
+export const SERVICE_TIER_CONFIG = {
+  basic:    { fee: 49,  label: "Basic",    includes: ["matching", "chat", "quotes"] },
+  standard: { fee: 99,  label: "Standard", includes: ["matching", "chat", "quotes", "airport_pickup", "airport_dropoff"] },
+  premium:  { fee: 199, label: "Premium",  includes: ["matching", "chat", "quotes", "airport_pickup", "airport_dropoff", "hotel_clinic_transport"] },
+} as const;
+
 export interface Booking {
   id: string;
   caseId: string;
   quoteId: string;
   dentistName: string;
   clinicName: string;
-  depositPaid: number;
-  totalPrice: number;
+  serviceTier: ServiceTier;         // patient's chosen service tier
+  serviceFee: number;               // 49 | 99 | 199
+  totalPrice: number;               // doctor's quoted price (paid directly to clinic)
   treatments?: { name: string; qty: number; price: number }[];  // doctor can modify
   visitDates: VisitDate[];
   arrivalInfo?: ArrivalInfo;
@@ -259,7 +259,9 @@ export interface Booking {
   cancelReason?: string;
   refundAmount?: number;
   platformFeeRate?: number;  // tier-based: 0.15 (Gold) | 0.18 (Silver) | 0.20 (Standard)
-  savedCard?: { last4: string; brand: string; name: string; expiry: string };
+  receiptUploaded?: boolean;        // patient uploaded hospital receipt
+  dropOffUnlocked?: boolean;        // free drop-off unlocked via receipt
+  receiptData?: { hospital: string; date: string; amount: number };  // extracted from receipt (image not stored)
   createdAt: string;
 }
 
@@ -357,13 +359,14 @@ const mockTranslate = async (text: string, from: "en" | "ko"): Promise<string> =
   }
 };
 
-// ── Refund 계산 헬퍼 ──
+// ── Refund 계산 헬퍼 (서비스 수수료 환불) ──
 export const getRefundInfo = (booking: Booking): { percent: number; amount: number; tier: "full" | "partial" | "none" } => {
+  const fee = booking.serviceFee || 0;
   const firstVisitDate = booking.visitDates?.[0]?.date;
-  if (!firstVisitDate) return { percent: 100, amount: booking.depositPaid, tier: "full" };
+  if (!firstVisitDate) return { percent: 100, amount: fee, tier: "full" };
   const daysUntil = Math.ceil((new Date(firstVisitDate).getTime() - Date.now()) / (1000 * 60 * 60 * 24));
-  if (daysUntil >= 7) return { percent: 100, amount: booking.depositPaid, tier: "full" };
-  if (daysUntil >= 3) return { percent: 50, amount: Math.round(booking.depositPaid * 0.5), tier: "partial" };
+  if (daysUntil >= 7) return { percent: 100, amount: fee, tier: "full" };
+  if (daysUntil >= 3) return { percent: 50, amount: Math.round(fee * 0.5), tier: "partial" };
   return { percent: 0, amount: 0, tier: "none" };
 };
 
@@ -801,7 +804,7 @@ export const store = {
       const data = await AsyncStorage.getItem(storageKey);
       result[key] = data ? JSON.parse(data) : null;
     }
-    console.log("=== DentaRoute Store ===", JSON.stringify(result, null, 2));
+    console.log("=== Concourse Store ===", JSON.stringify(result, null, 2));
     return result;
   },
 
@@ -1362,7 +1365,8 @@ export const store = {
       quoteId: "q001",
       dentistName: "Dr. Kim Minjun",
       clinicName: "Seoul Bright Dental",
-      depositPaid: 445,
+      serviceTier: "standard",
+      serviceFee: 99,
       totalPrice: 4450,
       treatments: [
         { name: "Implant: Whole (Root + Crown)", qty: 2, price: 1600 },
@@ -1397,7 +1401,6 @@ export const store = {
       currentVisit: 1,
       status: "flight_submitted",
       platformFeeRate: 0.20,
-      savedCard: { last4: "4242", brand: "Visa", name: "Sarah Johnson", expiry: "12/28" },
       createdAt: "2026-02-25T15:00:00Z",
     };
 
@@ -1408,7 +1411,8 @@ export const store = {
       quoteId: "q005",
       dentistName: "Dr. Park Soojin",
       clinicName: "Apgujeong Dental Care",
-      depositPaid: 270,
+      serviceTier: "basic",
+      serviceFee: 49,
       totalPrice: 2700,
       treatments: [
         { name: "Veneer", qty: 6, price: 450 },
@@ -1460,7 +1464,6 @@ export const store = {
       currentVisit: 1,
       status: "flight_submitted",
       platformFeeRate: 0.20,
-      savedCard: { last4: "4242", brand: "Visa", name: "Sarah Johnson", expiry: "12/28" },
       createdAt: "2026-02-26T15:00:00Z",
     };
     await AsyncStorage.setItem(KEYS.BOOKINGS, JSON.stringify([demoBooking, demoBooking2]));
