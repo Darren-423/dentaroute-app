@@ -129,11 +129,11 @@ export default function DoctorLoginScreen() {
             <Animated.View entering={FadeInDown.duration(700).delay(300)} style={styles.fieldGroup}>
               <Text style={styles.label}>EMAIL</Text>
               <View style={styles.inputContainer}>
-                <Ionicons name="mail-outline" size={20} color="rgba(255,255,255,0.5)" style={styles.inputIcon} />
+                <Ionicons name="mail-outline" size={20} color="#9CA3AF" style={styles.inputIcon} />
                 <TextInput
                   style={styles.input}
                   placeholder="doctor@clinic.com"
-                  placeholderTextColor="rgba(255,255,255,0.3)"
+                  placeholderTextColor="#9CA3AF"
                   value={email}
                   onChangeText={(t) => { setEmail(t); setError(""); }}
                   keyboardType="email-address"
@@ -148,11 +148,11 @@ export default function DoctorLoginScreen() {
             <Animated.View entering={FadeInDown.duration(700).delay(400)} style={styles.fieldGroup}>
               <Text style={styles.label}>PASSWORD</Text>
               <View style={styles.inputContainer}>
-                <Ionicons name="lock-closed-outline" size={20} color="rgba(255,255,255,0.5)" style={styles.inputIcon} />
+                <Ionicons name="lock-closed-outline" size={20} color="#9CA3AF" style={styles.inputIcon} />
                 <TextInput
                   style={[styles.input, { paddingRight: 50 }]}
                   placeholder="••••••••"
-                  placeholderTextColor="rgba(255,255,255,0.3)"
+                  placeholderTextColor="#9CA3AF"
                   value={password}
                   onChangeText={(t) => { setPassword(t); setError(""); }}
                   secureTextEntry={!showPassword}
@@ -164,7 +164,7 @@ export default function DoctorLoginScreen() {
                   onPress={() => setShowPassword(!showPassword)}
                   hitSlop={{ top: 15, bottom: 15, left: 15, right: 15 }}
                 >
-                  <Ionicons name={showPassword ? "eye-off-outline" : "eye-outline"} size={22} color="rgba(255,255,255,0.7)" />
+                  <Ionicons name={showPassword ? "eye-off-outline" : "eye-outline"} size={22} color="#6B7280" />
                 </Pressable>
               </View>
             </Animated.View>
@@ -264,7 +264,7 @@ const styles = StyleSheet.create({
   },
   subtitle: {
     fontSize: 15,
-    color: "rgba(255,255,255,0.6)",
+    color: "rgba(255,255,255,0.85)",
     fontWeight: "400",
     lineHeight: 22,
   },
@@ -294,17 +294,17 @@ const styles = StyleSheet.create({
   label: {
     fontSize: 12,
     fontWeight: "600",
-    color: "rgba(255,255,255,0.6)",
+    color: "rgba(255,255,255,0.85)",
     letterSpacing: 1,
     marginLeft: 4,
   },
   inputContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: "rgba(255,255,255,0.06)",
+    backgroundColor: "#FFFFFF",
     borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.15)",
-    borderRadius: 16,
+    borderColor: "#E5E7EB",
+    borderRadius: 12,
     overflow: 'hidden',
     height: 56,
   },
@@ -316,7 +316,7 @@ const styles = StyleSheet.create({
     flex: 1,
     height: '100%',
     fontSize: 15,
-    color: SharedColors.white,
+    color: "#111827",
     paddingRight: 16,
   },
   eyeBtn: {
@@ -333,7 +333,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 4,
   },
   forgotText: {
-    color: "rgba(255,255,255,0.7)",
+    color: "rgba(255,255,255,0.85)",
     fontSize: 14,
     fontWeight: "500",
   },
@@ -342,11 +342,9 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     height: 56,
-    borderRadius: 16,
+    borderRadius: 14,
     overflow: 'hidden',
-    backgroundColor: 'rgba(255,255,255,0.1)',
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.2)',
+    backgroundColor: '#0F766E',
   },
   signInGradient: {
     ...StyleSheet.absoluteFillObject,
@@ -365,7 +363,7 @@ const styles = StyleSheet.create({
   },
   bottomLinkText: {
     fontSize: 14,
-    color: "rgba(255,255,255,0.6)",
+    color: "rgba(255,255,255,0.85)",
   },
   bottomLinkAction: {
     fontSize: 14,

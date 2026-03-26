@@ -86,6 +86,12 @@ export default function DoctorChatListScreen() {
           <Text style={s.emptyDesc}>
             Patients will message you when{"\n"}they're interested in your quotes
           </Text>
+          <TouchableOpacity
+            style={{ marginTop: 24, backgroundColor: '#0F766E', paddingVertical: 12, paddingHorizontal: 24, borderRadius: 12 }}
+            onPress={() => router.push('/doctor/dashboard' as any)}
+          >
+            <Text style={{ color: '#FFFFFF', fontSize: 14, fontWeight: '600' }}>View Cases</Text>
+          </TouchableOpacity>
         </View>
       ) : (
         <FlatList

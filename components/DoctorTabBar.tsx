@@ -1,6 +1,6 @@
 import { Feather } from "@expo/vector-icons";
 import React, { useState } from "react";
-import { Platform, StyleSheet, TouchableOpacity, View } from "react-native";
+import { Platform, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 export type DoctorTabName = "Home" | "Chat" | "Hours" | "Schedule" | "Profile";
@@ -61,6 +61,7 @@ export function DoctorTabBar({ currentTab, chatUnread = 0, onTabPress }: DoctorT
                   <View style={s.badge} />
                 )}
               </View>
+              <Text style={[s.tabLabel, isActive && s.tabLabelActive]}>{item.label}</Text>
             </TouchableOpacity>
           );
         })}
@@ -105,7 +106,7 @@ const s = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     flex: 1,
-    height: 36,
+    height: 46,
   },
   iconWrap: {
     width: 36,
@@ -130,5 +131,14 @@ const s = StyleSheet.create({
     height: 4,
     borderRadius: 2,
     backgroundColor: "#0f766e",
+  },
+  tabLabel: {
+    fontSize: 10,
+    fontWeight: "500" as const,
+    color: "#b0b0b0",
+    marginTop: 2,
+  },
+  tabLabelActive: {
+    color: "#0f766e",
   },
 });

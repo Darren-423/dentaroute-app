@@ -152,6 +152,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 28,
     paddingTop: 60,
     paddingBottom: 56,
+    justifyContent: 'center',
   },
   logoArea: {
     alignItems: 'center',
@@ -181,8 +182,8 @@ const styles = StyleSheet.create({
     minHeight: 180,
   },
   subtitle: {
-    fontSize: 15,
-    color: 'rgba(255,255,255,0.7)',
+    fontSize: 18,
+    color: 'rgba(255,255,255,0.85)',
     textAlign: 'center',
     lineHeight: 22,
     paddingHorizontal: 20,
@@ -193,8 +194,8 @@ const styles = StyleSheet.create({
     color: SharedColors.white,
   },
   swipeHint: {
-    fontSize: 12,
-    color: 'rgba(255,255,255,0.4)',
+    fontSize: 14,
+    color: 'rgba(255,255,255,0.8)',
     textAlign: 'center',
     marginTop: 16,
     fontStyle: 'italic',
@@ -212,7 +213,7 @@ const styles = StyleSheet.create({
   },
   label: {
     fontSize: 9,
-    color: 'rgba(255,255,255,0.5)',
+    color: 'rgba(255,255,255,0.85)',
     textAlign: 'center',
     fontWeight: '600',
     letterSpacing: 0.5,
@@ -239,12 +240,12 @@ const styles = StyleSheet.create({
   },
   arrow: {
     fontSize: 18,
-    color: 'rgba(255,255,255,0.3)',
+    color: 'rgba(255,255,255,0.85)',
     marginHorizontal: 12,
   },
   savings: {
     fontSize: 10,
-    color: 'rgba(255,255,255,0.7)',
+    color: 'rgba(255,255,255,0.85)',
     textAlign: 'center',
   },
   savingsBold: {
@@ -276,7 +277,7 @@ const styles = StyleSheet.create({
     width: 20,
   },
   button: {
-    backgroundColor: SharedColors.white,
+    backgroundColor: '#7C3AED',
     borderRadius: 14,
     paddingVertical: 16,
     paddingHorizontal: 24,
@@ -296,7 +297,7 @@ const styles = StyleSheet.create({
   buttonText: {
     fontSize: 17,
     fontWeight: '700',
-    color: PatientTheme.primary,
+    color: '#FFFFFF',
     letterSpacing: 0.3,
   },
   arrowCircle: {
@@ -308,12 +309,12 @@ const styles = StyleSheet.create({
     height: 9,
     borderTopWidth: 2.5,
     borderRightWidth: 2.5,
-    borderColor: PatientTheme.primary,
+    borderColor: '#FFFFFF',
     transform: [{ rotate: '45deg' }],
   },
   founderText: {
     fontSize: 11,
-    color: 'rgba(255,255,255,0.35)',
+    color: 'rgba(255,255,255,0.85)',
     textAlign: 'center',
     marginTop: 14,
     letterSpacing: 0.2,

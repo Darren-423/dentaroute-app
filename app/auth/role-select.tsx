@@ -69,7 +69,7 @@ const RoleCard = ({
         >
           {/* Subtle gradient border effect inside the card */}
           <LinearGradient
-            colors={['rgba(255,255,255,0.2)', 'rgba(255,255,255,0.02)']}
+            colors={['rgba(255,255,255,0.35)', 'rgba(255,255,255,0.05)']}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 1 }}
             style={styles.cardGradient}
@@ -82,7 +82,7 @@ const RoleCard = ({
             <Text style={styles.cardTitle}>{title}</Text>
             <Text style={styles.cardSubtitle}>{subtitle}</Text>
           </View>
-          <Ionicons name="chevron-forward" size={20} color="rgba(255,255,255,0.4)" />
+          <Ionicons name="chevron-forward" size={20} color="rgba(255,255,255,0.85)" />
         </Pressable>
       </Animated.View>
     </View>
@@ -191,6 +191,7 @@ const styles = StyleSheet.create({
   content: {
     flex: 1,
     paddingHorizontal: 24,
+    justifyContent: 'center',
     zIndex: 10,
   },
 
@@ -233,7 +234,7 @@ const styles = StyleSheet.create({
   },
   subtitle: {
     fontSize: 16,
-    color: 'rgba(255,255,255,0.7)',
+    color: 'rgba(255,255,255,0.85)',
     fontWeight: '400',
     lineHeight: 24,
   },
@@ -254,11 +255,11 @@ const styles = StyleSheet.create({
   card: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(255,255,255,0.06)',
+    backgroundColor: 'rgba(255,255,255,0.12)',
     borderRadius: 24,
     padding: 24,
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.15)',
+    borderColor: 'rgba(255,255,255,0.25)',
     overflow: 'hidden',
   },
   cardPressed: {
@@ -292,7 +293,7 @@ const styles = StyleSheet.create({
   },
   cardSubtitle: {
     fontSize: 14,
-    color: 'rgba(255,255,255,0.6)',
+    color: 'rgba(255,255,255,0.85)',
     fontWeight: '400',
     lineHeight: 20,
   },
@@ -308,7 +309,7 @@ const styles = StyleSheet.create({
   },
   devMenuText: {
     fontSize: 13,
-    color: 'rgba(255,255,255,0.4)',
+    color: 'rgba(255,255,255,0.85)',
     fontWeight: '500',
   },
 });

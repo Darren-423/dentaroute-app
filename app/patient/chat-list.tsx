@@ -94,6 +94,12 @@ export default function PatientChatListScreen() {
           <Text style={s.emptyDesc}>
             Start a conversation with a dentist{"\n"}from their quote details page
           </Text>
+          <TouchableOpacity
+            style={{ marginTop: 24, backgroundColor: '#7C3AED', paddingVertical: 12, paddingHorizontal: 24, borderRadius: 12 }}
+            onPress={() => router.push('/patient/dashboard' as any)}
+          >
+            <Text style={{ color: '#FFFFFF', fontSize: 14, fontWeight: '600' }}>Browse My Cases</Text>
+          </TouchableOpacity>
         </View>
       ) : (
         <FlatList

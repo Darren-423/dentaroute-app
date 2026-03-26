@@ -782,6 +782,21 @@ export default function VisitScheduleScreen() {
             {completedCount}/{visits.length}
           </Text>
         </View>
+        {params.totalPrice && params.amount && (
+          <View style={{ backgroundColor: '#F9FAFB', borderRadius: 12, padding: 14, marginBottom: 10, marginHorizontal: 2 }}>
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 6 }}>
+              <Text style={{ fontSize: 13, color: '#6B7280' }}>Total treatment cost</Text>
+              <Text style={{ fontSize: 13, color: '#111827' }}>${Number(params.totalPrice).toLocaleString()}</Text>
+            </View>
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 6 }}>
+              <Text style={{ fontSize: 13, fontWeight: '600', color: '#111827' }}>Service fee (pay now)</Text>
+              <Text style={{ fontSize: 15, fontWeight: '700', color: '#7C3AED' }}>${Number(params.amount).toLocaleString()}</Text>
+            </View>
+            <Text style={{ fontSize: 11, color: '#9CA3AF', marginTop: 2 }}>
+              Treatment cost is paid directly at the clinic
+            </Text>
+          </View>
+        )}
         <TouchableOpacity
           style={[s.nextBtn, !allDatesSelected && s.nextBtnDisabled]}
           onPress={handleConfirm}
@@ -794,7 +809,7 @@ export default function VisitScheduleScreen() {
             <Text style={s.nextBtnText}>
               {isReschedule
                 ? "Confirm Reschedule"
-                : `Confirm & Pay ${params.amount ? `$${Number(params.amount).toLocaleString()}` : "Deposit"} →`}
+                : `Confirm Schedule${params.amount ? ` — Service Fee $${Number(params.amount).toLocaleString()}` : ""} →`}
             </Text>
           )}
         </TouchableOpacity>

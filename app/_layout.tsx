@@ -1,6 +1,7 @@
 import { router, Stack, useGlobalSearchParams, usePathname } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { useEffect, useMemo } from "react";
+import { Platform, StyleSheet, View } from "react-native";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 
 import {
@@ -78,7 +79,25 @@ export default function RootLayout() {
   return (
     <SafeAreaProvider>
       <StatusBar style="light" />
-      <Stack screenOptions={{ headerShown: false, animation: "slide_from_right" }} />
+      <View style={layoutStyles.outer}>
+        <View style={layoutStyles.inner}>
+          <Stack screenOptions={{ headerShown: false, animation: "slide_from_right" }} />
+        </View>
+      </View>
     </SafeAreaProvider>
   );
 }
+
+const layoutStyles = StyleSheet.create({
+  outer: {
+    flex: 1,
+    alignItems: "center",
+    backgroundColor: "#f5f5f5",
+  },
+  inner: {
+    flex: 1,
+    width: "100%",
+    maxWidth: Platform.OS === "web" ? 480 : undefined,
+    ...(Platform.OS === "web" ? { boxShadow: "0 0 20px rgba(0,0,0,0.1)" } as any : {}),
+  },
+});

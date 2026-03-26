@@ -1,7 +1,7 @@
 import { Feather } from "@expo/vector-icons";
 import { router } from "expo-router";
 import React, { useEffect, useRef, useState } from "react";
-import { Animated, Platform, StyleSheet, TouchableOpacity, View } from "react-native";
+import { Animated, Platform, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { setTabDirection } from "../lib/tabDirection";
 
@@ -77,6 +77,7 @@ export function PatientTabBar({ currentTab, chatUnread = 0 }: PatientTabBarProps
                   <View style={s.badge} />
                 )}
               </View>
+              <Text style={[s.tabLabel, isActive && s.tabLabelActive]}>{item.label}</Text>
             </TouchableOpacity>
           );
         })}
@@ -110,7 +111,7 @@ const s = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     flex: 1,
-    height: 36,
+    height: 46,
   },
   iconWrap: {
     width: 36,
@@ -135,5 +136,14 @@ const s = StyleSheet.create({
     height: 4,
     borderRadius: 2,
     backgroundColor: "#4A0080",
+  },
+  tabLabel: {
+    fontSize: 10,
+    fontWeight: "500" as const,
+    color: "#b0b0b0",
+    marginTop: 2,
+  },
+  tabLabelActive: {
+    color: "#4A0080",
   },
 });
