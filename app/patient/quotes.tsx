@@ -121,42 +121,42 @@ export default function PatientQuotesScreen() {
         </View>
       </LinearGradient>
 
-      {/* Sort options + Compare */}
-      {quotes.length > 0 && (
-        <View style={s.sortWrapper}>
-          <View style={s.sortRow}>
-            <Text style={s.sortLabel}>Sort by</Text>
-            {([
-              { key: "price" as SortOption, label: "Price" },
-              { key: "reviews" as SortOption, label: "Reviews" },
-              { key: "stars" as SortOption, label: "Rating" },
-              { key: "duration" as SortOption, label: "Duration" },
-            ]).map((opt) => {
-              const isActive = sortBy === opt.key;
-              return (
-                <TouchableOpacity
-                  key={opt.key}
-                  style={[s.sortBtn, isActive && s.sortBtnActive]}
-                  onPress={() => handleSort(opt.key)}
-                  activeOpacity={0.7}
-                >
-                  <Text style={[s.sortBtnText, isActive && s.sortBtnTextActive]}>
-                    {opt.label}
-                  </Text>
-                  {isActive && (
-                    <View style={s.sortArrows}>
-                      <View style={[s.sortTriUp, sortAsc && s.sortTriUpActive]} />
-                      <View style={[s.sortTriDown, !sortAsc && s.sortTriDownActive]} />
-                    </View>
-                  )}
-                </TouchableOpacity>
-              );
-            })}
-          </View>
-        </View>
-      )}
-
       <ScrollView contentContainerStyle={s.content} showsVerticalScrollIndicator={false}>
+        {/* Sort options — scrolls with content */}
+        {quotes.length > 0 && (
+          <View style={s.sortWrapper}>
+            <View style={s.sortRow}>
+              <Text style={s.sortLabel}>Sort by</Text>
+              {([
+                { key: "price" as SortOption, label: "Price" },
+                { key: "reviews" as SortOption, label: "Reviews" },
+                { key: "stars" as SortOption, label: "Rating" },
+                { key: "duration" as SortOption, label: "Duration" },
+              ]).map((opt) => {
+                const isActive = sortBy === opt.key;
+                return (
+                  <TouchableOpacity
+                    key={opt.key}
+                    style={[s.sortBtn, isActive && s.sortBtnActive]}
+                    onPress={() => handleSort(opt.key)}
+                    activeOpacity={0.7}
+                  >
+                    <Text style={[s.sortBtnText, isActive && s.sortBtnTextActive]}>
+                      {opt.label}
+                    </Text>
+                    {isActive && (
+                      <View style={s.sortArrows}>
+                        <View style={[s.sortTriUp, sortAsc && s.sortTriUpActive]} />
+                        <View style={[s.sortTriDown, !sortAsc && s.sortTriDownActive]} />
+                      </View>
+                    )}
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
+          </View>
+        )}
+
         <View style={{ backgroundColor: "#f1f5f9", borderRadius: 8, padding: 10, marginBottom: 12, borderWidth: 1, borderColor: SharedColors.border }}><Text style={{ fontSize: 11, color: SharedColors.slate, lineHeight: 16 }}>Quotes are estimates only. Actual treatment costs may change after in-person examination. Concourse does not guarantee treatment outcomes.</Text></View>
 
         {quotes.length === 0 ? (
