@@ -51,6 +51,14 @@ export interface PatientCase {
   hidden?: boolean;
   caseMode?: "specific" | "proposal";  // Treatment Intent: A="specific", B="proposal"
   concernDescription?: string;         // Path B: patient's concern text
+  concernPhoto?: string;               // Path B: photo URI
+  quickHealth?: {
+    bloodThinners: boolean;
+    drugAllergies: boolean;
+    pregnantNursing: boolean;
+    diabetesImplant?: boolean;
+    details?: string;
+  };
 }
 
 export interface DentistQuote {
@@ -73,6 +81,7 @@ export interface DentistQuote {
     description: string;
     gapMonths?: number;
     gapDays?: number;
+    gapReason?: string;
     paymentAmount?: number;
     paymentPercent?: number;
     availabilitySlots?: { date: string; time: string }[];
@@ -124,6 +133,7 @@ export interface VisitDate {
   confirmedTime?: string;   // patient selects time in visit-schedule
   gapMonths?: number;       // min gap AFTER this visit before next
   gapDays?: number;         // min gap AFTER this visit before next
+  gapReason?: string;       // reason for waiting period (e.g. "Bone Integration Period")
   paymentAmount?: number;   // amount due at this visit
   paymentPercent?: number;  // OR percentage of total
   paid?: boolean;           // has patient paid for this visit
@@ -821,6 +831,23 @@ export const store = {
     };
     bookings.push(booking);
     await AsyncStorage.setItem(KEYS.BOOKINGS, JSON.stringify(bookings));
+
+    // Auto-create chat room with the dentist on booking confirmation
+    const user = await store.getCurrentUser();
+    const patientName = user?.name || data.dentistName || "Patient";
+    const chatRoom = await store.getOrCreateChatRoom(
+      data.caseId,
+      patientName,
+      data.dentistName,
+      data.clinicName,
+    );
+    // Send an automatic welcome message from the doctor
+    await store.sendMessage(
+      chatRoom.id,
+      "doctor",
+      `Hello! Your booking with ${data.clinicName} has been confirmed. Feel free to message me if you have any questions before your visit.`,
+    );
+
     return booking;
   },
 
@@ -1016,9 +1043,83 @@ export const store = {
   },
 
   // ══════════════════════════
+  //  케이스 보강 동기화
+  // ══════════════════════════
+  syncCaseEnrichment: async (caseId: string) => {
+    const [medical, dental, files] = await Promise.all([
+      store.getPatientMedical(),
+      store.getPatientDental(),
+      store.getPatientFiles(),
+    ]);
+    const updates: any = {};
+    if (medical) {
+      const notes: string[] = [];
+      if (medical.conditions?.length) notes.push(`Conditions: ${medical.conditions.join(', ')}`);
+      if (medical.medications?.length) notes.push(`Medications: ${medical.medications.join(', ')}`);
+      if (medical.allergies?.length) notes.push(`Allergies: ${medical.allergies.join(', ')}`);
+      updates.medicalNotes = notes.join('. ') || '';
+    }
+    if (dental?.issues?.length) updates.dentalIssues = dental.issues;
+    if (files) {
+      updates.filesCount = {
+        xrays: files.xrays?.length || 0,
+        treatmentPlans: files.treatmentPlans?.length || 0,
+        photos: files.photos?.length || 0,
+      };
+    }
+    await store.updateCase(caseId, updates);
+    await store.addNotification({
+      role: 'doctor', type: 'case_updated',
+      title: 'Patient updated their case',
+      body: `New information added to Case #${caseId}`,
+      icon: '📋',
+      route: `/doctor/case-detail?caseId=${caseId}`,
+    });
+  },
+
+  // ══════════════════════════
   //  데모 시드 데이터
   // ══════════════════════════
   seedDemoData: async () => {
+    // ── Date helpers (all dates relative to NOW) ──
+    const now = new Date();
+    const day = (offset: number) => {
+      const d = new Date(now);
+      d.setDate(d.getDate() + offset);
+      return d;
+    };
+    const fmt = (d: Date) => d.toISOString().slice(0, 10);                  // "YYYY-MM-DD"
+    const fmtISO = (d: Date, time = "10:00:00") => fmt(d) + "T" + time + "Z"; // ISO timestamp
+    const fmtRange = (a: Date, b: Date) => {
+      const months = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+      return `${months[a.getMonth()]} ${a.getDate()} – ${months[b.getMonth()]} ${b.getDate()}, ${b.getFullYear()}`;
+    };
+
+    // Key reference dates
+    const caseDate1       = day(-34);   // Case 1001 submitted
+    const caseDate2       = day(-32);   // Case 1002 submitted
+    const quoteDate1      = day(-33);   // Quotes for 1001
+    const quoteDate2      = day(-31);   // Quotes for 1002
+    const chatDay         = day(-32);   // Chat messages
+    const bookingCreated1 = day(-30);   // Booking 1 created
+    const bookingCreated2 = day(-29);   // Booking 2 created
+
+    // Booking 1 — upcoming trip (arrives in 5 days)
+    const b1Arrival       = day(5);
+    const b1Visit1        = day(6);
+    const b1Visit2        = day(7);
+    const b1Departure     = day(12);
+    const b1Visit3        = day(97);    // ~3 months later
+    const b1Visit4        = day(104);   // 7 days after visit 3
+
+    // Booking 2 — trip in ~2.5 months
+    const b2Trip1Arrival  = day(75);
+    const b2Visit1        = day(76);
+    const b2Trip1Depart   = day(79);
+    const b2Trip2Arrival  = day(82);
+    const b2Visit2        = day(83);
+    const b2Trip2Depart   = day(85);
+
     // 1. Patient Profile
     await AsyncStorage.setItem(KEYS.PATIENT_PROFILE, JSON.stringify({
       fullName: "Sarah Johnson",
@@ -1077,8 +1178,8 @@ export const store = {
     // 4. Travel Dates
     await AsyncStorage.setItem(KEYS.PATIENT_TRAVEL, JSON.stringify({
       scheduleType: "fixed",
-      arrivalDate: "2026-03-15",
-      departureDate: "2026-03-22",
+      arrivalDate: fmt(b1Arrival),
+      departureDate: fmt(b1Departure),
       tripDays: 7,
     }));
 
@@ -1102,7 +1203,7 @@ export const store = {
         id: "1001",
         patientName: "Sarah Johnson",
         country: "United States",
-        date: "2026-02-23",
+        date: fmt(caseDate1),
         treatments: [
           { name: "Implant: Whole (Root + Crown)", qty: 2 },
           { name: "Crowns", qty: 1 },
@@ -1112,14 +1213,14 @@ export const store = {
         dentalIssues: ["Missing Teeth", "Discoloration"],
         filesCount: { xrays: 2, treatmentPlans: 1, photos: 3 },
         status: "booked",
-        visitDate: "Mar 15 – Mar 22, 2026",
+        visitDate: fmtRange(b1Arrival, b1Departure),
         birthDate: "1990-05-15",
       },
       {
         id: "1002",
         patientName: "Sarah Johnson",
         country: "United States",
-        date: "2026-02-25",
+        date: fmt(caseDate2),
         treatments: [
           { name: "Veneer", qty: 6 },
         ],
@@ -1127,7 +1228,7 @@ export const store = {
         dentalIssues: ["Discoloration", "Chipped Teeth"],
         filesCount: { xrays: 1, treatmentPlans: 0, photos: 4 },
         status: "booked",
-        visitDate: "Jun 18 – Jun 27, 2026",
+        visitDate: fmtRange(b2Trip1Arrival, b2Trip2Depart),
         birthDate: "1990-05-15",
       },
     ];
@@ -1155,13 +1256,13 @@ export const store = {
         treatmentDetails: "Premium Osstem implants with zirconia crowns. Includes free consultation and aftercare package.",
         duration: "6 Days",
         visits: [
-          { visit: 1, description: "Initial consultation, panoramic X-ray, teeth cleaning", gapMonths: 0, gapDays: 1, paymentPercent: 30 },
-          { visit: 2, description: "Implant placement surgery (2 implants)", gapMonths: 3, gapDays: 0, paymentPercent: 40 },
-          { visit: 3, description: "Follow-up check, suture inspection", gapMonths: 0, gapDays: 7, paymentPercent: 0 },
+          { visit: 1, description: "Initial consultation, panoramic X-ray, teeth cleaning", gapMonths: 0, gapDays: 1, gapReason: "Pre-surgery Preparation", paymentPercent: 30 },
+          { visit: 2, description: "Implant placement surgery (2 implants)", gapMonths: 3, gapDays: 0, gapReason: "Bone Integration Period", paymentPercent: 40 },
+          { visit: 3, description: "Follow-up check, suture inspection", gapMonths: 0, gapDays: 7, gapReason: "Soft Tissue Healing", paymentPercent: 0 },
           { visit: 4, description: "Final crown fitting and veneer adjustment", paymentPercent: 30 },
         ],
         message: "We can complete all treatments during your visit. Airport pickup included!",
-        createdAt: "2026-02-24T10:30:00Z",
+        createdAt: fmtISO(quoteDate1, "10:30:00"),
         licenseVerified: true,
         certifications: ["License Verified", "ISO 9001", "Korean Dental Association"],
       },
@@ -1192,7 +1293,7 @@ export const store = {
           { visit: 5, description: "Final check and veneer polish" },
         ],
         message: "Premium Straumann implants for the best long-term results.",
-        createdAt: "2026-02-24T14:15:00Z",
+        createdAt: fmtISO(quoteDate1, "14:15:00"),
         licenseVerified: true,
         certifications: ["License Verified", "ISO 9001"],
       },
@@ -1221,7 +1322,7 @@ export const store = {
           { visit: 3, description: "Crown and veneer placement" },
         ],
         message: "Most affordable option with great results. Clinic is walking distance from major hotels.",
-        createdAt: "2026-02-25T09:00:00Z",
+        createdAt: fmtISO(day(-32), "09:00:00"),
         licenseVerified: false,
         certifications: ["License Verified"],
       },
@@ -1248,7 +1349,7 @@ export const store = {
           { visit: 2, description: "Veneer fitting and bonding" },
         ],
         message: "We specialize in veneer treatments. Beautiful results guaranteed!",
-        createdAt: "2026-02-26T10:00:00Z",
+        createdAt: fmtISO(quoteDate2, "10:00:00"),
         licenseVerified: true,
         certifications: ["License Verified", "ISO 9001", "Korean Dental Association"],
       },
@@ -1267,7 +1368,7 @@ export const store = {
         treatmentDetails: "Ultra-thin porcelain veneers. Minimal tooth preparation.",
         duration: "5 Days",
         message: "Premium ultra-thin veneers for the most natural look.",
-        createdAt: "2026-02-26T14:00:00Z",
+        createdAt: fmtISO(quoteDate2, "14:00:00"),
         licenseVerified: true,
         certifications: ["License Verified", "ISO 9001"],
       },
@@ -1283,7 +1384,7 @@ export const store = {
         dentistName: "Dr. Kim Minjun",
         clinicName: "Seoul Bright Dental",
         lastMessage: "📷 Photo",
-        lastMessageAt: "2026-02-25T11:35:00Z",
+        lastMessageAt: fmtISO(chatDay, "11:35:00"),
         unreadPatient: 1,
         unreadDoctor: 0,
       },
@@ -1299,9 +1400,9 @@ export const store = {
         text: "Hello! I have a question about the treatment plan.",
         originalLang: "en",
         translatedText: "[KO 번역] 안녕하세요! 치료 계획에 대해 질문이 있습니다.",
-        timestamp: "2026-02-25T10:00:00Z",
+        timestamp: fmtISO(chatDay, "10:00:00"),
         delivered: true,
-        readAt: "2026-02-25T10:04:00Z",
+        readAt: fmtISO(chatDay, "10:04:00"),
       },
       {
         id: "msg_002",
@@ -1310,9 +1411,9 @@ export const store = {
         text: "Hi Sarah! Of course, I'd be happy to help. What would you like to know?",
         originalLang: "ko",
         translatedText: "[EN Translation] 안녕하세요 Sarah! 물론이죠, 무엇이 궁금하세요?",
-        timestamp: "2026-02-25T10:05:00Z",
+        timestamp: fmtISO(chatDay, "10:05:00"),
         delivered: true,
-        readAt: "2026-02-25T10:10:00Z",
+        readAt: fmtISO(chatDay, "10:10:00"),
       },
       {
         id: "msg_003",
@@ -1321,9 +1422,9 @@ export const store = {
         text: "How long is the recovery time for the implants? And do you recommend any hotels nearby?",
         originalLang: "en",
         translatedText: "How long is the recovery time for the implants? And do you recommend any hotels nearby? → [KO] 회복",
-        timestamp: "2026-02-25T10:12:00Z",
+        timestamp: fmtISO(chatDay, "10:12:00"),
         delivered: true,
-        readAt: "2026-02-25T10:50:00Z",
+        readAt: fmtISO(chatDay, "10:50:00"),
       },
       {
         id: "msg_004",
@@ -1332,9 +1433,9 @@ export const store = {
         text: "The implant procedure itself takes about 1 hour per implant. You'll need 2-3 days of rest after. Most patients can eat soft foods the next day.",
         originalLang: "ko",
         translatedText: "[EN Translation] 임플란트 시술 자체는 1개당 약 1시간 소요됩니다. 시술 후 2-3일 휴식이 필요하며, 대부분 다음 날부터 부드러운 음식 섭취가 가능합니다.",
-        timestamp: "2026-02-25T11:00:00Z",
+        timestamp: fmtISO(chatDay, "11:00:00"),
         delivered: true,
-        readAt: "2026-02-25T11:10:00Z",
+        readAt: fmtISO(chatDay, "11:10:00"),
       },
       {
         id: "msg_005",
@@ -1343,7 +1444,7 @@ export const store = {
         text: "Yes, we provide hotel recommendations near our clinic!",
         originalLang: "ko",
         translatedText: "[EN Translation] 네, 저희 클리닉 근처 호텔 추천도 해드립니다!",
-        timestamp: "2026-02-25T11:30:00Z",
+        timestamp: fmtISO(chatDay, "11:30:00"),
         delivered: true,
       },
       {
@@ -1354,7 +1455,7 @@ export const store = {
         messageType: "image",
         imageUri: "https://placehold.co/400x300/e2e8f0/64748b?text=X-Ray+Sample",
         originalLang: "ko",
-        timestamp: "2026-02-25T11:35:00Z",
+        timestamp: fmtISO(chatDay, "11:35:00"),
         delivered: true,
       },
     ];
@@ -1376,34 +1477,34 @@ export const store = {
         { name: "Veneers", qty: 1, price: 800 },
       ],
       visitDates: [
-        { visit: 1, description: "Initial consultation, panoramic X-ray, teeth cleaning", date: "2026-03-16", confirmedTime: "9:00 AM", gapMonths: 0, gapDays: 1, paymentPercent: 30 },
-        { visit: 2, description: "Implant placement surgery (2 implants)", date: "2026-03-17", confirmedTime: "9:00 AM", gapMonths: 3, gapDays: 0, paymentPercent: 40 },
-        { visit: 3, description: "Follow-up check, suture inspection", date: "2026-06-19", confirmedTime: "11:00 AM", gapMonths: 0, gapDays: 7, paymentPercent: 0 },
-        { visit: 4, description: "Final crown fitting and veneer adjustment", date: "2026-06-26", confirmedTime: "10:00 AM", paymentPercent: 30 },
+        { visit: 1, description: "Initial consultation, panoramic X-ray, teeth cleaning", date: fmt(b1Visit1), confirmedTime: "9:00 AM", gapMonths: 0, gapDays: 1, gapReason: "Pre-surgery Preparation", paymentPercent: 30 },
+        { visit: 2, description: "Implant placement surgery (2 implants)", date: fmt(b1Visit2), confirmedTime: "9:00 AM", gapMonths: 3, gapDays: 0, gapReason: "Bone Integration Period", paymentPercent: 40 },
+        { visit: 3, description: "Follow-up check, suture inspection", date: fmt(b1Visit3), confirmedTime: "11:00 AM", gapMonths: 0, gapDays: 7, gapReason: "Soft Tissue Healing", paymentPercent: 0 },
+        { visit: 4, description: "Final crown fitting and veneer adjustment", date: fmt(b1Visit4), confirmedTime: "10:00 AM", paymentPercent: 30 },
       ],
       arrivalInfo: {
         airline: "Korean Air",
         flightNumber: "KE082",
-        flightDate: "2026-03-15",
-        arrivalDate: "2026-03-15",
+        flightDate: fmt(b1Arrival),
+        arrivalDate: fmt(b1Arrival),
         arrivalTime: "14:30",
         terminal: "Terminal 1",
         depAirline: "Korean Air",
         depFlightNumber: "KE081",
-        depFlightDate: "2026-03-22",
+        depFlightDate: fmt(b1Departure),
         depFlightTime: "10:00",
         depTerminal: "Terminal 1",
         hotelName: "Lotte Hotel Seoul",
         hotelAddress: "30 Eulji-ro, Jung-gu, Seoul",
-        checkInDate: "2026-03-15",
-        checkOutDate: "2026-03-22",
+        checkInDate: fmt(b1Arrival),
+        checkOutDate: fmt(b1Departure),
         confirmationNumber: "LH-829461",
         pickupRequested: true,
       },
       currentVisit: 1,
       status: "flight_submitted",
       platformFeeRate: 0.20,
-      createdAt: "2026-02-25T15:00:00Z",
+      createdAt: fmtISO(bookingCreated1, "15:00:00"),
     };
 
     // Demo Booking 2 (case 1002, Dr. Park's quote, multi-trip)
@@ -1420,45 +1521,45 @@ export const store = {
         { name: "Veneer", qty: 6, price: 450 },
       ],
       visitDates: [
-        { visit: 1, description: "Consultation and teeth preparation", date: "2026-06-19", confirmedTime: "10:00 AM", gapMonths: 0, gapDays: 7, paymentPercent: 50 },
-        { visit: 2, description: "Veneer fitting and bonding", date: "2026-06-26", confirmedTime: "10:00 AM", paymentPercent: 50 },
+        { visit: 1, description: "Consultation and teeth preparation", date: fmt(b2Visit1), confirmedTime: "10:00 AM", gapMonths: 0, gapDays: 7, gapReason: "Lab Processing Period", paymentPercent: 50 },
+        { visit: 2, description: "Veneer fitting and bonding", date: fmt(b2Visit2), confirmedTime: "10:00 AM", paymentPercent: 50 },
       ],
       tripInfos: [
         {
           airline: "Asiana Airlines",
           flightNumber: "OZ201",
-          flightDate: "2026-06-18",
-          arrivalDate: "2026-06-18",
+          flightDate: fmt(b2Trip1Arrival),
+          arrivalDate: fmt(b2Trip1Arrival),
           arrivalTime: "09:15",
           terminal: "Terminal 1",
           depAirline: "Asiana Airlines",
           depFlightNumber: "OZ202",
-          depFlightDate: "2026-06-21",
+          depFlightDate: fmt(b2Trip1Depart),
           depFlightTime: "18:30",
           depTerminal: "Terminal 1",
           hotelName: "Grand Hyatt Seoul",
           hotelAddress: "322 Sowol-ro, Yongsan-gu, Seoul",
-          checkInDate: "2026-06-18",
-          checkOutDate: "2026-06-21",
+          checkInDate: fmt(b2Trip1Arrival),
+          checkOutDate: fmt(b2Trip1Depart),
           confirmationNumber: "GH-174052",
           pickupRequested: true,
         },
         {
           airline: "Asiana Airlines",
           flightNumber: "OZ203",
-          flightDate: "2026-06-25",
-          arrivalDate: "2026-06-25",
+          flightDate: fmt(b2Trip2Arrival),
+          arrivalDate: fmt(b2Trip2Arrival),
           arrivalTime: "10:00",
           terminal: "Terminal 1",
           depAirline: "Asiana Airlines",
           depFlightNumber: "OZ204",
-          depFlightDate: "2026-06-27",
+          depFlightDate: fmt(b2Trip2Depart),
           depFlightTime: "17:00",
           depTerminal: "Terminal 1",
           hotelName: "Grand Hyatt Seoul",
           hotelAddress: "322 Sowol-ro, Yongsan-gu, Seoul",
-          checkInDate: "2026-06-25",
-          checkOutDate: "2026-06-27",
+          checkInDate: fmt(b2Trip2Arrival),
+          checkOutDate: fmt(b2Trip2Depart),
           confirmationNumber: "GH-174053",
           pickupRequested: false,
         },
@@ -1466,7 +1567,7 @@ export const store = {
       currentVisit: 1,
       status: "flight_submitted",
       platformFeeRate: 0.20,
-      createdAt: "2026-02-26T15:00:00Z",
+      createdAt: fmtISO(bookingCreated2, "15:00:00"),
     };
     await AsyncStorage.setItem(KEYS.BOOKINGS, JSON.stringify([demoBooking, demoBooking2]));
 
@@ -1478,7 +1579,7 @@ export const store = {
         patientName: "Michael T.", rating: 5, treatmentRating: 5, clinicRating: 5, communicationRating: 5,
         title: "Incredible experience!",
         comment: "Dr. Kim was amazing. The implants look completely natural. Staff spoke perfect English and the clinic was spotless. Would fly back just for dental work!",
-        treatments: ["Implant: Whole (Root + Crown)", "Crown"], createdAt: "2026-01-15T10:00:00Z",
+        treatments: ["Implant: Whole (Root + Crown)", "Crown"], createdAt: fmtISO(day(-73), "10:00:00"),
       },
       {
         id: "rev_002", caseId: "prev_002", bookingId: "bk_prev_002",
@@ -1486,7 +1587,7 @@ export const store = {
         patientName: "Emma L.", rating: 5, treatmentRating: 5, clinicRating: 4, communicationRating: 5,
         title: "Best dental care I've ever had",
         comment: "Saved over $4,000 compared to prices back home. Dr. Kim explained everything clearly. Only minor note: the waiting room was a bit small.",
-        treatments: ["Veneer", "Veneers"], createdAt: "2026-01-28T14:00:00Z",
+        treatments: ["Veneer", "Veneers"], createdAt: fmtISO(day(-60), "14:00:00"),
       },
       {
         id: "rev_003", caseId: "prev_003", bookingId: "bk_prev_003",
@@ -1494,21 +1595,21 @@ export const store = {
         patientName: "David K.", rating: 4, treatmentRating: 5, clinicRating: 4, communicationRating: 4,
         title: "Great results, smooth process",
         comment: "Very professional team. The airport pickup was a nice touch. Treatment was painless and results are great. Highly recommend for anyone considering dental tourism.",
-        treatments: ["Implant: Whole (Root + Crown)", "Gum Treatment"], createdAt: "2026-02-10T09:00:00Z",
+        treatments: ["Implant: Whole (Root + Crown)", "Gum Treatment"], createdAt: fmtISO(day(-47), "09:00:00"),
       },
     ];
     await AsyncStorage.setItem(KEYS.REVIEWS, JSON.stringify(demoReviews));
 
     // 12. Demo Notifications
     const demoNotifs: AppNotification[] = [
-      { id: "notif_001", role: "patient", type: "new_quote", title: "New Quote Received!", body: "Dr. Kim Minjun sent you a quote for $4,150", icon: "💰", read: false, route: "/patient/quotes?caseId=1001", createdAt: "2026-02-25T10:30:00Z" },
-      { id: "notif_002", role: "patient", type: "new_quote", title: "New Quote Received!", body: "Dr. Park Soojin sent you a quote for $4,500", icon: "💰", read: false, route: "/patient/quotes?caseId=1001", createdAt: "2026-02-25T14:15:00Z" },
-      { id: "notif_003", role: "patient", type: "new_quote", title: "New Quote Received!", body: "Dr. Lee Jiwon sent you a quote for $3,600", icon: "💰", read: true, route: "/patient/quotes?caseId=1001", createdAt: "2026-02-25T09:00:00Z" },
-      { id: "notif_005", role: "patient", type: "new_message", title: "New Message", body: "Dr. Kim Minjun: \"Yes, we provide hotel recommendations...\"", icon: "💬", read: true, route: "/patient/chat-list", createdAt: "2026-02-25T11:30:00Z" },
-      { id: "notif_006", role: "patient", type: "reminder", title: "Complete Your Profile", body: "Add more dental photos to get more accurate quotes", icon: "📸", read: true, createdAt: "2026-02-23T09:00:00Z" },
-      { id: "notif_007", role: "doctor", type: "new_case", title: "New Patient Case", body: "Sarah Johnson from USA submitted a new case with 3 treatments", icon: "🦷", read: false, route: "/doctor/case-detail?caseId=1001", createdAt: "2026-02-23T15:00:00Z" },
-      { id: "notif_008", role: "doctor", type: "payment_received", title: "Deposit Received", body: "Sarah Johnson paid $445 deposit for Case #1001", icon: "💳", read: false, route: "/doctor/dashboard", createdAt: "2026-02-25T16:00:00Z" },
-      { id: "notif_009", role: "doctor", type: "new_message", title: "New Message", body: "Sarah Johnson: \"How long is the recovery time...\"", icon: "💬", read: true, route: "/doctor/chat-list", createdAt: "2026-02-25T10:12:00Z" },
+      { id: "notif_001", role: "patient", type: "new_quote", title: "New Quote Received!", body: "Dr. Kim Minjun sent you a quote for $4,150", icon: "💰", read: false, route: "/patient/quotes?caseId=1001", createdAt: fmtISO(quoteDate1, "10:30:00") },
+      { id: "notif_002", role: "patient", type: "new_quote", title: "New Quote Received!", body: "Dr. Park Soojin sent you a quote for $4,500", icon: "💰", read: false, route: "/patient/quotes?caseId=1001", createdAt: fmtISO(quoteDate1, "14:15:00") },
+      { id: "notif_003", role: "patient", type: "new_quote", title: "New Quote Received!", body: "Dr. Lee Jiwon sent you a quote for $3,600", icon: "💰", read: true, route: "/patient/quotes?caseId=1001", createdAt: fmtISO(day(-32), "09:00:00") },
+      { id: "notif_005", role: "patient", type: "new_message", title: "New Message", body: "Dr. Kim Minjun: \"Yes, we provide hotel recommendations...\"", icon: "💬", read: true, route: "/patient/chat-list", createdAt: fmtISO(chatDay, "11:30:00") },
+      { id: "notif_006", role: "patient", type: "reminder", title: "Complete Your Profile", body: "Add more dental photos to get more accurate quotes", icon: "📸", read: true, createdAt: fmtISO(caseDate1, "09:00:00") },
+      { id: "notif_007", role: "doctor", type: "new_case", title: "New Patient Case", body: "Sarah Johnson from USA submitted a new case with 3 treatments", icon: "🦷", read: false, route: "/doctor/case-detail?caseId=1001", createdAt: fmtISO(caseDate1, "15:00:00") },
+      { id: "notif_008", role: "doctor", type: "payment_received", title: "Deposit Received", body: "Sarah Johnson paid $445 deposit for Case #1001", icon: "💳", read: false, route: "/doctor/dashboard", createdAt: fmtISO(bookingCreated1, "16:00:00") },
+      { id: "notif_009", role: "doctor", type: "new_message", title: "New Message", body: "Sarah Johnson: \"How long is the recovery time...\"", icon: "💬", read: true, route: "/doctor/chat-list", createdAt: fmtISO(chatDay, "10:12:00") },
     ];
     await AsyncStorage.setItem(KEYS.NOTIFICATIONS, JSON.stringify(demoNotifs));
 
@@ -1518,67 +1619,67 @@ export const store = {
         id: "trip_bk_bk_demo_001",
         airline: "Korean Air",
         flightNumber: "KE082",
-        flightDate: "2026-03-15",
+        flightDate: fmt(b1Arrival),
         flightTime: "14:30",
         terminal: "Terminal 1",
         depAirline: "Korean Air",
         depFlightNumber: "KE081",
-        depFlightDate: "2026-03-22",
+        depFlightDate: fmt(b1Departure),
         depFlightTime: "10:00",
         depTerminal: "Terminal 1",
         hotelName: "Lotte Hotel Seoul",
         hotelAddress: "30 Eulji-ro, Jung-gu, Seoul",
-        checkInDate: "2026-03-15",
-        checkOutDate: "2026-03-22",
+        checkInDate: fmt(b1Arrival),
+        checkOutDate: fmt(b1Departure),
         confirmationNumber: "LH-829461",
         caseId: "1001",
         tripIndex: 0,
-        createdAt: "2026-03-01T10:00:00Z",
-        updatedAt: "2026-03-01T10:00:00Z",
+        createdAt: fmtISO(day(-14), "10:00:00"),
+        updatedAt: fmtISO(day(-14), "10:00:00"),
       },
       {
         id: "trip_bk_bk_demo_002_0",
         airline: "Asiana Airlines",
         flightNumber: "OZ201",
-        flightDate: "2026-06-18",
+        flightDate: fmt(b2Trip1Arrival),
         flightTime: "09:15",
         terminal: "Terminal 1",
         depAirline: "Asiana Airlines",
         depFlightNumber: "OZ202",
-        depFlightDate: "2026-06-21",
+        depFlightDate: fmt(b2Trip1Depart),
         depFlightTime: "18:30",
         depTerminal: "Terminal 1",
         hotelName: "Grand Hyatt Seoul",
         hotelAddress: "322 Sowol-ro, Yongsan-gu, Seoul",
-        checkInDate: "2026-06-18",
-        checkOutDate: "2026-06-21",
+        checkInDate: fmt(b2Trip1Arrival),
+        checkOutDate: fmt(b2Trip1Depart),
         confirmationNumber: "GH-174052",
         caseId: "1002",
         tripIndex: 0,
-        createdAt: "2026-06-01T10:00:00Z",
-        updatedAt: "2026-06-01T10:00:00Z",
+        createdAt: fmtISO(day(-10), "10:00:00"),
+        updatedAt: fmtISO(day(-10), "10:00:00"),
       },
       {
         id: "trip_bk_bk_demo_002_1",
         airline: "Asiana Airlines",
         flightNumber: "OZ203",
-        flightDate: "2026-06-25",
+        flightDate: fmt(b2Trip2Arrival),
         flightTime: "10:00",
         terminal: "Terminal 1",
         depAirline: "Asiana Airlines",
         depFlightNumber: "OZ204",
-        depFlightDate: "2026-06-27",
+        depFlightDate: fmt(b2Trip2Depart),
         depFlightTime: "17:00",
         depTerminal: "Terminal 1",
         hotelName: "Grand Hyatt Seoul",
         hotelAddress: "322 Sowol-ro, Yongsan-gu, Seoul",
-        checkInDate: "2026-06-25",
-        checkOutDate: "2026-06-27",
+        checkInDate: fmt(b2Trip2Arrival),
+        checkOutDate: fmt(b2Trip2Depart),
         confirmationNumber: "GH-174053",
         caseId: "1002",
         tripIndex: 1,
-        createdAt: "2026-06-01T10:00:00Z",
-        updatedAt: "2026-06-01T10:00:00Z",
+        createdAt: fmtISO(day(-10), "10:00:00"),
+        updatedAt: fmtISO(day(-10), "10:00:00"),
       },
     ];
     await AsyncStorage.setItem(KEYS.SAVED_TRIPS, JSON.stringify(demoTrips));

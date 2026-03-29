@@ -132,9 +132,6 @@ export default function PatientProfileScreen() {
         end={{ x: 1, y: 1 }}
         style={s.header}
       >
-        <TouchableOpacity style={s.backBtn} onPress={() => router.back()}>
-          <Text style={s.backArrow}>‹</Text>
-        </TouchableOpacity>
         <Text style={s.headerTitle}>My Profile</Text>
       </LinearGradient>
 
@@ -194,7 +191,12 @@ export default function PatientProfileScreen() {
 
         {/* Medical Summary */}
         <View style={s.section}>
-          <Text style={s.sectionTitle}>Medical History</Text>
+          <View style={s.sectionHeader}>
+            <Text style={s.sectionTitle}>Medical History</Text>
+            <TouchableOpacity style={s.editBtn} onPress={() => router.push("/patient/medical-history?mode=edit" as any)}>
+              <Text style={s.editBtnText}>Edit</Text>
+            </TouchableOpacity>
+          </View>
           <View style={s.card}>
             <InfoRow icon="💊" label="Conditions" value={medical?.conditions?.join(", ") || "None"} />
             <InfoRow icon="💉" label="Allergies" value={medical?.allergies || "None"} />
@@ -204,7 +206,12 @@ export default function PatientProfileScreen() {
 
         {/* Dental Summary */}
         <View style={s.section}>
-          <Text style={s.sectionTitle}>Dental History</Text>
+          <View style={s.sectionHeader}>
+            <Text style={s.sectionTitle}>Dental History</Text>
+            <TouchableOpacity style={s.editBtn} onPress={() => router.push("/patient/dental-history?mode=edit" as any)}>
+              <Text style={s.editBtnText}>Edit</Text>
+            </TouchableOpacity>
+          </View>
           <View style={s.card}>
             <InfoRow icon="🦷" label="Issues" value={dental?.issues?.join(", ") || "—"} />
             <InfoRow icon="📅" label="Last Visit" value={dental?.lastVisit || "—"} />
@@ -272,17 +279,9 @@ const iStyles = StyleSheet.create({
 const s = StyleSheet.create({
   container: { flex: 1, backgroundColor: SharedColors.bg },
   header: {
-    paddingHorizontal: 24, paddingTop: 60, paddingBottom: 16,
-    flexDirection: "row", alignItems: "center", gap: 16,
+    paddingHorizontal: 20, paddingTop: 60, paddingBottom: 16,
   },
-  backBtn: {
-    width: 36, height: 36, borderRadius: 12,
-    backgroundColor: "rgba(255,255,255,0.12)",
-    borderWidth: 1, borderColor: "rgba(255,255,255,0.15)",
-    alignItems: "center", justifyContent: "center",
-  },
-  backArrow: { fontSize: 24, color: SharedColors.white, fontWeight: "600", marginTop: -2 },
-  headerTitle: { fontSize: 18, fontWeight: "700", color: SharedColors.white },
+  headerTitle: { fontSize: 20, fontWeight: "700", color: SharedColors.white },
 
   content: { padding: 20, gap: 20, paddingBottom: 40 },
 

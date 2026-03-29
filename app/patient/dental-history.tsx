@@ -18,7 +18,7 @@ const DEFAULT_ISSUES = ["Tooth Pain", "Missing Teeth", "Broken Teeth", "Gum Dise
 const visitOptions = ["< 6 months", "6-12 months", "1-2 years", "2+ years", "Never"];
 
 export default function PatientDentalHistoryScreen() {
-  const { mode, from } = useLocalSearchParams<{ mode?: string; from?: string }>();
+  const { mode, from, caseId } = useLocalSearchParams<{ mode?: string; from?: string; caseId?: string }>();
   const isEditMode = mode === "edit";
   const [issues, setIssues] = useState<string[]>([]);
   const [customIssues, setCustomIssues] = useState<string[]>([]);
@@ -77,6 +77,12 @@ export default function PatientDentalHistoryScreen() {
         lastVisit: dentistVisit,
       });
 
+      if (from === "checklist" && caseId) {
+        await store.syncCaseEnrichment(caseId);
+        setLoading(false);
+        router.replace("/patient/dashboard" as any);
+        return;
+      }
       if (from === "review") { setLoading(false); router.back(); return; }
       if (isEditMode) {
         const updatedCount = await store.updateCasesForProfile();

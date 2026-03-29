@@ -43,6 +43,7 @@ interface Visit {
   description: string;
   gapMonths?: number;
   gapDays?: number;
+  gapReason?: string;
   availabilitySlots?: { date: string; time: string }[];
 }
 
@@ -73,6 +74,7 @@ const normalizeVisits = (raw: unknown): Visit[] => {
       const gapDaysRaw = Number((item as any)?.gapDays);
       const gapMonths = Number.isFinite(gapMonthsRaw) && gapMonthsRaw > 0 ? gapMonthsRaw : 0;
       const gapDays = Number.isFinite(gapDaysRaw) && gapDaysRaw > 0 ? gapDaysRaw : 0;
+      const gapReason = (item as any)?.gapReason ? String((item as any).gapReason) : undefined;
 
       const availabilitySlots = Array.isArray((item as any)?.availabilitySlots)
         ? (item as any).availabilitySlots
@@ -85,6 +87,7 @@ const normalizeVisits = (raw: unknown): Visit[] => {
         description,
         ...(gapMonths > 0 ? { gapMonths } : {}),
         ...(gapDays > 0 ? { gapDays } : {}),
+        ...(gapReason ? { gapReason } : {}),
         ...(availabilitySlots && availabilitySlots.length > 0 ? { availabilitySlots } : {}),
       };
     })
@@ -365,7 +368,7 @@ export default function VisitScheduleScreen() {
       const prevVisit = visits.find((v) => v.visit === blockInfo.afterVisit);
       Alert.alert(
         "Recovery Period",
-        `This date is during the recovery period after Visit ${blockInfo.afterVisit}.\n\nYour dentist requires ${formatGap(prevVisit?.gapMonths, prevVisit?.gapDays)} between visits for healing.`
+        `This date is during the waiting period after Visit ${blockInfo.afterVisit}.\n\nYour dentist requires ${formatGap(prevVisit?.gapMonths, prevVisit?.gapDays)} between visits${prevVisit?.gapReason ? ` for ${prevVisit.gapReason.toLowerCase()}` : ""}.`
       );
       return;
     }
@@ -428,6 +431,7 @@ export default function VisitScheduleScreen() {
           confirmedTime: selectedTimes[v.visit],
           gapMonths: v.gapMonths,
           gapDays: v.gapDays,
+          gapReason: v.gapReason,
           paymentAmount: v.paymentAmount,
           paymentPercent: v.paymentPercent,
         }));
@@ -470,6 +474,7 @@ export default function VisitScheduleScreen() {
               confirmedTime: selectedTimes[v.visit],
               gapMonths: v.gapMonths,
               gapDays: v.gapDays,
+              gapReason: v.gapReason,
             }))
           ),
         },
@@ -575,7 +580,7 @@ export default function VisitScheduleScreen() {
                     <View style={s.gapLine} />
                     <View style={s.gapBadge}>
                       <Text style={s.gapBadgeText}>
-                        {formatGap(v.gapMonths, v.gapDays)} recovery
+                        {formatGap(v.gapMonths, v.gapDays)} waiting{v.gapReason ? ` — ${v.gapReason}` : ""}
                       </Text>
                     </View>
                     <View style={s.gapLine} />
@@ -764,7 +769,7 @@ export default function VisitScheduleScreen() {
                   {(v.gapMonths || v.gapDays) && idx < visits.length - 1 ? (
                     <View style={s.allSetGap}>
                       <Text style={s.allSetGapText}>
-                        {formatGap(v.gapMonths, v.gapDays)} recovery
+                        {formatGap(v.gapMonths, v.gapDays)} waiting{v.gapReason ? ` — ${v.gapReason}` : ""}
                       </Text>
                     </View>
                   ) : null}

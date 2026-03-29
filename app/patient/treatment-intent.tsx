@@ -64,7 +64,7 @@ export default function TreatmentIntentScreen() {
         <TouchableOpacity
           style={s.card}
           activeOpacity={0.7}
-          onPress={() => router.push("/patient/upload?mode=proposal" as any)}
+          onPress={() => router.push("/patient/concern-describe" as any)}
           accessibilityRole="button"
           accessibilityLabel="Help me figure it out. Dentists will suggest a plan."
         >

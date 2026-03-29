@@ -32,7 +32,7 @@ export default function WriteReviewScreen() {
   const [treatmentRating, setTreatmentRating] = useState(0);
   const [clinicRating, setClinicRating] = useState(0);
   const [communicationRating, setCommunicationRating] = useState(0);
-  const [title, setTitle] = useState("");
+  const title = "";
   const [comment, setComment] = useState("");
   const [loading, setLoading] = useState(false);
   const [submitted, setSubmitted] = useState(false);
@@ -53,7 +53,7 @@ export default function WriteReviewScreen() {
     load();
   }, [bookingId]);
 
-  const isComplete = overallRating > 0 && treatmentRating > 0 && clinicRating > 0 && communicationRating > 0 && title.trim() && comment.trim().length >= 10;
+  const isComplete = overallRating > 0 && treatmentRating > 0 && clinicRating > 0 && communicationRating > 0 && comment.trim().length >= 10;
 
   const handleSubmit = async () => {
     if (!isComplete || !booking) {
@@ -116,7 +116,6 @@ export default function WriteReviewScreen() {
         </Text>
         <View style={s.successCard}>
           <StarRow rating={overallRating} onRate={() => {}} size={28} />
-          <Text style={s.successReviewTitle}>{title}</Text>
           <Text style={s.successReviewComment}>{comment}</Text>
         </View>
         <TouchableOpacity style={s.successBtn} onPress={() => router.replace("/patient/dashboard" as any)}>
@@ -206,23 +205,6 @@ export default function WriteReviewScreen() {
           {showErrors && (treatmentRating === 0 || clinicRating === 0 || communicationRating === 0) && (
             <Text style={s.errorText}>Please rate all categories</Text>
           )}
-        </View>
-
-        {/* Review Title */}
-        <View style={s.field}>
-          <Text style={s.fieldLabel}>Review Title</Text>
-          <TextInput
-            style={[s.input, showErrors && !title.trim() && s.errorBorder]}
-            placeholder="Summarize your experience"
-            placeholderTextColor={SharedColors.slateLight}
-            value={title}
-            onChangeText={setTitle}
-            maxLength={60}
-          />
-          <View style={{ flexDirection: "row", justifyContent: "space-between" }}>
-            {showErrors && !title.trim() ? <Text style={s.errorText}>Please enter a title</Text> : <View />}
-            <Text style={s.charCount}>{title.length}/60</Text>
-          </View>
         </View>
 
         {/* Comment */}

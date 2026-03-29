@@ -74,17 +74,9 @@ export default function PatientChatListScreen() {
   return (
     <View style={s.container}>
       {/* Header */}
-      <LinearGradient colors={[...PatientTheme.gradient]} style={s.header}>
-        <View style={s.headerRow}>
-          <TouchableOpacity style={s.backBtn} onPress={() => router.back()} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
-            <Text style={s.backArrow}>‹</Text>
-          </TouchableOpacity>
-          <View style={s.headerCenter}>
-            <Text style={s.title}>Messages</Text>
-            <Text style={s.subtitle}>{rooms.length} conversation{rooms.length !== 1 ? "s" : ""}</Text>
-          </View>
-          <View style={{ width: 36 }} />
-        </View>
+      <LinearGradient colors={[...PatientTheme.gradient]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={s.header}>
+        <Text style={s.title}>Messages</Text>
+        <Text style={s.subtitle}>{rooms.length} conversation{rooms.length !== 1 ? "s" : ""}</Text>
       </LinearGradient>
 
       {rooms.length === 0 ? (
@@ -95,7 +87,7 @@ export default function PatientChatListScreen() {
             Start a conversation with a dentist{"\n"}from their quote details page
           </Text>
           <TouchableOpacity
-            style={{ marginTop: 24, backgroundColor: '#7C3AED', paddingVertical: 12, paddingHorizontal: 24, borderRadius: 12 }}
+            style={{ marginTop: 24, backgroundColor: PatientTheme.primary, paddingVertical: 12, paddingHorizontal: 24, borderRadius: 12 }}
             onPress={() => router.push('/patient/dashboard' as any)}
           >
             <Text style={{ color: '#FFFFFF', fontSize: 14, fontWeight: '600' }}>Browse My Cases</Text>
@@ -116,13 +108,9 @@ export default function PatientChatListScreen() {
 
 const s = StyleSheet.create({
   container: { flex: 1, backgroundColor: SharedColors.bg },
-  header: { paddingHorizontal: 20, paddingTop: 60, paddingBottom: 18 },
-  headerRow: { flexDirection: "row", alignItems: "center" },
-  headerCenter: { flex: 1, alignItems: "center" },
-  backBtn: { width: 36, height: 36, borderRadius: 12, backgroundColor: "rgba(255,255,255,0.12)", borderWidth: 1, borderColor: "rgba(255,255,255,0.15)", alignItems: "center", justifyContent: "center" },
-  backArrow: { fontSize: 24, color: SharedColors.white, fontWeight: "600", marginTop: -2 },
-  title: { fontSize: 18, fontWeight: "700", color: SharedColors.white },
-  subtitle: { fontSize: 12, color: "rgba(255,255,255,0.55)", marginTop: 2 },
+  header: { paddingHorizontal: 20, paddingTop: 60, paddingBottom: 16 },
+  title: { fontSize: 20, fontWeight: "700", color: SharedColors.white },
+  subtitle: { fontSize: 13, color: "rgba(255,255,255,0.6)", marginTop: 2 },
 
   list: { padding: 16, gap: 8 },
 

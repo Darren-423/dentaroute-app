@@ -72,9 +72,6 @@ export default function DoctorChatListScreen() {
   return (
     <View style={s.container}>
       <LinearGradient colors={[DoctorTheme.primary, DoctorTheme.primaryDark]} style={s.header}>
-        <TouchableOpacity style={s.backBtn} onPress={() => router.back()} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
-          <Text style={s.backArrow}>‹</Text>
-        </TouchableOpacity>
         <Text style={s.title}>Messages</Text>
         <Text style={s.subtitle}>{rooms.length} patient conversation{rooms.length !== 1 ? "s" : ""}</Text>
       </LinearGradient>
@@ -108,19 +105,9 @@ export default function DoctorChatListScreen() {
 
 const s = StyleSheet.create({
   container: { flex: 1, backgroundColor: SharedColors.bg },
-  header: {
-    paddingHorizontal: 24, paddingTop: 60, paddingBottom: 24,
-  },
-  backBtn: {
-    width: 36, height: 36, borderRadius: 12,
-    backgroundColor: "rgba(255,255,255,0.12)",
-    borderWidth: 1, borderColor: "rgba(255,255,255,0.15)",
-    alignItems: "center", justifyContent: "center",
-    marginBottom: 8,
-  },
-  backArrow: { fontSize: 24, color: SharedColors.white, fontWeight: "600", marginTop: -2 },
-  title: { fontSize: 24, fontWeight: "700", color: SharedColors.white, marginBottom: 4 },
-  subtitle: { fontSize: 13, color: "rgba(255,255,255,0.7)" },
+  header: { paddingHorizontal: 24, paddingTop: 60, paddingBottom: 18 },
+  title: { fontSize: 28, fontWeight: "700", color: SharedColors.white },
+  subtitle: { fontSize: 14, color: "rgba(255,255,255,0.7)", marginTop: 4 },
 
   list: { padding: 16, gap: 8 },
 

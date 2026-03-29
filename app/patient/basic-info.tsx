@@ -235,8 +235,9 @@ export default function PatientBasicInfoScreen() {
       });
     } catch {}
     setLoading(false);
-    if (from === "review") { router.back(); return; }
-    router.push(isEditMode ? "/patient/medical-history?mode=edit" as any : "/patient/medical-history" as any);
+    if (from === "review" || from === "checklist") { router.back(); return; }
+    if (isEditMode) { router.push("/patient/medical-history?mode=edit" as any); return; }
+    router.push("/patient/treatment-intent" as any);
   };
 
   const Tag = ({ label, selected, onPress }: { label: string; selected: boolean; onPress: () => void }) => (
@@ -286,19 +287,13 @@ export default function PatientBasicInfoScreen() {
           <View style={s.progressDot} />
           <View style={s.progressLine} />
           <View style={s.progressDot} />
+          <View style={s.progressLine} />
+          <View style={s.progressDot} />
         </View>
       </LinearGradient>
 
       {/* Content */}
       <ScrollView contentContainerStyle={s.content} showsVerticalScrollIndicator={false}>
-        {/* Passport Notice */}
-        <View style={s.passportNotice}>
-          <Text style={s.passportIcon}>🛂</Text>
-          <Text style={s.passportText}>
-            Please enter your information exactly as it appears on your passport.
-          </Text>
-        </View>
-
         {/* Country */}
         <View style={s.section}>
           <Text style={s.label}>COUNTRY</Text>
@@ -362,7 +357,7 @@ export default function PatientBasicInfoScreen() {
           {loading ? (
             <ActivityIndicator color={SharedColors.white} size="small" />
           ) : (
-            <Text style={s.nextBtnText}>Next: Medical History →</Text>
+            <Text style={s.nextBtnText}>Next →</Text>
           )}
         </TouchableOpacity>
       </View>
@@ -470,9 +465,6 @@ const s = StyleSheet.create({
   progressLine: { flex: 1, height: 2, backgroundColor: "rgba(255,255,255,0.15)", marginHorizontal: 6 },
 
   content: { padding: 24, gap: 24, paddingBottom: 60 },
-  passportNotice: { flexDirection: "row", alignItems: "center", gap: 10, backgroundColor: SharedColors.amberLight, borderRadius: 12, padding: 14, borderWidth: 1, borderColor: "rgba(245,158,11,0.2)" },
-  passportIcon: { fontSize: 20 },
-  passportText: { flex: 1, fontSize: 13, color: "#78350f", lineHeight: 18 },
   section: { gap: 10 },
   label: { fontSize: 11, fontWeight: "600", color: SharedColors.slate, letterSpacing: 0.8 },
   tagWrap: { flexDirection: "row", flexWrap: "wrap", gap: 8 },

@@ -30,14 +30,14 @@ export default function DoctorProfileScreen() {
     }, [])
   );
 
+  const goEdit = () => router.push("/doctor/profile-setup" as any);
+
   return (
     <View style={s.container}>
       {/* Header */}
       <LinearGradient colors={[DoctorTheme.primary, DoctorTheme.primaryDark]} style={s.header}>
-        <TouchableOpacity style={s.backBtn} onPress={() => router.back()}>
-          <Text style={s.backArrow}>‹</Text>
-        </TouchableOpacity>
         <Text style={s.headerTitle}>My Profile</Text>
+        <Text style={s.headerSubtitle}>Manage your account & clinic info</Text>
       </LinearGradient>
 
       <ScrollView contentContainerStyle={s.content} showsVerticalScrollIndicator={false} style={s.scrollView}>
@@ -62,6 +62,20 @@ export default function DoctorProfileScreen() {
           )}
         </View>
 
+        {/* Preview as Patient */}
+        <TouchableOpacity
+          style={s.previewBtn}
+          onPress={() => router.push("/doctor/quote-preview" as any)}
+          activeOpacity={0.7}
+        >
+          <Text style={s.previewIcon}>👁</Text>
+          <View style={{ flex: 1 }}>
+            <Text style={s.previewTitle}>Preview as Patient</Text>
+            <Text style={s.previewDesc}>See how patients view your profile in quotes</Text>
+          </View>
+          <Text style={s.menuArrow}>›</Text>
+        </TouchableOpacity>
+
         {/* Stats */}
         <View style={s.statsRow}>
           <View style={s.statCard}>
@@ -78,28 +92,67 @@ export default function DoctorProfileScreen() {
           </View>
         </View>
 
-        {/* Info */}
+        {/* Clinic Photos */}
         <View style={s.section}>
-          <Text style={s.sectionTitle}>CLINIC INFORMATION</Text>
-          <View style={s.card}>
+          <View style={s.sectionHeader}>
+            <Text style={s.sectionTitle}>CLINIC PHOTOS</Text>
+            <TouchableOpacity onPress={goEdit} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
+              <Text style={s.editLink}>Edit</Text>
+            </TouchableOpacity>
+          </View>
+          {profile?.clinicPhotos && profile.clinicPhotos.length > 0 ? (
+            <TouchableOpacity style={s.photosRow} onPress={goEdit} activeOpacity={0.7}>
+              {profile.clinicPhotos.slice(0, 4).map((uri: string, i: number) => (
+                <Image key={i} source={{ uri }} style={s.photoThumb} />
+              ))}
+              {profile.clinicPhotos.length > 4 && (
+                <View style={s.photoMore}>
+                  <Text style={s.photoMoreText}>+{profile.clinicPhotos.length - 4}</Text>
+                </View>
+              )}
+            </TouchableOpacity>
+          ) : (
+            <TouchableOpacity style={s.photoEmpty} onPress={goEdit} activeOpacity={0.7}>
+              <Text style={s.photoEmptyIcon}>📷</Text>
+              <View>
+                <Text style={s.photoEmptyTitle}>Add Clinic Photos</Text>
+                <Text style={s.photoEmptyHint}>Patients see these when reviewing your quotes</Text>
+              </View>
+              <Text style={s.menuArrow}>›</Text>
+            </TouchableOpacity>
+          )}
+        </View>
+
+        {/* Info — tappable to edit */}
+        <View style={s.section}>
+          <View style={s.sectionHeader}>
+            <Text style={s.sectionTitle}>CLINIC INFORMATION</Text>
+            <TouchableOpacity onPress={goEdit} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
+              <Text style={s.editLink}>Edit</Text>
+            </TouchableOpacity>
+          </View>
+          <TouchableOpacity style={s.card} onPress={goEdit} activeOpacity={0.7}>
             <InfoRow icon="🏥" label="Clinic" value={profile?.clinic || "—"} />
             <InfoRow icon="📍" label="Location" value={profile?.location || "—"} />
             <InfoRow icon="📧" label="Email" value={profile?.email || "—"} />
             <InfoRow icon="📱" label="Phone" value={profile?.phone || "—"} />
             <InfoRow icon="🎓" label="Experience" value={profile?.experience ? `${profile.experience} years` : "—"} />
             <InfoRow icon="📋" label="License" value={profile?.license || "—"} last />
-          </View>
+          </TouchableOpacity>
         </View>
 
-        {/* Bio */}
-        {profile?.bio && (
-          <View style={s.section}>
+        {/* Bio — tappable to edit */}
+        <View style={s.section}>
+          <View style={s.sectionHeader}>
             <Text style={s.sectionTitle}>ABOUT</Text>
-            <View style={s.card}>
-              <Text style={s.bioText}>{profile.bio}</Text>
-            </View>
+            <TouchableOpacity onPress={goEdit} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
+              <Text style={s.editLink}>Edit</Text>
+            </TouchableOpacity>
           </View>
-        )}
+          <TouchableOpacity style={s.card} onPress={goEdit} activeOpacity={0.7}>
+            <Text style={s.bioText}>{profile?.bio || "Add a bio to tell patients about yourself..."}</Text>
+          </TouchableOpacity>
+        </View>
 
         {/* Certifications */}
         {profile?.certifications && profile.certifications.length > 0 && (
@@ -121,7 +174,7 @@ export default function DoctorProfileScreen() {
           </View>
         )}
 
-        {/* Before/After Photos — preview + link to dedicated page */}
+        {/* Before/After Photos */}
         <View style={s.section}>
           <Text style={s.sectionTitle}>BEFORE & AFTER PHOTOS</Text>
           <TouchableOpacity
@@ -164,7 +217,7 @@ export default function DoctorProfileScreen() {
             <Text style={s.menuText}>Notifications</Text>
             <Text style={s.menuArrow}>›</Text>
           </TouchableOpacity>
-          <TouchableOpacity style={s.menuItem} onPress={() => router.push("/doctor/profile-setup" as any)}>
+          <TouchableOpacity style={s.menuItem} onPress={goEdit}>
             <Text style={s.menuIcon}>✏️</Text>
             <Text style={s.menuText}>Edit Profile</Text>
             <Text style={s.menuArrow}>›</Text>
@@ -210,18 +263,9 @@ const iStyles = StyleSheet.create({
 
 const s = StyleSheet.create({
   container: { flex: 1, backgroundColor: SharedColors.bg },
-  header: {
-    paddingHorizontal: 24, paddingTop: 60, paddingBottom: 16,
-    flexDirection: "row", alignItems: "center", gap: 16,
-  },
-  backBtn: {
-    width: 36, height: 36, borderRadius: 12,
-    backgroundColor: "rgba(255,255,255,0.12)",
-    borderWidth: 1, borderColor: "rgba(255,255,255,0.15)",
-    alignItems: "center", justifyContent: "center",
-  },
-  backArrow: { fontSize: 24, color: SharedColors.white, fontWeight: "600", marginTop: -2 },
-  headerTitle: { fontSize: 18, fontWeight: "700", color: SharedColors.white },
+  header: { paddingHorizontal: 24, paddingTop: 60, paddingBottom: 18 },
+  headerTitle: { fontSize: 28, fontWeight: "700", color: SharedColors.white },
+  headerSubtitle: { fontSize: 14, color: "rgba(255,255,255,0.7)", marginTop: 4 },
 
   scrollView: { flex: 1, backgroundColor: SharedColors.bg },
   content: { padding: 20, gap: 20, paddingBottom: 120 },
@@ -241,6 +285,16 @@ const s = StyleSheet.create({
   },
   specialtyText: { fontSize: 12, fontWeight: "600", color: DoctorTheme.primary },
 
+  // Preview button
+  previewBtn: {
+    flexDirection: "row", alignItems: "center", gap: 12,
+    backgroundColor: "rgba(15,118,110,0.06)", borderRadius: 14, padding: 16,
+    borderWidth: 1.5, borderColor: "rgba(15,118,110,0.15)",
+  },
+  previewIcon: { fontSize: 22 },
+  previewTitle: { fontSize: 14, fontWeight: "700", color: DoctorTheme.primary },
+  previewDesc: { fontSize: 11, color: SharedColors.navySec, marginTop: 2 },
+
   // Stats
   statsRow: { flexDirection: "row", gap: 10 },
   statCard: {
@@ -253,16 +307,39 @@ const s = StyleSheet.create({
 
   // Section
   section: { gap: 8 },
+  sectionHeader: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
   sectionTitle: {
     fontSize: 11, fontWeight: "700", color: SharedColors.navySec, letterSpacing: 0.5,
     marginBottom: 2,
   },
+  editLink: { fontSize: 13, fontWeight: "600", color: DoctorTheme.primary },
   card: {
     backgroundColor: SharedColors.white, borderRadius: 14, paddingHorizontal: 16,
     borderWidth: 1, borderColor: SharedColors.border,
     shadowColor: "#000", shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.05, shadowRadius: 4, elevation: 2,
   },
   bioText: { color: SharedColors.navySec, fontSize: 13, lineHeight: 20, paddingVertical: 14 },
+
+  // Clinic photos
+  photosRow: {
+    flexDirection: "row", gap: 8, flexWrap: "wrap",
+  },
+  photoThumb: {
+    width: 72, height: 72, borderRadius: 12, backgroundColor: SharedColors.border,
+  },
+  photoMore: {
+    width: 72, height: 72, borderRadius: 12, backgroundColor: "rgba(15,118,110,0.08)",
+    alignItems: "center", justifyContent: "center", borderWidth: 1, borderColor: "rgba(15,118,110,0.15)",
+  },
+  photoMoreText: { fontSize: 16, fontWeight: "700", color: DoctorTheme.primary },
+  photoEmpty: {
+    flexDirection: "row", alignItems: "center", gap: 12,
+    backgroundColor: SharedColors.white, borderRadius: 14, padding: 16,
+    borderWidth: 1.5, borderColor: SharedColors.border, borderStyle: "dashed",
+  },
+  photoEmptyIcon: { fontSize: 24 },
+  photoEmptyTitle: { fontSize: 14, fontWeight: "600", color: SharedColors.navy },
+  photoEmptyHint: { fontSize: 11, color: SharedColors.navyMuted, marginTop: 2 },
 
   // Verified badge
   verifiedBadge: {

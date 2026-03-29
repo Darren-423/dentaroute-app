@@ -1,6 +1,7 @@
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { LinearGradient } from "expo-linear-gradient";
 import { router, useLocalSearchParams } from "expo-router";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   ActivityIndicator,
   ScrollView,
@@ -50,6 +51,38 @@ export default function PatientTreatmentSelectScreen() {
   const [newTreatment, setNewTreatment] = useState("");
   const [showAddInput, setShowAddInput] = useState(false);
   const [loading, setLoading] = useState(false);
+
+  // Pre-load draft so navigating back doesn't lose selections
+  useEffect(() => {
+    (async () => {
+      try {
+        const raw = await AsyncStorage.getItem("CASE_DRAFT_TREATMENTS");
+        if (raw) {
+          const draft = JSON.parse(raw);
+          if (draft.selected) {
+            const sel: Record<string, number> = {};
+            const impSubs: Record<string, number> = {};
+            for (const [name, qty] of Object.entries(draft.selected)) {
+              if (name.startsWith("Implant: ")) {
+                const implantT = treatments.find(t => t.id === "implant");
+                const sub = implantT?.subOptions?.find(s => `Implant: ${s.label}` === name);
+                if (sub) impSubs[sub.id] = qty as number;
+              } else {
+                const t = treatments.find(tr => tr.name === name);
+                if (t) sel[t.id] = qty as number;
+              }
+            }
+            setSelected(sel);
+            if (Object.keys(impSubs).length > 0) {
+              setImplantSubs(impSubs);
+              setImplantExpanded(true);
+            }
+          }
+          if (draft.custom) setCustomTreatments(draft.custom);
+        }
+      } catch (e) { console.warn("Draft read error:", e); }
+    })();
+  }, []);
 
   const implantSubTotal = Object.values(implantSubs).reduce((s, v) => s + v, 0);
   const hasImplant = implantSubTotal > 0;
@@ -108,11 +141,13 @@ export default function PatientTreatmentSelectScreen() {
         const t = treatments.find((tr) => tr.id === id);
         selectedWithNames[t ? t.name : id] = qty;
       }
-      await store.savePatientTreatments({ selected: selectedWithNames, custom: customTreatments });
+      const draftData = { selected: selectedWithNames, custom: customTreatments };
+      await store.savePatientTreatments(draftData);
+      await AsyncStorage.setItem("CASE_DRAFT_TREATMENTS", JSON.stringify(draftData));
     } catch (err) { console.log("Save error:", err); }
     setLoading(false);
-    if (from === "review") { router.back(); return; }
-    router.push("/patient/upload?mode=specific" as any);
+    if (from === "review" || from === "checklist") { router.back(); return; }
+    router.push("/patient/review?caseMode=specific" as any);
   };
 
   const QtyStepper = ({ qty, onMinus, onPlus }: { qty: number; onMinus: () => void; onPlus: () => void }) => (

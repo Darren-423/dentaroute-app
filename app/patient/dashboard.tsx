@@ -14,35 +14,102 @@ import {
   View,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { resetNavigationHistory } from "../../lib/navigationHistory";
 import { Booking, PatientCase, store } from "../../lib/store";
 
-import JourneyChecklist from "../../components/JourneyChecklist";
+import EnrichmentChecklist from "../../components/EnrichmentChecklist";
 import { PatientTheme, SharedColors } from "../../constants/theme";
-// ── Treatment → Emoji mapping (keyword-based) ──
-const TREATMENT_EMOJI_RULES: [string, string][] = [
-  ["implant", "🦷"],
-  ["veneer", "✨"],
-  ["smile makeover", "😁"],
-  ["filling", "🪥"],
-  ["crown", "👑"],
-  ["root canal", "🏥"],
-  ["gum", "🩺"],
-  ["invisalign", "🔗"],
-  ["sleep appliance", "😴"],
-  ["tongue tie", "✂️"],
-  ["wisdom", "🦷"],
-  ["whitening", "🪥"],
-  ["extraction", "🦷"],
+
+
+// ── Journey Steps (Feather icons) ──
+type JourneyStepDef = {
+  key: string;
+  label: string;
+  summary: (bk: Booking) => string;
+  icon: keyof typeof Feather.glyphMap;
+  actionLabel?: string;
+  actionRoute?: (bk: Booking) => string;
+};
+
+const JOURNEY_STEPS: JourneyStepDef[] = [
+  {
+    key: "confirmed", label: "Trip Details", icon: "navigation",
+    summary: (bk) => bk.arrivalInfo
+      ? `${bk.arrivalInfo.airline || ""} ${bk.arrivalInfo.flightNumber || ""}`.trim() || "Flight info submitted"
+      : "Add flight & hotel info",
+    actionLabel: "Add Trip Info",
+    actionRoute: (bk) => `/patient/case-hub?bookingId=${bk.id}&caseId=${bk.caseId}`,
+  },
+  {
+    key: "flight_submitted", label: "Hotel Check-in", icon: "home",
+    summary: (bk) => bk.arrivalInfo?.hotelName || "Confirm arrival",
+    actionLabel: "Confirm Arrival",
+    actionRoute: (bk) => `/patient/hotel-arrived?bookingId=${bk.id}`,
+  },
+  {
+    key: "arrived_korea", label: "Clinic Visit", icon: "map-pin",
+    summary: (bk) => {
+      const v = bk.visitDates?.[0];
+      return v ? `${bk.clinicName} · ${v.confirmedTime || v.date}` : bk.clinicName;
+    },
+    actionLabel: "Check In",
+    actionRoute: (bk) => `/patient/clinic-checkin?bookingId=${bk.id}`,
+  },
+  {
+    key: "checked_in_clinic", label: "Treatment", icon: "activity",
+    summary: () => "In progress",
+  },
+  {
+    key: "treatment_done", label: "Payment", icon: "credit-card",
+    summary: (bk) => `$${(bk.totalPrice || 0).toLocaleString()}`,
+    actionLabel: "Pay Now",
+    actionRoute: (bk) => `/patient/visit-checkout?bookingId=${bk.id}`,
+  },
+  {
+    key: "between_visits", label: "Next Visit", icon: "refresh-cw",
+    summary: (bk) => {
+      const cur = bk.currentVisit || 1;
+      const total = bk.visitDates?.length || 1;
+      return total > 1 ? `Visit ${cur}/${total}` : "Stay or return";
+    },
+    actionLabel: "Continue",
+    actionRoute: (bk) => `/patient/stay-or-return?bookingId=${bk.id}`,
+  },
+  {
+    key: "returning_home", label: "Departure", icon: "log-out",
+    summary: (bk) => bk.departurePickup ? `Pickup ${bk.departurePickup.pickupTime || "TBD"}` : "Arrange pickup",
+    actionLabel: "Arrange Departure",
+    actionRoute: (bk) => bk.dropOffUnlocked ? `/patient/departure-pickup?bookingId=${bk.id}` : `/patient/write-review?bookingId=${bk.id}`,
+  },
+  {
+    key: "payment_complete", label: "Review", icon: "star",
+    summary: () => "Share your experience",
+    actionLabel: "Leave Review",
+    actionRoute: (bk) => bk.dropOffUnlocked ? `/patient/departure-pickup?bookingId=${bk.id}` : `/patient/write-review?bookingId=${bk.id}`,
+  },
+  {
+    key: "departure_set", label: "Complete", icon: "check-circle",
+    summary: () => "Journey complete!",
+    actionLabel: "Leave Review",
+    actionRoute: (bk) => `/patient/write-review?bookingId=${bk.id}`,
+  },
 ];
 
-const getCaseEmoji = (treatments: { name: string; qty: number }[]): string => {
-  if (!treatments || treatments.length === 0) return "🦷";
-  const name = treatments[0].name.toLowerCase();
-  for (const [keyword, emoji] of TREATMENT_EMOJI_RULES) {
-    if (name.includes(keyword)) return emoji;
-  }
-  return "🦷";
+const MANAGE_HIDDEN = ["treatment_done", "payment_complete", "departure_set"];
+
+const getStatusColor = (status: string, bkStatus?: string): string => {
+  if (status === "pending") return "#f59e0b";
+  if (status === "quotes_received") return "#a16207";
+  if (status === "booked" && bkStatus === "cancelled") return "#ef4444";
+  if (status === "booked") return "#4A0080";
+  return "#64748b";
+};
+
+const getStatusLabel = (status: string, bkStatus?: string): string => {
+  if (status === "pending") return "AWAITING QUOTES";
+  if (status === "quotes_received") return "QUOTES READY";
+  if (status === "booked" && bkStatus === "cancelled") return "CANCELLED";
+  if (status === "booked") return "BOOKED";
+  return "SUBMITTED";
 };
 
 export default function PatientDashboardScreen() {
@@ -56,13 +123,15 @@ export default function PatientDashboardScreen() {
   const [statusFilter, setStatusFilter] = useState<"all" | "with_quotes" | "bookings" | "in_treatment" | "completed">("all");
   const [manageBooking, setManageBooking] = useState<Booking | null>(null);
   const [deleteCaseId, setDeleteCaseId] = useState<string | null>(null);
-  const [expandedCaseId, setExpandedCaseId] = useState<string | null>(null);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [enrichmentNeeded, setEnrichmentNeeded] = useState<Record<string, boolean>>({});
+  const [expandedEnrich, setExpandedEnrich] = useState<string | null>(null);
+  const [expandedJourney, setExpandedJourney] = useState<string | null>(null);
 
   // Stats toggle
   const STATS_HEIGHT = 80;
-  const [statsOpen, setStatsOpen] = useState(true);
-  const statsAnim = useRef(new Animated.Value(0)).current;
+  const [statsOpen, setStatsOpen] = useState(false);
+  const statsAnim = useRef(new Animated.Value(-STATS_HEIGHT)).current;
   const toggleStats = useCallback(() => {
     const toValue = statsOpen ? -STATS_HEIGHT : 0;
     setStatsOpen(!statsOpen);
@@ -94,6 +163,24 @@ export default function PatientDashboardScreen() {
       counts[cs.id] = quotes.length;
     }
     setQuoteCounts(counts);
+
+    // Check enrichment completion for pending/quotes_received cases
+    const [medical, dental, files] = await Promise.all([
+      store.getPatientMedical(),
+      store.getPatientDental(),
+      store.getPatientFiles(),
+    ]);
+    const hasMedical = !!(medical?.conditions?.length || medical?.medications?.length || medical?.allergies?.length);
+    const hasDental = !!(dental?.issues?.length || dental?.lastVisit);
+    const hasFiles = !!((files?.xrays?.length || 0) + (files?.treatmentPlans?.length || 0) + (files?.photos?.length || 0));
+    const needsEnrichment = !hasMedical || !hasDental || !hasFiles;
+    const enrichMap: Record<string, boolean> = {};
+    for (const cs of c) {
+      if ((cs.status === "pending" || cs.status === "quotes_received") && needsEnrichment) {
+        enrichMap[cs.id] = true;
+      }
+    }
+    setEnrichmentNeeded(enrichMap);
   }, []);
 
   useFocusEffect(
@@ -133,25 +220,12 @@ export default function PatientDashboardScreen() {
     ? "My Cases"
     : { with_quotes: "Cases With Quotes", bookings: "Booked Cases", in_treatment: "In Treatment", completed: "Completed" }[statusFilter];
 
-  const BOOKING_STEPS = [
-    { key: "confirmed", label: "Booked", next: "Input flight info for pickup service", emoji: "📖" },
-    { key: "flight_submitted", label: "Flight Booked", next: "Confirm hotel arrival", emoji: "🏨" },
-    { key: "arrived_korea", label: "In Korea", next: "Check in at clinic", emoji: "🇰🇷" },
-    { key: "checked_in_clinic", label: "At Clinic", next: "Treatment in progress", emoji: "🦷" },
-    { key: "treatment_done", label: "Treatment Done", next: "Complete payment", emoji: "✅", dynamic: true },
-    { key: "between_visits", label: "Visit Complete", next: "Choose stay or return", emoji: "🎉" },
-    { key: "returning_home", label: "Returning Home", next: "Book departure pickup", emoji: "🛫" },
-    { key: "payment_complete", label: "Paid", next: "Continue", emoji: "✅" },
-    { key: "departure_set", label: "Complete", next: "Leave a review!", emoji: "⭐" },
-    { key: "cancelled", label: "Cancelled", next: "View quotes to rebook", emoji: "❌" },
-  ];
-
   const sortedCases = useMemo(() => {
     const getPriority = (c: PatientCase): number => {
       if (c.status === "booked") {
         const bk = bookings.find((b) => b.caseId === c.id);
         if (bk?.status === "cancelled") return -1;
-        const stepIdx = BOOKING_STEPS.findIndex((st) => st.key === bk?.status);
+        const stepIdx = JOURNEY_STEPS.findIndex((st) => st.key === bk?.status);
         return stepIdx >= 0 ? 100 + stepIdx : 100;
       }
       if (c.status === "quotes_received") return 10;
@@ -161,54 +235,29 @@ export default function PatientDashboardScreen() {
     return [...filteredCases].sort((a, b) => getPriority(b) - getPriority(a));
   }, [filteredCases, bookings]);
 
-  const getCaseProgress = (status: string, caseId?: string) => {
-    if (status === "booked" && caseId) {
-      const bk = bookings.find((b) => b.caseId === caseId);
-      // Cancelled gets special red styling
-      if (bk?.status === "cancelled") {
-        return {
-          label: "Cancelled", next: "View quotes to rebook", emoji: "❌",
-          step: 0, total: BOOKING_STEPS.length,
-          bg: SharedColors.redLight, color: SharedColors.red,
-          isBooking: true,
-        };
-      }
-      const stepIdx = BOOKING_STEPS.findIndex((st) => st.key === bk?.status);
-      if (stepIdx >= 0) {
-        const step = BOOKING_STEPS[stepIdx];
-        let label = step.label;
-        // Dynamic label for treatment_done: "Visit X of Y Complete"
-        if (bk?.status === "treatment_done" && bk.visitDates && bk.visitDates.length > 1) {
-          const cur = bk.currentVisit || 1;
-          label = `Visit ${cur} of ${bk.visitDates.length} Complete`;
-        }
-        return {
-          label, next: step.next, emoji: step.emoji,
-          step: stepIdx + 1, total: BOOKING_STEPS.length,
-          bg: PatientTheme.primaryLight, color: PatientTheme.primary,
-          isBooking: true,
-        };
-      }
-      return { label: "Booked", next: "Input flight info for pickup service", emoji: "📖", step: 0, total: BOOKING_STEPS.length, bg: PatientTheme.primaryLight, color: PatientTheme.primary, isBooking: true };
-    }
-    if (status === "pending") {
-      return { label: "Awaiting Quotes", next: "Dentists are reviewing your case", emoji: "⏳", step: 1, total: 3, bg: SharedColors.amberLight, color: SharedColors.amber, isBooking: false };
-    }
-    if (status === "quotes_received") {
-      return { label: "Quotes Ready", next: "Review & accept a quote", emoji: "📋", step: 2, total: 3, bg: SharedColors.yellowLight, color: SharedColors.yellow, isBooking: false };
-    }
-    return { label: "Submitted", next: "Waiting for processing", emoji: "📄", step: 0, total: 3, bg: SharedColors.bg, color: SharedColors.slate, isBooking: false };
-  };
+  const BOOKING_STEPS_NAV: { key: string; route?: (bk: Booking) => string }[] = [
+    { key: "confirmed", route: (bk) => `/patient/case-hub?bookingId=${bk.id}&caseId=${bk.caseId}` },
+    { key: "flight_submitted", route: (bk) => `/patient/hotel-arrived?bookingId=${bk.id}` },
+    { key: "arrived_korea", route: (bk) => `/patient/clinic-checkin?bookingId=${bk.id}` },
+    { key: "checked_in_clinic" },
+    { key: "treatment_done", route: (bk) => `/patient/visit-checkout?bookingId=${bk.id}` },
+    { key: "between_visits", route: (bk) => `/patient/stay-or-return?bookingId=${bk.id}` },
+    { key: "returning_home", route: (bk) => bk.dropOffUnlocked ? `/patient/departure-pickup?bookingId=${bk.id}` : `/patient/write-review?bookingId=${bk.id}` },
+    { key: "payment_complete", route: (bk) => bk.dropOffUnlocked ? `/patient/departure-pickup?bookingId=${bk.id}` : `/patient/write-review?bookingId=${bk.id}` },
+    { key: "departure_set", route: (bk) => `/patient/write-review?bookingId=${bk.id}` },
+  ];
 
   const handleCasePress = (c: PatientCase) => {
     if (c.status === "booked") {
       const bk = bookings.find((b) => b.caseId === c.id);
-      if (bk?.status === "cancelled") {
+      if (!bk || bk.status === "cancelled") {
         router.push(`/patient/quotes?caseId=${c.id}` as any);
         return;
       }
-      // Toggle journey checklist expansion
-      setExpandedCaseId(prev => prev === c.id ? null : c.id);
+      const currentStep = BOOKING_STEPS_NAV.find(s => s.key === bk.status);
+      if (currentStep?.route) {
+        router.push(currentStep.route(bk) as any);
+      }
       return;
     }
     router.push(`/patient/quotes?caseId=${c.id}` as any);
@@ -339,7 +388,7 @@ export default function PatientDashboardScreen() {
           <Text style={s.sectionTitle}>{filterSectionTitle}</Text>
           <TouchableOpacity
             style={s.newCaseBtn}
-            onPress={() => router.push("/patient/patient-info" as any)}
+            onPress={() => router.push("/patient/treatment-intent" as any)}
             activeOpacity={0.7}
             accessibilityRole="button"
             accessibilityLabel="Create new case"
@@ -361,7 +410,7 @@ export default function PatientDashboardScreen() {
             </Text>
             <TouchableOpacity
               style={s.createBtn}
-              onPress={() => router.push("/patient/patient-info" as any)}
+              onPress={() => router.push("/patient/treatment-intent" as any)}
               activeOpacity={0.85}
               accessibilityRole="button"
               accessibilityLabel="Create first case"
@@ -380,143 +429,176 @@ export default function PatientDashboardScreen() {
             </Text>
           </View>
         ) : (
-          /* Case cards */
+          /* Case cards — variant-switched rendering */
           sortedCases.map((c) => {
-            const progress = getCaseProgress(c.status, c.id);
             const qCount = quoteCounts[c.id] || 0;
+            const bookedBk = c.status === "booked" ? bookings.find((b) => b.caseId === c.id) : undefined;
+            const isActiveBooking = bookedBk && bookedBk.status !== "cancelled";
+            const bkStatus = bookedBk?.status;
+
+            const journeyIdx = isActiveBooking ? JOURNEY_STEPS.findIndex((st) => st.key === bkStatus) : -1;
+            const journeyStep = journeyIdx >= 0 ? JOURNEY_STEPS[journeyIdx] : null;
+            const isInProgress = bkStatus === "checked_in_clinic";
+            const showManage = isActiveBooking && !MANAGE_HIDDEN.includes(bkStatus!);
+
+            const handleJourneyCTA = () => {
+              if (journeyStep?.actionRoute && bookedBk) {
+                router.push(journeyStep.actionRoute(bookedBk) as any);
+              }
+            };
+
+            const statusColor = getStatusColor(c.status, bkStatus);
+            const statusLabel = getStatusLabel(c.status, bkStatus);
+            const treatmentLine = c.treatments.map((t) => `${t.name} x${t.qty}`).join(", ");
+            const accessLabel = `Case ${c.id}, ${statusLabel}, ${c.treatments.map(t => t.name).join(", ")}`;
+
+            const dateFormatted = new Date(c.date).toLocaleDateString("en-US", { month: "short", day: "numeric" });
+            const actionLabel = c.status === "quotes_received" ? "Review quotes" : c.status === "pending" ? "Under review" : "View details";
+
+            const CardW = isActiveBooking ? View : TouchableOpacity;
+            const baseProps = isActiveBooking
+              ? { accessibilityLabel: accessLabel }
+              : { onPress: () => handleCasePress(c), activeOpacity: 0.7 as number, accessibilityRole: "button" as const, accessibilityLabel: accessLabel };
+
+              const card = (
+                <CardW style={sV1.card} {...baseProps as any}>
+                  <View style={sV1.cardInner}>
+                    <View style={sV1.topRow}>
+                      <Text style={[sV1.status, { color: statusColor }]}>{statusLabel}</Text>
+                      {enrichmentNeeded[c.id] && (
+                        <TouchableOpacity
+                          onPress={(e) => { e.stopPropagation(); setExpandedEnrich(expandedEnrich === c.id ? null : c.id); }}
+                          activeOpacity={0.7}
+                          hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                        >
+                          <View style={sV1.redDot} />
+                        </TouchableOpacity>
+                      )}
+                      <View style={{ flex: 1 }} />
+                      <Text style={sV1.date}>{dateFormatted}</Text>
+                    </View>
+                    <Text style={sV1.title}>Case #{c.id}</Text>
+                    <Text style={sV1.treatments} numberOfLines={1}>{treatmentLine}</Text>
+                    <View style={sV1.divider} />
+                    {/* Action row — state-specific */}
+                    {c.status === "pending" && (
+                      <Text style={sV1.actionMuted}>Awaiting quotes</Text>
+                    )}
+                    {c.status === "quotes_received" && (
+                      <Text style={sV1.actionActive}>{qCount} quote{qCount !== 1 ? "s" : ""} · View &gt;</Text>
+                    )}
+                    {c.status === "booked" && bookedBk?.status === "cancelled" && (
+                      <Text style={sV1.actionCancelled}>Cancelled</Text>
+                    )}
+                    {/* Journey section for booked */}
+                    {isActiveBooking && bookedBk && journeyStep && (
+                      <View style={sV1.journeySection}>
+                        <View style={sV1.dentistRow}>
+                          <Text style={sV1.dentistName} numberOfLines={1}>{bookedBk.dentistName}</Text>
+                          <Text style={sV1.dentistSep}> · </Text>
+                          <Text style={sV1.clinicText} numberOfLines={1}>{bookedBk.clinicName}</Text>
+                          <View style={{ flex: 1 }} />
+                          {showManage && (
+                            <TouchableOpacity
+                              style={sV1.manageBtn}
+                              onPress={(e) => { e.stopPropagation(); setManageBooking(bookedBk); }}
+                              activeOpacity={0.6}
+                              hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                            >
+                              <Feather name="more-horizontal" size={16} color={SharedColors.slate} />
+                            </TouchableOpacity>
+                          )}
+                        </View>
+                        {/* Diamond quest progress */}
+                        <TouchableOpacity
+                          activeOpacity={0.8}
+                          onPress={(e) => { e.stopPropagation(); setExpandedJourney(expandedJourney === c.id ? null : c.id); }}
+                          style={sV1.questRow}
+                        >
+                          {JOURNEY_STEPS.map((st, idx) => {
+                            const isDone = idx < journeyIdx;
+                            const isCurrent = idx === journeyIdx;
+                            return (
+                              <React.Fragment key={st.key}>
+                                {idx > 0 && <View style={[sV1.questLine, isDone && sV1.questLineDone, isCurrent && sV1.questLineDone]} />}
+                                <View style={[sV1.diamond, isDone && sV1.diamondDone, isCurrent && sV1.diamondCurrent]}>
+                                  {isDone && <Feather name="check" size={7} color="#fff" />}
+                                  {isCurrent && <View style={sV1.diamondInner} />}
+                                </View>
+                              </React.Fragment>
+                            );
+                          })}
+                        </TouchableOpacity>
+
+                        {/* Current step info */}
+                        <View style={sV1.stepRow}>
+                          <View style={sV1.stepIconWrap}>
+                            <Feather name={journeyStep.icon} size={17} color={PatientTheme.primary} />
+                          </View>
+                          <View style={{ flex: 1 }}>
+                            <Text style={sV1.stepLabel}>{journeyStep.label}</Text>
+                            <Text style={sV1.stepSummary} numberOfLines={1}>{journeyStep.summary(bookedBk)}</Text>
+                          </View>
+                          <TouchableOpacity
+                            onPress={(e) => { e.stopPropagation(); setExpandedJourney(expandedJourney === c.id ? null : c.id); }}
+                            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                          >
+                            <Feather name={expandedJourney === c.id ? "chevron-up" : "chevron-down"} size={16} color="#94a3b8" />
+                          </TouchableOpacity>
+                        </View>
+
+                        {/* Expanded step list */}
+                        {expandedJourney === c.id && (
+                          <View style={sV1.expandedSteps}>
+                            {JOURNEY_STEPS.map((st, idx) => {
+                              const isDone = idx < journeyIdx;
+                              const isCurrent = idx === journeyIdx;
+                              const isFuture = idx > journeyIdx;
+                              const isLast = idx === JOURNEY_STEPS.length - 1;
+                              return (
+                                <View key={st.key} style={sV1.timelineRow}>
+                                  <View style={sV1.timelineCol}>
+                                    <View style={[sV1.timelineDot, isDone && sV1.timelineDotDone, isCurrent && sV1.timelineDotCurrent, isFuture && sV1.timelineDotFuture]}>
+                                      {isDone && <Feather name="check" size={9} color="#fff" />}
+                                      {isCurrent && <Feather name={st.icon} size={10} color="#fff" />}
+                                    </View>
+                                    {!isLast && <View style={[sV1.timelineLine, isDone && sV1.timelineLineDone]} />}
+                                  </View>
+                                  <View style={[sV1.timelineContent, isFuture && { opacity: 0.35 }]}>
+                                    <Text style={[sV1.timelineLabel, isCurrent && { color: PatientTheme.primary, fontWeight: "700" }]}>{st.label}</Text>
+                                  </View>
+                                </View>
+                              );
+                            })}
+                          </View>
+                        )}
+                        {isInProgress ? (
+                          <View style={sV1.ctaInProgress}>
+                            <View style={sV1.pulseDot} />
+                            <Text style={sV1.ctaInProgressText}>Treatment in Progress</Text>
+                          </View>
+                        ) : journeyStep.actionRoute ? (
+                          <TouchableOpacity onPress={handleJourneyCTA} activeOpacity={0.85} style={sV1.ctaButton}>
+                            <Text style={sV1.ctaButtonText}>{journeyStep.actionLabel || "Continue"}</Text>
+                            <Feather name="arrow-right" size={15} color="#fff" />
+                          </TouchableOpacity>
+                        ) : null}
+                      </View>
+                    )}
+                    {expandedEnrich === c.id && enrichmentNeeded[c.id] && (
+                      <EnrichmentChecklist caseId={c.id} />
+                    )}
+                  </View>
+                </CardW>
+              );
 
             return (
-              <TouchableOpacity
-                key={c.id}
-                style={s.caseCard}
-                onPress={() => handleCasePress(c)}
-                activeOpacity={0.75}
-                accessibilityRole="button"
-                accessibilityLabel={`Case ${c.id}, ${progress.label}, ${c.treatments.map(t => t.name).join(", ")}`}
-              >
-                {/* Status strip + badge */}
-                <View style={[s.statusStrip, { backgroundColor: progress.color }]} />
-                <View style={s.cardInner}>
-                  <View style={s.statusRow2}>
-                    <View style={[s.statusPill, { backgroundColor: progress.bg }]}>
-                      <Text style={s.statusPillEmoji}>{progress.emoji}</Text>
-                      <Text style={[s.statusPillText, { color: progress.color }]}>{progress.label}</Text>
-                    </View>
-                    {qCount > 0 && c.status !== "booked" && (
-                      <View style={s.quoteCount}>
-                        <Text style={s.quoteCountText}>{qCount} quote{qCount > 1 ? "s" : ""}</Text>
-                      </View>
-                    )}
-                    {c.status === "booked" && (() => {
-                      const bk = bookings.find((b) => b.caseId === c.id);
-                      if (bk?.status === "cancelled") {
-                        return (
-                          <TouchableOpacity
-                            style={s.manageBtn}
-                            onPress={(e) => { e.stopPropagation(); setDeleteCaseId(c.id); }}
-                            activeOpacity={0.6}
-                            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-                          >
-                            <Text style={s.manageBtnText}>⋯</Text>
-                          </TouchableOpacity>
-                        );
-                      }
-                      return bk && bk.status !== "treatment_done" && bk.status !== "payment_complete" && bk.status !== "departure_set" ? (
-                        <TouchableOpacity
-                          style={s.manageBtn}
-                          onPress={(e) => { e.stopPropagation(); setManageBooking(bk); }}
-                          activeOpacity={0.6}
-                          hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-                        >
-                          <Text style={s.manageBtnText}>⋯</Text>
-                        </TouchableOpacity>
-                      ) : null;
-                    })()}
-                  </View>
-
-                  {/* Case info */}
-                  <View style={s.caseTop}>
-                    <View style={s.caseIconWrap}>
-                      <Text style={s.caseIconText}>{getCaseEmoji(c.treatments)}</Text>
-                    </View>
-                    <View style={{ flex: 1 }}>
-                      <Text style={s.caseTitle}>Case #{c.id}</Text>
-                      <Text style={s.caseMeta}>{c.date} · {c.country}</Text>
-                    </View>
-                  </View>
-
-                  {/* Treatment tags */}
-                  <View style={s.tagRow}>
-                    {c.treatments.slice(0, 3).map((t) => (
-                      <View key={t.name} style={s.tag}>
-                        <Text style={s.tagText}>{t.name}</Text>
-                        <Text style={s.tagQty}>x{t.qty}</Text>
-                      </View>
-                    ))}
-                    {c.treatments.length > 3 && (
-                      <View style={[s.tag, s.tagMore]}>
-                        <Text style={s.tagMoreText}>+{c.treatments.length - 3}</Text>
-                      </View>
-                    )}
-                  </View>
-
-                  {/* Step progress bar for booked cases */}
-                  {progress.isBooking && progress.step > 0 && (
-                    <View style={s.stepProgressWrap}>
-                      <View style={s.stepTrack}>
-                        <View style={[s.stepFill, { width: `${((progress.step - 1) / (BOOKING_STEPS.length - 2)) * 100}%`, backgroundColor: progress.color }]} />
-                      </View>
-                      <Text style={[s.stepText, { color: progress.color }]}>{progress.step}/{BOOKING_STEPS.length - 1}</Text>
-                    </View>
-                  )}
-
-                  {/* Next action */}
-                  <View style={s.nextSection}>
-                    <Text style={s.nextLabel}>Next:</Text>
-                    <Text style={s.nextAction}>{progress.next}</Text>
-                    <Text style={s.nextArrow}>{c.status === "booked" && expandedCaseId === c.id ? "▼" : "›"}</Text>
-                  </View>
-
-                  {/* Journey Checklist — inline expansion for booked cases */}
-                  {c.status === "booked" && expandedCaseId === c.id && (() => {
-                    const bk = bookings.find((b) => b.caseId === c.id);
-                    return bk && bk.status !== "cancelled" ? <JourneyChecklist booking={bk} /> : null;
-                  })()}
-                </View>
-              </TouchableOpacity>
+              <React.Fragment key={c.id}>
+                {card}
+              </React.Fragment>
             );
           })
         )}
-
-
-        {/* Logout */}
-        <TouchableOpacity
-          style={s.logoutBtn}
-          accessibilityRole="button"
-          accessibilityLabel="Log out"
-          onPress={() => {
-            Alert.alert(
-              "Log Out",
-              "Are you sure you want to log out?",
-              [
-                { text: "Cancel", style: "cancel" },
-                {
-                  text: "Log Out",
-                  style: "destructive",
-                  onPress: async () => {
-                    await store.clearCurrentUser();
-                    resetNavigationHistory("/auth/role-select");
-                    router.replace("/auth/role-select" as any);
-                  },
-                },
-              ],
-            );
-          }}
-          activeOpacity={0.7}
-        >
-          <Text style={s.logoutText}>Log Out</Text>
-        </TouchableOpacity>
-
         <View style={{ height: 70 }} />
       </ScrollView>
 
@@ -660,7 +742,7 @@ const s = StyleSheet.create({
 
   /* Header */
   header: {
-    paddingHorizontal: 24, paddingTop: 60, paddingBottom: 8,
+    paddingHorizontal: 20, paddingTop: 60, paddingBottom: 8,
   },
   headerTop: {
     flexDirection: "row", justifyContent: "space-between",
@@ -800,106 +882,6 @@ const s = StyleSheet.create({
   },
   createBtnText: { color: SharedColors.white, fontSize: 14, fontWeight: "600" },
 
-  /* Case card — Clean Floating */
-  caseCard: {
-    backgroundColor: SharedColors.white, borderRadius: 16, overflow: "hidden",
-    marginBottom: 14,
-    borderWidth: 1.5, borderColor: PatientTheme.primaryBorder,
-    shadowColor: "#1e0a3c", shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.10, shadowRadius: 14, elevation: 4,
-  },
-  statusStrip: {
-    height: 4, width: "100%",
-  },
-  cardInner: {
-    padding: 16,
-  },
-  statusRow2: {
-    flexDirection: "row", alignItems: "center", marginBottom: 14,
-  },
-  statusPill: {
-    flexDirection: "row", alignItems: "center", gap: 6,
-    paddingHorizontal: 12, paddingVertical: 6, borderRadius: 20,
-  },
-  statusPillEmoji: { fontSize: 14 },
-  statusPillText: { fontSize: 13, fontWeight: "700" },
-  caseTop: {
-    flexDirection: "row", alignItems: "center", gap: 12,
-  },
-  caseIconWrap: {
-    width: 42, height: 42, borderRadius: 12,
-    backgroundColor: "#f1ecf7",
-    alignItems: "center", justifyContent: "center",
-  },
-  caseIconText: { fontSize: 19 },
-  caseTitle: { fontSize: 15, fontWeight: "700", color: SharedColors.navy },
-  caseMeta: { fontSize: 12, color: SharedColors.slateLight, marginTop: 2 },
-  /* Tags */
-  tagRow: { flexDirection: "row", flexWrap: "wrap", gap: 6, marginTop: 14 },
-  tag: {
-    flexDirection: "row", alignItems: "center", gap: 3,
-    backgroundColor: "#f4f1f8", borderRadius: 6,
-    paddingHorizontal: 10, paddingVertical: 5,
-  },
-  tagText: { fontSize: 12, fontWeight: "500", color: "#3d2060" },
-  tagQty: { fontSize: 11, fontWeight: "600", color: SharedColors.slateLight },
-  tagMore: { backgroundColor: "#f0edf4" },
-  tagMoreText: { fontSize: 12, fontWeight: "500", color: SharedColors.slate },
-
-  /* Quote count */
-  quoteCount: {
-    backgroundColor: SharedColors.yellowLight, borderRadius: 12,
-    paddingHorizontal: 10, paddingVertical: 4, marginLeft: "auto",
-  },
-  quoteCountText: { fontSize: 12, fontWeight: "700", color: "#92400e" },
-
-  /* Progress bar (single track) */
-  stepProgressWrap: {
-    flexDirection: "row", alignItems: "center", gap: 10, marginTop: 14,
-  },
-  stepTrack: {
-    flex: 1, height: 5, backgroundColor: "#ede9f3", borderRadius: 3, overflow: "hidden",
-  },
-  stepFill: {
-    height: "100%", borderRadius: 3,
-  },
-  stepText: {
-    fontSize: 11, fontWeight: "700",
-  },
-
-  /* Next action */
-  nextSection: {
-    flexDirection: "row", alignItems: "center", gap: 6,
-    marginTop: 14, paddingTop: 12,
-    borderTopWidth: 1, borderTopColor: "#e8e2f0",
-  },
-  nextLabel: {
-    fontSize: 11, fontWeight: "600", color: SharedColors.slateLight,
-  },
-  nextAction: {
-    fontSize: 13, fontWeight: "600", color: SharedColors.navy, flex: 1,
-  },
-  nextArrow: {
-    fontSize: 22, fontWeight: "300", color: SharedColors.slateLight, marginTop: -1,
-  },
-
-  /* Logout */
-  logoutBtn: {
-    alignSelf: "center", marginTop: 28,
-    paddingHorizontal: 20, paddingVertical: 10,
-    borderRadius: 10, borderWidth: 1, borderColor: SharedColors.border,
-  },
-  logoutText: { fontSize: 13, fontWeight: "500", color: SharedColors.slate },
-
-  /* ── Manage booking button ── */
-  manageBtn: {
-    width: 30, height: 30, borderRadius: 15,
-    backgroundColor: "#f4f1f8",
-    alignItems: "center", justifyContent: "center",
-    marginLeft: "auto",
-  },
-  manageBtnText: { fontSize: 18, fontWeight: "900", color: PatientTheme.primary, marginTop: -2 },
-
   /* ── Bottom Bar ── */
   /* ── Manage Booking Modal ── */
   modalOverlay: {
@@ -937,4 +919,73 @@ const s = StyleSheet.create({
     borderWidth: 1, borderColor: SharedColors.border,
   },
   modalCloseBtnText: { fontSize: 14, fontWeight: "600", color: SharedColors.slate },
+});
+
+// ── V1: Whisper card styles ──
+const sV1 = StyleSheet.create({
+  card: { backgroundColor: "#fff", borderRadius: 16, marginBottom: 16, ...Platform.select({ ios: { shadowColor: "#1A002E", shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.03, shadowRadius: 8 }, android: { elevation: 1 } }) },
+  cardInner: { padding: 24 },
+  topRow: { flexDirection: "row", alignItems: "center", gap: 8, marginBottom: 20 },
+  status: { fontSize: 12, fontWeight: "600", letterSpacing: 0.6, textTransform: "uppercase" as const },
+  redDot: { width: 7, height: 7, borderRadius: 3.5, backgroundColor: "#ef4444" },
+  date: { fontSize: 12, color: "#94a3b8" },
+  title: { fontSize: 20, fontWeight: "700", color: "#0f172a", letterSpacing: -0.3, marginBottom: 6 },
+  treatments: { fontSize: 14, color: "#64748b", lineHeight: 20, marginBottom: 24 },
+  divider: { height: StyleSheet.hairlineWidth, backgroundColor: "#e2e8f0", marginBottom: 20 },
+  actionMuted: { textAlign: "center" as const, fontSize: 13, fontWeight: "500", color: "#94a3b8" },
+  actionActive: { textAlign: "right" as const, fontSize: 14, fontWeight: "600", color: "#4A0080" },
+  actionCancelled: { textAlign: "center" as const, fontSize: 13, fontWeight: "500", color: "#ef4444" },
+  journeySection: { marginTop: 0 },
+  dentistRow: { flexDirection: "row", alignItems: "center", marginBottom: 16 },
+  dentistName: { fontSize: 14, fontWeight: "600", color: "#0f172a", flexShrink: 1 },
+  dentistSep: { fontSize: 14, color: "#94a3b8" },
+  clinicText: { fontSize: 14, color: "#64748b", flexShrink: 1 },
+  manageBtn: { width: 32, height: 32, borderRadius: 16, backgroundColor: "#f8f6fb", alignItems: "center", justifyContent: "center" },
+  // Diamond quest progress
+  questRow: { flexDirection: "row", alignItems: "center", marginBottom: 16, paddingHorizontal: 2 },
+  questLine: { flex: 1, height: 2, backgroundColor: "#e2e8f0" },
+  questLineDone: { backgroundColor: "#4A0080" },
+  diamond: {
+    width: 12, height: 12, borderRadius: 2, transform: [{ rotate: "45deg" }],
+    backgroundColor: "#e2e8f0", alignItems: "center", justifyContent: "center",
+  },
+  diamondDone: {
+    backgroundColor: "#4A0080",
+    ...Platform.select({ ios: { shadowColor: "#7c3aed", shadowOffset: { width: 0, height: 0 }, shadowOpacity: 0.3, shadowRadius: 4 }, android: {} }),
+  },
+  diamondCurrent: {
+    backgroundColor: "#4A0080", width: 16, height: 16, borderRadius: 3,
+    ...Platform.select({ ios: { shadowColor: "#7c3aed", shadowOffset: { width: 0, height: 0 }, shadowOpacity: 0.5, shadowRadius: 6 }, android: { elevation: 3 } }),
+  },
+  diamondInner: { width: 4, height: 4, borderRadius: 1, backgroundColor: "#fff", transform: [{ rotate: "-45deg" }] },
+
+  // Current step row
+  stepRow: { flexDirection: "row", alignItems: "center", gap: 12, marginBottom: 18 },
+  stepIconWrap: { width: 36, height: 36, borderRadius: 12, backgroundColor: "#faf8ff", alignItems: "center", justifyContent: "center" },
+  stepLabel: { fontSize: 15, fontWeight: "600", color: "#0f172a" },
+  stepSummary: { fontSize: 13, color: "#64748b", marginTop: 1 },
+
+  // Expanded step timeline
+  expandedSteps: { marginBottom: 16, paddingLeft: 4 },
+  timelineRow: { flexDirection: "row", minHeight: 32 },
+  timelineCol: { width: 24, alignItems: "center" },
+  timelineDot: {
+    width: 18, height: 18, borderRadius: 9,
+    backgroundColor: "#e2e8f0", alignItems: "center", justifyContent: "center",
+    borderWidth: 2, borderColor: "#e2e8f0",
+  },
+  timelineDotDone: { backgroundColor: "#16a34a", borderColor: "#16a34a" },
+  timelineDotCurrent: { backgroundColor: "#4A0080", borderColor: "#4A0080" },
+  timelineDotFuture: { backgroundColor: "#f8fafc", borderColor: "#e2e8f0" },
+  timelineLine: { width: 2, flex: 1, backgroundColor: "#e2e8f0", marginVertical: 1 },
+  timelineLineDone: { backgroundColor: "#16a34a" },
+  timelineContent: { flex: 1, marginLeft: 10, paddingBottom: 10 },
+  timelineLabel: { fontSize: 13, fontWeight: "500", color: "#0f172a" },
+
+  // CTA
+  ctaButton: { flexDirection: "row", alignItems: "center", justifyContent: "center", backgroundColor: "#4A0080", borderRadius: 14, paddingVertical: 14, gap: 8, minHeight: 50 },
+  ctaButtonText: { color: "#fff", fontSize: 15, fontWeight: "700" },
+  ctaInProgress: { flexDirection: "row", alignItems: "center", justifyContent: "center", backgroundColor: "#faf8ff", borderRadius: 14, paddingVertical: 14, minHeight: 50, gap: 8 },
+  pulseDot: { width: 8, height: 8, borderRadius: 4, backgroundColor: "#16a34a" },
+  ctaInProgressText: { color: "#4A0080", fontSize: 14, fontWeight: "600", opacity: 0.7 },
 });

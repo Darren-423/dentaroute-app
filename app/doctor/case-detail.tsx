@@ -64,7 +64,19 @@ export default function DoctorCaseDetailScreen() {
   const [submitted, setSubmitted] = useState(false);
   const [existingQuote, setExistingQuote] = useState<DentistQuote | null>(null);
   const [visitsCount, setVisitsCount] = useState(1);
-  const [gapConfigs, setGapConfigs] = useState<{ gapMonths: number; gapDays: number }[]>([]);
+  const [gapConfigs, setGapConfigs] = useState<{ gapMonths: number; gapDays: number; gapReason: string }[]>([]);
+  const [activeReasonPicker, setActiveReasonPicker] = useState<number | null>(null);
+
+  const GAP_REASONS = [
+    "Bone Integration Period",
+    "Lab Processing Period",
+    "Soft Tissue Healing",
+    "Pre-surgery Preparation",
+    "Post-extraction Healing",
+    "Orthodontic Adjustment",
+    "Custom Prosthesis Fabrication",
+    "Other",
+  ];
 
   // Patient uploaded files & travel
   const [patientFiles, setPatientFiles] = useState<{
@@ -109,11 +121,12 @@ export default function DoctorCaseDetailScreen() {
             const quoteVisits = Array.isArray(myQuote.visits) ? myQuote.visits : [];
             if (quoteVisits.length > 0) {
               setVisitsCount(quoteVisits.length);
-              const gaps: { gapMonths: number; gapDays: number }[] = [];
+              const gaps: { gapMonths: number; gapDays: number; gapReason: string }[] = [];
               for (let i = 0; i < quoteVisits.length - 1; i++) {
                 gaps.push({
                   gapMonths: quoteVisits[i]?.gapMonths || 0,
                   gapDays: quoteVisits[i]?.gapDays || 0,
+                  gapReason: (quoteVisits[i] as any)?.gapReason || "",
                 });
               }
               setGapConfigs(gaps);
@@ -194,13 +207,14 @@ export default function DoctorCaseDetailScreen() {
         const availabilitySlots = visitSpecific.length > 0 ? visitSpecific : sharedSlots;
         const isLast = visitNum === safeVisitsCount;
         const gapIndex = visitNum - 1;
-        const gapConfig = gapIndex < gapConfigs.length ? gapConfigs[gapIndex] : { gapMonths: 0, gapDays: 0 };
+        const gapConfig = gapIndex < gapConfigs.length ? gapConfigs[gapIndex] : { gapMonths: 0, gapDays: 0, gapReason: "" };
 
         return {
           visit: visitNum,
           description: `Visit ${visitNum}`,
           ...(!isLast && gapConfig.gapMonths > 0 ? { gapMonths: gapConfig.gapMonths } : {}),
           ...(!isLast && gapConfig.gapDays > 0 ? { gapDays: gapConfig.gapDays } : {}),
+          ...(!isLast && gapConfig.gapReason ? { gapReason: gapConfig.gapReason } : {}),
           ...(availabilitySlots.length > 0 ? { availabilitySlots } : {}),
         };
       });
@@ -688,7 +702,7 @@ export default function DoctorCaseDetailScreen() {
                           ⏳ {[
                             v.gapMonths ? `${v.gapMonths} month${v.gapMonths > 1 ? "s" : ""}` : "",
                             v.gapDays ? `${v.gapDays} day${v.gapDays > 1 ? "s" : ""}` : "",
-                          ].filter(Boolean).join(" ")} before next visit
+                          ].filter(Boolean).join(" ")} waiting period{(v as any).gapReason ? ` — ${(v as any).gapReason}` : ""}
                         </Text>
                       ) : null}
                     </View>
@@ -944,7 +958,7 @@ export default function DoctorCaseDetailScreen() {
                     setVisitsCount(newCount);
                     // Add new gap if increasing
                     if (newCount > visitsCount) {
-                      setGapConfigs((prev) => [...prev, { gapMonths: 0, gapDays: 0 }]);
+                      setGapConfigs((prev) => [...prev, { gapMonths: 0, gapDays: 0, gapReason: "" }]);
                     }
                   }}
                   activeOpacity={0.7}
@@ -955,19 +969,56 @@ export default function DoctorCaseDetailScreen() {
 
               {visitsCount > 1 && (
                 <View style={s.gapCard}>
-                  <Text style={s.gapTitle}>Healing time between visits</Text>
-                  <Text style={s.gapHint}>Set different healing time for each gap.</Text>
+                  <Text style={s.gapTitle}>Waiting period between visits</Text>
+                  <Text style={s.gapHint}>Set the waiting period and reason for each gap.</Text>
 
                   <View style={s.gapInputCol}>
                     {Array.from({ length: visitsCount - 1 }).map((_, gapIndex) => {
                       const visitANum = gapIndex + 1;
                       const visitBNum = gapIndex + 2;
-                      const gap = gapConfigs[gapIndex] || { gapMonths: 0, gapDays: 0 };
+                      const gap = gapConfigs[gapIndex] || { gapMonths: 0, gapDays: 0, gapReason: "" };
 
                       return (
                         <View key={`gap-${gapIndex}`} style={s.gapBlockWrap}>
                           <Text style={s.gapBlockTitle}>Visit {visitANum} → Visit {visitBNum}</Text>
-                          
+
+                          {/* Reason dropdown */}
+                          <View style={s.gapReasonRow}>
+                            <Text style={s.gapUnitLabel}>Reason</Text>
+                            <TouchableOpacity
+                              style={s.gapReasonBtn}
+                              onPress={() => setActiveReasonPicker(activeReasonPicker === gapIndex ? null : gapIndex)}
+                              activeOpacity={0.7}
+                            >
+                              <Text style={[s.gapReasonBtnText, !gap.gapReason && { color: SharedColors.slateLight }]}>
+                                {gap.gapReason || "Select reason"}
+                              </Text>
+                              <Text style={s.gapReasonArrow}>{activeReasonPicker === gapIndex ? "▲" : "▼"}</Text>
+                            </TouchableOpacity>
+                          </View>
+                          {activeReasonPicker === gapIndex && (
+                            <View style={s.gapReasonDropdown}>
+                              {GAP_REASONS.map((reason) => (
+                                <TouchableOpacity
+                                  key={reason}
+                                  style={[s.gapReasonOption, gap.gapReason === reason && s.gapReasonOptionActive]}
+                                  onPress={() => {
+                                    const newGaps = [...gapConfigs];
+                                    newGaps[gapIndex] = { ...gap, gapReason: reason };
+                                    setGapConfigs(newGaps);
+                                    setActiveReasonPicker(null);
+                                  }}
+                                  activeOpacity={0.7}
+                                >
+                                  <Text style={[s.gapReasonOptionText, gap.gapReason === reason && s.gapReasonOptionTextActive]}>
+                                    {reason}
+                                  </Text>
+                                  {gap.gapReason === reason && <Text style={s.gapReasonCheck}>✓</Text>}
+                                </TouchableOpacity>
+                              ))}
+                            </View>
+                          )}
+
                           <View style={s.gapInputGroupRow}>
                             <Text style={s.gapUnitLabel}>Months</Text>
                             <View style={s.gapControlsRow}>
@@ -1335,6 +1386,34 @@ const s = StyleSheet.create({
     fontSize: 12, fontWeight: "700", color: "#b45309",
     marginBottom: 10,
   },
+  gapReasonRow: {
+    flexDirection: "row", alignItems: "center",
+    justifyContent: "space-between",
+    paddingBottom: 8, marginBottom: 8,
+    borderBottomWidth: 1, borderBottomColor: "rgba(217,119,6,0.15)",
+  },
+  gapReasonBtn: {
+    flexDirection: "row", alignItems: "center", gap: 6,
+    backgroundColor: SharedColors.white, borderRadius: 8,
+    borderWidth: 1, borderColor: SharedColors.border,
+    paddingHorizontal: 10, paddingVertical: 7, flex: 1, marginLeft: 10,
+  },
+  gapReasonBtnText: { flex: 1, fontSize: 12, fontWeight: "500", color: SharedColors.navy },
+  gapReasonArrow: { fontSize: 9, color: SharedColors.slate },
+  gapReasonDropdown: {
+    backgroundColor: SharedColors.white, borderRadius: 8,
+    borderWidth: 1, borderColor: SharedColors.border,
+    marginBottom: 10, overflow: "hidden",
+  },
+  gapReasonOption: {
+    flexDirection: "row", alignItems: "center", justifyContent: "space-between",
+    paddingHorizontal: 12, paddingVertical: 10,
+    borderBottomWidth: 1, borderBottomColor: "#f1f5f9",
+  },
+  gapReasonOptionActive: { backgroundColor: "rgba(217,119,6,0.08)" },
+  gapReasonOptionText: { fontSize: 12, color: SharedColors.navy },
+  gapReasonOptionTextActive: { fontWeight: "600", color: "#b45309" },
+  gapReasonCheck: { fontSize: 13, color: "#d97706", fontWeight: "700" },
 
   issueTagWrap: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
   issueTag: {

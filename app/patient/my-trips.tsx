@@ -121,11 +121,9 @@ export default function MyTripsScreen() {
 
   return (
     <View style={s.container}>
-      <LinearGradient colors={[PatientTheme.primary, PatientTheme.primaryMid]} style={s.header}>
-        <View style={s.headerCenter}>
-          <Text style={s.headerTitle}>My Trips</Text>
-          <Text style={s.headerSub}>{trips.length} trip{trips.length !== 1 ? "s" : ""} saved</Text>
-        </View>
+      <LinearGradient colors={[...PatientTheme.gradient]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={s.header}>
+        <Text style={s.headerTitle}>My Trips</Text>
+        <Text style={s.headerSub}>{trips.length} trip{trips.length !== 1 ? "s" : ""} saved</Text>
       </LinearGradient>
 
       <FlatList
@@ -150,10 +148,9 @@ export default function MyTripsScreen() {
 
 const s = StyleSheet.create({
   container: { flex: 1, backgroundColor: SharedColors.bg },
-  header: { paddingTop: 56, paddingBottom: 20, paddingHorizontal: 20 },
-  headerCenter: { alignItems: "center" },
-  headerTitle: { color: SharedColors.white, fontSize: 20, fontWeight: "700" },
-  headerSub: { color: "rgba(255,255,255,0.7)", fontSize: 13, marginTop: 2 },
+  header: { paddingTop: 60, paddingBottom: 16, paddingHorizontal: 20 },
+  headerTitle: { fontSize: 20, fontWeight: "700", color: SharedColors.white },
+  headerSub: { fontSize: 13, color: "rgba(255,255,255,0.6)", marginTop: 2 },
   list: { padding: 16, paddingBottom: 100 },
 
   card: {

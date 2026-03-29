@@ -3,9 +3,7 @@ import { router } from "expo-router";
 import React, { useRef, useState } from "react";
 import {
   ActivityIndicator,
-  FlatList,
   KeyboardAvoidingView,
-  Modal,
   Platform,
   ScrollView,
   StyleSheet,
@@ -16,38 +14,14 @@ import {
 } from "react-native";
 
 import { PatientTheme, SharedColors } from "../../constants/theme";
+import { store } from "../../lib/store";
 const API_URL = "https://concourse-api.onrender.com/api";
-
-// 국가코드 리스트
-const COUNTRY_CODES = [
-  { code: "+1", country: "US", flag: "🇺🇸", name: "United States" },
-  { code: "+82", country: "KR", flag: "🇰🇷", name: "South Korea" },
-  { code: "+44", country: "GB", flag: "🇬🇧", name: "United Kingdom" },
-  { code: "+86", country: "CN", flag: "🇨🇳", name: "China" },
-  { code: "+81", country: "JP", flag: "🇯🇵", name: "Japan" },
-  { code: "+49", country: "DE", flag: "🇩🇪", name: "Germany" },
-  { code: "+33", country: "FR", flag: "🇫🇷", name: "France" },
-  { code: "+61", country: "AU", flag: "🇦🇺", name: "Australia" },
-  { code: "+1", country: "CA", flag: "🇨🇦", name: "Canada" },
-  { code: "+91", country: "IN", flag: "🇮🇳", name: "India" },
-  { code: "+55", country: "BR", flag: "🇧🇷", name: "Brazil" },
-  { code: "+52", country: "MX", flag: "🇲🇽", name: "Mexico" },
-  { code: "+65", country: "SG", flag: "🇸🇬", name: "Singapore" },
-  { code: "+66", country: "TH", flag: "🇹🇭", name: "Thailand" },
-  { code: "+84", country: "VN", flag: "🇻🇳", name: "Vietnam" },
-  { code: "+63", country: "PH", flag: "🇵🇭", name: "Philippines" },
-  { code: "+971", country: "AE", flag: "🇦🇪", name: "UAE" },
-  { code: "+7", country: "RU", flag: "🇷🇺", name: "Russia" },
-  { code: "+39", country: "IT", flag: "🇮🇹", name: "Italy" },
-  { code: "+34", country: "ES", flag: "🇪🇸", name: "Spain" },
-];
 
 export default function PatientCreateAccountScreen() {
   const [formData, setFormData] = useState({
     firstName: "",
     lastName: "",
     email: "",
-    phone: "",
     password: "",
     confirmPassword: "",
     agreeTerms: false,
@@ -56,23 +30,12 @@ export default function PatientCreateAccountScreen() {
   const [loading, setLoading] = useState(false);
   const [apiError, setApiError] = useState("");
 
-  // 국가코드
-  const [selectedCountry, setSelectedCountry] = useState(COUNTRY_CODES[0]);
-  const [showCountryPicker, setShowCountryPicker] = useState(false);
-
   // Email 인증
   const [emailCode, setEmailCode] = useState(["", "", "", "", "", ""]);
   const [emailVerified, setEmailVerified] = useState(false);
   const [emailCodeSent, setEmailCodeSent] = useState(false);
   const [emailVerifying, setEmailVerifying] = useState(false);
   const emailCodeRefs = useRef<(TextInput | null)[]>([]);
-
-  // Phone 인증
-  const [phoneCode, setPhoneCode] = useState(["", "", "", "", "", ""]);
-  const [phoneVerified, setPhoneVerified] = useState(false);
-  const [phoneCodeSent, setPhoneCodeSent] = useState(false);
-  const [phoneVerifying, setPhoneVerifying] = useState(false);
-  const phoneCodeRefs = useRef<(TextInput | null)[]>([]);
 
   const updateField = (field: string, value: string | boolean) => {
     setFormData({ ...formData, [field]: value });
@@ -83,16 +46,11 @@ export default function PatientCreateAccountScreen() {
     }
     setApiError("");
 
-    // 이메일이나 폰 변경되면 인증 리셋
+    // 이메일 변경되면 인증 리셋
     if (field === "email") {
       setEmailVerified(false);
       setEmailCodeSent(false);
       setEmailCode(["", "", "", "", "", ""]);
-    }
-    if (field === "phone") {
-      setPhoneVerified(false);
-      setPhoneCodeSent(false);
-      setPhoneCode(["", "", "", "", "", ""]);
     }
   };
 
@@ -168,33 +126,6 @@ export default function PatientCreateAccountScreen() {
     }, 800);
   };
 
-  // ── Phone 인증 ──
-  const handleSendPhoneCode = () => {
-    if (!formData.phone.trim() || formData.phone.length < 6) {
-      setErrors({ ...errors, phone: "Please enter a valid phone number first" });
-      return;
-    }
-    setPhoneVerifying(true);
-    // TODO: 백엔드 API 호출 - POST /api/auth/send-sms-code { phone, countryCode }
-    setTimeout(() => {
-      setPhoneCodeSent(true);
-      setPhoneVerifying(false);
-      setPhoneCode(["", "", "", "", "", ""]);
-    }, 1000);
-  };
-
-  const handleVerifyPhone = () => {
-    const code = phoneCode.join("");
-    if (code.length !== 6) return;
-
-    setPhoneVerifying(true);
-    // TODO: 백엔드 API 호출 - POST /api/auth/verify-sms { phone, code }
-    setTimeout(() => {
-      setPhoneVerified(true);
-      setPhoneVerifying(false);
-    }, 800);
-  };
-
   // ── 폼 검증 ──
   const validateForm = () => {
     const e: Record<string, string> = {};
@@ -204,8 +135,6 @@ export default function PatientCreateAccountScreen() {
     if (!formData.email.trim()) e.email = "Email is required";
     else if (!/\S+@\S+\.\S+/.test(formData.email)) e.email = "Invalid email format";
     if (!emailVerified) e.email = "Please verify your email";
-    if (!formData.phone.trim()) e.phone = "Phone number is required";
-    if (!phoneVerified) e.phone = "Please verify your phone number";
     if (!formData.password) e.password = "Password is required";
     else if (formData.password.length < 8) e.password = "Password must be 8+ characters";
     if (formData.password !== formData.confirmPassword) e.confirmPassword = "Passwords don't match";
@@ -229,7 +158,6 @@ export default function PatientCreateAccountScreen() {
       //   body: JSON.stringify({
       //     name: `${formData.firstName.trim()} ${formData.lastName.trim()}`,
       //     email: formData.email.trim().toLowerCase(),
-      //     phone: `${selectedCountry.code}${formData.phone.trim()}`,
       //     password: formData.password,
       //     role: "patient",
       //   }),
@@ -240,7 +168,14 @@ export default function PatientCreateAccountScreen() {
       //   return;
       // }
 
-      router.replace("/patient/dashboard" as any);
+      const fullName = `${formData.firstName.trim()} ${formData.lastName.trim()}`;
+      await store.savePatientProfile({
+        fullName,
+        email: formData.email.trim().toLowerCase(),
+      });
+      await store.setCurrentUser('patient', fullName);
+
+      router.replace("/patient/basic-info" as any);
     } catch (err) {
       setApiError("Cannot connect to server. Please check your internet.");
     } finally {
@@ -452,84 +387,6 @@ export default function PatientCreateAccountScreen() {
               </View>
             )}
 
-            {/* ━━━ Phone + Country Code + Verify ━━━ */}
-            <View style={styles.fieldGroup}>
-              <Text style={styles.label}>PHONE NUMBER</Text>
-              <View style={styles.phoneRow}>
-                {/* 국가코드 드롭다운 */}
-                <TouchableOpacity
-                  style={styles.countryCodeBtn}
-                  onPress={() => setShowCountryPicker(true)}
-                  disabled={phoneVerified}
-                  accessibilityRole="button"
-                  accessibilityLabel={`Country code ${selectedCountry.name} ${selectedCountry.code}`}
-                >
-                  <Text style={styles.countryFlag}>{selectedCountry.flag}</Text>
-                  <Text style={styles.countryCodeText}>{selectedCountry.code}</Text>
-                  <Text style={styles.dropdownArrow}>▼</Text>
-                </TouchableOpacity>
-
-                {/* 전화번호 입력 */}
-                <TextInput
-                  style={[
-                    styles.input,
-                    { flex: 1 },
-                    errors.phone && styles.inputError,
-                    phoneVerified && styles.inputVerified,
-                  ]}
-                  placeholder="Phone number"
-                  placeholderTextColor="rgba(255,255,255,0.3)"
-                  value={formData.phone}
-                  onChangeText={(v) => updateField("phone", v.replace(/\D/g, ""))}
-                  keyboardType="phone-pad"
-                  editable={!loading && !phoneVerified}
-                  accessibilityLabel="Phone number"
-                />
-
-                {/* Send Code 버튼 */}
-                {!phoneVerified && (
-                  <TouchableOpacity
-                    style={[
-                      styles.sendCodeBtn,
-                      phoneCodeSent && styles.sendCodeBtnResend,
-                    ]}
-                    onPress={handleSendPhoneCode}
-                    disabled={phoneVerifying}
-                    accessibilityRole="button"
-                    accessibilityLabel={phoneCodeSent ? "Resend phone verification code" : "Send phone verification code"}
-                  >
-                    {phoneVerifying ? (
-                      <ActivityIndicator color={SharedColors.white} size="small" />
-                    ) : (
-                      <Text style={styles.sendCodeBtnText}>
-                        {phoneCodeSent ? "Resend" : "Send"}
-                      </Text>
-                    )}
-                  </TouchableOpacity>
-                )}
-              </View>
-              {errors.phone && !phoneCodeSent ? (
-                <Text style={styles.fieldError}>⚠️ {errors.phone}</Text>
-              ) : null}
-            </View>
-
-            {/* Phone 인증코드 입력 */}
-            {phoneCodeSent && (
-              <View style={styles.verifySection}>
-                <Text style={styles.verifyLabel}>
-                  Enter the 6-digit code sent to your phone
-                </Text>
-                {renderCodeInputs(
-                  phoneCode,
-                  setPhoneCode,
-                  phoneCodeRefs,
-                  phoneVerified,
-                  phoneVerifying,
-                  handleVerifyPhone
-                )}
-              </View>
-            )}
-
             {/* ━━━ Password ━━━ */}
             <View style={styles.fieldGroup}>
               <Text style={styles.label}>PASSWORD</Text>
@@ -629,50 +486,6 @@ export default function PatientCreateAccountScreen() {
         </ScrollView>
       </KeyboardAvoidingView>
 
-      {/* ── Country Code Picker Modal ── */}
-      <Modal
-        visible={showCountryPicker}
-        transparent
-        animationType="slide"
-        onRequestClose={() => setShowCountryPicker(false)}
-      >
-        <TouchableOpacity
-          style={styles.modalOverlay}
-          activeOpacity={1}
-          onPress={() => setShowCountryPicker(false)}
-        >
-          <View style={styles.modalContent}>
-            <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>Select Country</Text>
-              <TouchableOpacity onPress={() => setShowCountryPicker(false)}>
-                <Text style={styles.modalClose}>✕</Text>
-              </TouchableOpacity>
-            </View>
-            <FlatList
-              data={COUNTRY_CODES}
-              keyExtractor={(item) => `${item.country}-${item.code}`}
-              renderItem={({ item }) => (
-                <TouchableOpacity
-                  style={[
-                    styles.countryItem,
-                    selectedCountry.country === item.country &&
-                      selectedCountry.code === item.code &&
-                      styles.countryItemSelected,
-                  ]}
-                  onPress={() => {
-                    setSelectedCountry(item);
-                    setShowCountryPicker(false);
-                  }}
-                >
-                  <Text style={styles.countryItemFlag}>{item.flag}</Text>
-                  <Text style={styles.countryItemName}>{item.name}</Text>
-                  <Text style={styles.countryItemCode}>{item.code}</Text>
-                </TouchableOpacity>
-              )}
-            />
-          </View>
-        </TouchableOpacity>
-      </Modal>
     </LinearGradient>
   );
 }
@@ -757,9 +570,8 @@ const styles = StyleSheet.create({
     flex: 1,
   },
 
-  // Email/Phone: input + send code button row
+  // Email: input + send code button row
   inputWithBtn: { flexDirection: "row", gap: 8, alignItems: "center" },
-  phoneRow: { flexDirection: "row", gap: 8, alignItems: "center" },
 
   // Send code button
   sendCodeBtn: {
@@ -773,22 +585,6 @@ const styles = StyleSheet.create({
   },
   sendCodeBtnResend: { backgroundColor: "rgba(255,255,255,0.15)" },
   sendCodeBtnText: { color: SharedColors.white, fontSize: 13, fontWeight: "600" },
-
-  // Country code
-  countryCodeBtn: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 4,
-    borderWidth: 1.5,
-    borderColor: "rgba(255,255,255,0.15)",
-    backgroundColor: "rgba(255,255,255,0.08)",
-    borderRadius: 12,
-    paddingHorizontal: 12,
-    paddingVertical: 13,
-  },
-  countryFlag: { fontSize: 18 },
-  countryCodeText: { color: SharedColors.white, fontSize: 14, fontWeight: "500" },
-  dropdownArrow: { color: "rgba(255,255,255,0.4)", fontSize: 8, marginLeft: 2 },
 
   // Verification section
   verifySection: {
@@ -895,40 +691,4 @@ const styles = StyleSheet.create({
   bottomLinkText: { fontSize: 13, color: "rgba(255,255,255,0.35)" },
   bottomLinkAction: { fontSize: 13, color: PatientTheme.primaryMid, fontWeight: "600" },
 
-  // ── Country Picker Modal ──
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: "rgba(0,0,0,0.6)",
-    justifyContent: "flex-end",
-  },
-  modalContent: {
-    backgroundColor: SharedColors.text,
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
-    maxHeight: "60%",
-    paddingBottom: 30,
-  },
-  modalHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    padding: 20,
-    borderBottomWidth: 1,
-    borderBottomColor: "rgba(255,255,255,0.1)",
-  },
-  modalTitle: { fontSize: 18, fontWeight: "700", color: SharedColors.white },
-  modalClose: { fontSize: 20, color: "rgba(255,255,255,0.5)", padding: 4 },
-  countryItem: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingHorizontal: 20,
-    paddingVertical: 14,
-    gap: 14,
-    borderBottomWidth: 1,
-    borderBottomColor: "rgba(255,255,255,0.05)",
-  },
-  countryItemSelected: { backgroundColor: "rgba(92,16,160,0.15)" },
-  countryItemFlag: { fontSize: 24 },
-  countryItemName: { flex: 1, fontSize: 15, color: SharedColors.white },
-  countryItemCode: { fontSize: 15, color: "rgba(255,255,255,0.5)", fontWeight: "500" },
 });

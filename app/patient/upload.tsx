@@ -5,6 +5,7 @@ import React, { useState } from "react";
 import {
   ActivityIndicator,
   Alert,
+  Animated,
   Image,
   Modal,
   ScrollView,
@@ -46,7 +47,7 @@ const CATEGORIES: { key: CategoryKey; title: string; icon: string; desc: string;
 ];
 
 export default function PatientUploadScreen() {
-  const { from, mode } = useLocalSearchParams<{ from?: string; mode?: string }>();
+  const { from, mode, caseId } = useLocalSearchParams<{ from?: string; mode?: string; caseId?: string }>();
   const isProposal = mode === "proposal";
   const [files, setFiles] = useState<Record<CategoryKey, FileItem[]>>({
     xrays: [],
@@ -56,6 +57,7 @@ export default function PatientUploadScreen() {
   const [concernText, setConcernText] = useState("");
   const [loading, setLoading] = useState(false);
   const [activeCategory, setActiveCategory] = useState<CategoryKey | null>(null);
+  const [guideOpen, setGuideOpen] = useState(false);
 
   const totalFiles = files.xrays.length + files.treatmentPlans.length + files.photos.length;
 
@@ -120,6 +122,11 @@ export default function PatientUploadScreen() {
       photos: files.photos.map((f) => f.uri),
     });
     setLoading(false);
+    if (from === "checklist" && caseId) {
+      await store.syncCaseEnrichment(caseId);
+      router.replace("/patient/dashboard" as any);
+      return;
+    }
     if (from === "review" || mode === "standalone") {
       router.back();
       return;
@@ -221,6 +228,64 @@ export default function PatientUploadScreen() {
 
             {/* Hint */}
             <Text style={styles.catHint}>💡 {cat.hint}</Text>
+
+            {/* Photo Guide — Photos category only */}
+            {cat.key === "photos" && (
+              <View>
+                <TouchableOpacity
+                  style={styles.guideToggle}
+                  onPress={() => setGuideOpen(!guideOpen)}
+                  activeOpacity={0.7}
+                >
+                  <Text style={styles.guideToggleIcon}>📖</Text>
+                  <Text style={styles.guideToggleText}>How to take great dental photos</Text>
+                  <Text style={styles.guideToggleArrow}>{guideOpen ? "▲" : "▼"}</Text>
+                </TouchableOpacity>
+
+                {guideOpen && (
+                  <View style={styles.guideContent}>
+                    <View style={styles.guideTip}>
+                      <Text style={styles.guideTipNum}>1</Text>
+                      <View style={{ flex: 1 }}>
+                        <Text style={styles.guideTipTitle}>Front teeth (smile)</Text>
+                        <Text style={styles.guideTipDesc}>Pull lips back to show all front teeth. Bite down naturally.</Text>
+                      </View>
+                    </View>
+                    <View style={styles.guideTip}>
+                      <Text style={styles.guideTipNum}>2</Text>
+                      <View style={{ flex: 1 }}>
+                        <Text style={styles.guideTipTitle}>Upper arch</Text>
+                        <Text style={styles.guideTipDesc}>Tilt head back, open wide, and photograph the upper teeth from below.</Text>
+                      </View>
+                    </View>
+                    <View style={styles.guideTip}>
+                      <Text style={styles.guideTipNum}>3</Text>
+                      <View style={{ flex: 1 }}>
+                        <Text style={styles.guideTipTitle}>Lower arch</Text>
+                        <Text style={styles.guideTipDesc}>Open wide and photograph the lower teeth from above.</Text>
+                      </View>
+                    </View>
+                    <View style={styles.guideTip}>
+                      <Text style={styles.guideTipNum}>4</Text>
+                      <View style={{ flex: 1 }}>
+                        <Text style={styles.guideTipTitle}>Left & right sides</Text>
+                        <Text style={styles.guideTipDesc}>Bite down, pull cheek back on each side to show how teeth meet.</Text>
+                      </View>
+                    </View>
+                    <View style={styles.guideTip}>
+                      <Text style={styles.guideTipNum}>5</Text>
+                      <View style={{ flex: 1 }}>
+                        <Text style={styles.guideTipTitle}>Problem areas</Text>
+                        <Text style={styles.guideTipDesc}>Zoom in on any specific area of concern (chipped, missing, discolored teeth).</Text>
+                      </View>
+                    </View>
+                    <View style={styles.guideNote}>
+                      <Text style={styles.guideNoteText}>Use natural daylight or a bright lamp. Avoid flash directly — it washes out details. A small mirror can help capture hard-to-reach areas.</Text>
+                    </View>
+                  </View>
+                )}
+              </View>
+            )}
           </View>
         ))}
 
@@ -258,7 +323,7 @@ export default function PatientUploadScreen() {
           {loading ? (
             <ActivityIndicator color={SharedColors.white} size="small" />
           ) : (
-            <Text style={styles.nextBtnText}>{isProposal ? "Next: Review & Submit →" : "Next: Select Treatment →"}</Text>
+            <Text style={styles.nextBtnText}>{isProposal ? "Next: Review & Submit →" : "Next: Review & Submit →"}</Text>
           )}
         </TouchableOpacity>
         {totalFiles === 0 && (
@@ -424,6 +489,34 @@ const styles = StyleSheet.create({
   uploadBtnText: { fontSize: 14, fontWeight: "600", color: PatientTheme.primary },
 
   catHint: { fontSize: 11, color: SharedColors.slateLight, lineHeight: 16 },
+
+  // Photo Guide
+  guideToggle: {
+    flexDirection: "row", alignItems: "center", gap: 8,
+    backgroundColor: "#f0fdf4", borderRadius: 10, padding: 12,
+    borderWidth: 1, borderColor: "#bbf7d0",
+  },
+  guideToggleIcon: { fontSize: 16 },
+  guideToggleText: { flex: 1, fontSize: 13, fontWeight: "600", color: "#15803d" },
+  guideToggleArrow: { fontSize: 10, color: "#15803d" },
+  guideContent: { gap: 0, marginTop: 10 },
+  guideTip: {
+    flexDirection: "row", alignItems: "flex-start", gap: 10,
+    paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: "#f1f5f9",
+  },
+  guideTipNum: {
+    width: 22, height: 22, borderRadius: 11,
+    backgroundColor: PatientTheme.primary, color: SharedColors.white,
+    fontSize: 12, fontWeight: "700", textAlign: "center", lineHeight: 22,
+    overflow: "hidden",
+  },
+  guideTipTitle: { fontSize: 13, fontWeight: "700", color: SharedColors.navy, marginBottom: 2 },
+  guideTipDesc: { fontSize: 12, color: SharedColors.slate, lineHeight: 17 },
+  guideNote: {
+    backgroundColor: "#fffbeb", borderRadius: 8, padding: 10, marginTop: 10,
+    borderWidth: 1, borderColor: "#fde68a",
+  },
+  guideNoteText: { fontSize: 11, color: "#92400e", lineHeight: 16 },
 
   // Concern card (Path B)
   concernCard: {

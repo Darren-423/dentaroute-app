@@ -495,15 +495,21 @@ export default function ArrivalInfoScreen() {
               placeholder="e.g. Korean Air"
               placeholderTextColor={SharedColors.faint}
             />
-            {showAirlines && airline.length > 0 && (() => {
-              const q = airline.toLowerCase();
-              const starts = AIRLINES.filter((a) =>
-                a.toLowerCase().startsWith(q) && a.toLowerCase() !== q
-              );
-              const contains = AIRLINES.filter((a) =>
-                !a.toLowerCase().startsWith(q) && a.toLowerCase().includes(q) && a.toLowerCase() !== q
-              );
-              const filtered = [...starts, ...contains].slice(0, 8);
+            {showAirlines && (() => {
+              const q = airline.toLowerCase().trim();
+              let filtered: string[];
+              if (q.length === 0) {
+                // Show popular airlines when empty
+                filtered = AIRLINES.slice(0, 12);
+              } else {
+                const starts = AIRLINES.filter((a) =>
+                  a.toLowerCase().startsWith(q) && a.toLowerCase() !== q
+                );
+                const contains = AIRLINES.filter((a) =>
+                  !a.toLowerCase().startsWith(q) && a.toLowerCase().includes(q) && a.toLowerCase() !== q
+                );
+                filtered = [...starts, ...contains].slice(0, 12);
+              }
               if (filtered.length === 0) return null;
               return (
                 <ScrollView style={st.dropList} keyboardShouldPersistTaps="handled" nestedScrollEnabled>

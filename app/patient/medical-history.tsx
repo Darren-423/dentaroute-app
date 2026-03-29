@@ -18,7 +18,7 @@ const DEFAULT_MEDICATIONS = ["Blood Thinners", "Insulin", "Blood Pressure Meds",
 const DEFAULT_ALLERGIES = ["Penicillin", "Latex", "Ibuprofen", "Aspirin", "Codeine", "None"];
 
 export default function PatientMedicalHistoryScreen() {
-  const { mode, from } = useLocalSearchParams<{ mode?: string; from?: string }>();
+  const { mode, from, caseId } = useLocalSearchParams<{ mode?: string; from?: string; caseId?: string }>();
   const isEditMode = mode === "edit";
   // Conditions
   const [conditions, setConditions] = useState<string[]>([]);
@@ -40,11 +40,21 @@ export default function PatientMedicalHistoryScreen() {
 
   const [loading, setLoading] = useState(false);
 
+  // Items pre-populated from Quick Health (visually distinct but editable)
+  const [fromQuickHealth, setFromQuickHealth] = useState<Set<string>>(new Set());
+
   // 저장된 의료 데이터 불러오기
   useEffect(() => {
     const load = async () => {
       const med = await store.getPatientMedical();
+      if (!med) {
+        // No saved medical data — but check if Quick Health was synced
+        if (med === null) return;
+      }
       if (!med) return;
+
+      const qhItems = new Set<string>();
+
       // conditions (배열)
       if (Array.isArray(med.conditions) && med.conditions.length > 0) {
         const defaults = med.conditions.filter((c: string) => DEFAULT_CONDITIONS.includes(c));
@@ -75,6 +85,25 @@ export default function PatientMedicalHistoryScreen() {
           setAllergies(defaults);
           setCustomAllergies(customs);
         }
+      }
+
+      // Pre-populate from Quick Health sync (checklist mode or fresh entry)
+      if (med.quickHealthSynced) {
+        if (med.bloodThinners === true) {
+          setMedications(prev => prev.includes("Blood Thinners") ? prev : [...prev.filter(m => m !== "None"), "Blood Thinners"]);
+          setConditions(prev => prev.includes("Bleeding Disorder") ? prev : [...prev.filter(c => c !== "None"), "Bleeding Disorder"]);
+          qhItems.add("Blood Thinners");
+          qhItems.add("Bleeding Disorder");
+        }
+        if (med.drugAllergies === true) {
+          // Don't pre-select specific allergies since Quick Health only asked yes/no
+          // But mark that allergies section needs attention
+        }
+        if (med.pregnantNursing === true) {
+          setConditions(prev => prev.includes("Pregnancy") ? prev : [...prev.filter(c => c !== "None"), "Pregnancy"]);
+          qhItems.add("Pregnancy");
+        }
+        if (qhItems.size > 0) setFromQuickHealth(qhItems);
       }
     };
     load();
@@ -138,14 +167,20 @@ export default function PatientMedicalHistoryScreen() {
       });
     } catch {}
     setLoading(false);
+    if (from === "checklist" && caseId) {
+      await store.syncCaseEnrichment(caseId);
+      router.replace("/patient/dashboard" as any);
+      return;
+    }
     if (from === "review") { router.back(); return; }
     router.push(isEditMode ? "/patient/dental-history?mode=edit" as any : "/patient/dental-history" as any);
   };
 
   // ── Reusable Tag ──
-  const Tag = ({ label, selected, onPress }: { label: string; selected: boolean; onPress: () => void }) => (
-    <TouchableOpacity style={[styles.tag, selected && styles.tagSelected]} onPress={onPress} activeOpacity={0.7}>
+  const Tag = ({ label, selected, onPress, isFromQH }: { label: string; selected: boolean; onPress: () => void; isFromQH?: boolean }) => (
+    <TouchableOpacity style={[styles.tag, selected && styles.tagSelected, selected && isFromQH && styles.tagFromQH]} onPress={onPress} activeOpacity={0.7}>
       <Text style={[styles.tagText, selected && styles.tagTextSelected]}>{label}</Text>
+      {selected && isFromQH && <Text style={styles.qhBadge}>from Quick Health</Text>}
     </TouchableOpacity>
   );
 
@@ -176,6 +211,7 @@ export default function PatientMedicalHistoryScreen() {
             key={item}
             label={item}
             selected={selected.includes(item)}
+            isFromQH={fromQuickHealth.has(item)}
             onPress={() => toggleItem(item, selected, setSelected, setCustom)}
           />
         ))}
@@ -335,8 +371,10 @@ const styles = StyleSheet.create({
     backgroundColor: SharedColors.white,
   },
   tagSelected: { borderColor: PatientTheme.primaryMid, backgroundColor: PatientTheme.primaryLight },
+  tagFromQH: { borderColor: "#8b9cf7", backgroundColor: "#eef0ff" },
   tagText: { fontSize: 13, color: SharedColors.slate, fontWeight: "400" },
   tagTextSelected: { color: PatientTheme.primary, fontWeight: "600" },
+  qhBadge: { fontSize: 9, color: "#6b7ae0", marginTop: 1 },
 
   // Custom tags
   customTagsWrap: { flexDirection: "row", flexWrap: "wrap", gap: 8 },

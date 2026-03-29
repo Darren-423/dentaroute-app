@@ -224,7 +224,9 @@ export default function ReservationScreen() {
     <View style={s.container}>
       <LinearGradient
         colors={[...PatientTheme.gradient]}
-        style={[s.header, { paddingTop: insets.top + 12 }]}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+        style={s.header}
       >
         <Text style={s.headerTitle}>My Reservations</Text>
         <Text style={s.headerSub}>
@@ -557,9 +559,9 @@ export default function ReservationScreen() {
 
 const s = StyleSheet.create({
   container: { flex: 1, backgroundColor: SharedColors.bg },
-  header: { paddingHorizontal: 20, paddingBottom: 20 },
-  headerTitle: { fontSize: 26, fontWeight: "800", color: SharedColors.white },
-  headerSub: { fontSize: 14, color: "rgba(255,255,255,0.7)", marginTop: 4 },
+  header: { paddingHorizontal: 20, paddingTop: 60, paddingBottom: 16 },
+  headerTitle: { fontSize: 20, fontWeight: "700", color: SharedColors.white },
+  headerSub: { fontSize: 13, color: "rgba(255,255,255,0.6)", marginTop: 2 },
   scroll: { flex: 1 },
   scrollContent: { padding: 16 },
 

@@ -67,7 +67,7 @@ export default function DoctorDashboardScreen() {
   const [statusFilter, setStatusFilter] = useState<"all" | "new" | "quoted" | "appointments" | "in_process">("all");
   const [patientProfileImage, setPatientProfileImage] = useState<string | null>(initialDashboardData.patientProfileImage);
   const [unreadMessages, setUnreadMessages] = useState(initialDashboardData.unreadMessages);
-  const [collapsedSections, setCollapsedSections] = useState<Record<string, boolean>>({});
+  const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({});
 
   // Stats toggle
   const STATS_HEIGHT = 80;
@@ -341,13 +341,13 @@ export default function DoctorDashboardScreen() {
           </View>
         ) : (
           groupedSections.map((section, idx) => {
-            const isCollapsed = !!collapsedSections[section.key];
+            const isCollapsed = !expandedSections[section.key];
             return (
             <View key={section.key} style={s.statusSection}>
               {/* Section Header */}
               <TouchableOpacity
                 style={[s.statusSectionHeader, idx === 0 && { marginTop: 4 }]}
-                onPress={() => setCollapsedSections(prev => ({ ...prev, [section.key]: !prev[section.key] }))}
+                onPress={() => setExpandedSections(prev => ({ ...prev, [section.key]: !prev[section.key] }))}
                 activeOpacity={0.6}
               >
                 <View style={s.statusSectionLeft}>
