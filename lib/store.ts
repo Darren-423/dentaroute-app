@@ -491,7 +491,9 @@ export const store = {
       role: "doctor",
       type: "new_case",
       title: "🆕 New Patient Case",
-      body: `${caseData.patientName} from ${caseData.country} submitted a new case with ${caseData.treatments?.length || 0} treatments.`,
+      body: caseData.caseMode === "proposal" && caseData.concernDescription
+        ? `${caseData.patientName} from ${caseData.country} described a concern: "${caseData.concernDescription.slice(0, 80)}${caseData.concernDescription.length > 80 ? "..." : ""}"`
+        : `${caseData.patientName} from ${caseData.country} submitted a new case with ${caseData.treatments?.length || 0} treatments.`,
       icon: "🆕",
     });
 

@@ -247,7 +247,7 @@ export default function DeparturePickupScreen() {
 
         <View style={s.successActions}>
           {isMidVisitReturn ? (
-            <TouchableOpacity style={s.reviewBtn} onPress={() => router.replace("/patient/dashboard" as any)}>
+            <TouchableOpacity style={s.reviewBtn} onPress={() => router.push("/patient/dashboard" as any)}>
               <Text style={s.reviewBtnText}>✈️ Go to Dashboard</Text>
             </TouchableOpacity>
           ) : (
@@ -261,7 +261,7 @@ export default function DeparturePickupScreen() {
               <Text style={s.reviewBtnText}>⭐ Leave a Review</Text>
             </TouchableOpacity>
           )}
-          <TouchableOpacity style={s.dashBtn} onPress={() => router.replace("/patient/dashboard" as any)}>
+          <TouchableOpacity style={s.dashBtn} onPress={() => router.push("/patient/dashboard" as any)}>
             <Text style={s.dashBtnText}>Go to Dashboard</Text>
           </TouchableOpacity>
         </View>

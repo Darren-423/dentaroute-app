@@ -24,7 +24,7 @@ import { Feather } from "@expo/vector-icons";
 import { PatientTheme, SharedColors } from "../../constants/theme";
 
 const MAX_CHARS = 500;
-const MIN_CHARS = 20;
+const MIN_CHARS = 10;
 
 export default function ConcernDescribeScreen() {
   const [text, setText] = useState("");

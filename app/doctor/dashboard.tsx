@@ -362,7 +362,7 @@ export default function DoctorDashboardScreen() {
           </View>
         ) : (
           groupedSections.map((section, idx) => {
-            const isCollapsed = !expandedSections[section.key];
+            const isCollapsed = expandedSections[section.key] === false;
             return (
             <View key={section.key} style={s.statusSection}>
               {/* Section Header */}

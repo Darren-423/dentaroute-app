@@ -105,6 +105,7 @@ export default function ArrivalInfoScreen() {
   const [flightNumber, setFlightNumber] = useState("");
   const [airline, setAirline] = useState("");
   const [showAirlines, setShowAirlines] = useState(false);
+  const [showDepAirlines, setShowDepAirlines] = useState(false);
   const [arrivalDate, setArrivalDate] = useState("");
   const [arrivalTime, setArrivalTime] = useState("");
   const [airport, setAirport] = useState("ICN");
@@ -128,6 +129,10 @@ export default function ArrivalInfoScreen() {
   const [savedTrips, setSavedTrips] = useState<SavedTrip[]>([]);
   const [showTripPicker, setShowTripPicker] = useState(false);
   const [step, setStep] = useState(1);
+  const [datePickerVisible, setDatePickerVisible] = useState(false);
+  const [datePickerTarget, setDatePickerTarget] = useState<null | "arrivalDate" | "checkInDate" | "checkOutDate" | "depFlightDate">(null);
+  const [calYear, setCalYear] = useState(new Date().getFullYear());
+  const [calMonth, setCalMonth] = useState(new Date().getMonth()); // 0-indexed
 
   useEffect(() => {
     store.getTrips().then(setSavedTrips);
@@ -421,6 +426,135 @@ export default function ArrivalInfoScreen() {
 
   const isReturnVisit = (booking?.currentVisit || 1) > 1;
 
+  const openDatePicker = (target: typeof datePickerTarget) => {
+    // Initialize calendar to the currently selected date if available, otherwise today
+    const currentVal = target === "arrivalDate" ? arrivalDate
+      : target === "checkInDate" ? checkInDate
+      : target === "checkOutDate" ? checkOutDate
+      : depFlightDate;
+    if (currentVal && currentVal.length === 10) {
+      const [y, m] = currentVal.split("-");
+      setCalYear(parseInt(y));
+      setCalMonth(parseInt(m) - 1);
+    } else {
+      const now = new Date();
+      setCalYear(now.getFullYear());
+      setCalMonth(now.getMonth());
+    }
+    setDatePickerTarget(target);
+    setDatePickerVisible(true);
+  };
+
+  const handleDateSelect = (day: number) => {
+    const mm = String(calMonth + 1).padStart(2, "0");
+    const dd = String(day).padStart(2, "0");
+    const val = `${calYear}-${mm}-${dd}`;
+    if (datePickerTarget === "arrivalDate") setArrivalDate(val);
+    else if (datePickerTarget === "checkInDate") setCheckInDate(val);
+    else if (datePickerTarget === "checkOutDate") setCheckOutDate(val);
+    else if (datePickerTarget === "depFlightDate") setDepFlightDate(val);
+    setDatePickerVisible(false);
+    setDatePickerTarget(null);
+  };
+
+  const renderDatePicker = () => {
+    const DAY_NAMES = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+    const MONTH_NAMES = ["January","February","March","April","May","June","July","August","September","October","November","December"];
+    const daysInMonth = new Date(calYear, calMonth + 1, 0).getDate();
+    const firstDayOfWeek = new Date(calYear, calMonth, 1).getDay();
+    const today = new Date();
+    const todayStr = `${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,"0")}-${String(today.getDate()).padStart(2,"0")}`;
+    const selectedVal = datePickerTarget === "arrivalDate" ? arrivalDate
+      : datePickerTarget === "checkInDate" ? checkInDate
+      : datePickerTarget === "checkOutDate" ? checkOutDate
+      : depFlightDate;
+
+    const cells: (number | null)[] = [];
+    for (let i = 0; i < firstDayOfWeek; i++) cells.push(null);
+    for (let d = 1; d <= daysInMonth; d++) cells.push(d);
+    while (cells.length % 7 !== 0) cells.push(null);
+
+    const prevMonth = () => {
+      if (calMonth === 0) { setCalMonth(11); setCalYear(calYear - 1); }
+      else setCalMonth(calMonth - 1);
+    };
+    const nextMonth = () => {
+      if (calMonth === 11) { setCalMonth(0); setCalYear(calYear + 1); }
+      else setCalMonth(calMonth + 1);
+    };
+
+    return (
+      <Modal visible={datePickerVisible} animationType="fade" transparent>
+        <TouchableOpacity
+          style={st.calOverlay}
+          activeOpacity={1}
+          onPress={() => { setDatePickerVisible(false); setDatePickerTarget(null); }}
+        >
+          <TouchableOpacity activeOpacity={1} style={st.calContainer}>
+            {/* Header with month/year nav */}
+            <View style={st.calHeader}>
+              <TouchableOpacity onPress={prevMonth} style={st.calNavBtn}>
+                <Text style={st.calNavText}>{"<"}</Text>
+              </TouchableOpacity>
+              <Text style={st.calMonthYear}>{MONTH_NAMES[calMonth]} {calYear}</Text>
+              <TouchableOpacity onPress={nextMonth} style={st.calNavBtn}>
+                <Text style={st.calNavText}>{">"}</Text>
+              </TouchableOpacity>
+            </View>
+
+            {/* Day names row */}
+            <View style={st.calDayNamesRow}>
+              {DAY_NAMES.map((dn) => (
+                <Text key={dn} style={st.calDayName}>{dn}</Text>
+              ))}
+            </View>
+
+            {/* Day grid */}
+            <View style={st.calGrid}>
+              {cells.map((day, idx) => {
+                if (day === null) {
+                  return <View key={`empty-${idx}`} style={st.calCell} />;
+                }
+                const cellStr = `${calYear}-${String(calMonth+1).padStart(2,"0")}-${String(day).padStart(2,"0")}`;
+                const isToday = cellStr === todayStr;
+                const isSelected = cellStr === selectedVal;
+                return (
+                  <TouchableOpacity
+                    key={`day-${day}`}
+                    style={[
+                      st.calCell,
+                      isToday && st.calCellToday,
+                      isSelected && st.calCellSelected,
+                    ]}
+                    onPress={() => handleDateSelect(day)}
+                  >
+                    <Text
+                      style={[
+                        st.calDayText,
+                        isToday && st.calDayTextToday,
+                        isSelected && st.calDayTextSelected,
+                      ]}
+                    >
+                      {day}
+                    </Text>
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
+
+            {/* Cancel button */}
+            <TouchableOpacity
+              style={st.calCancelBtn}
+              onPress={() => { setDatePickerVisible(false); setDatePickerTarget(null); }}
+            >
+              <Text style={st.calCancelText}>Cancel</Text>
+            </TouchableOpacity>
+          </TouchableOpacity>
+        </TouchableOpacity>
+      </Modal>
+    );
+  };
+
   if (loading) {
     return (
       <View style={[st.container, { justifyContent: "center", alignItems: "center" }]}>
@@ -479,7 +613,7 @@ export default function ArrivalInfoScreen() {
             </View>
           )}
 
-          <TouchableOpacity style={st.successBtn} onPress={() => router.replace("/patient/dashboard" as any)}>
+          <TouchableOpacity style={st.successBtn} onPress={() => router.push("/patient/dashboard" as any)}>
             <Text style={st.successBtnText}>Go to Dashboard</Text>
           </TouchableOpacity>
         </View>
@@ -678,23 +812,11 @@ export default function ArrivalInfoScreen() {
               {/* ── Arrival Date ── */}
               <View style={st.field}>
                 <Text style={st.fieldLabel}>Arrival Date <Text style={st.req}>*</Text></Text>
-                <TextInput
-                  style={st.input}
-                  value={arrivalDate}
-                  onChangeText={(t) => {
-                    const digits = t.replace(/\D/g, "");
-                    if (digits.length <= 4) setArrivalDate(digits);
-                    else if (digits.length <= 6) setArrivalDate(digits.slice(0,4) + "-" + digits.slice(4));
-                    else setArrivalDate(digits.slice(0,4) + "-" + digits.slice(4,6) + "-" + digits.slice(6,8));
-                  }}
-                  placeholder="YYYY-MM-DD"
-                  placeholderTextColor={SharedColors.faint}
-                  keyboardType="number-pad"
-                  maxLength={10}
-                />
-                {arrivalDate && arrivalDate.length === 10 && (
-                  <Text style={st.datePreview}>{formatDateDisplay(arrivalDate)}</Text>
-                )}
+                <TouchableOpacity style={st.input} onPress={() => openDatePicker("arrivalDate")} activeOpacity={0.7}>
+                  <Text style={arrivalDate ? { fontSize: 15, color: SharedColors.navy } : { fontSize: 15, color: SharedColors.faint }}>
+                    {arrivalDate ? formatDateDisplay(arrivalDate) : "Select date"}
+                  </Text>
+                </TouchableOpacity>
               </View>
 
               {/* ── Arrival Time ── */}
@@ -811,38 +933,20 @@ export default function ArrivalInfoScreen() {
 
               <View style={st.field}>
                 <Text style={st.fieldLabel}>Check-in Date</Text>
-                <TextInput
-                  style={st.input}
-                  value={checkInDate}
-                  onChangeText={(t) => {
-                    const digits = t.replace(/\D/g, "");
-                    if (digits.length <= 4) setCheckInDate(digits);
-                    else if (digits.length <= 6) setCheckInDate(digits.slice(0,4) + "-" + digits.slice(4));
-                    else setCheckInDate(digits.slice(0,4) + "-" + digits.slice(4,6) + "-" + digits.slice(6,8));
-                  }}
-                  placeholder="YYYY-MM-DD"
-                  placeholderTextColor={SharedColors.faint}
-                  keyboardType="number-pad"
-                  maxLength={10}
-                />
+                <TouchableOpacity style={st.input} onPress={() => openDatePicker("checkInDate")} activeOpacity={0.7}>
+                  <Text style={checkInDate ? { fontSize: 15, color: SharedColors.navy } : { fontSize: 15, color: SharedColors.faint }}>
+                    {checkInDate ? formatDateDisplay(checkInDate) : "Select date"}
+                  </Text>
+                </TouchableOpacity>
               </View>
 
               <View style={st.field}>
                 <Text style={st.fieldLabel}>Check-out Date</Text>
-                <TextInput
-                  style={st.input}
-                  value={checkOutDate}
-                  onChangeText={(t) => {
-                    const digits = t.replace(/\D/g, "");
-                    if (digits.length <= 4) setCheckOutDate(digits);
-                    else if (digits.length <= 6) setCheckOutDate(digits.slice(0,4) + "-" + digits.slice(4));
-                    else setCheckOutDate(digits.slice(0,4) + "-" + digits.slice(4,6) + "-" + digits.slice(6,8));
-                  }}
-                  placeholder="YYYY-MM-DD"
-                  placeholderTextColor={SharedColors.faint}
-                  keyboardType="number-pad"
-                  maxLength={10}
-                />
+                <TouchableOpacity style={st.input} onPress={() => openDatePicker("checkOutDate")} activeOpacity={0.7}>
+                  <Text style={checkOutDate ? { fontSize: 15, color: SharedColors.navy } : { fontSize: 15, color: SharedColors.faint }}>
+                    {checkOutDate ? formatDateDisplay(checkOutDate) : "Select date"}
+                  </Text>
+                </TouchableOpacity>
               </View>
 
               <View style={st.field}>
@@ -973,10 +1077,40 @@ export default function ArrivalInfoScreen() {
                 <TextInput
                   style={st.input}
                   value={depAirline}
-                  onChangeText={setDepAirline}
+                  onChangeText={(t) => { setDepAirline(t); setShowDepAirlines(true); }}
+                  onFocus={() => setShowDepAirlines(true)}
                   placeholder="e.g. Korean Air"
                   placeholderTextColor={SharedColors.faint}
                 />
+                {showDepAirlines && (() => {
+                  const q = depAirline.toLowerCase().trim();
+                  let filtered: string[];
+                  if (q.length === 0) {
+                    filtered = AIRLINES.slice(0, 12);
+                  } else {
+                    const starts = AIRLINES.filter((a) =>
+                      a.toLowerCase().startsWith(q) && a.toLowerCase() !== q
+                    );
+                    const contains = AIRLINES.filter((a) =>
+                      !a.toLowerCase().startsWith(q) && a.toLowerCase().includes(q) && a.toLowerCase() !== q
+                    );
+                    filtered = [...starts, ...contains].slice(0, 12);
+                  }
+                  if (filtered.length === 0) return null;
+                  return (
+                    <ScrollView style={st.dropList} keyboardShouldPersistTaps="handled" nestedScrollEnabled>
+                      {filtered.map((a) => (
+                        <TouchableOpacity
+                          key={a}
+                          style={st.dropItem}
+                          onPress={() => { setDepAirline(a); setShowDepAirlines(false); }}
+                        >
+                          <Text style={st.dropText}>{a}</Text>
+                        </TouchableOpacity>
+                      ))}
+                    </ScrollView>
+                  );
+                })()}
               </View>
 
               <View style={st.field}>
@@ -997,20 +1131,11 @@ export default function ArrivalInfoScreen() {
 
               <View style={st.field}>
                 <Text style={st.fieldLabel}>Date</Text>
-                <TextInput
-                  style={st.input}
-                  value={depFlightDate}
-                  onChangeText={(t) => {
-                    const digits = t.replace(/\D/g, "");
-                    if (digits.length <= 4) setDepFlightDate(digits);
-                    else if (digits.length <= 6) setDepFlightDate(digits.slice(0,4) + "-" + digits.slice(4));
-                    else setDepFlightDate(digits.slice(0,4) + "-" + digits.slice(4,6) + "-" + digits.slice(6,8));
-                  }}
-                  placeholder="YYYY-MM-DD"
-                  placeholderTextColor={SharedColors.faint}
-                  keyboardType="number-pad"
-                  maxLength={10}
-                />
+                <TouchableOpacity style={st.input} onPress={() => openDatePicker("depFlightDate")} activeOpacity={0.7}>
+                  <Text style={depFlightDate ? { fontSize: 15, color: SharedColors.navy } : { fontSize: 15, color: SharedColors.faint }}>
+                    {depFlightDate ? formatDateDisplay(depFlightDate) : "Select date"}
+                  </Text>
+                </TouchableOpacity>
               </View>
 
               <View style={st.field}>
@@ -1167,6 +1292,9 @@ export default function ArrivalInfoScreen() {
           </View>
         )}
       </View>
+
+      {/* ── Date Picker Modal ── */}
+      {renderDatePicker()}
 
       {/* ── Trip Picker Modal ── */}
       <Modal visible={showTripPicker} animationType="slide" transparent>
@@ -1530,5 +1658,62 @@ const st = StyleSheet.create({
   },
   ssReuploadText: {
     fontSize: 12, fontWeight: "600", color: SharedColors.green,
+  },
+
+  /* ── Calendar Date Picker ── */
+  calOverlay: {
+    flex: 1, backgroundColor: "rgba(0,0,0,0.45)",
+    justifyContent: "center", alignItems: "center",
+  },
+  calContainer: {
+    backgroundColor: SharedColors.white, borderRadius: 20, padding: 20,
+    width: "88%", maxWidth: 360,
+    shadowColor: "#000", shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.15, shadowRadius: 24,
+    elevation: 12,
+  },
+  calHeader: {
+    flexDirection: "row", alignItems: "center", justifyContent: "space-between",
+    marginBottom: 16,
+  },
+  calNavBtn: {
+    width: 36, height: 36, borderRadius: 10, alignItems: "center", justifyContent: "center",
+    backgroundColor: SharedColors.bg, borderWidth: 1, borderColor: SharedColors.border,
+  },
+  calNavText: { fontSize: 16, fontWeight: "700", color: SharedColors.navy },
+  calMonthYear: { fontSize: 16, fontWeight: "700", color: SharedColors.navy },
+  calDayNamesRow: {
+    flexDirection: "row", marginBottom: 8,
+  },
+  calDayName: {
+    flex: 1, textAlign: "center", fontSize: 12, fontWeight: "600",
+    color: SharedColors.slate,
+  },
+  calGrid: {
+    flexDirection: "row", flexWrap: "wrap",
+  },
+  calCell: {
+    width: "14.28%", aspectRatio: 1, alignItems: "center", justifyContent: "center",
+  },
+  calCellToday: {
+    borderRadius: 20, borderWidth: 1.5, borderColor: SharedColors.border,
+  },
+  calCellSelected: {
+    borderRadius: 20, backgroundColor: PatientTheme.primary,
+  },
+  calDayText: {
+    fontSize: 14, fontWeight: "500", color: SharedColors.navy,
+  },
+  calDayTextToday: {
+    fontWeight: "700", color: PatientTheme.primary,
+  },
+  calDayTextSelected: {
+    fontWeight: "700", color: SharedColors.white,
+  },
+  calCancelBtn: {
+    alignItems: "center", paddingVertical: 12, marginTop: 12,
+    borderTopWidth: 1, borderTopColor: SharedColors.border,
+  },
+  calCancelText: {
+    fontSize: 14, fontWeight: "600", color: SharedColors.slate,
   },
 });

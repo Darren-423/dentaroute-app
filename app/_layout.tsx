@@ -81,7 +81,7 @@ export default function RootLayout() {
       <StatusBar style="light" />
       <View style={layoutStyles.outer}>
         <View style={layoutStyles.inner}>
-          <Stack screenOptions={{ headerShown: false, animation: "slide_from_right" }} />
+          <Stack screenOptions={{ headerShown: false, animation: "none" }} />
         </View>
       </View>
     </SafeAreaProvider>

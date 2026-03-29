@@ -110,7 +110,7 @@ export default function PatientLayout() {
       <Stack
         screenOptions={({ route }) => ({
           headerShown: false,
-          animation: route.name in TAB_MAP ? "fade" : "slide_from_right",
+          animation: "none",
           gestureEnabled: route.name !== "hotel-arrived",
           fullScreenGestureEnabled: route.name !== "hotel-arrived",
         })}

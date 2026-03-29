@@ -96,7 +96,7 @@ export default function DoctorLayout() {
         <Stack
           screenOptions={({ route }) => ({
             headerShown: false,
-            animation: route.name in TAB_MAP ? "fade" : "slide_from_right",
+            animation: "none",
             gestureEnabled: true,
             fullScreenGestureEnabled: true,
           })}

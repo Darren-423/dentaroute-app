@@ -422,7 +422,7 @@ export default function PatientReviewScreen() {
             <Text style={s.healthTitle}>Quick Safety Check</Text>
           </View>
           <Text style={s.healthSubtitle}>
-            Required before submitting your case
+            Required before submitting your case. Additional questions may appear based on your selected treatments.
           </Text>
 
           <YesNo
@@ -496,7 +496,7 @@ export default function PatientReviewScreen() {
             <Text style={s.cardIcon}>📋</Text>
             <Text style={s.cardTitle}>Your Info</Text>
             <TouchableOpacity
-              onPress={() => router.push("/patient/basic-info?from=review" as any)}
+              onPress={() => router.push("/patient/patient-info?from=review" as any)}
             >
               <Text style={s.edit}>Edit</Text>
             </TouchableOpacity>

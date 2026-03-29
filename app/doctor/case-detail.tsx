@@ -403,6 +403,19 @@ export default function DoctorCaseDetailScreen() {
             </View>
             )}
 
+            {/* Patient's Concern (Path B) */}
+            {caseData?.concernDescription && (
+              <View style={s.infoCard}>
+                <Text style={s.infoLabel}>PATIENT'S CONCERN</Text>
+                <Text style={{ fontSize: 14, color: "#334155", lineHeight: 20, marginTop: 6 }}>
+                  "{caseData.concernDescription}"
+                </Text>
+                {caseData.concernPhoto && (
+                  <Image source={{ uri: caseData.concernPhoto }} style={{ width: "100%", height: 180, borderRadius: 8, marginTop: 10 }} resizeMode="cover" />
+                )}
+              </View>
+            )}
+
             {/* Dental Issues */}
             {caseData?.dentalIssues && caseData.dentalIssues.length > 0 && (
               <View style={s.infoCard}>
