@@ -415,123 +415,11 @@ export default function PatientReviewScreen() {
         contentContainerStyle={s.content}
         showsVerticalScrollIndicator={false}
       >
-        {/* ── Your Info card ── */}
-        <View style={[s.card, infoComplete ? s.sectionComplete : s.sectionIncomplete]}>
-          <View style={s.cardHeader}>
-            {infoComplete && <Text style={s.checkIcon}>✓</Text>}
-            <Text style={s.cardIcon}>📋</Text>
-            <Text style={s.cardTitle}>Your Info</Text>
-            <TouchableOpacity
-              onPress={() => router.push("/patient/basic-info?from=review" as any)}
-            >
-              <Text style={s.edit}>Edit</Text>
-            </TouchableOpacity>
-          </View>
-          {patientName || patientCountry ? (
-            <View style={s.cardBody}>
-              {patientName ? (
-                <Text style={s.summaryText}>{patientName}</Text>
-              ) : null}
-              {patientCountry ? (
-                <Text style={s.summarySubtext}>{patientCountry}</Text>
-              ) : null}
-            </View>
-          ) : (
-            <Text style={s.emptyText}>No profile info yet</Text>
-          )}
-        </View>
-
-        {/* ── Selected Treatments card (specific mode) ── */}
-        {!isProposal && (
-          <View style={[s.card, treatmentComplete ? s.sectionComplete : s.sectionIncomplete]}>
-            <View style={s.cardHeader}>
-              {treatmentComplete && <Text style={s.checkIcon}>✓</Text>}
-              <Text style={s.cardIcon}>✨</Text>
-              <Text style={s.cardTitle}>Selected Treatments</Text>
-              <TouchableOpacity
-                onPress={() =>
-                  router.push("/patient/treatment-select?from=review" as any)
-                }
-              >
-                <Text style={s.edit}>Edit</Text>
-              </TouchableOpacity>
-            </View>
-            {treatmentList.length > 0 ? (
-              <View style={s.cardBody}>
-                {treatmentList.map((t, i) => (
-                  <View key={i} style={s.treatmentRow}>
-                    <View style={s.treatmentDot} />
-                    <Text style={s.treatmentName}>{t.name}</Text>
-                    <Text style={s.treatmentQty}>x{t.qty}</Text>
-                  </View>
-                ))}
-              </View>
-            ) : (
-              <Text style={s.emptyText}>No treatments selected</Text>
-            )}
-          </View>
-        )}
-
-        {/* ── Your Concern card (proposal mode) ── */}
-        {isProposal && (
-          <View style={[s.card, treatmentComplete ? s.sectionComplete : s.sectionIncomplete]}>
-            <View style={s.cardHeader}>
-              {treatmentComplete && <Text style={s.checkIcon}>✓</Text>}
-              <Text style={s.cardIcon}>💬</Text>
-              <Text style={s.cardTitle}>Your Concern</Text>
-              <TouchableOpacity
-                onPress={() =>
-                  router.push("/patient/concern?from=review" as any)
-                }
-              >
-                <Text style={s.edit}>Edit</Text>
-              </TouchableOpacity>
-            </View>
-            {concernText ? (
-              <View style={s.cardBody}>
-                <Text style={s.summaryText} numberOfLines={4}>
-                  {concernText}
-                </Text>
-                {concernPhoto ? (
-                  <Image
-                    source={{ uri: concernPhoto }}
-                    style={s.concernThumb}
-                  />
-                ) : null}
-              </View>
-            ) : (
-              <Text style={s.emptyText}>No concern described yet</Text>
-            )}
-          </View>
-        )}
-
-        {/* ── Uploaded Files card (optional) ── */}
-        <View style={s.card}>
-          <View style={s.cardHeader}>
-            <Text style={s.cardIcon}>📁</Text>
-            <Text style={s.cardTitle}>Uploaded Files</Text>
-            <TouchableOpacity
-              onPress={() => router.push("/patient/upload?from=review" as any)}
-            >
-              <Text style={s.edit}>{filesCount > 0 ? "Edit" : "Add"}</Text>
-            </TouchableOpacity>
-          </View>
-          {filesCount > 0 ? (
-            <Text style={s.summarySubtext}>
-              {filesCount} file{filesCount !== 1 ? "s" : ""} uploaded
-            </Text>
-          ) : (
-            <Text style={s.optionalText}>
-              No files yet — you can add later
-            </Text>
-          )}
-        </View>
-
-        {/* ── Quick Health Screen ── */}
+        {/* ── Quick Safety Check ── */}
         <View style={[s.healthCard, healthComplete ? s.sectionComplete : s.sectionIncomplete]}>
           <View style={s.cardHeader}>
             {healthComplete && <Text style={s.checkIcon}>✓</Text>}
-            <Text style={s.healthTitle}>Quick Health Screen</Text>
+            <Text style={s.healthTitle}>Quick Safety Check</Text>
           </View>
           <Text style={s.healthSubtitle}>
             Required before submitting your case
@@ -598,6 +486,118 @@ export default function PatientReviewScreen() {
                 />
               )}
             </>
+          )}
+        </View>
+
+        {/* ── Your Info card ── */}
+        <View style={[s.card, infoComplete ? s.sectionComplete : s.sectionIncomplete]}>
+          <View style={s.cardHeader}>
+            {infoComplete && <Text style={s.checkIcon}>✓</Text>}
+            <Text style={s.cardIcon}>📋</Text>
+            <Text style={s.cardTitle}>Your Info</Text>
+            <TouchableOpacity
+              onPress={() => router.push("/patient/basic-info?from=review" as any)}
+            >
+              <Text style={s.edit}>Edit</Text>
+            </TouchableOpacity>
+          </View>
+          {patientName || patientCountry ? (
+            <View style={s.cardBody}>
+              {patientName ? (
+                <Text style={s.summaryText}>{patientName}</Text>
+              ) : null}
+              {patientCountry ? (
+                <Text style={s.summarySubtext}>{patientCountry}</Text>
+              ) : null}
+            </View>
+          ) : (
+            <Text style={s.emptyText}>No profile info yet</Text>
+          )}
+        </View>
+
+        {/* ── Selected Treatments card (specific mode) ── */}
+        {!isProposal && (
+          <View style={[s.card, treatmentComplete ? s.sectionComplete : s.sectionIncomplete]}>
+            <View style={s.cardHeader}>
+              {treatmentComplete && <Text style={s.checkIcon}>✓</Text>}
+              <Text style={s.cardIcon}>✨</Text>
+              <Text style={s.cardTitle}>Selected Treatments</Text>
+              <TouchableOpacity
+                onPress={() =>
+                  router.push("/patient/treatment-select?from=review" as any)
+                }
+              >
+                <Text style={s.edit}>Edit</Text>
+              </TouchableOpacity>
+            </View>
+            {treatmentList.length > 0 ? (
+              <View style={s.cardBody}>
+                {treatmentList.map((t, i) => (
+                  <View key={i} style={s.treatmentRow}>
+                    <View style={s.treatmentDot} />
+                    <Text style={s.treatmentName}>{t.name}</Text>
+                    <Text style={s.treatmentQty}>x{t.qty}</Text>
+                  </View>
+                ))}
+              </View>
+            ) : (
+              <Text style={s.emptyText}>No treatments selected</Text>
+            )}
+          </View>
+        )}
+
+        {/* ── Your Concern card (proposal mode) ── */}
+        {isProposal && (
+          <View style={[s.card, treatmentComplete ? s.sectionComplete : s.sectionIncomplete]}>
+            <View style={s.cardHeader}>
+              {treatmentComplete && <Text style={s.checkIcon}>✓</Text>}
+              <Text style={s.cardIcon}>💬</Text>
+              <Text style={s.cardTitle}>Your Concern</Text>
+              <TouchableOpacity
+                onPress={() =>
+                  router.push("/patient/concern-describe?from=review" as any)
+                }
+              >
+                <Text style={s.edit}>Edit</Text>
+              </TouchableOpacity>
+            </View>
+            {concernText ? (
+              <View style={s.cardBody}>
+                <Text style={s.summaryText} numberOfLines={4}>
+                  {concernText}
+                </Text>
+                {concernPhoto ? (
+                  <Image
+                    source={{ uri: concernPhoto }}
+                    style={s.concernThumb}
+                  />
+                ) : null}
+              </View>
+            ) : (
+              <Text style={s.emptyText}>No concern described yet</Text>
+            )}
+          </View>
+        )}
+
+        {/* ── Uploaded Files card (optional) ── */}
+        <View style={s.card}>
+          <View style={s.cardHeader}>
+            <Text style={s.cardIcon}>📁</Text>
+            <Text style={s.cardTitle}>Uploaded Files</Text>
+            <TouchableOpacity
+              onPress={() => router.push("/patient/upload?from=review" as any)}
+            >
+              <Text style={s.edit}>{filesCount > 0 ? "Edit" : "Add"}</Text>
+            </TouchableOpacity>
+          </View>
+          {filesCount > 0 ? (
+            <Text style={s.summarySubtext}>
+              {filesCount} file{filesCount !== 1 ? "s" : ""} uploaded
+            </Text>
+          ) : (
+            <Text style={s.optionalText}>
+              No files yet — you can add later
+            </Text>
           )}
         </View>
       </ScrollView>

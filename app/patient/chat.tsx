@@ -303,7 +303,7 @@ export default function PatientChatScreen() {
         ListHeaderComponent={
           <View style={{ backgroundColor: "#f1f5f9", borderRadius: 8, padding: 10, margin: 12, marginBottom: 4, borderWidth: 1, borderColor: SharedColors.border }}>
             <Text style={{ fontSize: 11, color: SharedColors.slate, lineHeight: 16, textAlign: "center" }}>
-              This chat is for general inquiries and quote discussion only. It does not replace an in-person medical consultation.
+              This chat is for general inquiries and quote discussion only. It does not replace an in-person medical consultation. Messages are auto-translated — verify important details with your care team.
             </Text>
           </View>
         }

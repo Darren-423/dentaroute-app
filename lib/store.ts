@@ -25,6 +25,7 @@ const KEYS = {
   INQUIRIES: "dr_inquiries",
   TYPING_STATUS: "dr_typing_status",
   SAVED_TRIPS: "dr_saved_trips",
+  PASSED_CASES: "dr_passed_cases",
 };
 
 // ── 티어 설정 ──
@@ -1691,5 +1692,29 @@ export const store = {
     }));
 
     console.log("✅ Demo data seeded successfully!");
+  },
+
+  // ══════════════════════════
+  //  Doctor Pass (케이스 무시)
+  // ══════════════════════════
+
+  passCase: async (caseId: string): Promise<void> => {
+    const data = await AsyncStorage.getItem(KEYS.PASSED_CASES);
+    const passed: string[] = data ? JSON.parse(data) : [];
+    if (!passed.includes(caseId)) {
+      passed.push(caseId);
+      await AsyncStorage.setItem(KEYS.PASSED_CASES, JSON.stringify(passed));
+    }
+  },
+
+  unpassCase: async (caseId: string): Promise<void> => {
+    const data = await AsyncStorage.getItem(KEYS.PASSED_CASES);
+    const passed: string[] = data ? JSON.parse(data) : [];
+    await AsyncStorage.setItem(KEYS.PASSED_CASES, JSON.stringify(passed.filter((id) => id !== caseId)));
+  },
+
+  getPassedCases: async (): Promise<string[]> => {
+    const data = await AsyncStorage.getItem(KEYS.PASSED_CASES);
+    return data ? JSON.parse(data) : [];
   },
 };

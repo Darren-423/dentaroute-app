@@ -253,6 +253,13 @@ export default function QuoteDetailScreen() {
 
           <View style={{ height: 20 }} />
         </View>
+        {/* Cancellation Policy */}
+        <View style={{ backgroundColor: "#f8fafc", borderRadius: 12, padding: 14, marginTop: 8, borderWidth: 1, borderColor: "#e2e8f0" }}>
+          <Text style={{ fontSize: 13, fontWeight: "600", color: "#334155", marginBottom: 6 }}>Cancellation Policy</Text>
+          <Text style={{ fontSize: 12, color: "#64748b", lineHeight: 18 }}>
+            {"Full refund if cancelled 7+ days before your visit.\n50% refund within 3–7 days.\nNo refund within 3 days.\n\nTreatment costs paid to clinics are subject to the clinic's own refund policy."}
+          </Text>
+        </View>
       </ScrollView>
 
       {/* Bottom CTA */}

@@ -44,7 +44,7 @@ export default function DoctorProfileScreen() {
         {/* Avatar + Name */}
         <View style={s.avatarSection}>
           <View style={s.avatar}>
-            <Text style={s.avatarText}>{profile?.name?.[4] || "K"}</Text>
+            <Text style={s.avatarText}>{profile?.name?.[0] || "D"}</Text>
           </View>
           <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
             <Text style={s.name}>{profile?.name || "Doctor"}</Text>

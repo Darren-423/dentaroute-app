@@ -3,7 +3,7 @@ import React, { useState } from "react";
 import { Platform, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-export type DoctorTabName = "Home" | "Chat" | "Hours" | "Schedule" | "Profile";
+export type DoctorTabName = "Home" | "Chat" | "Schedule" | "Earnings" | "Profile";
 
 interface DoctorTabBarProps {
   currentTab: DoctorTabName;
@@ -17,7 +17,7 @@ const TABS: { icon: FeatherIconName; label: DoctorTabName; route: string }[] = [
   { icon: "home", label: "Home", route: "/doctor/dashboard" },
   { icon: "message-circle", label: "Chat", route: "/doctor/chat-list" },
   { icon: "calendar", label: "Schedule", route: "/doctor/availability" },
-  { icon: "clock", label: "Hours", route: "/doctor/schedule-patient" },
+  { icon: "dollar-sign", label: "Earnings", route: "/doctor/earnings" },
   { icon: "user", label: "Profile", route: "/doctor/profile" },
 ];
 

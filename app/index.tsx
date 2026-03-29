@@ -107,12 +107,26 @@ export default function SplashScreen() {
               </View>
             </View>
           </View>
+
+          {/* Card 3: For Dentists */}
+          <View style={[styles.card, { width: CARD_WIDTH }]}>
+            <View style={styles.pricingCard}>
+              <Text style={{ fontSize: 28, textAlign: 'center', marginBottom: 8 }}>🦷</Text>
+              <Text style={{ fontSize: 17, fontWeight: '700', color: SharedColors.white, textAlign: 'center', marginBottom: 8 }}>
+                Are you a dentist?
+              </Text>
+              <Text style={{ fontSize: 14, color: 'rgba(255,255,255,0.85)', textAlign: 'center', lineHeight: 20 }}>
+                Grow your practice with international patients. Join Korea's dental tourism network.
+              </Text>
+            </View>
+          </View>
         </ScrollView>
 
         {/* Pagination Dots */}
         <View style={styles.pagination}>
           <View style={[styles.dot, activeIndex === 0 && styles.dotActive]} />
           <View style={[styles.dot, activeIndex === 1 && styles.dotActive]} />
+          <View style={[styles.dot, activeIndex === 2 && styles.dotActive]} />
         </View>
       </View>
 

@@ -37,7 +37,16 @@ const EXPERIENCE_OPTIONS = [
   "20+ years",
 ];
 
+const WIZARD_STEPS = [
+  { num: 1, label: "Personal" },
+  { num: 2, label: "Clinic" },
+  { num: 3, label: "Credentials" },
+  { num: 4, label: "Review" },
+];
+
 export default function DoctorProfileSetupScreen() {
+  const [step, setStep] = useState(1);
+
   const [formData, setFormData] = useState({
     clinicName: "",
     location: "",
@@ -240,277 +249,461 @@ export default function DoctorProfileSetupScreen() {
         keyboardShouldPersistTaps="handled"
         style={styles.scrollView}
       >
-        {/* Clinic Name */}
-        <View style={styles.fieldGroup}>
-          <Text style={styles.label}>CLINIC NAME</Text>
-          <TextInput
-            style={styles.input}
-            placeholder="e.g. Seoul Dental Clinic"
-            placeholderTextColor={SharedColors.slateLight}
-            value={formData.clinicName}
-            onChangeText={(v) => setFormData({ ...formData, clinicName: v })}
-          />
-        </View>
-
-        {/* Location */}
-        <View style={styles.fieldGroup}>
-          <Text style={styles.label}>LOCATION</Text>
-          <TextInput
-            style={styles.input}
-            placeholder="e.g. Gangnam, Seoul"
-            placeholderTextColor={SharedColors.slateLight}
-            value={formData.location}
-            onChangeText={(v) => setFormData({ ...formData, location: v })}
-          />
-        </View>
-
-        {/* Email */}
-        <View style={styles.fieldGroup}>
-          <Text style={styles.label}>EMAIL</Text>
-          <TextInput
-            style={styles.input}
-            placeholder="e.g. clinic@example.com"
-            placeholderTextColor={SharedColors.slateLight}
-            value={formData.email}
-            onChangeText={(v) => setFormData({ ...formData, email: v })}
-            keyboardType="email-address"
-            autoCapitalize="none"
-          />
-        </View>
-
-        {/* Phone */}
-        <View style={styles.fieldGroup}>
-          <Text style={styles.label}>PHONE NUMBER</Text>
-          <TextInput
-            style={styles.input}
-            placeholder="e.g. +82-2-1234-5678"
-            placeholderTextColor={SharedColors.slateLight}
-            value={formData.phone}
-            onChangeText={(v) => setFormData({ ...formData, phone: v })}
-            keyboardType="phone-pad"
-          />
-        </View>
-
-        {/* Specialties */}
-        <View style={styles.fieldGroup}>
-          <Text style={styles.label}>SPECIALTIES</Text>
-          <Text style={styles.hint}>Select all that apply</Text>
-          <View style={styles.tagWrap}>
-            {DEFAULT_SPECIALTIES.map((s) => (
-              <TouchableOpacity
-                key={s}
-                style={[
-                  styles.tag,
-                  formData.specialties.includes(s) && styles.tagSelected,
-                ]}
-                onPress={() => toggleSpecialty(s)}
-                activeOpacity={0.7}
-              >
-                <Text
+        {/* ── Step Progress Indicator ── */}
+        <View style={styles.progressRow}>
+          {WIZARD_STEPS.map((s, i) => (
+            <React.Fragment key={s.num}>
+              {i > 0 && (
+                <View style={[styles.progressLine, step > s.num - 1 ? styles.progressLineActive : null]} />
+              )}
+              <View style={styles.progressStep}>
+                <View
                   style={[
-                    styles.tagText,
-                    formData.specialties.includes(s) && styles.tagTextSelected,
+                    styles.progressDot,
+                    step === s.num && styles.progressDotActive,
+                    step > s.num && styles.progressDotDone,
                   ]}
                 >
-                  {s}
+                  {step > s.num ? (
+                    <Text style={styles.progressCheckmark}>{"✓"}</Text>
+                  ) : (
+                    <Text
+                      style={[
+                        styles.progressDotNum,
+                        step === s.num && styles.progressDotNumActive,
+                      ]}
+                    >
+                      {s.num}
+                    </Text>
+                  )}
+                </View>
+                <Text
+                  style={[
+                    styles.progressLabel,
+                    step === s.num && styles.progressLabelActive,
+                  ]}
+                >
+                  {s.label}
                 </Text>
-              </TouchableOpacity>
-            ))}
-          </View>
+              </View>
+            </React.Fragment>
+          ))}
+        </View>
 
-          {/* Custom specialties */}
-          {customSpecialties.length > 0 && (
-            <View style={styles.customTagsWrap}>
-              {customSpecialties.map((s) => (
-                <View key={s} style={styles.customTag}>
-                  <Text style={styles.customTagText}>{s}</Text>
+        {/* ══════════ STEP 1: Personal ══════════ */}
+        {step === 1 && (
+          <>
+            {/* Email */}
+            <View style={styles.fieldGroup}>
+              <Text style={styles.label}>EMAIL</Text>
+              <TextInput
+                style={styles.input}
+                placeholder="e.g. clinic@example.com"
+                placeholderTextColor={SharedColors.slateLight}
+                value={formData.email}
+                onChangeText={(v) => setFormData({ ...formData, email: v })}
+                keyboardType="email-address"
+                autoCapitalize="none"
+              />
+            </View>
+
+            {/* Phone */}
+            <View style={styles.fieldGroup}>
+              <Text style={styles.label}>PHONE NUMBER</Text>
+              <TextInput
+                style={styles.input}
+                placeholder="e.g. +82-2-1234-5678"
+                placeholderTextColor={SharedColors.slateLight}
+                value={formData.phone}
+                onChangeText={(v) => setFormData({ ...formData, phone: v })}
+                keyboardType="phone-pad"
+              />
+            </View>
+
+            {/* Bio */}
+            <View style={styles.fieldGroup}>
+              <Text style={styles.label}>BIO (OPTIONAL)</Text>
+              <TextInput
+                style={[styles.input, { minHeight: 80, textAlignVertical: "top" }]}
+                placeholder="Tell patients about yourself and your practice..."
+                placeholderTextColor={SharedColors.slateLight}
+                value={formData.bio}
+                onChangeText={(v) => setFormData({ ...formData, bio: v })}
+                multiline
+                numberOfLines={4}
+              />
+            </View>
+
+            {/* Website */}
+            <View style={styles.fieldGroup}>
+              <Text style={styles.label}>WEBSITE (OPTIONAL)</Text>
+              <TextInput
+                style={styles.input}
+                placeholder="e.g. https://www.mydentalclinic.com"
+                placeholderTextColor={SharedColors.slateLight}
+                value={formData.website}
+                onChangeText={(v) => setFormData({ ...formData, website: v })}
+                keyboardType="url"
+                autoCapitalize="none"
+              />
+            </View>
+          </>
+        )}
+
+        {/* ══════════ STEP 2: Clinic ══════════ */}
+        {step === 2 && (
+          <>
+            {/* Clinic Name */}
+            <View style={styles.fieldGroup}>
+              <Text style={styles.label}>CLINIC NAME</Text>
+              <TextInput
+                style={styles.input}
+                placeholder="e.g. Seoul Dental Clinic"
+                placeholderTextColor={SharedColors.slateLight}
+                value={formData.clinicName}
+                onChangeText={(v) => setFormData({ ...formData, clinicName: v })}
+              />
+            </View>
+
+            {/* Location */}
+            <View style={styles.fieldGroup}>
+              <Text style={styles.label}>LOCATION</Text>
+              <TextInput
+                style={styles.input}
+                placeholder="e.g. Gangnam, Seoul"
+                placeholderTextColor={SharedColors.slateLight}
+                value={formData.location}
+                onChangeText={(v) => setFormData({ ...formData, location: v })}
+              />
+            </View>
+
+            {/* Specialties */}
+            <View style={styles.fieldGroup}>
+              <Text style={styles.label}>SPECIALTIES</Text>
+              <Text style={styles.hint}>Select all that apply</Text>
+              <View style={styles.tagWrap}>
+                {DEFAULT_SPECIALTIES.map((s) => (
                   <TouchableOpacity
-                    onPress={() => removeCustomSpecialty(s)}
-                    hitSlop={{ top: 6, bottom: 6, left: 6, right: 6 }}
+                    key={s}
+                    style={[
+                      styles.tag,
+                      formData.specialties.includes(s) && styles.tagSelected,
+                    ]}
+                    onPress={() => toggleSpecialty(s)}
+                    activeOpacity={0.7}
                   >
-                    <Text style={styles.customTagRemove}>✕</Text>
+                    <Text
+                      style={[
+                        styles.tagText,
+                        formData.specialties.includes(s) && styles.tagTextSelected,
+                      ]}
+                    >
+                      {s}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+
+              {/* Custom specialties */}
+              {customSpecialties.length > 0 && (
+                <View style={styles.customTagsWrap}>
+                  {customSpecialties.map((s) => (
+                    <View key={s} style={styles.customTag}>
+                      <Text style={styles.customTagText}>{s}</Text>
+                      <TouchableOpacity
+                        onPress={() => removeCustomSpecialty(s)}
+                        hitSlop={{ top: 6, bottom: 6, left: 6, right: 6 }}
+                      >
+                        <Text style={styles.customTagRemove}>✕</Text>
+                      </TouchableOpacity>
+                    </View>
+                  ))}
+                </View>
+              )}
+
+              {/* Add custom */}
+              {showSpecialtyInput ? (
+                <View style={styles.addInputRow}>
+                  <TextInput
+                    style={styles.addInput}
+                    placeholder="Type a specialty..."
+                    placeholderTextColor={SharedColors.slateLight}
+                    value={newSpecialty}
+                    onChangeText={setNewSpecialty}
+                    onSubmitEditing={addCustomSpecialty}
+                    returnKeyType="done"
+                    autoFocus
+                  />
+                  <TouchableOpacity
+                    style={[
+                      styles.addConfirmBtn,
+                      !newSpecialty.trim() && { opacity: 0.4 },
+                    ]}
+                    onPress={addCustomSpecialty}
+                    disabled={!newSpecialty.trim()}
+                  >
+                    <Text style={styles.addConfirmText}>Add</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={styles.addCancelBtn}
+                    onPress={() => {
+                      setShowSpecialtyInput(false);
+                      setNewSpecialty("");
+                    }}
+                  >
+                    <Text style={styles.addCancelText}>✕</Text>
                   </TouchableOpacity>
                 </View>
-              ))}
-            </View>
-          )}
-
-          {/* Add custom */}
-          {showSpecialtyInput ? (
-            <View style={styles.addInputRow}>
-              <TextInput
-                style={styles.addInput}
-                placeholder="Type a specialty..."
-                placeholderTextColor={SharedColors.slateLight}
-                value={newSpecialty}
-                onChangeText={setNewSpecialty}
-                onSubmitEditing={addCustomSpecialty}
-                returnKeyType="done"
-                autoFocus
-              />
-              <TouchableOpacity
-                style={[
-                  styles.addConfirmBtn,
-                  !newSpecialty.trim() && { opacity: 0.4 },
-                ]}
-                onPress={addCustomSpecialty}
-                disabled={!newSpecialty.trim()}
-              >
-                <Text style={styles.addConfirmText}>Add</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={styles.addCancelBtn}
-                onPress={() => {
-                  setShowSpecialtyInput(false);
-                  setNewSpecialty("");
-                }}
-              >
-                <Text style={styles.addCancelText}>✕</Text>
-              </TouchableOpacity>
-            </View>
-          ) : (
-            <TouchableOpacity
-              style={styles.addBtn}
-              onPress={() => setShowSpecialtyInput(true)}
-              activeOpacity={0.7}
-            >
-              <Text style={styles.addBtnPlus}>+</Text>
-              <Text style={styles.addBtnText}>Add other specialty</Text>
-            </TouchableOpacity>
-          )}
-        </View>
-
-        {/* Years of Experience */}
-        <View style={styles.fieldGroup}>
-          <Text style={styles.label}>YEARS OF EXPERIENCE</Text>
-          <View style={styles.tagWrap}>
-            {EXPERIENCE_OPTIONS.map((e) => (
-              <TouchableOpacity
-                key={e}
-                style={[
-                  styles.tag,
-                  formData.yearsExperience === e && styles.tagSelected,
-                ]}
-                onPress={() =>
-                  setFormData({ ...formData, yearsExperience: e })
-                }
-                activeOpacity={0.7}
-              >
-                <Text
-                  style={[
-                    styles.tagText,
-                    formData.yearsExperience === e && styles.tagTextSelected,
-                  ]}
-                >
-                  {e}
-                </Text>
-              </TouchableOpacity>
-            ))}
-          </View>
-        </View>
-
-        {/* ── Clinic Photos ── */}
-        <View style={styles.fieldGroup}>
-          <Text style={styles.label}>CLINIC PHOTOS</Text>
-          <Text style={styles.hint}>
-            Show patients your clinic (up to 6 photos)
-          </Text>
-
-          {/* Photo Grid */}
-          <View style={styles.photoGrid}>
-            {clinicPhotos.map((uri, index) => (
-              <View key={index} style={styles.photoItem}>
-                <Image source={{ uri }} style={styles.photoImage} />
+              ) : (
                 <TouchableOpacity
-                  style={styles.photoRemoveBtn}
-                  onPress={() => removePhoto(index)}
-                  hitSlop={{ top: 6, bottom: 6, left: 6, right: 6 }}
+                  style={styles.addBtn}
+                  onPress={() => setShowSpecialtyInput(true)}
+                  activeOpacity={0.7}
                 >
-                  <Text style={styles.photoRemoveText}>✕</Text>
+                  <Text style={styles.addBtnPlus}>+</Text>
+                  <Text style={styles.addBtnText}>Add other specialty</Text>
                 </TouchableOpacity>
-                {index === 0 && (
-                  <View style={styles.photoCoverBadge}>
-                    <Text style={styles.photoCoverText}>Cover</Text>
+              )}
+            </View>
+
+            {/* Years of Experience */}
+            <View style={styles.fieldGroup}>
+              <Text style={styles.label}>YEARS OF EXPERIENCE</Text>
+              <View style={styles.tagWrap}>
+                {EXPERIENCE_OPTIONS.map((e) => (
+                  <TouchableOpacity
+                    key={e}
+                    style={[
+                      styles.tag,
+                      formData.yearsExperience === e && styles.tagSelected,
+                    ]}
+                    onPress={() =>
+                      setFormData({ ...formData, yearsExperience: e })
+                    }
+                    activeOpacity={0.7}
+                  >
+                    <Text
+                      style={[
+                        styles.tagText,
+                        formData.yearsExperience === e && styles.tagTextSelected,
+                      ]}
+                    >
+                      {e}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            </View>
+          </>
+        )}
+
+        {/* ══════════ STEP 3: Credentials ══════════ */}
+        {step === 3 && (
+          <>
+            {/* Clinic Photos */}
+            <View style={styles.fieldGroup}>
+              <Text style={styles.label}>CLINIC PHOTOS</Text>
+              <Text style={styles.hint}>
+                Show patients your clinic (up to 6 photos)
+              </Text>
+
+              {/* Photo Grid */}
+              <View style={styles.photoGrid}>
+                {clinicPhotos.map((uri, index) => (
+                  <View key={index} style={styles.photoItem}>
+                    <Image source={{ uri }} style={styles.photoImage} />
+                    <TouchableOpacity
+                      style={styles.photoRemoveBtn}
+                      onPress={() => removePhoto(index)}
+                      hitSlop={{ top: 6, bottom: 6, left: 6, right: 6 }}
+                    >
+                      <Text style={styles.photoRemoveText}>✕</Text>
+                    </TouchableOpacity>
+                    {index === 0 && (
+                      <View style={styles.photoCoverBadge}>
+                        <Text style={styles.photoCoverText}>Cover</Text>
+                      </View>
+                    )}
                   </View>
+                ))}
+
+                {/* Add Photo Button */}
+                {clinicPhotos.length < 6 && (
+                  <TouchableOpacity
+                    style={styles.photoAddBtn}
+                    onPress={showPhotoOptions}
+                    activeOpacity={0.7}
+                  >
+                    <Text style={styles.photoAddIcon}>📷</Text>
+                    <Text style={styles.photoAddText}>Add Photo</Text>
+                  </TouchableOpacity>
                 )}
               </View>
-            ))}
 
-            {/* Add Photo Button */}
-            {clinicPhotos.length < 6 && (
-              <TouchableOpacity
-                style={styles.photoAddBtn}
-                onPress={showPhotoOptions}
-                activeOpacity={0.7}
-              >
-                <Text style={styles.photoAddIcon}>📷</Text>
-                <Text style={styles.photoAddText}>Add Photo</Text>
-              </TouchableOpacity>
+              {clinicPhotos.length > 0 && (
+                <Text style={styles.photoCount}>
+                  {clinicPhotos.length}/6 photos added
+                </Text>
+              )}
+            </View>
+
+            {/* License Info */}
+            <View style={styles.infoBox}>
+              <Text style={styles.infoIcon}>🪪</Text>
+              <View style={{ flex: 1 }}>
+                <Text style={styles.infoTitle}>Your license is being verified</Text>
+                <Text style={styles.infoDesc}>
+                  This usually takes 24-48 hours. You can set up your profile in the
+                  meantime.
+                </Text>
+              </View>
+            </View>
+          </>
+        )}
+
+        {/* ══════════ STEP 4: Review ══════════ */}
+        {step === 4 && (
+          <>
+            <View style={styles.reviewSection}>
+              <Text style={styles.reviewSectionTitle}>Personal Info</Text>
+              <View style={styles.reviewCard}>
+                {formData.email ? (
+                  <View style={styles.reviewRow}>
+                    <Text style={styles.reviewLabel}>Email</Text>
+                    <Text style={styles.reviewValue}>{formData.email}</Text>
+                  </View>
+                ) : null}
+                {formData.phone ? (
+                  <View style={styles.reviewRow}>
+                    <Text style={styles.reviewLabel}>Phone</Text>
+                    <Text style={styles.reviewValue}>{formData.phone}</Text>
+                  </View>
+                ) : null}
+                {formData.bio ? (
+                  <View style={styles.reviewRow}>
+                    <Text style={styles.reviewLabel}>Bio</Text>
+                    <Text style={[styles.reviewValue, { flex: 1 }]} numberOfLines={3}>{formData.bio}</Text>
+                  </View>
+                ) : null}
+                {formData.website ? (
+                  <View style={styles.reviewRow}>
+                    <Text style={styles.reviewLabel}>Website</Text>
+                    <Text style={styles.reviewValue}>{formData.website}</Text>
+                  </View>
+                ) : null}
+                {!formData.email && !formData.phone && !formData.bio && !formData.website && (
+                  <Text style={styles.reviewEmpty}>No personal info added yet</Text>
+                )}
+              </View>
+            </View>
+
+            <View style={styles.reviewSection}>
+              <Text style={styles.reviewSectionTitle}>Clinic Details</Text>
+              <View style={styles.reviewCard}>
+                <View style={styles.reviewRow}>
+                  <Text style={styles.reviewLabel}>Clinic</Text>
+                  <Text style={styles.reviewValue}>{formData.clinicName || "Not set"}</Text>
+                </View>
+                <View style={styles.reviewRow}>
+                  <Text style={styles.reviewLabel}>Location</Text>
+                  <Text style={styles.reviewValue}>{formData.location || "Not set"}</Text>
+                </View>
+                <View style={styles.reviewRow}>
+                  <Text style={styles.reviewLabel}>Specialties</Text>
+                  <Text style={[styles.reviewValue, { flex: 1 }]}>
+                    {[...formData.specialties, ...customSpecialties].join(", ") || "None selected"}
+                  </Text>
+                </View>
+                <View style={styles.reviewRow}>
+                  <Text style={styles.reviewLabel}>Experience</Text>
+                  <Text style={styles.reviewValue}>{formData.yearsExperience || "Not set"}</Text>
+                </View>
+              </View>
+            </View>
+
+            <View style={styles.reviewSection}>
+              <Text style={styles.reviewSectionTitle}>Credentials</Text>
+              <View style={styles.reviewCard}>
+                <View style={styles.reviewRow}>
+                  <Text style={styles.reviewLabel}>Photos</Text>
+                  <Text style={styles.reviewValue}>
+                    {clinicPhotos.length > 0 ? `${clinicPhotos.length} photo${clinicPhotos.length > 1 ? "s" : ""} uploaded` : "No photos"}
+                  </Text>
+                </View>
+                <View style={styles.reviewRow}>
+                  <Text style={styles.reviewLabel}>License</Text>
+                  <Text style={styles.reviewValue}>Pending verification</Text>
+                </View>
+              </View>
+            </View>
+
+            {!isComplete && (
+              <View style={[styles.infoBox, { borderColor: SharedColors.orange, backgroundColor: "#fffbeb" }]}>
+                <Text style={styles.infoIcon}>⚠️</Text>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.infoTitle}>Required fields missing</Text>
+                  <Text style={styles.infoDesc}>
+                    Please fill in clinic name, location, at least one specialty, and experience to publish.
+                  </Text>
+                </View>
+              </View>
             )}
-          </View>
-
-          {clinicPhotos.length > 0 && (
-            <Text style={styles.photoCount}>
-              {clinicPhotos.length}/6 photos added
-            </Text>
-          )}
-        </View>
-
-        {/* Bio */}
-        <View style={styles.fieldGroup}>
-          <Text style={styles.label}>BIO (OPTIONAL)</Text>
-          <TextInput
-            style={[styles.input, { minHeight: 80, textAlignVertical: "top" }]}
-            placeholder="Tell patients about yourself and your practice..."
-            placeholderTextColor={SharedColors.slateLight}
-            value={formData.bio}
-            onChangeText={(v) => setFormData({ ...formData, bio: v })}
-            multiline
-            numberOfLines={4}
-          />
-        </View>
-
-        {/* Website */}
-        <View style={styles.fieldGroup}>
-          <Text style={styles.label}>WEBSITE (OPTIONAL)</Text>
-          <TextInput
-            style={styles.input}
-            placeholder="e.g. https://www.mydentalclinic.com"
-            placeholderTextColor={SharedColors.slateLight}
-            value={formData.website}
-            onChangeText={(v) => setFormData({ ...formData, website: v })}
-            keyboardType="url"
-            autoCapitalize="none"
-          />
-        </View>
-
-        {/* Info */}
-        <View style={styles.infoBox}>
-          <Text style={styles.infoIcon}>🪪</Text>
-          <View style={{ flex: 1 }}>
-            <Text style={styles.infoTitle}>Your license is being verified</Text>
-            <Text style={styles.infoDesc}>
-              This usually takes 24-48 hours. You can set up your profile in the
-              meantime.
-            </Text>
-          </View>
-        </View>
+          </>
+        )}
       </ScrollView>
 
-      {/* Bottom */}
+      {/* ── Bottom bar — step-aware navigation ── */}
       <View style={styles.bottomBar}>
-        <TouchableOpacity
-          style={[styles.completeBtn, !isComplete && styles.completeBtnDisabled]}
-          onPress={handleComplete}
-          disabled={!isComplete || loading}
-          activeOpacity={0.85}
-        >
-          {loading ? (
-            <ActivityIndicator color={SharedColors.white} size="small" />
-          ) : (
-            <Text style={styles.completeBtnText}>Complete Profile →</Text>
-          )}
-        </TouchableOpacity>
+        {step === 1 && (
+          <TouchableOpacity
+            style={[styles.completeBtn, { flex: 1 }]}
+            onPress={() => setStep(2)}
+            activeOpacity={0.85}
+          >
+            <Text style={styles.completeBtnText}>{"Next  \u2192"}</Text>
+          </TouchableOpacity>
+        )}
+
+        {(step === 2 || step === 3) && (
+          <View style={{ flexDirection: "row", gap: 12, flex: 1 }}>
+            <TouchableOpacity
+              style={styles.backStepBtn}
+              onPress={() => setStep(step - 1)}
+            >
+              <Text style={styles.backStepBtnText}>{"\u2190  Back"}</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.completeBtn, { flex: 1 }]}
+              onPress={() => setStep(step + 1)}
+              activeOpacity={0.85}
+            >
+              <Text style={styles.completeBtnText}>{"Next  \u2192"}</Text>
+            </TouchableOpacity>
+          </View>
+        )}
+
+        {step === 4 && (
+          <View style={{ flexDirection: "row", gap: 12, flex: 1 }}>
+            <TouchableOpacity
+              style={styles.backStepBtn}
+              onPress={() => setStep(3)}
+            >
+              <Text style={styles.backStepBtnText}>{"\u2190  Back"}</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.completeBtn, { flex: 1 }, !isComplete && styles.completeBtnDisabled]}
+              onPress={handleComplete}
+              disabled={!isComplete || loading}
+              activeOpacity={0.85}
+            >
+              {loading ? (
+                <ActivityIndicator color={SharedColors.white} size="small" />
+              ) : (
+                <Text style={styles.completeBtnText}>Publish Profile</Text>
+              )}
+            </TouchableOpacity>
+          </View>
+        )}
       </View>
     </View>
   );
@@ -760,6 +953,8 @@ const styles = StyleSheet.create({
 
   // Bottom
   bottomBar: {
+    flexDirection: "row",
+    gap: 12,
     paddingHorizontal: 24,
     paddingVertical: 16,
     borderTopWidth: 1,
@@ -775,4 +970,82 @@ const styles = StyleSheet.create({
   },
   completeBtnDisabled: { opacity: 0.4 },
   completeBtnText: { color: SharedColors.white, fontSize: 15, fontWeight: "600" },
+
+  /* ── Progress Indicator ── */
+  progressRow: {
+    flexDirection: "row", alignItems: "center", justifyContent: "center",
+    paddingVertical: 8, paddingHorizontal: 4, gap: 0,
+  },
+  progressStep: { alignItems: "center", gap: 6, width: 72 },
+  progressDot: {
+    width: 32, height: 32, borderRadius: 16,
+    backgroundColor: SharedColors.white, borderWidth: 2, borderColor: SharedColors.border,
+    alignItems: "center", justifyContent: "center",
+  },
+  progressDotActive: {
+    borderColor: DoctorTheme.primary, backgroundColor: DoctorTheme.primary,
+  },
+  progressDotDone: {
+    borderColor: DoctorTheme.primary, backgroundColor: DoctorTheme.accentSoft,
+  },
+  progressDotNum: {
+    fontSize: 13, fontWeight: "700", color: SharedColors.slate,
+  },
+  progressDotNumActive: {
+    color: SharedColors.white,
+  },
+  progressCheckmark: {
+    fontSize: 14, fontWeight: "800", color: DoctorTheme.primary,
+  },
+  progressLabel: {
+    fontSize: 11, fontWeight: "500", color: SharedColors.slate, textAlign: "center",
+  },
+  progressLabelActive: {
+    fontWeight: "700", color: DoctorTheme.primary,
+  },
+  progressLine: {
+    flex: 1, height: 2, backgroundColor: SharedColors.border,
+    marginBottom: 22,
+  },
+  progressLineActive: {
+    backgroundColor: DoctorTheme.primary,
+  },
+
+  /* ── Step Navigation Buttons ── */
+  backStepBtn: {
+    borderRadius: 14, borderWidth: 1.5, borderColor: SharedColors.border,
+    paddingHorizontal: 20, paddingVertical: 15,
+    alignItems: "center", justifyContent: "center",
+    backgroundColor: SharedColors.white,
+  },
+  backStepBtnText: {
+    fontSize: 15, fontWeight: "600", color: SharedColors.navy,
+  },
+
+  /* ── Review Step ── */
+  reviewSection: { gap: 8 },
+  reviewSectionTitle: {
+    fontSize: 13, fontWeight: "700", color: SharedColors.navy,
+    letterSpacing: 0.3,
+  },
+  reviewCard: {
+    backgroundColor: SharedColors.white,
+    borderRadius: 14,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: SharedColors.border,
+    gap: 12,
+  },
+  reviewRow: {
+    flexDirection: "row", gap: 12,
+  },
+  reviewLabel: {
+    fontSize: 13, fontWeight: "600", color: SharedColors.navySec, width: 90,
+  },
+  reviewValue: {
+    fontSize: 13, color: SharedColors.navy, fontWeight: "400",
+  },
+  reviewEmpty: {
+    fontSize: 13, color: SharedColors.navyMuted, fontStyle: "italic",
+  },
 });

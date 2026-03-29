@@ -19,6 +19,7 @@ import {
   TouchableWithoutFeedback,
   View,
 } from "react-native";
+import { Feather } from "@expo/vector-icons";
 
 import { PatientTheme, SharedColors } from "../../constants/theme";
 
@@ -196,6 +197,58 @@ export default function ConcernDescribeScreen() {
               </View>
             )}
           </View>
+
+          {/* Optional X-ray / Records Upload */}
+          <View style={s.xrayCard}>
+            <View style={s.xrayHeader}>
+              <Feather name="file-text" size={18} color={PatientTheme.primary} />
+              <Text style={s.xrayTitle}>Have X-rays or dental records?</Text>
+              <Text style={s.xrayOptional}>Optional</Text>
+            </View>
+            <Text style={s.xrayDesc}>
+              Adding X-rays helps dentists provide more accurate quotes
+            </Text>
+            <View style={s.xrayBtnRow}>
+              <TouchableOpacity
+                style={s.xrayAddBtn}
+                activeOpacity={0.7}
+                onPress={async () => {
+                  if (!isValid) return;
+                  Keyboard.dismiss();
+                  setSaving(true);
+                  await AsyncStorage.setItem(
+                    "CASE_DRAFT_CONCERN",
+                    JSON.stringify({ text: text.trim(), photoUri: photoUri || null })
+                  );
+                  if (photoUri) {
+                    try {
+                      const existing = await store.getPatientFiles() || { xrays: [], treatmentPlans: [], photos: [] };
+                      if (!existing.photos?.includes(photoUri)) {
+                        await store.savePatientFiles({
+                          ...existing,
+                          photos: [...(existing.photos || []), photoUri],
+                        });
+                      }
+                    } catch (e) { console.warn("Photo sync error:", e); }
+                  }
+                  setSaving(false);
+                  router.push("/patient/upload?from=concern-describe" as any);
+                }}
+              >
+                <Feather name="upload" size={15} color={PatientTheme.primary} />
+                <Text style={s.xrayAddBtnText}>Add Files</Text>
+                <Feather name="arrow-right" size={14} color={PatientTheme.primary} />
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={s.xraySkipBtn}
+                activeOpacity={0.7}
+                onPress={handleNext}
+                disabled={!isValid || saving}
+              >
+                <Text style={s.xraySkipBtnText}>Skip</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
         </ScrollView>
       </TouchableWithoutFeedback>
 
@@ -353,6 +406,78 @@ const s = StyleSheet.create({
   },
   nudgeIcon: { fontSize: 16, marginTop: 1 },
   nudgeText: { flex: 1, fontSize: 13, color: "#92400E", lineHeight: 19 },
+
+  // X-ray upload card
+  xrayCard: {
+    backgroundColor: SharedColors.white,
+    borderRadius: 16,
+    padding: 18,
+    borderWidth: 1,
+    borderColor: "#E8DEF8",
+    borderStyle: "dashed",
+  },
+  xrayHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    marginBottom: 6,
+  },
+  xrayTitle: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: SharedColors.navy,
+    flex: 1,
+  },
+  xrayOptional: {
+    fontSize: 11,
+    fontWeight: "500",
+    color: SharedColors.slateLight,
+    backgroundColor: "#f1f5f9",
+    borderRadius: 6,
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    overflow: "hidden",
+  },
+  xrayDesc: {
+    fontSize: 13,
+    color: SharedColors.navySec ?? "#64748b",
+    lineHeight: 18,
+    marginBottom: 14,
+  },
+  xrayBtnRow: {
+    flexDirection: "row",
+    gap: 10,
+  },
+  xrayAddBtn: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 6,
+    borderWidth: 1.5,
+    borderColor: PatientTheme.primaryMid,
+    borderRadius: 12,
+    paddingVertical: 12,
+    backgroundColor: PatientTheme.primaryLight,
+  },
+  xrayAddBtnText: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: PatientTheme.primary,
+  },
+  xraySkipBtn: {
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+    alignItems: "center",
+    justifyContent: "center",
+    borderRadius: 12,
+    backgroundColor: "#f1f5f9",
+  },
+  xraySkipBtnText: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: SharedColors.slateLight,
+  },
 
   // Bottom CTA
   bottomBar: {

@@ -4,7 +4,7 @@ import { router, useLocalSearchParams } from "expo-router";
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator, Animated, FlatList, Image, KeyboardAvoidingView, Modal, Platform,
-  StyleSheet,
+  ScrollView, StyleSheet,
   Text, TextInput, TouchableOpacity,
   View,
 } from "react-native";
@@ -297,7 +297,7 @@ export default function DoctorChatScreen() {
         ListHeaderComponent={
           <View style={{ backgroundColor: "#f1f5f9", borderRadius: 8, padding: 10, margin: 12, marginBottom: 4, borderWidth: 1, borderColor: SharedColors.border }}>
             <Text style={{ fontSize: 11, color: SharedColors.slate, lineHeight: 16, textAlign: "center" }}>
-              채팅은 견적 논의 및 일반 상담 전용입니다. 구체적 진단/치료계획을 제공하지 마십시오.
+              This chat is for quote discussion and general consultation only. Do not provide specific diagnoses or treatment plans. Messages are auto-translated — verify important details directly.
             </Text>
           </View>
         }
@@ -319,28 +319,30 @@ export default function DoctorChatScreen() {
       />
 
       {/* Quick Reply Chips */}
-      {messages.length === 0 && (
-        <View style={s.quickReplies}>
-          {[
-            "Hello! I'm happy to answer any questions.",
-            "We can complete the treatment within your visit dates.",
-            "Here's what I recommend for your case...",
-          ].map((q) => (
-            <TouchableOpacity
-              key={q}
-              style={s.quickChip}
-              onPress={async () => {
-                if (!chatRoomId) return;
-                await store.sendMessage(chatRoomId, "doctor", q);
-                await loadMessages();
-                setTimeout(() => flatListRef.current?.scrollToEnd({ animated: true }), 100);
-              }}
-            >
-              <Text style={s.quickChipText}>{q}</Text>
-            </TouchableOpacity>
-          ))}
-        </View>
-      )}
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={s.quickReplies} style={s.quickRepliesScroll}>
+        {[
+          "Hello! I'm happy to answer any questions.",
+          "We can complete the treatment within your visit dates.",
+          "Here's what I recommend for your case...",
+          "Please upload your X-ray",
+          "Your appointment is confirmed",
+          "Here's your treatment plan summary",
+          "Do you have any questions?",
+        ].map((q) => (
+          <TouchableOpacity
+            key={q}
+            style={s.quickChip}
+            onPress={async () => {
+              if (!chatRoomId) return;
+              await store.sendMessage(chatRoomId, "doctor", q);
+              await loadMessages();
+              setTimeout(() => flatListRef.current?.scrollToEnd({ animated: true }), 100);
+            }}
+          >
+            <Text style={s.quickChipText}>{q}</Text>
+          </TouchableOpacity>
+        ))}
+      </ScrollView>
 
       {/* Typing indicator */}
       {otherTyping && (
@@ -526,12 +528,13 @@ const s = StyleSheet.create({
   emptyChatText: { fontSize: 16, fontWeight: "600", color: SharedColors.navy, marginBottom: 4 },
   emptyChatSub: { fontSize: 13, color: SharedColors.navySec, textAlign: "center" },
 
-  quickReplies: { paddingHorizontal: 16, paddingBottom: 8, gap: 8 },
+  quickRepliesScroll: { maxHeight: 44, flexGrow: 0 },
+  quickReplies: { paddingHorizontal: 16, paddingBottom: 8, gap: 8, flexDirection: "row" as const },
   quickChip: {
-    backgroundColor: SharedColors.white, borderRadius: 20, paddingHorizontal: 16, paddingVertical: 10,
-    borderWidth: 1, borderColor: SharedColors.border,
+    backgroundColor: SharedColors.white, borderRadius: 20, paddingHorizontal: 14, paddingVertical: 8,
+    borderWidth: 1.5, borderColor: DoctorTheme.primary,
   },
-  quickChipText: { fontSize: 13, color: DoctorTheme.primary },
+  quickChipText: { fontSize: 12, color: DoctorTheme.primary, fontWeight: "500" as const },
 
   // Typing indicator
   typingBar: { flexDirection: "row", alignItems: "center", gap: 8, paddingHorizontal: 16, paddingBottom: 4 },

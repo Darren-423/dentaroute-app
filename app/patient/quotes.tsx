@@ -2,6 +2,7 @@ import { LinearGradient } from "expo-linear-gradient";
 import { router, useLocalSearchParams } from "expo-router";
 import React, { useEffect, useState } from "react";
 import {
+  Alert,
   ScrollView,
   StyleSheet,
   Text, TouchableOpacity,
@@ -69,9 +70,14 @@ export default function PatientQuotesScreen() {
     return sortAsc ? diff : -diff;
   });
   const toggleSelect = (id: string) => {
-    setSelectedIds((prev) =>
-      prev.includes(id) ? prev.filter((x) => x !== id) : prev.length < 3 ? [...prev, id] : prev
-    );
+    setSelectedIds((prev) => {
+      if (prev.includes(id)) return prev.filter((x) => x !== id);
+      if (prev.length >= 3) {
+        Alert.alert("Limit Reached", "Compare up to 3 quotes at a time. Deselect one to add another.");
+        return prev;
+      }
+      return [...prev, id];
+    });
   };
 
   const goCompare = () => {
@@ -269,7 +275,7 @@ export default function PatientQuotesScreen() {
                   {/* Best value badge */}
                   {isLowest && !compareMode && (
                     <View style={s.bestBadge}>
-                      <Text style={s.bestBadgeText}>Best Value</Text>
+                      <Text style={s.bestBadgeText}>Lowest Price</Text>
                     </View>
                   )}
 

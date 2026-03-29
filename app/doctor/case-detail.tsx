@@ -44,6 +44,17 @@ const getPriceFloor = (treatment: string): number => {
   return PRICE_FLOORS[toDoctorLabel(treatment)] || 0;
 };
 
+const VISIT_PRESETS = [
+  { label: "Standard Implant", visits: 2, gaps: [{ months: 4, days: 0, reason: "Bone integration" }] },
+  { label: "Implant + Bone Graft", visits: 3, gaps: [{ months: 5, days: 0, reason: "Bone integration" }, { months: 4, days: 0, reason: "Bone integration" }] },
+  { label: "Veneer Set", visits: 2, gaps: [{ months: 0, days: 10, reason: "Lab processing" }] },
+  { label: "Full Mouth", visits: 3, gaps: [{ months: 0, days: 14, reason: "Lab/fabrication" }, { months: 0, days: 10, reason: "Lab/fabrication" }] },
+  { label: "Smile Makeover", visits: 2, gaps: [{ months: 0, days: 12, reason: "Lab processing" }] },
+  { label: "Invisalign Start", visits: 2, gaps: [{ months: 0, days: 18, reason: "Custom fabrication" }] },
+  { label: "Root Canal + Crown", visits: 2, gaps: [{ months: 0, days: 10, reason: "Lab processing" }] },
+  { label: "Extraction + Implant", visits: 2, gaps: [{ months: 4, days: 0, reason: "Bone integration" }] },
+];
+
 type PlanItem = {
   id: string;
   treatment: string;
@@ -78,6 +89,16 @@ export default function DoctorCaseDetailScreen() {
     "Other",
   ];
 
+  // Apply a multi-visit preset (visits + gaps only, not treatments/prices)
+  const applyPreset = (preset: typeof VISIT_PRESETS[number]) => {
+    setVisitsCount(preset.visits);
+    setGapConfigs(preset.gaps.map((g) => ({
+      gapMonths: g.months,
+      gapDays: g.days,
+      gapReason: g.reason,
+    })));
+  };
+
   // Patient uploaded files & travel
   const [patientFiles, setPatientFiles] = useState<{
     xrays: string[]; treatmentPlans: string[]; photos: string[];
@@ -86,6 +107,12 @@ export default function DoctorCaseDetailScreen() {
   const [doctorProfile, setDoctorProfile] = useState<any>(null);
   const [patientProfileImage, setPatientProfileImage] = useState<string | null>(null);
   const [booking, setBooking] = useState<Booking | null>(null);
+
+  // Smart Collapse state
+  const [collapsedSections, setCollapsedSections] = useState<Record<string, boolean>>({});
+  const toggleSection = (key: string) => {
+    setCollapsedSections((prev) => ({ ...prev, [key]: !prev[key] }));
+  };
 
   useFocusEffect(
     useCallback(() => {
@@ -335,11 +362,12 @@ export default function DoctorCaseDetailScreen() {
         <View style={{ backgroundColor: "#f1f5f9", borderRadius: 8, padding: 10, marginBottom: 12, borderWidth: 1, borderColor: SharedColors.border }}><Text style={{ fontSize: 11, color: SharedColors.slate, lineHeight: 16 }}>Do not provide specific diagnoses or treatment plans via chat or quotes. Only provide estimates pending in-person examination.</Text></View>
 
         {/* ════════════════ SECTION: Patient Info ════════════════ */}
-        <View style={s.sectionHeader}>
-          <Text style={s.sectionHeaderText}>Patient Info</Text>
-        </View>
+        <TouchableOpacity style={s.sectionHeader} onPress={() => toggleSection("patientInfo")} activeOpacity={0.7}>
+          <Text style={s.sectionHeaderText}>{collapsedSections["patientInfo"] ? "▸" : "▾"} Patient Info</Text>
+        </TouchableOpacity>
 
             {/* Basic Info */}
+            {!collapsedSections["patientInfo"] && (
             <View style={s.infoCard}>
               <Text style={s.infoLabel}>PATIENT INFO</Text>
               <View style={s.infoRow}>
@@ -373,11 +401,15 @@ export default function DoctorCaseDetailScreen() {
                 </View>
               )}
             </View>
+            )}
 
             {/* Dental Issues */}
             {caseData?.dentalIssues && caseData.dentalIssues.length > 0 && (
               <View style={s.infoCard}>
-                <Text style={s.infoLabel}>DENTAL ISSUES</Text>
+                <TouchableOpacity onPress={() => toggleSection("dentalIssues")} activeOpacity={0.7}>
+                  <Text style={s.infoLabel}>{collapsedSections["dentalIssues"] ? "▸" : "▾"} DENTAL ISSUES</Text>
+                </TouchableOpacity>
+                {!collapsedSections["dentalIssues"] && (
                 <View style={s.issueTagWrap}>
                   {caseData.dentalIssues.map((issue) => (
                     <View key={issue} style={s.issueTag}>
@@ -385,6 +417,7 @@ export default function DoctorCaseDetailScreen() {
                     </View>
                   ))}
                 </View>
+                )}
               </View>
             )}
 
@@ -431,119 +464,129 @@ export default function DoctorCaseDetailScreen() {
             {/* ── Patient Uploaded Files ── */}
             {(() => {
               const hasFileURIs = patientFiles.xrays.length > 0 || patientFiles.treatmentPlans.length > 0 || patientFiles.photos.length > 0;
+              const totalFileCount = hasFileURIs
+                ? patientFiles.xrays.length + patientFiles.treatmentPlans.length + patientFiles.photos.length
+                : (() => {
+                    const fc = caseData?.filesCount;
+                    if (!fc) return 0;
+                    return typeof fc === "object"
+                      ? Object.values(fc).reduce((a: number, b: number) => a + b, 0)
+                      : typeof fc === "number" ? fc : 0;
+                  })();
 
-              if (!hasFileURIs) {
-                // Fallback: show count only
-                const fc = caseData?.filesCount;
-                if (!fc) return null;
-                const countTotal = typeof fc === "object"
-                  ? Object.values(fc).reduce((a: number, b: number) => a + b, 0)
-                  : typeof fc === "number" ? fc : 0;
-                if (countTotal <= 0) return null;
-                return (
-                  <View style={s.infoCard}>
-                    <Text style={s.infoLabel}>UPLOADED FILES</Text>
-                    <Text style={s.infoSub}>📎 {countTotal} file(s) attached</Text>
-                  </View>
-                );
-              }
+              if (totalFileCount <= 0 && !hasFileURIs) return null;
 
               return (
                 <>
-                  {/* Save All Button */}
-                  <TouchableOpacity
-                    style={s.saveAllBtn}
-                    onPress={async () => {
-                      try {
-                        const { status } = await MediaLibrary.requestPermissionsAsync();
-                        if (status !== "granted") {
-                          Alert.alert("Permission needed", "Please allow photo library access.");
-                          return;
-                        }
-                        const allUris = [
-                          ...patientFiles.xrays,
-                          ...patientFiles.treatmentPlans,
-                          ...patientFiles.photos,
-                        ];
-                        let saved = 0;
-                        for (const uri of allUris) {
-                          try {
-                            await MediaLibrary.saveToLibraryAsync(uri);
-                            saved++;
-                          } catch {}
-                        }
-                        Alert.alert("✅ Done", `${saved} image(s) saved to your photo library.`);
-                      } catch {
-                        Alert.alert("Error", "Failed to save images.");
-                      }
-                    }}
-                    activeOpacity={0.7}
-                  >
-                    <Text style={s.saveAllBtnText}>
-                      💾 Save All Photos ({
-                        patientFiles.xrays.length + patientFiles.treatmentPlans.length + patientFiles.photos.length
-                      })
-                    </Text>
+                  {/* Files section header — always shows count badge */}
+                  <TouchableOpacity onPress={() => toggleSection("files")} activeOpacity={0.7} style={s.infoCard}>
+                    <Text style={s.infoLabel}>{collapsedSections["files"] ? "▸" : "▾"} Files & X-rays ({totalFileCount})</Text>
                   </TouchableOpacity>
 
-                  {patientFiles.xrays.length > 0 && (
-                    <View style={s.filesCard}>
-                      <View style={s.filesHeader}>
-                        <Text style={s.filesIcon}>🦷</Text>
-                        <Text style={s.filesTitle}>X-RAYS</Text>
-                        <View style={s.filesCountBadge}>
-                          <Text style={s.filesCountText}>{patientFiles.xrays.length}</Text>
-                        </View>
-                      </View>
-                      <View style={s.filesGrid}>
-                        {patientFiles.xrays.map((uri, i) => (
-                          <TouchableOpacity key={`xray-${i}`} style={s.fileThumbWrap} onPress={() => setViewerImage(uri)} activeOpacity={0.8}>
-                            <Image source={{ uri }} style={s.fileThumb} />
-                            <View style={s.fileThumbOverlay}><Text style={s.fileThumbOverlayText}>🔍</Text></View>
-                          </TouchableOpacity>
-                        ))}
-                      </View>
+                  {!collapsedSections["files"] && (
+                  <>
+                  {!hasFileURIs ? (
+                    <View style={s.infoCard}>
+                      <Text style={s.infoSub}>📎 {totalFileCount} file(s) attached</Text>
                     </View>
-                  )}
+                  ) : (
+                    <>
+                      {/* Save All Button */}
+                      <TouchableOpacity
+                        style={s.saveAllBtn}
+                        onPress={async () => {
+                          try {
+                            const { status } = await MediaLibrary.requestPermissionsAsync();
+                            if (status !== "granted") {
+                              Alert.alert("Permission needed", "Please allow photo library access.");
+                              return;
+                            }
+                            const allUris = [
+                              ...patientFiles.xrays,
+                              ...patientFiles.treatmentPlans,
+                              ...patientFiles.photos,
+                            ];
+                            let saved = 0;
+                            for (const uri of allUris) {
+                              try {
+                                await MediaLibrary.saveToLibraryAsync(uri);
+                                saved++;
+                              } catch {}
+                            }
+                            Alert.alert("✅ Done", `${saved} image(s) saved to your photo library.`);
+                          } catch {
+                            Alert.alert("Error", "Failed to save images.");
+                          }
+                        }}
+                        activeOpacity={0.7}
+                      >
+                        <Text style={s.saveAllBtnText}>
+                          💾 Save All Photos ({totalFileCount})
+                        </Text>
+                      </TouchableOpacity>
 
-                  {patientFiles.treatmentPlans.length > 0 && (
-                    <View style={s.filesCard}>
-                      <View style={s.filesHeader}>
-                        <Text style={s.filesIcon}>📋</Text>
-                        <Text style={s.filesTitle}>TREATMENT PLANS</Text>
-                        <View style={s.filesCountBadge}>
-                          <Text style={s.filesCountText}>{patientFiles.treatmentPlans.length}</Text>
+                      {patientFiles.xrays.length > 0 && (
+                        <View style={s.filesCard}>
+                          <View style={s.filesHeader}>
+                            <Text style={s.filesIcon}>🦷</Text>
+                            <Text style={s.filesTitle}>X-RAYS</Text>
+                            <View style={s.filesCountBadge}>
+                              <Text style={s.filesCountText}>{patientFiles.xrays.length}</Text>
+                            </View>
+                          </View>
+                          <View style={s.filesGrid}>
+                            {patientFiles.xrays.map((uri, i) => (
+                              <TouchableOpacity key={`xray-${i}`} style={s.fileThumbWrap} onPress={() => setViewerImage(uri)} activeOpacity={0.8}>
+                                <Image source={{ uri }} style={s.fileThumb} />
+                                <View style={s.fileThumbOverlay}><Text style={s.fileThumbOverlayText}>🔍</Text></View>
+                              </TouchableOpacity>
+                            ))}
+                          </View>
                         </View>
-                      </View>
-                      <View style={s.filesGrid}>
-                        {patientFiles.treatmentPlans.map((uri, i) => (
-                          <TouchableOpacity key={`plan-${i}`} style={s.fileThumbWrap} onPress={() => setViewerImage(uri)} activeOpacity={0.8}>
-                            <Image source={{ uri }} style={s.fileThumb} />
-                            <View style={s.fileThumbOverlay}><Text style={s.fileThumbOverlayText}>🔍</Text></View>
-                          </TouchableOpacity>
-                        ))}
-                      </View>
-                    </View>
-                  )}
+                      )}
 
-                  {patientFiles.photos.length > 0 && (
-                    <View style={s.filesCard}>
-                      <View style={s.filesHeader}>
-                        <Text style={s.filesIcon}>📷</Text>
-                        <Text style={s.filesTitle}>PATIENT PHOTOS</Text>
-                        <View style={s.filesCountBadge}>
-                          <Text style={s.filesCountText}>{patientFiles.photos.length}</Text>
+                      {patientFiles.treatmentPlans.length > 0 && (
+                        <View style={s.filesCard}>
+                          <View style={s.filesHeader}>
+                            <Text style={s.filesIcon}>📋</Text>
+                            <Text style={s.filesTitle}>TREATMENT PLANS</Text>
+                            <View style={s.filesCountBadge}>
+                              <Text style={s.filesCountText}>{patientFiles.treatmentPlans.length}</Text>
+                            </View>
+                          </View>
+                          <View style={s.filesGrid}>
+                            {patientFiles.treatmentPlans.map((uri, i) => (
+                              <TouchableOpacity key={`plan-${i}`} style={s.fileThumbWrap} onPress={() => setViewerImage(uri)} activeOpacity={0.8}>
+                                <Image source={{ uri }} style={s.fileThumb} />
+                                <View style={s.fileThumbOverlay}><Text style={s.fileThumbOverlayText}>🔍</Text></View>
+                              </TouchableOpacity>
+                            ))}
+                          </View>
                         </View>
-                      </View>
-                      <View style={s.filesGrid}>
-                        {patientFiles.photos.map((uri, i) => (
-                          <TouchableOpacity key={`photo-${i}`} style={s.fileThumbWrap} onPress={() => setViewerImage(uri)} activeOpacity={0.8}>
-                            <Image source={{ uri }} style={s.fileThumb} />
-                            <View style={s.fileThumbOverlay}><Text style={s.fileThumbOverlayText}>🔍</Text></View>
-                          </TouchableOpacity>
-                        ))}
-                      </View>
-                    </View>
+                      )}
+
+                      {patientFiles.photos.length > 0 && (
+                        <View style={s.filesCard}>
+                          <View style={s.filesHeader}>
+                            <Text style={s.filesIcon}>📷</Text>
+                            <Text style={s.filesTitle}>PATIENT PHOTOS</Text>
+                            <View style={s.filesCountBadge}>
+                              <Text style={s.filesCountText}>{patientFiles.photos.length}</Text>
+                            </View>
+                          </View>
+                          <View style={s.filesGrid}>
+                            {patientFiles.photos.map((uri, i) => (
+                              <TouchableOpacity key={`photo-${i}`} style={s.fileThumbWrap} onPress={() => setViewerImage(uri)} activeOpacity={0.8}>
+                                <Image source={{ uri }} style={s.fileThumb} />
+                                <View style={s.fileThumbOverlay}><Text style={s.fileThumbOverlayText}>🔍</Text></View>
+                              </TouchableOpacity>
+                            ))}
+                          </View>
+                        </View>
+                      )}
+                    </>
+                  )}
+                  </>
                   )}
                 </>
               );
@@ -930,6 +973,40 @@ export default function DoctorCaseDetailScreen() {
             <View style={s.infoCard}>
               <Text style={s.infoLabel}>VISIT SETTINGS</Text>
 
+              {/* Preset chips */}
+              <View style={s.presetRow}>
+                {VISIT_PRESETS.slice(0, 3).map((preset) => (
+                  <TouchableOpacity
+                    key={preset.label}
+                    style={s.presetChip}
+                    onPress={() => applyPreset(preset)}
+                    activeOpacity={0.7}
+                  >
+                    <Text style={s.presetChipText}>{preset.label}</Text>
+                  </TouchableOpacity>
+                ))}
+                <TouchableOpacity
+                  style={s.presetChip}
+                  onPress={() => {
+                    const remaining = VISIT_PRESETS.slice(3);
+                    Alert.alert(
+                      "More Presets",
+                      "Select a visit preset:",
+                      [
+                        ...remaining.map((preset) => ({
+                          text: `${preset.label} (${preset.visits} visits)`,
+                          onPress: () => applyPreset(preset),
+                        })),
+                        { text: "Cancel", style: "cancel" as const },
+                      ]
+                    );
+                  }}
+                  activeOpacity={0.7}
+                >
+                  <Text style={s.presetChipText}>More ▾</Text>
+                </TouchableOpacity>
+              </View>
+
               <View style={s.visitsCountCard}>
                 <TouchableOpacity
                   style={s.visitsStepBtn}
@@ -1106,23 +1183,41 @@ export default function DoctorCaseDetailScreen() {
         </>)}
       </ScrollView>
 
-      {/* Bottom — Send Quote (hidden when booked) */}
-      {!isBooked && planItems.length > 0 && (
+      {/* Bottom — Send Quote or Pass */}
+      {!isBooked && (
         <View style={s.bottom}>
-          <TouchableOpacity
-            style={[s.sendBtn, !isComplete && s.sendBtnDisabled]}
-            onPress={handleSendQuote}
-            disabled={!isComplete || loading}
-            activeOpacity={0.85}
-          >
-            {loading ? (
-              <ActivityIndicator color={SharedColors.white} size="small" />
-            ) : (
-              <Text style={s.sendBtnText}>
-                Send Quote{totalPrice > 0 ? ` · $${totalPrice.toLocaleString()}` : ""} →
-              </Text>
-            )}
-          </TouchableOpacity>
+          {planItems.length > 0 ? (
+            <TouchableOpacity
+              style={[s.sendBtn, !isComplete && s.sendBtnDisabled]}
+              onPress={handleSendQuote}
+              disabled={!isComplete || loading}
+              activeOpacity={0.85}
+            >
+              {loading ? (
+                <ActivityIndicator color={SharedColors.white} size="small" />
+              ) : (
+                <Text style={s.sendBtnText}>
+                  Send Quote{totalPrice > 0 ? ` · $${totalPrice.toLocaleString()}` : ""} →
+                </Text>
+              )}
+            </TouchableOpacity>
+          ) : !existingQuote ? (
+            <TouchableOpacity
+              style={{ backgroundColor: "#f1f5f9", borderRadius: 12, paddingVertical: 14, alignItems: "center", borderWidth: 1, borderColor: "#e2e8f0" }}
+              onPress={() => {
+                Alert.alert("Pass on this case?", "This case will be hidden from your dashboard. You can undo this from your profile.", [
+                  { text: "Cancel", style: "cancel" },
+                  { text: "Not Interested", style: "destructive", onPress: async () => {
+                    await store.passCase(caseData!.id);
+                    router.replace("/doctor/dashboard" as any);
+                  }},
+                ]);
+              }}
+              activeOpacity={0.7}
+            >
+              <Text style={{ fontSize: 15, fontWeight: "600", color: "#94a3b8" }}>Not Interested</Text>
+            </TouchableOpacity>
+          ) : null}
         </View>
       )}
     </View>
@@ -1248,6 +1343,19 @@ const s = StyleSheet.create({
     paddingVertical: 14, alignItems: "center",
   },
   saveAllBtnText: { color: SharedColors.white, fontSize: 14, fontWeight: "700" },
+
+  // ── Visit Presets ──
+  presetRow: {
+    flexDirection: "row", flexWrap: "wrap", gap: 8, marginTop: 8, marginBottom: 4,
+  },
+  presetChip: {
+    borderWidth: 1.5, borderColor: DoctorTheme.primary, borderRadius: 20,
+    paddingHorizontal: 12, paddingVertical: 6,
+    backgroundColor: SharedColors.white,
+  },
+  presetChipText: {
+    fontSize: 12, fontWeight: "600", color: DoctorTheme.primary,
+  },
 
   // ── Duration Stepper ──
   // Number of visits stepper

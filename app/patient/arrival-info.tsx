@@ -127,6 +127,7 @@ export default function ArrivalInfoScreen() {
   const [hotelScreenshot, setHotelScreenshot] = useState("");
   const [savedTrips, setSavedTrips] = useState<SavedTrip[]>([]);
   const [showTripPicker, setShowTripPicker] = useState(false);
+  const [step, setStep] = useState(1);
 
   useEffect(() => {
     store.getTrips().then(setSavedTrips);
@@ -314,6 +315,98 @@ export default function ArrivalInfoScreen() {
     setSuccess(true);
   };
 
+  const handleSkipDepartureSave = async () => {
+    if (!booking || !isValid()) return;
+    setSaving(true);
+
+    const arrivalInfo: ArrivalInfo = {
+      flightNumber, airline, arrivalDate, arrivalTime,
+      terminal, passengers: parseInt(passengers) || 1,
+      notes, pickupRequested,
+      depAirline: undefined,
+      depFlightNumber: undefined,
+      depFlightDate: undefined,
+      depFlightTime: undefined,
+      depTerminal: undefined,
+      hotelName: hotelName || undefined,
+      hotelAddress: hotelAddress || undefined,
+      checkInDate: checkInDate || undefined,
+      checkOutDate: checkOutDate || undefined,
+      confirmationNumber: confirmationNumber || undefined,
+      arrivalScreenshot: arrivalScreenshot || undefined,
+      departureScreenshot: undefined,
+      hotelScreenshot: hotelScreenshot || undefined,
+    };
+
+    const updatedTripInfos = [...(booking.tripInfos || [])];
+    if (tripIndex >= 0) {
+      while (updatedTripInfos.length <= tripIndex) {
+        updatedTripInfos.push({} as ArrivalInfo);
+      }
+      updatedTripInfos[tripIndex] = arrivalInfo;
+    }
+    const updated = {
+      ...booking,
+      arrivalInfo: tripIndex === 0 ? arrivalInfo : booking.arrivalInfo || arrivalInfo,
+      ...(tripIndex >= 0 ? { tripInfos: updatedTripInfos } : {}),
+    };
+    const bookings = await store.getBookings();
+    const idx = bookings.findIndex((b) => b.id === booking.id);
+    if (idx >= 0) {
+      bookings[idx] = updated;
+      const AsyncStorage = (await import("@react-native-async-storage/async-storage")).default;
+      await AsyncStorage.setItem("dr_bookings", JSON.stringify(bookings));
+    }
+
+    const tripId = tripIndex >= 0 ? `trip_bk_${booking.id}_${tripIndex}` : `trip_bk_${booking.id}`;
+    const now2 = new Date().toISOString();
+    const savedTrip: SavedTrip = {
+      id: tripId,
+      caseId: booking.caseId,
+      tripIndex: tripIndex >= 0 ? tripIndex : 0,
+      airline: airline || flightNumber,
+      flightNumber,
+      flightDate: arrivalDate,
+      flightTime: arrivalTime,
+      terminal: terminal || undefined,
+      hotelName: hotelName || undefined,
+      hotelAddress: hotelAddress || undefined,
+      checkInDate: checkInDate || undefined,
+      checkOutDate: checkOutDate || undefined,
+      confirmationNumber: confirmationNumber || undefined,
+      arrivalScreenshot: arrivalScreenshot || undefined,
+      hotelScreenshot: hotelScreenshot || undefined,
+      createdAt: now2,
+      updatedAt: now2,
+    };
+    await store.saveTrip(savedTrip);
+
+    await store.addNotification({
+      role: "doctor",
+      type: "reminder",
+      title: "Patient Arrival Info",
+      body: `Your patient has submitted arrival details. Flight ${flightNumber} arriving ${formatDateDisplay(arrivalDate)} at ${arrivalTime}.`,
+      icon: "🛬",
+      route: `/doctor/case-detail?caseId=${booking.caseId}`,
+    });
+
+    const allBookings2 = await store.getBookings();
+    const bIdx = allBookings2.findIndex((b) => b.id === booking.id);
+    if (bIdx >= 0) {
+      allBookings2[bIdx] = {
+        ...allBookings2[bIdx],
+        arrivalInfo: tripIndex === 0 ? arrivalInfo : allBookings2[bIdx].arrivalInfo || arrivalInfo,
+        ...(tripIndex >= 0 ? { tripInfos: updatedTripInfos } : {}),
+        status: "flight_submitted" as any,
+      };
+      const AS = (await import("@react-native-async-storage/async-storage")).default;
+      await AS.setItem("dr_bookings", JSON.stringify(allBookings2));
+    }
+
+    setSaving(false);
+    setSuccess(true);
+  };
+
   const formatTimeSlot = (slot: string) => {
     if (!slot) return "";
     if (/[APap][Mm]/.test(slot)) return slot;
@@ -446,447 +539,511 @@ export default function ArrivalInfoScreen() {
             </View>
           </View>
 
-          {/* ── Arrival Flight Section ── */}
-          <Text style={st.sectionTitle}>🛬 Arrival Flight</Text>
-
-          {/* ── Arrival Screenshot Upload ── */}
-          {arrivalScreenshot ? (
-            <View style={st.ssUploaded}>
-              <Text style={st.ssCheckIcon}>✅</Text>
-              <Text style={st.ssUploadedText}>Screenshot uploaded</Text>
-              <TouchableOpacity style={st.ssReuploadBtn} onPress={() => pickScreenshot(setArrivalScreenshot)} activeOpacity={0.7}>
-                <Text style={st.ssReuploadText}>Reupload</Text>
-              </TouchableOpacity>
-            </View>
-          ) : (
-            <View style={st.ssCard}>
-              <Text style={st.ssGuide}>📷  Upload a screenshot of your arrival flight details for the AI to analyze and fill in the blanks for you</Text>
-              <TouchableOpacity style={st.ssUploadBtn} onPress={() => pickScreenshot(setArrivalScreenshot)} activeOpacity={0.7}>
-                <Text style={st.ssUploadBtnText}>+ Upload Photo</Text>
-              </TouchableOpacity>
-            </View>
-          )}
-
-          {/* ── Flight Number ── */}
-          <View style={st.field}>
-            <Text style={st.fieldLabel}>Flight Number <Text style={st.req}>*</Text></Text>
-            <View style={st.flightInputRow}>
-              <Text style={st.flightIcon}>🛫</Text>
-              <TextInput
-                style={st.flightInput}
-                value={flightNumber}
-                onChangeText={(t) => setFlightNumber(formatFlightNumber(t))}
-                placeholder="e.g. KE001"
-                placeholderTextColor={SharedColors.faint}
-                autoCapitalize="characters"
-                maxLength={8}
-              />
-            </View>
+          {/* ── Step Progress Indicator ── */}
+          <View style={st.progressRow}>
+            {[
+              { num: 1, label: "Arrival Flight" },
+              { num: 2, label: "Accommodation" },
+              { num: 3, label: "Return Flight" },
+            ].map((s, i) => (
+              <React.Fragment key={s.num}>
+                {i > 0 && (
+                  <View style={[st.progressLine, step > s.num - 1 ? st.progressLineActive : null]} />
+                )}
+                <View style={st.progressStep}>
+                  <View
+                    style={[
+                      st.progressDot,
+                      step === s.num && st.progressDotActive,
+                      step > s.num && st.progressDotDone,
+                    ]}
+                  >
+                    {step > s.num ? (
+                      <Text style={st.progressCheckmark}>{"✓"}</Text>
+                    ) : (
+                      <Text
+                        style={[
+                          st.progressDotNum,
+                          step === s.num && st.progressDotNumActive,
+                        ]}
+                      >
+                        {s.num}
+                      </Text>
+                    )}
+                  </View>
+                  <Text
+                    style={[
+                      st.progressLabel,
+                      step === s.num && st.progressLabelActive,
+                    ]}
+                  >
+                    {s.label}
+                  </Text>
+                </View>
+              </React.Fragment>
+            ))}
           </View>
 
-          {/* ── Airline ── */}
-          <View style={st.field}>
-            <Text style={st.fieldLabel}>Airline</Text>
-            <TextInput
-              style={st.input}
-              value={airline}
-              onChangeText={(t) => { setAirline(t); setShowAirlines(true); }}
-              onFocus={() => setShowAirlines(true)}
-              placeholder="e.g. Korean Air"
-              placeholderTextColor={SharedColors.faint}
-            />
-            {showAirlines && (() => {
-              const q = airline.toLowerCase().trim();
-              let filtered: string[];
-              if (q.length === 0) {
-                // Show popular airlines when empty
-                filtered = AIRLINES.slice(0, 12);
-              } else {
-                const starts = AIRLINES.filter((a) =>
-                  a.toLowerCase().startsWith(q) && a.toLowerCase() !== q
-                );
-                const contains = AIRLINES.filter((a) =>
-                  !a.toLowerCase().startsWith(q) && a.toLowerCase().includes(q) && a.toLowerCase() !== q
-                );
-                filtered = [...starts, ...contains].slice(0, 12);
-              }
-              if (filtered.length === 0) return null;
-              return (
-                <ScrollView style={st.dropList} keyboardShouldPersistTaps="handled" nestedScrollEnabled>
-                  {filtered.map((a) => (
+          {/* ══════════ STEP 1: Arrival Flight ══════════ */}
+          {step === 1 && (
+            <>
+              {/* ── Load from saved trip ── */}
+              {savedTrips.length > 0 && (
+                <TouchableOpacity style={st.loadTripBtn} onPress={() => setShowTripPicker(true)}>
+                  <Text style={{ fontSize: 16 }}>📂</Text>
+                  <Text style={st.loadTripText}>Load from saved trip</Text>
+                  <Text style={st.loadTripCount}>{savedTrips.length} saved</Text>
+                </TouchableOpacity>
+              )}
+
+              <Text style={st.sectionTitle}>🛬 Arrival Flight</Text>
+
+              {/* ── Arrival Screenshot Upload ── */}
+              {arrivalScreenshot ? (
+                <View style={st.ssUploaded}>
+                  <Text style={st.ssCheckIcon}>✅</Text>
+                  <Text style={st.ssUploadedText}>Screenshot uploaded</Text>
+                  <TouchableOpacity style={st.ssReuploadBtn} onPress={() => pickScreenshot(setArrivalScreenshot)} activeOpacity={0.7}>
+                    <Text style={st.ssReuploadText}>Reupload</Text>
+                  </TouchableOpacity>
+                </View>
+              ) : (
+                <View style={st.ssCard}>
+                  <Text style={st.ssGuide}>📷  Upload a screenshot of your arrival flight details for the AI to analyze and fill in the blanks for you</Text>
+                  <TouchableOpacity style={st.ssUploadBtn} onPress={() => pickScreenshot(setArrivalScreenshot)} activeOpacity={0.7}>
+                    <Text style={st.ssUploadBtnText}>+ Upload Photo</Text>
+                  </TouchableOpacity>
+                </View>
+              )}
+
+              {/* ── Flight Number ── */}
+              <View style={st.field}>
+                <Text style={st.fieldLabel}>Flight Number <Text style={st.req}>*</Text></Text>
+                <View style={st.flightInputRow}>
+                  <Text style={st.flightIcon}>🛫</Text>
+                  <TextInput
+                    style={st.flightInput}
+                    value={flightNumber}
+                    onChangeText={(t) => setFlightNumber(formatFlightNumber(t))}
+                    placeholder="e.g. KE001"
+                    placeholderTextColor={SharedColors.faint}
+                    autoCapitalize="characters"
+                    maxLength={8}
+                  />
+                </View>
+              </View>
+
+              {/* ── Airline ── */}
+              <View style={st.field}>
+                <Text style={st.fieldLabel}>Airline</Text>
+                <TextInput
+                  style={st.input}
+                  value={airline}
+                  onChangeText={(t) => { setAirline(t); setShowAirlines(true); }}
+                  onFocus={() => setShowAirlines(true)}
+                  placeholder="e.g. Korean Air"
+                  placeholderTextColor={SharedColors.faint}
+                />
+                {showAirlines && (() => {
+                  const q = airline.toLowerCase().trim();
+                  let filtered: string[];
+                  if (q.length === 0) {
+                    filtered = AIRLINES.slice(0, 12);
+                  } else {
+                    const starts = AIRLINES.filter((a) =>
+                      a.toLowerCase().startsWith(q) && a.toLowerCase() !== q
+                    );
+                    const contains = AIRLINES.filter((a) =>
+                      !a.toLowerCase().startsWith(q) && a.toLowerCase().includes(q) && a.toLowerCase() !== q
+                    );
+                    filtered = [...starts, ...contains].slice(0, 12);
+                  }
+                  if (filtered.length === 0) return null;
+                  return (
+                    <ScrollView style={st.dropList} keyboardShouldPersistTaps="handled" nestedScrollEnabled>
+                      {filtered.map((a) => (
+                        <TouchableOpacity
+                          key={a}
+                          style={st.dropItem}
+                          onPress={() => { setAirline(a); setShowAirlines(false); }}
+                        >
+                          <Text style={st.dropText}>{a}</Text>
+                        </TouchableOpacity>
+                      ))}
+                    </ScrollView>
+                  );
+                })()}
+              </View>
+
+              {/* ── Arrival Date ── */}
+              <View style={st.field}>
+                <Text style={st.fieldLabel}>Arrival Date <Text style={st.req}>*</Text></Text>
+                <TextInput
+                  style={st.input}
+                  value={arrivalDate}
+                  onChangeText={(t) => {
+                    const digits = t.replace(/\D/g, "");
+                    if (digits.length <= 4) setArrivalDate(digits);
+                    else if (digits.length <= 6) setArrivalDate(digits.slice(0,4) + "-" + digits.slice(4));
+                    else setArrivalDate(digits.slice(0,4) + "-" + digits.slice(4,6) + "-" + digits.slice(6,8));
+                  }}
+                  placeholder="YYYY-MM-DD"
+                  placeholderTextColor={SharedColors.faint}
+                  keyboardType="number-pad"
+                  maxLength={10}
+                />
+                {arrivalDate && arrivalDate.length === 10 && (
+                  <Text style={st.datePreview}>{formatDateDisplay(arrivalDate)}</Text>
+                )}
+              </View>
+
+              {/* ── Arrival Time ── */}
+              <View style={st.field}>
+                <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
+                  <Text style={st.fieldLabel}>Estimated Time of Arrival <Text style={st.req}>*</Text></Text>
+                  {isTimeInvalid && <Text style={st.timeError}>Invalid time (max 23:59)</Text>}
+                </View>
+                <View style={st.flightInputRow}>
+                  <Text style={st.flightIcon}>🕐</Text>
+                  <TextInput
+                    style={st.flightInput}
+                    value={arrivalTime}
+                    onChangeText={(t) => {
+                      const digits = t.replace(/\D/g, "");
+                      if (digits.length <= 2) setArrivalTime(digits);
+                      else setArrivalTime(digits.slice(0, 2) + ":" + digits.slice(2, 4));
+                    }}
+                    placeholder="HH:MM (e.g. 14:30)"
+                    placeholderTextColor={SharedColors.faint}
+                    keyboardType="number-pad"
+                    maxLength={5}
+                  />
+                </View>
+                {arrivalTime && arrivalTime.includes(":") && arrivalTime.length === 5 && (
+                  <Text style={st.datePreview}>{formatTimeSlot(arrivalTime)}</Text>
+                )}
+              </View>
+
+              {/* ── Airport ── */}
+              <View style={st.field}>
+                <Text style={st.fieldLabel}>Arrival Airport</Text>
+                <View style={st.termRow}>
+                  {[
+                    { code: "ICN", name: "Incheon (ICN)" },
+                    { code: "GMP", name: "Gimpo (GMP)" },
+                    { code: "PUS", name: "Busan (PUS)" },
+                  ].map((a) => (
                     <TouchableOpacity
-                      key={a}
-                      style={st.dropItem}
-                      onPress={() => { setAirline(a); setShowAirlines(false); }}
+                      key={a.code}
+                      style={[st.termChip, airport === a.code && st.termChipActive]}
+                      onPress={() => { setAirport(a.code); if (a.code !== "ICN") setTerminal(""); }}
                     >
-                      <Text style={st.dropText}>{a}</Text>
+                      <Text style={[st.termText, airport === a.code && st.termTextActive]}>{a.name}</Text>
                     </TouchableOpacity>
                   ))}
-                </ScrollView>
-              );
-            })()}
-          </View>
+                </View>
+              </View>
 
-          {/* ── Arrival Date ── */}
-          <View style={st.field}>
-            <Text style={st.fieldLabel}>Arrival Date <Text style={st.req}>*</Text></Text>
-            <TextInput
-              style={st.input}
-              value={arrivalDate}
-              onChangeText={(t) => {
-                const digits = t.replace(/\D/g, "");
-                if (digits.length <= 4) setArrivalDate(digits);
-                else if (digits.length <= 6) setArrivalDate(digits.slice(0,4) + "-" + digits.slice(4));
-                else setArrivalDate(digits.slice(0,4) + "-" + digits.slice(4,6) + "-" + digits.slice(6,8));
-              }}
-              placeholder="YYYY-MM-DD"
-              placeholderTextColor={SharedColors.faint}
-              keyboardType="number-pad"
-              maxLength={10}
-            />
-            {arrivalDate && arrivalDate.length === 10 && (
-              <Text style={st.datePreview}>{formatDateDisplay(arrivalDate)}</Text>
-            )}
-          </View>
+              {/* ── Terminal (ICN only) ── */}
+              {airport === "ICN" && (
+                <View style={st.field}>
+                  <Text style={st.fieldLabel}>Terminal</Text>
+                  <View style={st.termRow}>
+                    {["Terminal 1", "Terminal 2"].map((t) => (
+                      <TouchableOpacity
+                        key={t}
+                        style={[st.termChip, terminal === t && st.termChipActive]}
+                        onPress={() => setTerminal(terminal === t ? "" : t)}
+                      >
+                        <Text style={[st.termText, terminal === t && st.termTextActive]}>{t}</Text>
+                      </TouchableOpacity>
+                    ))}
+                  </View>
+                </View>
+              )}
+            </>
+          )}
 
-          {/* ── Arrival Time ── */}
-          <View style={st.field}>
-            <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
-              <Text style={st.fieldLabel}>Estimated Time of Arrival <Text style={st.req}>*</Text></Text>
-              {isTimeInvalid && <Text style={st.timeError}>Invalid time (max 23:59)</Text>}
-            </View>
-            <View style={st.flightInputRow}>
-              <Text style={st.flightIcon}>🕐</Text>
-              <TextInput
-                style={st.flightInput}
-                value={arrivalTime}
-                onChangeText={(t) => {
-                  const digits = t.replace(/\D/g, "");
-                  if (digits.length <= 2) setArrivalTime(digits);
-                  else setArrivalTime(digits.slice(0, 2) + ":" + digits.slice(2, 4));
-                }}
-                placeholder="HH:MM (e.g. 14:30)"
-                placeholderTextColor={SharedColors.faint}
-                keyboardType="number-pad"
-                maxLength={5}
-              />
-            </View>
-            {arrivalTime && arrivalTime.includes(":") && arrivalTime.length === 5 && (
-              <Text style={st.datePreview}>{formatTimeSlot(arrivalTime)}</Text>
-            )}
-          </View>
+          {/* ══════════ STEP 2: Accommodation & Preferences ══════════ */}
+          {step === 2 && (
+            <>
+              <Text style={st.sectionTitle}>🏨 Accommodation</Text>
 
-          {/* ── Airport ── */}
-          <View style={st.field}>
-            <Text style={st.fieldLabel}>Arrival Airport</Text>
-            <View style={st.termRow}>
-              {[
-                { code: "ICN", name: "Incheon (ICN)" },
-                { code: "GMP", name: "Gimpo (GMP)" },
-                { code: "PUS", name: "Busan (PUS)" },
-              ].map((a) => (
-                <TouchableOpacity
-                  key={a.code}
-                  style={[st.termChip, airport === a.code && st.termChipActive]}
-                  onPress={() => { setAirport(a.code); if (a.code !== "ICN") setTerminal(""); }}
-                >
-                  <Text style={[st.termText, airport === a.code && st.termTextActive]}>{a.name}</Text>
-                </TouchableOpacity>
-              ))}
-            </View>
-          </View>
-
-          {/* ── Terminal (ICN only) ── */}
-          {airport === "ICN" && (
-            <View style={st.field}>
-              <Text style={st.fieldLabel}>Terminal</Text>
-              <View style={st.termRow}>
-                {["Terminal 1", "Terminal 2"].map((t) => (
-                  <TouchableOpacity
-                    key={t}
-                    style={[st.termChip, terminal === t && st.termChipActive]}
-                    onPress={() => setTerminal(terminal === t ? "" : t)}
-                  >
-                    <Text style={[st.termText, terminal === t && st.termTextActive]}>{t}</Text>
+              {/* ── Hotel Screenshot Upload ── */}
+              {hotelScreenshot ? (
+                <View style={st.ssUploaded}>
+                  <Text style={st.ssCheckIcon}>✅</Text>
+                  <Text style={st.ssUploadedText}>Screenshot uploaded</Text>
+                  <TouchableOpacity style={st.ssReuploadBtn} onPress={() => pickScreenshot(setHotelScreenshot)} activeOpacity={0.7}>
+                    <Text style={st.ssReuploadText}>Reupload</Text>
                   </TouchableOpacity>
-                ))}
+                </View>
+              ) : (
+                <View style={st.ssCard}>
+                  <Text style={st.ssGuide}>📷  Upload a screenshot of your hotel booking details for the AI to analyze and fill in the blanks for you</Text>
+                  <TouchableOpacity style={st.ssUploadBtn} onPress={() => pickScreenshot(setHotelScreenshot)} activeOpacity={0.7}>
+                    <Text style={st.ssUploadBtnText}>+ Upload Photo</Text>
+                  </TouchableOpacity>
+                </View>
+              )}
+
+              <View style={st.field}>
+                <Text style={st.fieldLabel}>Hotel Name</Text>
+                <TextInput
+                  style={st.input}
+                  value={hotelName}
+                  onChangeText={setHotelName}
+                  placeholder="e.g. Lotte Hotel Seoul"
+                  placeholderTextColor={SharedColors.faint}
+                />
               </View>
-            </View>
+
+              <View style={st.field}>
+                <Text style={st.fieldLabel}>Address</Text>
+                <TextInput
+                  style={st.input}
+                  value={hotelAddress}
+                  onChangeText={setHotelAddress}
+                  placeholder="Hotel address"
+                  placeholderTextColor={SharedColors.faint}
+                />
+              </View>
+
+              <View style={st.field}>
+                <Text style={st.fieldLabel}>Check-in Date</Text>
+                <TextInput
+                  style={st.input}
+                  value={checkInDate}
+                  onChangeText={(t) => {
+                    const digits = t.replace(/\D/g, "");
+                    if (digits.length <= 4) setCheckInDate(digits);
+                    else if (digits.length <= 6) setCheckInDate(digits.slice(0,4) + "-" + digits.slice(4));
+                    else setCheckInDate(digits.slice(0,4) + "-" + digits.slice(4,6) + "-" + digits.slice(6,8));
+                  }}
+                  placeholder="YYYY-MM-DD"
+                  placeholderTextColor={SharedColors.faint}
+                  keyboardType="number-pad"
+                  maxLength={10}
+                />
+              </View>
+
+              <View style={st.field}>
+                <Text style={st.fieldLabel}>Check-out Date</Text>
+                <TextInput
+                  style={st.input}
+                  value={checkOutDate}
+                  onChangeText={(t) => {
+                    const digits = t.replace(/\D/g, "");
+                    if (digits.length <= 4) setCheckOutDate(digits);
+                    else if (digits.length <= 6) setCheckOutDate(digits.slice(0,4) + "-" + digits.slice(4));
+                    else setCheckOutDate(digits.slice(0,4) + "-" + digits.slice(4,6) + "-" + digits.slice(6,8));
+                  }}
+                  placeholder="YYYY-MM-DD"
+                  placeholderTextColor={SharedColors.faint}
+                  keyboardType="number-pad"
+                  maxLength={10}
+                />
+              </View>
+
+              <View style={st.field}>
+                <Text style={st.fieldLabel}>Confirmation Number</Text>
+                <TextInput
+                  style={st.input}
+                  value={confirmationNumber}
+                  onChangeText={setConfirmationNumber}
+                  placeholder="Booking confirmation #"
+                  placeholderTextColor={SharedColors.faint}
+                />
+              </View>
+
+              {/* ── Passengers ── */}
+              <Text style={[st.sectionTitle, { marginTop: 12 }]}>🚗 Pickup & Other</Text>
+
+              <View style={st.field}>
+                <Text style={st.fieldLabel}>Number of Passengers</Text>
+                <View style={st.stepperRow}>
+                  <TouchableOpacity
+                    style={st.stepperBtn}
+                    onPress={() => setPassengers(String(Math.max(1, parseInt(passengers) - 1)))}
+                  >
+                    <Text style={st.stepperBtnText}>−</Text>
+                  </TouchableOpacity>
+                  <View style={st.stepperVal}>
+                    <Text style={st.stepperNum}>{passengers}</Text>
+                    <Text style={st.stepperLabel}>{parseInt(passengers) === 1 ? "person" : "people"}</Text>
+                  </View>
+                  <TouchableOpacity
+                    style={st.stepperBtn}
+                    onPress={() => setPassengers(String(Math.min(10, parseInt(passengers) + 1)))}
+                  >
+                    <Text style={st.stepperBtnText}>+</Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+
+              {/* ── Pickup toggle ── */}
+              <View style={st.field}>
+                <Text style={st.fieldLabel}>Airport Pickup Service</Text>
+                {booking?.serviceTier === "basic" ? (
+                  <View style={{ backgroundColor: SharedColors.amberLight, borderRadius: 10, padding: 14, gap: 4 }}>
+                    <Text style={{ fontSize: 13, fontWeight: "600", color: "#92400e" }}>Not included in Basic plan</Text>
+                    <Text style={{ fontSize: 12, color: "#92400e", lineHeight: 18 }}>
+                      Upgrade to Standard or Premium for airport pickup service.
+                    </Text>
+                  </View>
+                ) : (
+                <View style={st.toggleRow}>
+                  <TouchableOpacity
+                    style={[st.toggleOpt, pickupRequested && st.toggleOptActive]}
+                    onPress={() => setPickupRequested(true)}
+                  >
+                    <Text style={{ fontSize: 18 }}>🚗</Text>
+                    <Text style={[st.toggleLabel, pickupRequested && st.toggleLabelActive]}>
+                      Yes, pick me up
+                    </Text>
+                    <Text style={[st.toggleSub, pickupRequested && { color: "rgba(74,0,128,0.6)" }]}>
+                      Included in your plan
+                    </Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={[st.toggleOpt, !pickupRequested && st.toggleOptInactive]}
+                    onPress={() => setPickupRequested(false)}
+                  >
+                    <Text style={{ fontSize: 18 }}>🚶</Text>
+                    <Text style={[st.toggleLabel, !pickupRequested && { color: SharedColors.navy }]}>
+                      No thanks
+                    </Text>
+                    <Text style={st.toggleSub}>
+                      I'll arrange my own
+                    </Text>
+                  </TouchableOpacity>
+                </View>
+                )}
+                {pickupRequested && booking?.serviceTier !== "basic" && (
+                  <View style={st.pickupNote}>
+                    <Text style={st.pickupNoteText}>
+                      Our driver will meet you at the arrivals gate with a sign. Completely free!
+                    </Text>
+                  </View>
+                )}
+              </View>
+
+              {/* ── Notes ── */}
+              <View style={st.field}>
+                <Text style={st.fieldLabel}>Additional Notes</Text>
+                <TextInput
+                  style={[st.input, { height: 80, textAlignVertical: "top" }]}
+                  value={notes}
+                  onChangeText={setNotes}
+                  placeholder="Special requests, wheelchair assistance, heavy luggage, etc."
+                  placeholderTextColor={SharedColors.faint}
+                  multiline
+                  maxLength={300}
+                />
+                <Text style={st.charCount}>{notes.length}/300</Text>
+              </View>
+            </>
           )}
 
-          {/* ── Departure Flight Section (Optional) ── */}
-          <Text style={[st.sectionTitle, { marginTop: 12 }]}>🛫 Departure Flight <Text style={st.optionalTag}>(Optional)</Text></Text>
+          {/* ══════════ STEP 3: Return Flight ══════════ */}
+          {step === 3 && (
+            <>
+              <Text style={st.sectionTitle}>🛫 Return Flight <Text style={st.optionalTag}>(Optional)</Text></Text>
 
-          {/* ── Departure Screenshot Upload ── */}
-          {departureScreenshot ? (
-            <View style={st.ssUploaded}>
-              <Text style={st.ssCheckIcon}>✅</Text>
-              <Text style={st.ssUploadedText}>Screenshot uploaded</Text>
-              <TouchableOpacity style={st.ssReuploadBtn} onPress={() => pickScreenshot(setDepartureScreenshot)} activeOpacity={0.7}>
-                <Text style={st.ssReuploadText}>Reupload</Text>
-              </TouchableOpacity>
-            </View>
-          ) : (
-            <View style={st.ssCard}>
-              <Text style={st.ssGuide}>📷  Upload a screenshot of your departure flight details for the AI to analyze and fill in the blanks for you</Text>
-              <TouchableOpacity style={st.ssUploadBtn} onPress={() => pickScreenshot(setDepartureScreenshot)} activeOpacity={0.7}>
-                <Text style={st.ssUploadBtnText}>+ Upload Photo</Text>
-              </TouchableOpacity>
-            </View>
+              {/* ── Departure Screenshot Upload ── */}
+              {departureScreenshot ? (
+                <View style={st.ssUploaded}>
+                  <Text style={st.ssCheckIcon}>✅</Text>
+                  <Text style={st.ssUploadedText}>Screenshot uploaded</Text>
+                  <TouchableOpacity style={st.ssReuploadBtn} onPress={() => pickScreenshot(setDepartureScreenshot)} activeOpacity={0.7}>
+                    <Text style={st.ssReuploadText}>Reupload</Text>
+                  </TouchableOpacity>
+                </View>
+              ) : (
+                <View style={st.ssCard}>
+                  <Text style={st.ssGuide}>📷  Upload a screenshot of your departure flight details for the AI to analyze and fill in the blanks for you</Text>
+                  <TouchableOpacity style={st.ssUploadBtn} onPress={() => pickScreenshot(setDepartureScreenshot)} activeOpacity={0.7}>
+                    <Text style={st.ssUploadBtnText}>+ Upload Photo</Text>
+                  </TouchableOpacity>
+                </View>
+              )}
+
+              <View style={st.field}>
+                <Text style={st.fieldLabel}>Airline</Text>
+                <TextInput
+                  style={st.input}
+                  value={depAirline}
+                  onChangeText={setDepAirline}
+                  placeholder="e.g. Korean Air"
+                  placeholderTextColor={SharedColors.faint}
+                />
+              </View>
+
+              <View style={st.field}>
+                <Text style={st.fieldLabel}>Flight Number</Text>
+                <View style={st.flightInputRow}>
+                  <Text style={st.flightIcon}>🛫</Text>
+                  <TextInput
+                    style={st.flightInput}
+                    value={depFlightNumber}
+                    onChangeText={(t) => setDepFlightNumber(formatFlightNumber(t))}
+                    placeholder="e.g. KE002"
+                    placeholderTextColor={SharedColors.faint}
+                    autoCapitalize="characters"
+                    maxLength={8}
+                  />
+                </View>
+              </View>
+
+              <View style={st.field}>
+                <Text style={st.fieldLabel}>Date</Text>
+                <TextInput
+                  style={st.input}
+                  value={depFlightDate}
+                  onChangeText={(t) => {
+                    const digits = t.replace(/\D/g, "");
+                    if (digits.length <= 4) setDepFlightDate(digits);
+                    else if (digits.length <= 6) setDepFlightDate(digits.slice(0,4) + "-" + digits.slice(4));
+                    else setDepFlightDate(digits.slice(0,4) + "-" + digits.slice(4,6) + "-" + digits.slice(6,8));
+                  }}
+                  placeholder="YYYY-MM-DD"
+                  placeholderTextColor={SharedColors.faint}
+                  keyboardType="number-pad"
+                  maxLength={10}
+                />
+              </View>
+
+              <View style={st.field}>
+                <Text style={st.fieldLabel}>Time</Text>
+                <TextInput
+                  style={st.input}
+                  value={depFlightTime}
+                  onChangeText={(t) => {
+                    const digits = t.replace(/\D/g, "");
+                    if (digits.length <= 2) setDepFlightTime(digits);
+                    else setDepFlightTime(digits.slice(0, 2) + ":" + digits.slice(2, 4));
+                  }}
+                  placeholder="HH:MM"
+                  placeholderTextColor={SharedColors.faint}
+                  keyboardType="number-pad"
+                  maxLength={5}
+                />
+              </View>
+
+              <View style={st.field}>
+                <Text style={st.fieldLabel}>Terminal</Text>
+                <TextInput
+                  style={st.input}
+                  value={depTerminal}
+                  onChangeText={setDepTerminal}
+                  placeholder="e.g. Terminal 2"
+                  placeholderTextColor={SharedColors.faint}
+                />
+              </View>
+            </>
           )}
 
-          <View style={st.field}>
-            <Text style={st.fieldLabel}>Airline</Text>
-            <TextInput
-              style={st.input}
-              value={depAirline}
-              onChangeText={setDepAirline}
-              placeholder="e.g. Korean Air"
-              placeholderTextColor={SharedColors.faint}
-            />
-          </View>
-
-          <View style={st.field}>
-            <Text style={st.fieldLabel}>Flight Number</Text>
-            <View style={st.flightInputRow}>
-              <Text style={st.flightIcon}>🛫</Text>
-              <TextInput
-                style={st.flightInput}
-                value={depFlightNumber}
-                onChangeText={(t) => setDepFlightNumber(formatFlightNumber(t))}
-                placeholder="e.g. KE002"
-                placeholderTextColor={SharedColors.faint}
-                autoCapitalize="characters"
-                maxLength={8}
-              />
-            </View>
-          </View>
-
-          <View style={st.field}>
-            <Text style={st.fieldLabel}>Date</Text>
-            <TextInput
-              style={st.input}
-              value={depFlightDate}
-              onChangeText={(t) => {
-                const digits = t.replace(/\D/g, "");
-                if (digits.length <= 4) setDepFlightDate(digits);
-                else if (digits.length <= 6) setDepFlightDate(digits.slice(0,4) + "-" + digits.slice(4));
-                else setDepFlightDate(digits.slice(0,4) + "-" + digits.slice(4,6) + "-" + digits.slice(6,8));
-              }}
-              placeholder="YYYY-MM-DD"
-              placeholderTextColor={SharedColors.faint}
-              keyboardType="number-pad"
-              maxLength={10}
-            />
-          </View>
-
-          <View style={st.field}>
-            <Text style={st.fieldLabel}>Time</Text>
-            <TextInput
-              style={st.input}
-              value={depFlightTime}
-              onChangeText={(t) => {
-                const digits = t.replace(/\D/g, "");
-                if (digits.length <= 2) setDepFlightTime(digits);
-                else setDepFlightTime(digits.slice(0, 2) + ":" + digits.slice(2, 4));
-              }}
-              placeholder="HH:MM"
-              placeholderTextColor={SharedColors.faint}
-              keyboardType="number-pad"
-              maxLength={5}
-            />
-          </View>
-
-          <View style={st.field}>
-            <Text style={st.fieldLabel}>Terminal</Text>
-            <TextInput
-              style={st.input}
-              value={depTerminal}
-              onChangeText={setDepTerminal}
-              placeholder="e.g. Terminal 2"
-              placeholderTextColor={SharedColors.faint}
-            />
-          </View>
-
-          {/* ── Hotel Section (Optional) ── */}
-          <Text style={[st.sectionTitle, { marginTop: 12 }]}>🏨 Hotel Information <Text style={st.optionalTag}>(Optional)</Text></Text>
-
-          {/* ── Hotel Screenshot Upload ── */}
-          {hotelScreenshot ? (
-            <View style={st.ssUploaded}>
-              <Text style={st.ssCheckIcon}>✅</Text>
-              <Text style={st.ssUploadedText}>Screenshot uploaded</Text>
-              <TouchableOpacity style={st.ssReuploadBtn} onPress={() => pickScreenshot(setHotelScreenshot)} activeOpacity={0.7}>
-                <Text style={st.ssReuploadText}>Reupload</Text>
-              </TouchableOpacity>
-            </View>
-          ) : (
-            <View style={st.ssCard}>
-              <Text style={st.ssGuide}>📷  Upload a screenshot of your hotel booking details for the AI to analyze and fill in the blanks for you</Text>
-              <TouchableOpacity style={st.ssUploadBtn} onPress={() => pickScreenshot(setHotelScreenshot)} activeOpacity={0.7}>
-                <Text style={st.ssUploadBtnText}>+ Upload Photo</Text>
-              </TouchableOpacity>
-            </View>
-          )}
-
-          <View style={st.field}>
-            <Text style={st.fieldLabel}>Hotel Name</Text>
-            <TextInput
-              style={st.input}
-              value={hotelName}
-              onChangeText={setHotelName}
-              placeholder="e.g. Lotte Hotel Seoul"
-              placeholderTextColor={SharedColors.faint}
-            />
-          </View>
-
-          <View style={st.field}>
-            <Text style={st.fieldLabel}>Address</Text>
-            <TextInput
-              style={st.input}
-              value={hotelAddress}
-              onChangeText={setHotelAddress}
-              placeholder="Hotel address"
-              placeholderTextColor={SharedColors.faint}
-            />
-          </View>
-
-          <View style={st.field}>
-            <Text style={st.fieldLabel}>Check-in Date</Text>
-            <TextInput
-              style={st.input}
-              value={checkInDate}
-              onChangeText={(t) => {
-                const digits = t.replace(/\D/g, "");
-                if (digits.length <= 4) setCheckInDate(digits);
-                else if (digits.length <= 6) setCheckInDate(digits.slice(0,4) + "-" + digits.slice(4));
-                else setCheckInDate(digits.slice(0,4) + "-" + digits.slice(4,6) + "-" + digits.slice(6,8));
-              }}
-              placeholder="YYYY-MM-DD"
-              placeholderTextColor={SharedColors.faint}
-              keyboardType="number-pad"
-              maxLength={10}
-            />
-          </View>
-
-          <View style={st.field}>
-            <Text style={st.fieldLabel}>Check-out Date</Text>
-            <TextInput
-              style={st.input}
-              value={checkOutDate}
-              onChangeText={(t) => {
-                const digits = t.replace(/\D/g, "");
-                if (digits.length <= 4) setCheckOutDate(digits);
-                else if (digits.length <= 6) setCheckOutDate(digits.slice(0,4) + "-" + digits.slice(4));
-                else setCheckOutDate(digits.slice(0,4) + "-" + digits.slice(4,6) + "-" + digits.slice(6,8));
-              }}
-              placeholder="YYYY-MM-DD"
-              placeholderTextColor={SharedColors.faint}
-              keyboardType="number-pad"
-              maxLength={10}
-            />
-          </View>
-
-          <View style={st.field}>
-            <Text style={st.fieldLabel}>Confirmation Number</Text>
-            <TextInput
-              style={st.input}
-              value={confirmationNumber}
-              onChangeText={setConfirmationNumber}
-              placeholder="Booking confirmation #"
-              placeholderTextColor={SharedColors.faint}
-            />
-          </View>
-
-          {/* ── Pickup & Other ── */}
-          <Text style={[st.sectionTitle, { marginTop: 12 }]}>🚗 Pickup & Other</Text>
-
-          {/* ── Passengers ── */}
-          <View style={st.field}>
-            <Text style={st.fieldLabel}>Number of Passengers</Text>
-            <View style={st.stepperRow}>
-              <TouchableOpacity
-                style={st.stepperBtn}
-                onPress={() => setPassengers(String(Math.max(1, parseInt(passengers) - 1)))}
-              >
-                <Text style={st.stepperBtnText}>−</Text>
-              </TouchableOpacity>
-              <View style={st.stepperVal}>
-                <Text style={st.stepperNum}>{passengers}</Text>
-                <Text style={st.stepperLabel}>{parseInt(passengers) === 1 ? "person" : "people"}</Text>
-              </View>
-              <TouchableOpacity
-                style={st.stepperBtn}
-                onPress={() => setPassengers(String(Math.min(10, parseInt(passengers) + 1)))}
-              >
-                <Text style={st.stepperBtnText}>+</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-
-          {/* ── Pickup toggle ── */}
-          <View style={st.field}>
-            <Text style={st.fieldLabel}>Airport Pickup Service</Text>
-            {booking?.serviceTier === "basic" ? (
-              <View style={{ backgroundColor: SharedColors.amberLight, borderRadius: 10, padding: 14, gap: 4 }}>
-                <Text style={{ fontSize: 13, fontWeight: "600", color: "#92400e" }}>Not included in Basic plan</Text>
-                <Text style={{ fontSize: 12, color: "#92400e", lineHeight: 18 }}>
-                  Upgrade to Standard or Premium for airport pickup service.
-                </Text>
-              </View>
-            ) : (
-            <View style={st.toggleRow}>
-              <TouchableOpacity
-                style={[st.toggleOpt, pickupRequested && st.toggleOptActive]}
-                onPress={() => setPickupRequested(true)}
-              >
-                <Text style={{ fontSize: 18 }}>🚗</Text>
-                <Text style={[st.toggleLabel, pickupRequested && st.toggleLabelActive]}>
-                  Yes, pick me up
-                </Text>
-                <Text style={[st.toggleSub, pickupRequested && { color: "rgba(74,0,128,0.6)" }]}>
-                  Included in your plan
-                </Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={[st.toggleOpt, !pickupRequested && st.toggleOptInactive]}
-                onPress={() => setPickupRequested(false)}
-              >
-                <Text style={{ fontSize: 18 }}>🚶</Text>
-                <Text style={[st.toggleLabel, !pickupRequested && { color: SharedColors.navy }]}>
-                  No thanks
-                </Text>
-                <Text style={st.toggleSub}>
-                  I'll arrange my own
-                </Text>
-              </TouchableOpacity>
-            </View>
-            )}
-            {pickupRequested && booking?.serviceTier !== "basic" && (
-              <View style={st.pickupNote}>
-                <Text style={st.pickupNoteText}>
-                  Our driver will meet you at the arrivals gate with a sign. Completely free!
-                </Text>
-              </View>
-            )}
-          </View>
-
-          {/* ── Notes ── */}
-          <View style={st.field}>
-            <Text style={st.fieldLabel}>Additional Notes</Text>
-            <TextInput
-              style={[st.input, { height: 80, textAlignVertical: "top" }]}
-              value={notes}
-              onChangeText={setNotes}
-              placeholder="Special requests, wheelchair assistance, heavy luggage, etc."
-              placeholderTextColor={SharedColors.faint}
-              multiline
-              maxLength={300}
-            />
-            <Text style={st.charCount}>{notes.length}/300</Text>
-          </View>
-
-          {/* Reschedule & Cancel */}
+          {/* Reschedule & Cancel — show on all steps */}
           {booking && (booking.status === "confirmed" || booking.status === "flight_submitted") && (
             <View style={{ gap: 10, marginTop: 8 }}>
               <TouchableOpacity
@@ -946,21 +1103,69 @@ export default function ArrivalInfoScreen() {
         </ScrollView>
       </KeyboardAvoidingView>
 
-      {/* ── Bottom bar ── */}
+      {/* ── Bottom bar — step-aware navigation ── */}
       <View style={st.bottomBar}>
-        <TouchableOpacity
-          style={[st.submitBtn, { flex: 1 }, !isValid() && { opacity: 0.35 }]}
-          onPress={handleSave}
-          disabled={!isValid() || saving}
-        >
-          {saving ? (
-            <ActivityIndicator color={SharedColors.white} size="small" />
-          ) : (
-            <Text style={st.submitBtnText}>
-              {booking?.arrivalInfo ? "Update" : "Submit"}
-            </Text>
-          )}
-        </TouchableOpacity>
+        {step === 1 && (
+          <TouchableOpacity
+            style={[st.submitBtn, { flex: 1 }, !isValid() && { opacity: 0.35 }]}
+            onPress={() => { if (isValid()) setStep(2); }}
+            disabled={!isValid()}
+          >
+            <Text style={st.submitBtnText}>{"Next  \u2192"}</Text>
+          </TouchableOpacity>
+        )}
+
+        {step === 2 && (
+          <>
+            <TouchableOpacity
+              style={st.backStepBtn}
+              onPress={() => setStep(1)}
+            >
+              <Text style={st.backStepBtnText}>{"\u2190  Back"}</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[st.submitBtn, { flex: 1 }]}
+              onPress={() => setStep(3)}
+            >
+              <Text style={st.submitBtnText}>{"Next  \u2192"}</Text>
+            </TouchableOpacity>
+          </>
+        )}
+
+        {step === 3 && (
+          <View style={{ flex: 1, gap: 8 }}>
+            <View style={{ flexDirection: "row", gap: 12 }}>
+              <TouchableOpacity
+                style={st.backStepBtn}
+                onPress={() => setStep(2)}
+              >
+                <Text style={st.backStepBtnText}>{"\u2190  Back"}</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[st.submitBtn, { flex: 1 }, (!isValid() || saving) && { opacity: 0.35 }]}
+                onPress={handleSave}
+                disabled={!isValid() || saving}
+              >
+                {saving ? (
+                  <ActivityIndicator color={SharedColors.white} size="small" />
+                ) : (
+                  <Text style={st.submitBtnText}>
+                    {booking?.arrivalInfo ? "Update" : "Submit"}
+                  </Text>
+                )}
+              </TouchableOpacity>
+            </View>
+            <TouchableOpacity
+              style={st.skipLink}
+              onPress={handleSkipDepartureSave}
+              disabled={!isValid() || saving}
+            >
+              <Text style={[st.skipLinkText, (!isValid() || saving) && { opacity: 0.35 }]}>
+                {"Skip \u2014 I'll add this later"}
+              </Text>
+            </TouchableOpacity>
+          </View>
+        )}
       </View>
 
       {/* ── Trip Picker Modal ── */}
@@ -1234,6 +1439,64 @@ const st = StyleSheet.create({
   },
   tripPickerMain: { fontSize: 15, fontWeight: "600", color: SharedColors.navy },
   tripPickerSub: { fontSize: 13, color: SharedColors.slate, marginTop: 2 },
+
+  /* ── Progress Indicator ── */
+  progressRow: {
+    flexDirection: "row", alignItems: "center", justifyContent: "center",
+    paddingVertical: 8, paddingHorizontal: 4, gap: 0,
+  },
+  progressStep: { alignItems: "center", gap: 6, width: 90 },
+  progressDot: {
+    width: 32, height: 32, borderRadius: 16,
+    backgroundColor: SharedColors.white, borderWidth: 2, borderColor: SharedColors.border,
+    alignItems: "center", justifyContent: "center",
+  },
+  progressDotActive: {
+    borderColor: PatientTheme.primary, backgroundColor: PatientTheme.primary,
+  },
+  progressDotDone: {
+    borderColor: PatientTheme.primary, backgroundColor: PatientTheme.accentSoft,
+  },
+  progressDotNum: {
+    fontSize: 13, fontWeight: "700", color: SharedColors.slate,
+  },
+  progressDotNumActive: {
+    color: SharedColors.white,
+  },
+  progressCheckmark: {
+    fontSize: 14, fontWeight: "800", color: PatientTheme.primary,
+  },
+  progressLabel: {
+    fontSize: 11, fontWeight: "500", color: SharedColors.slate, textAlign: "center",
+  },
+  progressLabelActive: {
+    fontWeight: "700", color: PatientTheme.primary,
+  },
+  progressLine: {
+    flex: 1, height: 2, backgroundColor: SharedColors.border,
+    marginBottom: 22, // offset to align with dot center
+  },
+  progressLineActive: {
+    backgroundColor: PatientTheme.primary,
+  },
+
+  /* ── Step Navigation Buttons ── */
+  backStepBtn: {
+    borderRadius: 14, borderWidth: 1.5, borderColor: SharedColors.border,
+    paddingHorizontal: 20, paddingVertical: 15,
+    alignItems: "center" as const, justifyContent: "center" as const,
+    backgroundColor: SharedColors.white,
+  },
+  backStepBtnText: {
+    fontSize: 15, fontWeight: "600", color: SharedColors.navy,
+  },
+  skipLink: {
+    alignItems: "center" as const, paddingVertical: 10,
+  },
+  skipLinkText: {
+    fontSize: 14, fontWeight: "500", color: SharedColors.slate,
+    textDecorationLine: "underline" as const,
+  },
 
   /* ── Screenshot Upload ── */
   ssCard: {

@@ -36,11 +36,19 @@ export default function BeforeAfterScreen() {
   // Inline editing state (no modal for treatment name)
   const [pendingPhotos, setPendingPhotos] = useState<{ before: string; after: string } | null>(null);
 
+  // Inline add mode — replaces Alert chain
+  const [addMode, setAddMode] = useState(false);
+  const [pendingBeforeUri, setPendingBeforeUri] = useState<string | null>(null);
+  const [pendingAfterUri, setPendingAfterUri] = useState<string | null>(null);
+  const [activeSlot, setActiveSlot] = useState<"before" | "after">("before");
+
   // Refs to avoid stale closures in setTimeout
   const sourceStepRef = useRef(sourceStep);
   sourceStepRef.current = sourceStep;
   const pendingBeforeRef = useRef(pendingBefore);
   pendingBeforeRef.current = pendingBefore;
+  const activeSlotRef = useRef(activeSlot);
+  activeSlotRef.current = activeSlot;
 
   useFocusEffect(
     useCallback(() => {
@@ -71,46 +79,53 @@ export default function BeforeAfterScreen() {
     }
   };
 
-  // Handle source selection
+  // Handle source selection — inline slot-based (no Alert chain)
   const handleSourceSelect = (source: "camera" | "library") => {
     setShowSourceModal(false);
     setTimeout(async () => {
       const uri = await pickImage(source);
       if (!uri) return;
 
-      if (sourceStepRef.current === "before") {
-        setPendingBefore(uri);
-        Alert.alert("Next Step", "Now select the AFTER photo", [
-          { text: "Cancel", style: "cancel", onPress: () => setPendingBefore(null) },
-          { text: "Continue", onPress: () => { setSourceStep("after"); setShowSourceModal(true); } },
-        ]);
+      if (activeSlotRef.current === "before") {
+        setPendingBeforeUri(uri);
       } else {
-        // Both photos selected → show inline treatment name input
-        setPendingPhotos({ before: pendingBeforeRef.current!, after: uri });
-        setPendingBefore(null);
-        setTreatmentName("");
+        setPendingAfterUri(uri);
       }
     }, 600);
   };
 
+  // Open source modal for a specific slot
+  const openSlotPicker = (slot: "before" | "after") => {
+    setActiveSlot(slot);
+    setSourceStep(slot);
+    setShowSourceModal(true);
+  };
+
   // Save new BA photo
   const handleSave = async () => {
-    if (!pendingPhotos || !treatmentName.trim()) return;
+    if (!pendingBeforeUri || !pendingAfterUri || !treatmentName.trim()) return;
     const p = profile || await store.getDoctorProfile() || {};
-    const newPhoto: BAPhoto = { before: pendingPhotos.before, after: pendingPhotos.after, treatment: treatmentName.trim() };
+    const newPhoto: BAPhoto = { before: pendingBeforeUri, after: pendingAfterUri, treatment: treatmentName.trim() };
     const updatedPhotos = [...photos, newPhoto];
     const updatedProfile = { ...p, beforeAfterPhotos: updatedPhotos };
     await store.saveDoctorProfile(updatedProfile);
     setProfile(updatedProfile);
     setPhotos(updatedPhotos);
-    setPendingPhotos(null);
+    // Reset all add mode state
+    setAddMode(false);
+    setPendingBeforeUri(null);
+    setPendingAfterUri(null);
     setTreatmentName("");
+    setPendingPhotos(null);
   };
 
   // Cancel pending
   const handleCancelPending = () => {
-    setPendingPhotos(null);
+    setAddMode(false);
+    setPendingBeforeUri(null);
+    setPendingAfterUri(null);
     setTreatmentName("");
+    setPendingPhotos(null);
   };
 
   // Remove a BA photo
@@ -129,14 +144,13 @@ export default function BeforeAfterScreen() {
     ]);
   };
 
-  // Start add flow
+  // Start add flow — inline, no Alerts
   const startAddFlow = () => {
-    if (pendingPhotos) return; // already in progress
-    setSourceStep("before");
-    Alert.alert("Add Photos", "First, select the BEFORE photo", [
-      { text: "Cancel", style: "cancel" },
-      { text: "Continue", onPress: () => { setSourceStep("before"); setShowSourceModal(true); } },
-    ]);
+    if (addMode) return; // already in progress
+    setAddMode(true);
+    setPendingBeforeUri(null);
+    setPendingAfterUri(null);
+    setTreatmentName("");
   };
 
   return (
@@ -178,21 +192,54 @@ export default function BeforeAfterScreen() {
       <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === "ios" ? "padding" : undefined}>
         <ScrollView contentContainerStyle={s.list} showsVerticalScrollIndicator={false}>
 
-          {/* Inline Treatment Name Input — shown after both photos selected */}
-          {pendingPhotos && (
+          {/* Inline Add Card — two tappable image slots + treatment name */}
+          {addMode && (
             <View style={s.pendingCard}>
               <Text style={s.pendingTitle}>New Before & After</Text>
               <View style={s.pendingImages}>
-                <View style={s.pendingImgWrap}>
-                  <Image source={{ uri: pendingPhotos.before }} style={s.pendingImg} />
-                  <View style={s.imgLabel}><Text style={s.imgLabelText}>Before</Text></View>
-                </View>
+                {/* Before slot */}
+                <TouchableOpacity
+                  style={s.pendingImgWrap}
+                  onPress={() => openSlotPicker("before")}
+                  activeOpacity={0.7}
+                >
+                  {pendingBeforeUri ? (
+                    <>
+                      <Image source={{ uri: pendingBeforeUri }} style={s.pendingImg} />
+                      <View style={s.imgLabel}><Text style={s.imgLabelText}>Before</Text></View>
+                      <View style={s.slotRetake}><Text style={s.slotRetakeText}>Retake</Text></View>
+                    </>
+                  ) : (
+                    <View style={s.slotPlaceholder}>
+                      <Text style={s.slotPlaceholderIcon}>+</Text>
+                      <Text style={s.slotPlaceholderLabel}>Before</Text>
+                    </View>
+                  )}
+                </TouchableOpacity>
+
                 <Text style={s.arrow}>→</Text>
-                <View style={s.pendingImgWrap}>
-                  <Image source={{ uri: pendingPhotos.after }} style={s.pendingImg} />
-                  <View style={[s.imgLabel, s.imgLabelAfter]}><Text style={s.imgLabelText}>After</Text></View>
-                </View>
+
+                {/* After slot */}
+                <TouchableOpacity
+                  style={s.pendingImgWrap}
+                  onPress={() => openSlotPicker("after")}
+                  activeOpacity={0.7}
+                >
+                  {pendingAfterUri ? (
+                    <>
+                      <Image source={{ uri: pendingAfterUri }} style={s.pendingImg} />
+                      <View style={[s.imgLabel, s.imgLabelAfter]}><Text style={s.imgLabelText}>After</Text></View>
+                      <View style={s.slotRetake}><Text style={s.slotRetakeText}>Retake</Text></View>
+                    </>
+                  ) : (
+                    <View style={s.slotPlaceholder}>
+                      <Text style={s.slotPlaceholderIcon}>+</Text>
+                      <Text style={s.slotPlaceholderLabel}>After</Text>
+                    </View>
+                  )}
+                </TouchableOpacity>
               </View>
+
               <Text style={s.inputLabel}>Treatment Name</Text>
               <TextInput
                 style={s.treatmentInput}
@@ -200,16 +247,15 @@ export default function BeforeAfterScreen() {
                 placeholderTextColor={SharedColors.navyMuted}
                 value={treatmentName}
                 onChangeText={setTreatmentName}
-                autoFocus
               />
               <View style={s.pendingBtns}>
                 <TouchableOpacity style={s.cancelBtn} onPress={handleCancelPending}>
                   <Text style={s.cancelBtnText}>Cancel</Text>
                 </TouchableOpacity>
                 <TouchableOpacity
-                  style={[s.saveBtn, !treatmentName.trim() && { opacity: 0.4 }]}
+                  style={[s.saveBtn, (!pendingBeforeUri || !pendingAfterUri || !treatmentName.trim()) && { opacity: 0.4 }]}
                   onPress={handleSave}
-                  disabled={!treatmentName.trim()}
+                  disabled={!pendingBeforeUri || !pendingAfterUri || !treatmentName.trim()}
                 >
                   <Text style={s.saveBtnText}>Save</Text>
                 </TouchableOpacity>
@@ -218,7 +264,7 @@ export default function BeforeAfterScreen() {
           )}
 
           {/* Existing photos */}
-          {photos.length === 0 && !pendingPhotos ? (
+          {photos.length === 0 && !addMode ? (
             <View style={s.empty}>
               <Text style={s.emptyIcon}>📸</Text>
               <Text style={s.emptyTitle}>No photos yet</Text>
@@ -256,7 +302,7 @@ export default function BeforeAfterScreen() {
       </KeyboardAvoidingView>
 
       {/* Fixed Add Button — hidden while editing */}
-      {!pendingPhotos && (
+      {!addMode && (
         <View style={s.addBtnWrap}>
           <TouchableOpacity style={s.addBtn} onPress={startAddFlow} activeOpacity={0.8}>
             <Text style={s.addBtnIcon}>📷</Text>
@@ -303,6 +349,19 @@ const s = StyleSheet.create({
   pendingImages: { flexDirection: "row", alignItems: "center", gap: 8 },
   pendingImgWrap: { flex: 1, position: "relative" as const },
   pendingImg: { width: "100%", height: 100, borderRadius: 12, backgroundColor: SharedColors.border },
+  slotPlaceholder: {
+    width: "100%", height: 100, borderRadius: 12,
+    backgroundColor: "#f1f5f9", borderWidth: 2, borderColor: SharedColors.border, borderStyle: "dashed",
+    alignItems: "center", justifyContent: "center", gap: 4,
+  },
+  slotPlaceholderIcon: { fontSize: 24, color: DoctorTheme.primary, fontWeight: "600" },
+  slotPlaceholderLabel: { fontSize: 12, fontWeight: "600", color: SharedColors.navySec },
+  slotRetake: {
+    position: "absolute" as const, bottom: 6, right: 6,
+    backgroundColor: "rgba(0,0,0,0.55)", borderRadius: 6,
+    paddingHorizontal: 8, paddingVertical: 3,
+  },
+  slotRetakeText: { fontSize: 10, fontWeight: "600", color: SharedColors.white },
   inputLabel: { fontSize: 12, fontWeight: "600", color: SharedColors.navySec, marginTop: 14, marginBottom: 6 },
   treatmentInput: {
     borderWidth: 1.5, borderColor: SharedColors.border, borderRadius: 12,

@@ -287,8 +287,6 @@ export default function PatientBasicInfoScreen() {
           <View style={s.progressDot} />
           <View style={s.progressLine} />
           <View style={s.progressDot} />
-          <View style={s.progressLine} />
-          <View style={s.progressDot} />
         </View>
       </LinearGradient>
 

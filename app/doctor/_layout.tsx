@@ -14,16 +14,16 @@ import { store } from "../../lib/store";
 const TAB_MAP: Record<string, DoctorTabName> = {
   dashboard: "Home",
   "chat-list": "Chat",
-  "schedule-patient": "Hours",
   availability: "Schedule",
+  earnings: "Earnings",
   profile: "Profile",
 };
 
 const TAB_ROUTES: Record<DoctorTabName, string> = {
   Home: "/doctor/dashboard",
   Chat: "/doctor/chat-list",
-  Hours: "/doctor/schedule-patient",
   Schedule: "/doctor/availability",
+  Earnings: "/doctor/earnings",
   Profile: "/doctor/profile",
 };
 
@@ -34,7 +34,7 @@ export default function DoctorLayout() {
   const [chatUnread, setChatUnread] = useState(0);
 
   useEffect(() => {
-    if (currentScreen !== "schedule-patient" && currentScreen !== "availability") {
+    if (currentScreen !== "availability") {
       setDoctorTabSwipeBlocked(false);
     }
   }, [currentScreen]);
@@ -110,8 +110,7 @@ export default function DoctorLayout() {
           onTabPress={(tab) => {
             const route = TAB_ROUTES[tab];
             if (
-              (currentScreen === "schedule-patient" || currentScreen === "availability") &&
-              tab !== "Hours" &&
+              currentScreen === "availability" &&
               tab !== "Schedule" &&
               isDoctorTabSwipeBlocked()
             ) {

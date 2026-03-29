@@ -59,7 +59,7 @@ const JOURNEY_STEPS: JourneyStepDef[] = [
     summary: () => "In progress",
   },
   {
-    key: "treatment_done", label: "Payment", icon: "credit-card",
+    key: "treatment_done", label: "Service Plan", icon: "credit-card",
     summary: (bk) => `$${(bk.totalPrice || 0).toLocaleString()}`,
     actionLabel: "Pay Now",
     actionRoute: (bk) => `/patient/visit-checkout?bookingId=${bk.id}`,
@@ -341,6 +341,8 @@ export default function PatientDashboardScreen() {
                     style={[s.statCard, isActive && s.statCardActive]}
                     onPress={() => setStatusFilter(statusFilter === item.key ? "all" : item.key)}
                     activeOpacity={0.7}
+                    accessibilityRole="button"
+                    accessibilityLabel={`Filter by ${item.label}`}
                   >
                     <Text style={[s.statNum, isActive && s.statNumActive]}>{item.count}</Text>
                     <Text style={[s.statLabel, isActive && s.statLabelActive]}>{item.label}</Text>
@@ -351,7 +353,7 @@ export default function PatientDashboardScreen() {
           </Animated.View>
         </View>
         <View style={s.statsToggleBar}>
-          <TouchableOpacity style={s.statsToggleBtn} onPress={toggleStats} activeOpacity={0.6}>
+          <TouchableOpacity style={s.statsToggleBtn} onPress={toggleStats} activeOpacity={0.6} accessibilityRole="button" accessibilityLabel={statsOpen ? "Hide stats" : "Show stats"}>
             <Text style={s.statsToggleIcon}>{statsOpen ? "▲" : "▼"}</Text>
           </TouchableOpacity>
         </View>
@@ -364,13 +366,15 @@ export default function PatientDashboardScreen() {
             style={s.menuOverlay}
             activeOpacity={1}
             onPress={() => setMenuOpen(false)}
+            accessibilityRole="button"
+            accessibilityLabel="Close menu"
           />
           <View style={s.menuDropdown}>
-            <TouchableOpacity style={s.menuItem} onPress={() => { setMenuOpen(false); router.push("/patient/help-center" as any); }}>
+            <TouchableOpacity style={s.menuItem} onPress={() => { setMenuOpen(false); router.push("/patient/help-center" as any); }} accessibilityRole="button" accessibilityLabel="Help Center">
               <Text style={s.menuItemText}>Help Center</Text>
             </TouchableOpacity>
             <View style={s.menuDivider} />
-            <TouchableOpacity style={s.menuItem} onPress={() => { setMenuOpen(false); router.push("/patient/affiliate-clinics" as any); }}>
+            <TouchableOpacity style={s.menuItem} onPress={() => { setMenuOpen(false); router.push("/patient/affiliate-clinics" as any); }} accessibilityRole="button" accessibilityLabel="Affiliate Clinics">
               <Text style={s.menuItemText}>Affiliate Clinics</Text>
             </TouchableOpacity>
           </View>
@@ -404,18 +408,30 @@ export default function PatientDashboardScreen() {
             <View style={s.emptyIconWrap}>
               <Text style={s.emptyIcon}>📋</Text>
             </View>
-            <Text style={s.emptyTitle}>No cases yet</Text>
+            <Text style={s.emptyTitle}>Start your dental journey</Text>
             <Text style={s.emptyDesc}>
-              Create your first case to get quotes{"\n"}from dentists in Korea
+              Get quotes from top dentists in Korea{"\n"}and save up to 70% on dental care
+            </Text>
+            <Text style={{ fontSize: 12, color: "#94a3b8", textAlign: "center", marginBottom: 16 }}>
+              500+ patients treated · Average savings: 60%
             </Text>
             <TouchableOpacity
               style={s.createBtn}
               onPress={() => router.push("/patient/treatment-intent" as any)}
               activeOpacity={0.85}
               accessibilityRole="button"
-              accessibilityLabel="Create first case"
+              accessibilityLabel="Find a dentist"
             >
-              <Text style={s.createBtnText}>Create First Case</Text>
+              <Text style={s.createBtnText}>Find a Dentist</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              onPress={() => router.push("/patient/help-center" as any)}
+              activeOpacity={0.7}
+              style={{ marginTop: 12 }}
+              accessibilityRole="button"
+              accessibilityLabel="How it works"
+            >
+              <Text style={{ fontSize: 14, color: "#7C3AED", fontWeight: "600", textAlign: "center" }}>How It Works</Text>
             </TouchableOpacity>
           </View>
         ) : sortedCases.length === 0 ? (
@@ -470,6 +486,8 @@ export default function PatientDashboardScreen() {
                           onPress={(e) => { e.stopPropagation(); setExpandedEnrich(expandedEnrich === c.id ? null : c.id); }}
                           activeOpacity={0.7}
                           hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                          accessibilityRole="button"
+                          accessibilityLabel="View enrichment checklist"
                         >
                           <View style={sV1.redDot} />
                         </TouchableOpacity>
@@ -482,7 +500,9 @@ export default function PatientDashboardScreen() {
                     <View style={sV1.divider} />
                     {/* Action row — state-specific */}
                     {c.status === "pending" && (
-                      <Text style={sV1.actionMuted}>Awaiting quotes</Text>
+                      c.createdAt && (Date.now() - new Date(c.createdAt).getTime()) > 259200000
+                        ? <Text style={[sV1.actionMuted, { fontSize: 12, lineHeight: 17 }]}>No quotes yet — try editing your case or broadening your treatment request.</Text>
+                        : <Text style={sV1.actionMuted}>Awaiting quotes</Text>
                     )}
                     {c.status === "quotes_received" && (
                       <Text style={sV1.actionActive}>{qCount} quote{qCount !== 1 ? "s" : ""} · View &gt;</Text>
@@ -504,6 +524,8 @@ export default function PatientDashboardScreen() {
                               onPress={(e) => { e.stopPropagation(); setManageBooking(bookedBk); }}
                               activeOpacity={0.6}
                               hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                              accessibilityRole="button"
+                              accessibilityLabel="Manage booking"
                             >
                               <Feather name="more-horizontal" size={16} color={SharedColors.slate} />
                             </TouchableOpacity>
@@ -514,6 +536,8 @@ export default function PatientDashboardScreen() {
                           activeOpacity={0.8}
                           onPress={(e) => { e.stopPropagation(); setExpandedJourney(expandedJourney === c.id ? null : c.id); }}
                           style={sV1.questRow}
+                          accessibilityRole="button"
+                          accessibilityLabel={`Journey progress, ${expandedJourney === c.id ? "collapse" : "expand"}`}
                         >
                           {JOURNEY_STEPS.map((st, idx) => {
                             const isDone = idx < journeyIdx;
@@ -542,6 +566,8 @@ export default function PatientDashboardScreen() {
                           <TouchableOpacity
                             onPress={(e) => { e.stopPropagation(); setExpandedJourney(expandedJourney === c.id ? null : c.id); }}
                             hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                            accessibilityRole="button"
+                            accessibilityLabel={`${expandedJourney === c.id ? "Collapse" : "Expand"} journey steps`}
                           >
                             <Feather name={expandedJourney === c.id ? "chevron-up" : "chevron-down"} size={16} color="#94a3b8" />
                           </TouchableOpacity>
@@ -578,7 +604,7 @@ export default function PatientDashboardScreen() {
                             <Text style={sV1.ctaInProgressText}>Treatment in Progress</Text>
                           </View>
                         ) : journeyStep.actionRoute ? (
-                          <TouchableOpacity onPress={handleJourneyCTA} activeOpacity={0.85} style={sV1.ctaButton}>
+                          <TouchableOpacity onPress={handleJourneyCTA} activeOpacity={0.85} style={sV1.ctaButton} accessibilityRole="button" accessibilityLabel={journeyStep.actionLabel || "Continue"}>
                             <Text style={sV1.ctaButtonText}>{journeyStep.actionLabel || "Continue"}</Text>
                             <Feather name="arrow-right" size={15} color="#fff" />
                           </TouchableOpacity>
@@ -604,7 +630,7 @@ export default function PatientDashboardScreen() {
 
       {/* ── Manage Booking Modal ── */}
       <Modal visible={!!manageBooking} transparent animationType="fade" onRequestClose={() => setManageBooking(null)}>
-        <TouchableOpacity style={s.modalOverlay} activeOpacity={1} onPress={() => setManageBooking(null)}>
+        <TouchableOpacity style={s.modalOverlay} activeOpacity={1} onPress={() => setManageBooking(null)} accessibilityRole="button" accessibilityLabel="Close manage booking modal">
           <View style={s.modalSheet}>
             <View style={s.modalHandle} />
             <Text style={s.modalTitle}>Manage Booking</Text>
@@ -612,6 +638,8 @@ export default function PatientDashboardScreen() {
             <TouchableOpacity
               style={s.modalOption}
               activeOpacity={0.7}
+              accessibilityRole="button"
+              accessibilityLabel="Reschedule my booking"
               onPress={() => {
                 if (!manageBooking) return;
                 const bk = manageBooking;
@@ -671,6 +699,8 @@ export default function PatientDashboardScreen() {
             <TouchableOpacity
               style={s.modalOption}
               activeOpacity={0.7}
+              accessibilityRole="button"
+              accessibilityLabel="Cancel my booking"
               onPress={() => {
                 if (!manageBooking) return;
                 const id = manageBooking.id;
@@ -686,7 +716,7 @@ export default function PatientDashboardScreen() {
               <View style={[s.modalChevron, { borderColor: "#b91c1c" }]} />
             </TouchableOpacity>
 
-            <TouchableOpacity style={s.modalCloseBtn} onPress={() => setManageBooking(null)} activeOpacity={0.8}>
+            <TouchableOpacity style={s.modalCloseBtn} onPress={() => setManageBooking(null)} activeOpacity={0.8} accessibilityRole="button" accessibilityLabel="Close">
               <Text style={s.modalCloseBtnText}>Close</Text>
             </TouchableOpacity>
           </View>
@@ -695,7 +725,7 @@ export default function PatientDashboardScreen() {
 
       {/* ── Delete Cancelled Case Modal ── */}
       <Modal visible={!!deleteCaseId} transparent animationType="fade" onRequestClose={() => setDeleteCaseId(null)}>
-        <TouchableOpacity style={s.modalOverlay} activeOpacity={1} onPress={() => setDeleteCaseId(null)}>
+        <TouchableOpacity style={s.modalOverlay} activeOpacity={1} onPress={() => setDeleteCaseId(null)} accessibilityRole="button" accessibilityLabel="Close manage case modal">
           <View style={s.modalSheet}>
             <View style={s.modalHandle} />
             <Text style={s.modalTitle}>Manage Case</Text>
@@ -703,6 +733,8 @@ export default function PatientDashboardScreen() {
             <TouchableOpacity
               style={s.modalOption}
               activeOpacity={0.7}
+              accessibilityRole="button"
+              accessibilityLabel="Delete this card"
               onPress={() => {
                 const caseId = deleteCaseId;
                 setDeleteCaseId(null);
@@ -727,7 +759,7 @@ export default function PatientDashboardScreen() {
               <View style={[s.modalChevron, { borderColor: "#b91c1c" }]} />
             </TouchableOpacity>
 
-            <TouchableOpacity style={s.modalCloseBtn} onPress={() => setDeleteCaseId(null)} activeOpacity={0.8}>
+            <TouchableOpacity style={s.modalCloseBtn} onPress={() => setDeleteCaseId(null)} activeOpacity={0.8} accessibilityRole="button" accessibilityLabel="Close">
               <Text style={s.modalCloseBtnText}>Close</Text>
             </TouchableOpacity>
           </View>

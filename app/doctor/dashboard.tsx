@@ -5,13 +5,16 @@ import React, { useCallback, useMemo, useRef, useState } from "react";
 import {
     Animated,
     Image,
+    LayoutAnimation,
+    Platform,
     ScrollView,
     StyleSheet,
     Text, TouchableOpacity,
+    UIManager,
     View
 } from "react-native";
 import { getDoctorDashboardCache, loadDoctorDashboardData } from "../../lib/doctorTabDataCache";
-import { Booking, PatientCase } from "../../lib/store";
+import { Booking, PatientCase, store } from "../../lib/store";
 import { toDoctorLabel } from "../../lib/treatmentTerminology";
 
 
@@ -58,6 +61,11 @@ const getResolvedStatus = (c: PatientCase, bks: Booking[]): string => {
   return c.status; // "pending" | "quotes_received"
 };
 
+// Enable LayoutAnimation on Android
+if (Platform.OS === "android" && UIManager.setLayoutAnimationEnabledExperimental) {
+  UIManager.setLayoutAnimationEnabledExperimental(true);
+}
+
 export default function DoctorDashboardScreen() {
   const initialDashboardData = getDoctorDashboardCache();
   const [cases, setCases] = useState<PatientCase[]>(initialDashboardData.cases);
@@ -68,6 +76,8 @@ export default function DoctorDashboardScreen() {
   const [patientProfileImage, setPatientProfileImage] = useState<string | null>(initialDashboardData.patientProfileImage);
   const [unreadMessages, setUnreadMessages] = useState(initialDashboardData.unreadMessages);
   const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({});
+  const [doctorName, setDoctorName] = useState("Doctor");
+  const [passedCaseIds, setPassedCaseIds] = useState<string[]>([]);
 
   // Stats toggle
   const STATS_HEIGHT = 80;
@@ -90,6 +100,9 @@ export default function DoctorDashboardScreen() {
         setUnreadCount(data.unreadCount);
         setPatientProfileImage(data.patientProfileImage);
         setUnreadMessages(data.unreadMessages);
+        const user = await store.getCurrentUser();
+        if (user?.name) setDoctorName(user.name);
+        setPassedCaseIds(await store.getPassedCases());
       };
       load();
     }, [])
@@ -135,8 +148,8 @@ export default function DoctorDashboardScreen() {
   // ── 상태별 섹션 그룹화 (치료 필터 + 상태 필터 적용) ──
   const groupedSections = useMemo(() => {
     let filtered = activeFilter === "All"
-      ? cases
-      : cases.filter((c) => c.treatments.some((t) => toDoctorLabel(t.name) === activeFilter));
+      ? cases.filter((c) => !passedCaseIds.includes(c.id))
+      : cases.filter((c) => !passedCaseIds.includes(c.id) && c.treatments.some((t) => toDoctorLabel(t.name) === activeFilter));
 
     // 상태 필터 적용
     if (statusFilter !== "all") {
@@ -208,13 +221,15 @@ export default function DoctorDashboardScreen() {
         <View style={s.headerTop}>
           <View style={{ flex: 1 }}>
             <Text style={s.welcome}>Welcome back 👋</Text>
-            <Text style={s.userName}>Dr. Kim</Text>
+            <Text style={s.userName}>{doctorName}</Text>
           </View>
           <View style={s.headerIcons}>
             <TouchableOpacity
               style={s.iconBtn}
               onPress={() => router.push("/doctor/earnings" as any)}
               activeOpacity={0.7}
+              accessibilityRole="button"
+              accessibilityLabel="View earnings"
             >
               <Feather name="dollar-sign" size={18} color="rgba(255,255,255,0.85)" />
             </TouchableOpacity>
@@ -222,6 +237,8 @@ export default function DoctorDashboardScreen() {
               style={s.iconBtn}
               onPress={() => router.push("/notifications?role=doctor" as any)}
               activeOpacity={0.7}
+              accessibilityRole="button"
+              accessibilityLabel="View notifications"
             >
               <Feather name="bell" size={18} color="rgba(255,255,255,0.85)" />
               {unreadCount > 0 && (
@@ -248,6 +265,8 @@ export default function DoctorDashboardScreen() {
                     style={[s.stat, isActive && s.statActive]}
                     onPress={() => setStatusFilter(statusFilter === item.key ? "all" : item.key)}
                     activeOpacity={0.7}
+                    accessibilityRole="button"
+                    accessibilityLabel={`Filter by ${item.label}`}
                   >
                     <Text style={[s.statNum, isActive && s.statNumActive]}>{item.count}</Text>
                     <Text style={[s.statLabel, isActive && s.statLabelActive]}>{item.label}</Text>
@@ -258,7 +277,7 @@ export default function DoctorDashboardScreen() {
           </Animated.View>
         </View>
         <View style={s.statsToggleBar}>
-          <TouchableOpacity style={s.statsToggleBtn} onPress={toggleStats} activeOpacity={0.6}>
+          <TouchableOpacity style={s.statsToggleBtn} onPress={toggleStats} activeOpacity={0.6} accessibilityRole="button" accessibilityLabel={statsOpen ? "Hide stats" : "Show stats"}>
             <Text style={s.statsToggleIcon}>{statsOpen ? "▲" : "▼"}</Text>
           </TouchableOpacity>
         </View>
@@ -284,6 +303,8 @@ export default function DoctorDashboardScreen() {
                   style={[s.filterTab, isActive && s.filterTabActive]}
                   onPress={() => setActiveFilter(tab)}
                   activeOpacity={0.7}
+                  accessibilityRole="button"
+                  accessibilityLabel={`${tab} filter`}
                 >
                   {tab !== "All" && (
                     <Text style={s.filterIcon}>{getTreatmentIcon(tab)}</Text>
@@ -347,18 +368,21 @@ export default function DoctorDashboardScreen() {
               {/* Section Header */}
               <TouchableOpacity
                 style={[s.statusSectionHeader, idx === 0 && { marginTop: 4 }]}
-                onPress={() => setExpandedSections(prev => ({ ...prev, [section.key]: !prev[section.key] }))}
+                onPress={() => {
+                  LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
+                  setExpandedSections(prev => ({ ...prev, [section.key]: !prev[section.key] }));
+                }}
                 activeOpacity={0.6}
+                accessibilityRole="button"
+                accessibilityLabel={`${section.label}, ${section.cases.length} cases, ${isCollapsed ? "expand" : "collapse"}`}
               >
                 <View style={s.statusSectionLeft}>
                   <Text style={s.statusSectionEmoji}>{section.emoji}</Text>
-                  <Text style={s.statusSectionLabel}>{section.label}</Text>
-                  <Text style={[s.collapseChevron, isCollapsed && s.collapseChevronClosed]}>▾</Text>
-                </View>
-                <View style={[s.statusSectionCount, { backgroundColor: section.colorBg }]}>
-                  <Text style={[s.statusSectionCountText, { color: section.color }]}>
-                    {section.cases.length}
+                  <Text style={s.statusSectionLabel}>
+                    {section.label}{" "}
+                    <Text style={s.statusSectionInlineCount}>({section.cases.length})</Text>
                   </Text>
+                  <Text style={[s.collapseChevron, isCollapsed && s.collapseChevronClosed]}>▾</Text>
                 </View>
               </TouchableOpacity>
 
@@ -383,6 +407,8 @@ export default function DoctorDashboardScreen() {
                       router.push(`/doctor/case-detail?caseId=${c.id}` as any);
                     }}
                     activeOpacity={0.75}
+                    accessibilityRole="button"
+                    accessibilityLabel={`View case details for ${treatmentSummary}`}
                   >
                     <View style={[s.statusStrip, { backgroundColor: badge.color }]} />
                     <View style={s.cardInner}>
@@ -570,6 +596,11 @@ const s = StyleSheet.create({
     fontWeight: "700",
     color: SharedColors.navy,
     letterSpacing: 0.3,
+  },
+  statusSectionInlineCount: {
+    fontSize: 12,
+    fontWeight: "600",
+    color: SharedColors.navyMuted,
   },
   statusSectionCount: {
     borderRadius: 10,

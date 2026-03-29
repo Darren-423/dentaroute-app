@@ -2,6 +2,7 @@ import { LinearGradient } from "expo-linear-gradient";
 import { router, useFocusEffect } from "expo-router";
 import React, { useCallback, useMemo, useState } from "react";
 import {
+  Alert,
   ScrollView,
   StyleSheet,
   Text, TouchableOpacity,
@@ -126,6 +127,48 @@ export default function DoctorEarningsScreen() {
     return `${MONTHS[d.getMonth()]} ${d.getDate()}, ${d.getFullYear()}`;
   };
 
+  // ── 6-month trend data ──
+  const trendData = useMemo(() => {
+    const months: { label: string; total: number }[] = [];
+    for (let i = 5; i >= 0; i--) {
+      let m = now.getMonth() - i;
+      let y = now.getFullYear();
+      if (m < 0) { m += 12; y -= 1; }
+      const total = allEntries
+        .filter(e => { const d = new Date(e.date); return d.getMonth() === m && d.getFullYear() === y; })
+        .reduce((s, e) => s + e.amount, 0);
+      months.push({ label: MONTHS[m], total });
+    }
+    return months;
+  }, [allEntries]);
+  const trendMax = Math.max(...trendData.map(d => d.total), 1);
+
+  // ── Tier info tooltip ──
+  const showTierInfo = () => {
+    // Current month revenue (gross, before fee)
+    const currentMonthGross = monthEntries.reduce((s, e) => s + e.amount + e.fee, 0);
+    const tierThresholds = [
+      { tier: "Standard", range: "$0 - $4,999/month", fee: "20%" },
+      { tier: "Silver", range: "$5,000 - $14,999/month", fee: "18%" },
+      { tier: "Gold", range: "$15,000+/month", fee: "15%" },
+    ];
+    // Calculate next tier progress
+    let nextTierMsg = "You are at the highest tier!";
+    if (tierLabel === "Standard") {
+      const needed = 5000 - currentMonthGross;
+      nextTierMsg = `Next tier (Silver) in: $${Math.max(0, needed).toLocaleString()} more`;
+    } else if (tierLabel === "Silver") {
+      const needed = 15000 - currentMonthGross;
+      nextTierMsg = `Next tier (Gold) in: $${Math.max(0, needed).toLocaleString()} more`;
+    }
+    Alert.alert(
+      "Tier Criteria",
+      tierThresholds.map(t => `${t.tier}: ${t.range} (${t.fee} fee)`).join("\n") +
+      `\n\nYour current monthly revenue: $${currentMonthGross.toLocaleString()}` +
+      `\n${nextTierMsg}`
+    );
+  };
+
   return (
     <View style={s.container}>
       <LinearGradient colors={[DoctorTheme.primary, DoctorTheme.primaryDark]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={s.headerGradient}>
@@ -137,6 +180,11 @@ export default function DoctorEarningsScreen() {
           <View style={[s.tierBadge, { backgroundColor: tierColor }]}>
             <Text style={s.tierBadgeText}>{tierLabel} Tier</Text>
           </View>
+          <TouchableOpacity onPress={showTierInfo} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
+            <View style={s.tierInfoBtn}>
+              <Text style={s.tierInfoIcon}>i</Text>
+            </View>
+          </TouchableOpacity>
         </View>
 
         {/* Month navigator */}
@@ -173,6 +221,27 @@ export default function DoctorEarningsScreen() {
       </LinearGradient>
 
       <ScrollView style={{ flex: 1 }} contentContainerStyle={s.scrollContent} showsVerticalScrollIndicator={false}>
+        {/* 6-Month Trend */}
+        <View style={s.section}>
+          <Text style={s.sectionTitle}>6-MONTH TREND</Text>
+          <View style={s.trendCard}>
+            <View style={s.trendBars}>
+              {trendData.map((d, i) => {
+                const pct = d.total / trendMax;
+                return (
+                  <View key={d.label + i} style={s.trendCol}>
+                    <Text style={s.trendAmt}>{d.total > 0 ? formatCompact(d.total) : "-"}</Text>
+                    <View style={s.trendBarBg}>
+                      <View style={[s.trendBar, { height: `${Math.max(pct * 100, 4)}%`, opacity: 0.45 + pct * 0.55 }]} />
+                    </View>
+                    <Text style={s.trendMonth}>{d.label}</Text>
+                  </View>
+                );
+              })}
+            </View>
+          </View>
+        </View>
+
         {/* Breakdown */}
         <View style={s.section}>
           <Text style={s.sectionTitle}>BREAKDOWN</Text>
@@ -225,6 +294,17 @@ export default function DoctorEarningsScreen() {
             ))
           )}
         </View>
+
+        {/* Settlement section */}
+        <View style={{ backgroundColor: "#f0fdfa", borderRadius: 12, padding: 16, marginTop: 16, borderWidth: 1, borderColor: "#ccfbf1" }}>
+          <Text style={{ fontSize: 14, fontWeight: "600", color: "#0f766e", marginBottom: 6 }}>Settlement</Text>
+          <Text style={{ fontSize: 13, color: "#64748b", lineHeight: 19, marginBottom: 12 }}>
+            Settlements are processed monthly. Earnings are deposited to your registered account by the 15th of the following month.
+          </Text>
+          <View style={{ backgroundColor: "#e2e8f0", borderRadius: 10, paddingVertical: 13, alignItems: "center", opacity: 0.6 }}>
+            <Text style={{ fontSize: 14, fontWeight: "600", color: "#94a3b8" }}>Request Settlement — Coming Soon</Text>
+          </View>
+        </View>
       </ScrollView>
     </View>
   );
@@ -248,6 +328,13 @@ const s = StyleSheet.create({
     borderRadius: 6, paddingHorizontal: 8, paddingVertical: 3,
   },
   tierBadgeText: { fontSize: 10, fontWeight: "800", color: SharedColors.white, letterSpacing: 0.5 },
+  tierInfoBtn: {
+    width: 20, height: 20, borderRadius: 10,
+    backgroundColor: "rgba(255,255,255,0.25)",
+    borderWidth: 1, borderColor: "rgba(255,255,255,0.4)",
+    alignItems: "center", justifyContent: "center",
+  },
+  tierInfoIcon: { fontSize: 12, fontWeight: "700", color: SharedColors.white, fontStyle: "italic" },
 
   monthNav: {
     flexDirection: "row", alignItems: "center", justifyContent: "center",
@@ -308,6 +395,19 @@ const s = StyleSheet.create({
   txMeta: { fontSize: 11, color: SharedColors.navyMuted },
   txDate: { fontSize: 11, color: SharedColors.navyMuted },
   txAmount: { fontSize: 15, fontWeight: "700", color: SharedColors.green },
+
+  // Trend chart
+  trendCard: {
+    backgroundColor: SharedColors.white, borderRadius: 14, padding: 16,
+    borderWidth: 1, borderColor: SharedColors.border,
+    shadowColor: "#000", shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.05, shadowRadius: 4, elevation: 2,
+  },
+  trendBars: { flexDirection: "row", alignItems: "flex-end", gap: 8, height: 120 },
+  trendCol: { flex: 1, alignItems: "center", gap: 4 },
+  trendAmt: { fontSize: 9, fontWeight: "600", color: SharedColors.navySec },
+  trendBarBg: { width: "100%", height: 80, justifyContent: "flex-end", alignItems: "center" },
+  trendBar: { width: "70%", borderRadius: 4, backgroundColor: DoctorTheme.primary, minHeight: 3 },
+  trendMonth: { fontSize: 10, fontWeight: "600", color: SharedColors.navyMuted },
 
   empty: { alignItems: "center", paddingVertical: 40 },
   emptyTitle: { fontSize: 16, fontWeight: "600", color: SharedColors.navySec, marginBottom: 4 },
