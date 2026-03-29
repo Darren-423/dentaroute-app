@@ -1,8 +1,9 @@
 import { LinearGradient } from "expo-linear-gradient";
 import { router, useLocalSearchParams } from "expo-router";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import {
-  ActivityIndicator, Animated, Easing,
+  ActivityIndicator, Animated, Dimensions, Easing,
+  PanResponder,
   ScrollView,
   StyleSheet,
   Text, TouchableOpacity,
@@ -11,6 +12,10 @@ import {
 import { Booking, store } from "../../lib/store";
 
 import { PatientTheme, SharedColors } from "../../constants/theme";
+const { width: SCREEN_W } = Dimensions.get("window");
+const SLIDER_PAD = 4;
+const THUMB_SZ = 56;
+const SLIDE_MAX = SCREEN_W - 40 - THUMB_SZ - SLIDER_PAD * 2;
 /* ── palette ── */
 export default function ClinicCheckinScreen() {
   const { bookingId } = useLocalSearchParams<{ bookingId: string }>();
@@ -19,8 +24,9 @@ export default function ClinicCheckinScreen() {
   const [confirming, setConfirming] = useState(false);
   const [checkedIn, setCheckedIn] = useState(false);
   const [patientName, setPatientName] = useState("Patient");
+  const [slideX] = useState(new Animated.Value(0));
   const [pulseAnim] = useState(new Animated.Value(1));
-  const [glowAnim] = useState(new Animated.Value(0));
+  const confirmingRef = useRef(false);
 
   useEffect(() => {
     const load = async () => {
@@ -39,7 +45,7 @@ export default function ClinicCheckinScreen() {
     load();
   }, [bookingId]);
 
-  // Pulse + glow animation
+  // Slider pulse animation
   useEffect(() => {
     if (checkedIn) return;
     const pulse = Animated.loop(
@@ -48,15 +54,8 @@ export default function ClinicCheckinScreen() {
         Animated.timing(pulseAnim, { toValue: 1, duration: 1400, easing: Easing.inOut(Easing.ease), useNativeDriver: true }),
       ])
     );
-    const glow = Animated.loop(
-      Animated.sequence([
-        Animated.timing(glowAnim, { toValue: 1, duration: 1800, easing: Easing.inOut(Easing.ease), useNativeDriver: true }),
-        Animated.timing(glowAnim, { toValue: 0, duration: 1800, easing: Easing.inOut(Easing.ease), useNativeDriver: true }),
-      ])
-    );
     pulse.start();
-    glow.start();
-    return () => { pulse.stop(); glow.stop(); };
+    return () => { pulse.stop(); };
   }, [checkedIn]);
 
   const fmtDate = (str: string) => {
@@ -102,6 +101,37 @@ export default function ClinicCheckinScreen() {
     setConfirming(false);
     setCheckedIn(true);
   };
+
+  const handleRef = useRef(handleCheckin);
+  handleRef.current = handleCheckin;
+
+  const panResponder = useRef(
+    PanResponder.create({
+      onStartShouldSetPanResponder: () => !confirmingRef.current,
+      onMoveShouldSetPanResponder: (_, g) => !confirmingRef.current && Math.abs(g.dx) > 5,
+      onPanResponderMove: (_, g) => {
+        if (confirmingRef.current) return;
+        slideX.setValue(Math.max(0, Math.min(g.dx, SLIDE_MAX)));
+      },
+      onPanResponderRelease: (_, g) => {
+        if (confirmingRef.current) return;
+        if (g.dx >= SLIDE_MAX * 0.75) {
+          confirmingRef.current = true;
+          Animated.spring(slideX, { toValue: SLIDE_MAX, useNativeDriver: true, bounciness: 0 }).start(() => {
+            handleRef.current();
+          });
+        } else {
+          Animated.spring(slideX, { toValue: 0, useNativeDriver: true, friction: 5 }).start();
+        }
+      },
+    })
+  ).current;
+
+  const sliderTextOpacity = slideX.interpolate({
+    inputRange: [0, SLIDE_MAX * 0.35],
+    outputRange: [1, 0],
+    extrapolate: "clamp",
+  });
 
   if (loading) {
     return (
@@ -158,17 +188,17 @@ export default function ClinicCheckinScreen() {
 
           {/* Info strip — single card, 3 equal columns */}
           <View style={s.doneInfoStrip}>
-            <View style={s.doneInfoCol}>
+            <View style={{ width: "33.33%", alignItems: "center", justifyContent: "center", gap: 4 }}>
               <Text style={s.doneInfoLabel}>DOCTOR</Text>
               <Text style={s.doneInfoValue} numberOfLines={1}>{booking?.dentistName}</Text>
             </View>
             <View style={s.doneInfoDivider} />
-            <View style={s.doneInfoCol}>
+            <View style={{ width: "33.33%", alignItems: "center", justifyContent: "center", gap: 4 }}>
               <Text style={s.doneInfoLabel}>TIME</Text>
               <Text style={s.doneInfoValue}>{fmtTime(currentVD?.confirmedTime || "")}</Text>
             </View>
             <View style={s.doneInfoDivider} />
-            <View style={s.doneInfoCol}>
+            <View style={{ width: "33.33%", alignItems: "center", justifyContent: "center", gap: 4 }}>
               <Text style={s.doneInfoLabel}>VISIT</Text>
               <Text style={s.doneInfoValue}>{cvn} of {totalV}</Text>
             </View>
@@ -184,14 +214,6 @@ export default function ClinicCheckinScreen() {
               <Text style={s.doneWhatSub}>Please have a seat in the waiting area — we'll call you shortly!</Text>
             </View>
           </View>
-
-          {/* Current procedure */}
-          {currentVD?.description ? (
-            <View style={s.doneProcCard}>
-              <Text style={s.doneProcLabel}>TODAY'S PROCEDURE</Text>
-              <Text style={s.doneProcText}>{currentVD.description}</Text>
-            </View>
-          ) : null}
 
           {/* Visit timeline — multi-visit only */}
           {booking?.visitDates && booking.visitDates.length > 1 && (
@@ -377,36 +399,44 @@ export default function ClinicCheckinScreen() {
           <View style={s.divLine} />
         </View>
 
-        {/* ── Check-in Button ── */}
-        <View style={{ alignItems: "center" }}>
-          {/* Glow ring */}
-          <Animated.View style={[s.glowRing, { opacity: glowAnim.interpolate({ inputRange: [0, 1], outputRange: [0.15, 0.5] }) }]} />
-
-          <Animated.View style={{ transform: [{ scale: pulseAnim }] }}>
-            <TouchableOpacity
-              style={s.checkinBtn}
-              onPress={handleCheckin}
-              disabled={confirming}
-              activeOpacity={0.85}
+        {/* ── Slide to Check-in ── */}
+        <View style={s.sliderOuter}>
+          <LinearGradient
+            colors={["#0f0520", "#261048", "#180830"]}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 0 }}
+            style={s.sliderTrack}
+          >
+            <Animated.View
+              pointerEvents="none"
+              style={[s.thumbRing, {
+                transform: [
+                  { translateX: slideX },
+                  { scale: pulseAnim.interpolate({ inputRange: [1, 1.04], outputRange: [1, 1.2] }) },
+                ],
+                opacity: pulseAnim.interpolate({ inputRange: [1, 1.04], outputRange: [0.55, 0] }),
+              }]}
+            />
+            <Animated.View style={[s.sliderTextWrap, { opacity: sliderTextOpacity }]}>
+              <Text style={s.sliderLabel}>Slide to check in</Text>
+              <Animated.View style={{
+                opacity: pulseAnim.interpolate({ inputRange: [1, 1.04], outputRange: [0.15, 0.85] }),
+                transform: [{ translateX: pulseAnim.interpolate({ inputRange: [1, 1.04], outputRange: [0, 6] }) }],
+              }}>
+                <Text style={s.sliderArrow}>→</Text>
+              </Animated.View>
+            </Animated.View>
+            <Animated.View
+              {...panResponder.panHandlers}
+              style={[s.sliderThumb, { transform: [{ translateX: slideX }] }]}
             >
-              <LinearGradient
-                colors={["#6B21A8", PatientTheme.primary, "#3B0764"]}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 1 }}
-                style={s.checkinGrad}
-              >
-                {confirming ? (
-                  <ActivityIndicator color={SharedColors.white} size="large" />
-                ) : (
-                  <>
-                    <Text style={s.checkinEmoji}>🏥</Text>
-                    <Text style={s.checkinTitle}>I've Arrived!</Text>
-                    <Text style={s.checkinSub}>Tap to check in for Visit {cvn}</Text>
-                  </>
-                )}
-              </LinearGradient>
-            </TouchableOpacity>
-          </Animated.View>
+              {confirming ? (
+                <ActivityIndicator color="#6B21A8" size="small" />
+              ) : (
+                <Text style={s.sliderThumbIcon}>🏥</Text>
+              )}
+            </Animated.View>
+          </LinearGradient>
         </View>
 
         <Text style={s.checkinHint}>
@@ -505,22 +535,41 @@ const s = StyleSheet.create({
   divLine: { flex: 1, height: 1, backgroundColor: SharedColors.border },
   divText: { fontSize: 11, fontWeight: "600", color: SharedColors.slateLight, letterSpacing: 0.3 },
 
-  /* ── Check-in Button ── */
-  glowRing: {
-    position: "absolute", top: -12, width: 220, height: 220, borderRadius: 110,
-    backgroundColor: PatientTheme.primaryMid,
+  /* ── Slider ── */
+  sliderOuter: {
+    borderRadius: 33, marginHorizontal: 0,
+    shadowColor: "#7c3aed", shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.4, shadowRadius: 18, elevation: 12,
   },
-  checkinBtn: { borderRadius: 100, overflow: "hidden" },
-  checkinGrad: {
-    width: 196, height: 196, borderRadius: 98,
-    alignItems: "center", justifyContent: "center", gap: 4,
+  sliderTrack: {
+    height: THUMB_SZ + SLIDER_PAD * 2,
+    borderRadius: (THUMB_SZ + SLIDER_PAD * 2) / 2,
+    justifyContent: "center", paddingHorizontal: SLIDER_PAD,
+    borderWidth: 1, borderColor: "rgba(139,92,246,0.2)", overflow: "visible",
   },
-  checkinEmoji: { fontSize: 36 },
-  checkinTitle: { fontSize: 22, fontWeight: "900", color: SharedColors.white },
-  checkinSub: { fontSize: 12, color: "rgba(255,255,255,0.65)", marginTop: 2 },
+  thumbRing: {
+    position: "absolute", left: 0, top: 0,
+    width: THUMB_SZ + SLIDER_PAD * 2, height: THUMB_SZ + SLIDER_PAD * 2,
+    borderRadius: (THUMB_SZ + SLIDER_PAD * 2) / 2,
+    borderWidth: 2, borderColor: "rgba(167,139,250,0.6)",
+  },
+  sliderTextWrap: {
+    ...StyleSheet.absoluteFillObject,
+    flexDirection: "row", alignItems: "center", justifyContent: "center",
+    gap: 10, paddingLeft: THUMB_SZ + 4,
+  },
+  sliderLabel: { fontSize: 14, fontWeight: "600", color: "rgba(255,255,255,0.75)", letterSpacing: 0.5 },
+  sliderArrow: { fontSize: 18, color: "rgba(255,255,255,0.85)", fontWeight: "300" },
+  sliderThumb: {
+    width: THUMB_SZ, height: THUMB_SZ, borderRadius: THUMB_SZ / 2,
+    backgroundColor: SharedColors.white, alignItems: "center", justifyContent: "center",
+    shadowColor: "#a78bfa", shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.5, shadowRadius: 12, elevation: 8,
+  },
+  sliderThumbIcon: { fontSize: 24 },
   checkinHint: {
     fontSize: 12, color: SharedColors.slateLight, textAlign: "center", lineHeight: 17,
-    paddingHorizontal: 30, marginTop: -4,
+    paddingHorizontal: 30, marginTop: 12,
   },
 
   /* ══ Done state ══ */
@@ -543,17 +592,17 @@ const s = StyleSheet.create({
   doneHeroSub: { fontSize: 13, color: "rgba(255,255,255,0.75)", marginTop: 5 },
 
   doneInfoStrip: {
-    flexDirection: "row", alignItems: "center", width: "100%", marginTop: 22,
+    flexDirection: "row", width: "100%", marginTop: 22,
     backgroundColor: SharedColors.white, borderRadius: 16, paddingVertical: 18,
     borderWidth: 1, borderColor: "rgba(5,150,105,0.1)",
   },
   doneInfoCol: {
-    flex: 1, alignItems: "center", gap: 4, paddingHorizontal: 4,
+    flex: 1, alignItems: "center", justifyContent: "center", gap: 4,
   },
   doneInfoDivider: {
-    width: 1, height: 30, backgroundColor: "rgba(5,150,105,0.12)",
+    width: 1, alignSelf: "stretch", backgroundColor: "rgba(5,150,105,0.12)", marginVertical: 4,
   },
-  doneInfoLabel: { fontSize: 9, fontWeight: "800", color: SharedColors.slateLight, letterSpacing: 1 },
+  doneInfoLabel: { fontSize: 10, fontWeight: "800", color: SharedColors.slateLight, letterSpacing: 1, textAlign: "center" },
   doneInfoValue: { fontSize: 13, fontWeight: "700", color: "#065f46", textAlign: "center" },
 
   doneWhatCard: {
@@ -569,13 +618,6 @@ const s = StyleSheet.create({
   doneWhatDot: { width: 10, height: 10, borderRadius: 5, backgroundColor: "#059669" },
   doneWhatTitle: { fontSize: 14, fontWeight: "700", color: "#047857" },
   doneWhatSub: { fontSize: 12, color: SharedColors.slate, marginTop: 3, lineHeight: 17 },
-
-  doneProcCard: {
-    width: "100%", backgroundColor: SharedColors.white, borderRadius: 16, padding: 18,
-    borderWidth: 1, borderColor: "rgba(5,150,105,0.1)", gap: 6,
-  },
-  doneProcLabel: { fontSize: 9, fontWeight: "800", color: "#059669", letterSpacing: 1 },
-  doneProcText: { fontSize: 14, fontWeight: "600", color: SharedColors.text, lineHeight: 20 },
 
   /* Timeline */
   timelineCard: {

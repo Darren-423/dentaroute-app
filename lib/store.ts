@@ -601,6 +601,28 @@ export const store = {
     return newQuote;
   },
 
+  // 견적 수정
+  updateQuote: async (quoteId: string, updates: Partial<DentistQuote>): Promise<DentistQuote | null> => {
+    const raw = await AsyncStorage.getItem(KEYS.QUOTES);
+    const quotes: DentistQuote[] = raw ? JSON.parse(raw) : [];
+    const idx = quotes.findIndex((q) => q.id === quoteId);
+    if (idx === -1) return null;
+    quotes[idx] = { ...quotes[idx], ...updates };
+    await AsyncStorage.setItem(KEYS.QUOTES, JSON.stringify(quotes));
+
+    // 환자에게 알림: quote가 수정됨
+    await store.addNotification({
+      role: "patient",
+      type: "system" as any,
+      title: "📝 Quote Updated",
+      body: `${quotes[idx].dentistName} has updated their quote for $${quotes[idx].totalPrice.toLocaleString()}.`,
+      icon: "📝",
+      route: `/patient/quotes?caseId=${quotes[idx].caseId}`,
+    });
+
+    return quotes[idx];
+  },
+
   // 특정 케이스의 견적 가져오기
   getQuotesForCase: async (caseId: string): Promise<DentistQuote[]> => {
     const quotes = await store.getQuotes();

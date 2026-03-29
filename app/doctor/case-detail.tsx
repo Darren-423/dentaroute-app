@@ -74,6 +74,7 @@ export default function DoctorCaseDetailScreen() {
   const [loading, setLoading] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [existingQuote, setExistingQuote] = useState<DentistQuote | null>(null);
+  const [editingQuote, setEditingQuote] = useState(false);
   const [visitsCount, setVisitsCount] = useState(1);
   const [gapConfigs, setGapConfigs] = useState<{ gapMonths: number; gapDays: number; gapReason: string }[]>([]);
   const [activeReasonPicker, setActiveReasonPicker] = useState<number | null>(null);
@@ -246,24 +247,36 @@ export default function DoctorCaseDetailScreen() {
         };
       });
 
-      await store.createQuote({
-        caseId: caseData.id,
-        dentistName: doctorProfile?.fullName || doctorProfile?.name || "Doctor",
-        clinicName: doctorProfile?.clinicName || doctorProfile?.clinic || "Clinic",
-        location: doctorProfile?.location || "Gangnam, Seoul",
-        rating: doctorProfile?.rating || 4.9,
-        reviewCount: doctorProfile?.reviewCount || 127,
+      const quotePayload = {
         totalPrice,
         treatments: planItems.map((p) => ({
           name: p.treatment,
           qty: p.qty,
           price: Number(p.price || 0),
         })),
-        treatmentDetails: "",
         duration: visits.length > 1 ? `${visits.length} Visits` : "1 Visit",
         visits,
-        message: "",
-      });
+      };
+
+      if (editingQuote && existingQuote) {
+        // Update existing quote
+        const updated = await store.updateQuote(existingQuote.id, quotePayload);
+        if (updated) setExistingQuote(updated);
+        setEditingQuote(false);
+      } else {
+        // Create new quote
+        await store.createQuote({
+          caseId: caseData.id,
+          dentistName: doctorProfile?.fullName || doctorProfile?.name || "Doctor",
+          clinicName: doctorProfile?.clinicName || doctorProfile?.clinic || "Clinic",
+          location: doctorProfile?.location || "Gangnam, Seoul",
+          rating: doctorProfile?.rating || 4.9,
+          reviewCount: doctorProfile?.reviewCount || 127,
+          ...quotePayload,
+          treatmentDetails: "",
+          message: "",
+        });
+      }
       setSubmitted(true);
     } catch (err) {
       console.log("Error sending quote:", err);
@@ -282,10 +295,10 @@ export default function DoctorCaseDetailScreen() {
     return (
       <LinearGradient colors={[DoctorTheme.primary, DoctorTheme.primaryDark]} style={s.submittedWrap}>
         <Text style={{ fontSize: 80, marginBottom: 20 }}>✅</Text>
-        <Text style={s.submittedTitle}>Quote Sent</Text>
+        <Text style={s.submittedTitle}>{editingQuote ? "Quote Updated" : "Quote Sent"}</Text>
         <Text style={s.submittedDesc}>
           {existingQuote
-            ? `You already sent a quote for this case on ${new Date(existingQuote.createdAt).toLocaleDateString()}.`
+            ? `Your quote of $${displayPrice.toLocaleString()} was sent on ${new Date(existingQuote.createdAt).toLocaleDateString()}.`
             : `The patient will see your quote of $${displayPrice.toLocaleString()}\nin their dashboard.`}
         </Text>
         <View style={s.sentSummary}>
@@ -300,6 +313,16 @@ export default function DoctorCaseDetailScreen() {
             <Text style={s.sentTotalPrice}>${displayPrice.toLocaleString()}</Text>
           </View>
         </View>
+        <TouchableOpacity
+          style={s.editQuoteBtn}
+          onPress={() => {
+            setEditingQuote(true);
+            setSubmitted(false);
+          }}
+          activeOpacity={0.85}
+        >
+          <Text style={s.editQuoteBtnText}>✏️ Edit Quote</Text>
+        </TouchableOpacity>
         <TouchableOpacity
           style={s.backDashBtn}
           onPress={() => router.replace("/doctor/dashboard" as any)}
@@ -1210,7 +1233,7 @@ export default function DoctorCaseDetailScreen() {
                 <ActivityIndicator color={SharedColors.white} size="small" />
               ) : (
                 <Text style={s.sendBtnText}>
-                  Send Quote{totalPrice > 0 ? ` · $${totalPrice.toLocaleString()}` : ""} →
+                  {editingQuote ? "Update Quote" : "Send Quote"}{totalPrice > 0 ? ` · $${totalPrice.toLocaleString()}` : ""} →
                 </Text>
               )}
             </TouchableOpacity>
@@ -1793,6 +1816,12 @@ const s = StyleSheet.create({
   },
   sentTotalLabel: { fontSize: 14, fontWeight: "700", color: SharedColors.white },
   sentTotalPrice: { fontSize: 18, fontWeight: "700", color: DoctorTheme.accentBright },
+  editQuoteBtn: {
+    width: "100%", backgroundColor: "rgba(255,255,255,0.15)", borderRadius: 14,
+    paddingVertical: 15, alignItems: "center", borderWidth: 1.5, borderColor: "rgba(255,255,255,0.3)",
+    marginBottom: 10,
+  },
+  editQuoteBtnText: { color: SharedColors.white, fontSize: 16, fontWeight: "700" },
   backDashBtn: {
     width: "100%", backgroundColor: SharedColors.white, borderRadius: 14,
     paddingVertical: 15, alignItems: "center",

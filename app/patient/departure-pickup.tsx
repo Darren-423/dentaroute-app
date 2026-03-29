@@ -2,7 +2,7 @@ import { LinearGradient } from "expo-linear-gradient";
 import { router, useLocalSearchParams } from "expo-router";
 import React, { useEffect, useState } from "react";
 import {
-  ActivityIndicator, KeyboardAvoidingView, Platform,
+  ActivityIndicator, Alert, KeyboardAvoidingView, Modal, Platform,
   ScrollView,
   StyleSheet,
   Text,
@@ -36,7 +36,9 @@ export default function DeparturePickupScreen() {
   const [terminal, setTerminal] = useState("");
   const [passengers, setPassengers] = useState("1");
   const [notes, setNotes] = useState("");
-  const [showTimePicker, setShowTimePicker] = useState(false);
+  const [datePickerVisible, setDatePickerVisible] = useState(false);
+  const [calYear, setCalYear] = useState(new Date().getFullYear());
+  const [calMonth, setCalMonth] = useState(new Date().getMonth());
 
   useEffect(() => {
     const load = async () => {
@@ -73,12 +75,6 @@ export default function DeparturePickupScreen() {
 
   const formatFlightNumber = (text: string) => text.toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 8);
 
-  const timeSlots: string[] = [];
-  for (let h = 4; h < 24; h++) {
-    for (let m = 0; m < 60; m += 30) {
-      timeSlots.push(`${h.toString().padStart(2, "0")}:${m.toString().padStart(2, "0")}`);
-    }
-  }
   const formatTimeSlot = (slot: string) => {
     if (!slot) return "";
     if (/[APap][Mm]/.test(slot)) return slot;
@@ -96,6 +92,54 @@ export default function DeparturePickupScreen() {
     if (pickupType === "clinic") return booking?.clinicName || "Clinic";
     return customAddress;
   };
+
+  /* ── Calendar ── */
+  const DAY_NAMES = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+  const todayStr = (() => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`; })();
+  const daysInMonth = new Date(calYear, calMonth + 1, 0).getDate();
+  const firstDayOfWeek = new Date(calYear, calMonth, 1).getDay();
+  const calCells: (number | null)[] = [];
+  for (let i = 0; i < firstDayOfWeek; i++) calCells.push(null);
+  for (let d = 1; d <= daysInMonth; d++) calCells.push(d);
+  const monthNames = ["January","February","March","April","May","June","July","August","September","October","November","December"];
+
+  const prevMonth = () => { if (calMonth === 0) { setCalMonth(11); setCalYear(calYear - 1); } else setCalMonth(calMonth - 1); };
+  const nextMonth = () => { if (calMonth === 11) { setCalMonth(0); setCalYear(calYear + 1); } else setCalMonth(calMonth + 1); };
+
+  const renderCalendar = () => (
+    <Modal transparent visible={datePickerVisible} animationType="fade" onRequestClose={() => setDatePickerVisible(false)}>
+      <TouchableOpacity style={s.calOverlay} activeOpacity={1} onPress={() => setDatePickerVisible(false)}>
+        <TouchableOpacity style={s.calContainer} activeOpacity={1} onPress={() => {}}>
+          <View style={s.calHeader}>
+            <TouchableOpacity onPress={prevMonth} style={s.calNavBtn}><Text style={s.calNavText}>{"<"}</Text></TouchableOpacity>
+            <Text style={s.calMonthYear}>{monthNames[calMonth]} {calYear}</Text>
+            <TouchableOpacity onPress={nextMonth} style={s.calNavBtn}><Text style={s.calNavText}>{">"}</Text></TouchableOpacity>
+          </View>
+          <View style={s.calDayNamesRow}>
+            {DAY_NAMES.map((dn) => (<Text key={dn} style={s.calDayName}>{dn}</Text>))}
+          </View>
+          <View style={s.calGrid}>
+            {calCells.map((day, idx) => {
+              if (day === null) return <View key={`e-${idx}`} style={s.calCell} />;
+              const cellStr = `${calYear}-${String(calMonth+1).padStart(2,"0")}-${String(day).padStart(2,"0")}`;
+              const isToday = cellStr === todayStr;
+              const isSelected = cellStr === pickupDate;
+              return (
+                <TouchableOpacity key={`d-${day}`} style={s.calCell} onPress={() => { setPickupDate(cellStr); setDatePickerVisible(false); }}>
+                  <View style={[s.calDayCircle, isToday && s.calCellToday, isSelected && s.calCellSelected]}>
+                    <Text style={[s.calDayText, isToday && s.calDayTextToday, isSelected && s.calDayTextSelected]}>{day}</Text>
+                  </View>
+                </TouchableOpacity>
+              );
+            })}
+          </View>
+          <TouchableOpacity style={s.calCancelBtn} onPress={() => setDatePickerVisible(false)}>
+            <Text style={s.calCancelText}>Cancel</Text>
+          </TouchableOpacity>
+        </TouchableOpacity>
+      </TouchableOpacity>
+    </Modal>
+  );
 
   const isValid = () => {
     if (!pickupType || !pickupDate || !pickupTime) return false;
@@ -246,20 +290,36 @@ export default function DeparturePickupScreen() {
         )}
 
         <View style={s.successActions}>
+          {/* Message driver button */}
+          <TouchableOpacity
+            style={[s.reviewBtn, { backgroundColor: "#1e88e5" }]}
+            onPress={() => Alert.alert("Coming Soon", "Driver messaging will be available soon. Your driver will contact you before pickup.")}
+          >
+            <Text style={s.reviewBtnText}>💬 Message Your Driver</Text>
+          </TouchableOpacity>
+
           {isMidVisitReturn ? (
-            <TouchableOpacity style={s.reviewBtn} onPress={() => router.push("/patient/dashboard" as any)}>
-              <Text style={s.reviewBtnText}>✈️ Go to Dashboard</Text>
+            <TouchableOpacity style={s.dashBtn} onPress={() => router.push("/patient/dashboard" as any)}>
+              <Text style={s.dashBtnText}>✈️ Go to Dashboard</Text>
             </TouchableOpacity>
           ) : (
-            <TouchableOpacity
-              style={s.reviewBtn}
-              onPress={() => router.push({
-                pathname: "/patient/write-review" as any,
-                params: { bookingId: booking?.id, dentistName: booking?.dentistName, clinicName: booking?.clinicName },
-              })}
-            >
-              <Text style={s.reviewBtnText}>⭐ Leave a Review</Text>
-            </TouchableOpacity>
+            <>
+              <TouchableOpacity
+                style={s.reviewBtn}
+                onPress={() => router.push({
+                  pathname: "/patient/write-review" as any,
+                  params: { bookingId: booking?.id, dentistName: booking?.dentistName, clinicName: booking?.clinicName },
+                })}
+              >
+                <Text style={s.reviewBtnText}>⭐ Leave a Review</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[s.reviewBtn, { backgroundColor: SharedColors.green }]}
+                onPress={() => router.replace(`/patient/treatment-complete?bookingId=${booking?.id}` as any)}
+              >
+                <Text style={s.reviewBtnText}>Complete Journey ✅</Text>
+              </TouchableOpacity>
+            </>
           )}
           <TouchableOpacity style={s.dashBtn} onPress={() => router.push("/patient/dashboard" as any)}>
             <Text style={s.dashBtnText}>Go to Dashboard</Text>
@@ -350,52 +410,38 @@ export default function DeparturePickupScreen() {
           {/* ── Pickup Date ── */}
           <View style={s.fieldGroup}>
             <Text style={s.fieldLabel}>Pickup Date <Text style={s.req}>*</Text></Text>
-            <TextInput
-              style={s.input}
-              value={pickupDate}
-              onChangeText={(t) => {
-                const digits = t.replace(/\D/g, "");
-                if (digits.length <= 4) setPickupDate(digits);
-                else if (digits.length <= 6) setPickupDate(digits.slice(0,4) + "-" + digits.slice(4));
-                else setPickupDate(digits.slice(0,4) + "-" + digits.slice(4,6) + "-" + digits.slice(6,8));
-              }}
-              placeholder="YYYY-MM-DD"
-              placeholderTextColor="#c1c9d4"
-              keyboardType="number-pad"
-              maxLength={10}
-            />
-            {pickupDate.length === 10 && (
-              <Text style={s.datePreview}>📅 {formatDateDisplay(pickupDate)}</Text>
-            )}
+            <TouchableOpacity style={s.input} onPress={() => {
+              if (pickupDate) {
+                const [y, m] = pickupDate.split("-");
+                setCalYear(parseInt(y)); setCalMonth(parseInt(m) - 1);
+              }
+              setDatePickerVisible(true);
+            }} activeOpacity={0.7}>
+              <Text style={pickupDate ? { fontSize: 15, color: SharedColors.navy } : { fontSize: 15, color: "#c1c9d4" }}>
+                {pickupDate ? formatDateDisplay(pickupDate) : "Select date"}
+              </Text>
+            </TouchableOpacity>
           </View>
 
           {/* ── Pickup Time ── */}
           <View style={s.fieldGroup}>
             <Text style={s.fieldLabel}>Pickup Time <Text style={s.req}>*</Text></Text>
-            <TouchableOpacity
-              style={s.selectBtn}
-              onPress={() => setShowTimePicker(!showTimePicker)}
-            >
-              <Text style={pickupTime ? s.selectText : s.selectPlaceholder}>
-                {pickupTime ? `🕐 ${formatTimeSlot(pickupTime)}` : "Select time..."}
-              </Text>
-              <Text style={s.selectArrow}>{showTimePicker ? "▲" : "▼"}</Text>
-            </TouchableOpacity>
-            {showTimePicker && (
-              <View style={s.timeGrid}>
-                {timeSlots.map((slot) => (
-                  <TouchableOpacity
-                    key={slot}
-                    style={[s.timeChip, pickupTime === slot && s.timeChipActive]}
-                    onPress={() => { setPickupTime(slot); setShowTimePicker(false); }}
-                  >
-                    <Text style={[s.timeChipText, pickupTime === slot && s.timeChipTextActive]}>
-                      {formatTimeSlot(slot)}
-                    </Text>
-                  </TouchableOpacity>
-                ))}
-              </View>
-            )}
+            <View style={s.flightInputRow}>
+              <Text style={s.flightIcon}>🕐</Text>
+              <TextInput
+                style={s.flightInput}
+                value={pickupTime}
+                onChangeText={(t) => {
+                  const digits = t.replace(/\D/g, "");
+                  if (digits.length <= 2) setPickupTime(digits);
+                  else setPickupTime(digits.slice(0, 2) + ":" + digits.slice(2, 4));
+                }}
+                placeholder="HH:MM (e.g. 14:30)"
+                placeholderTextColor="#c1c9d4"
+                keyboardType="number-pad"
+                maxLength={5}
+              />
+            </View>
             <Text style={s.fieldHint}>💡 We recommend scheduling pickup at least 3 hours before your flight</Text>
           </View>
 
@@ -490,6 +536,7 @@ export default function DeparturePickupScreen() {
           )}
         </TouchableOpacity>
       </View>
+      {renderCalendar()}
     </View>
   );
 }
@@ -547,30 +594,6 @@ const s = StyleSheet.create({
   },
   radioActive: { borderColor: PatientTheme.primary },
   radioInner: { width: 12, height: 12, borderRadius: 6, backgroundColor: PatientTheme.primary },
-
-  // Select
-  selectBtn: {
-    flexDirection: "row", alignItems: "center", justifyContent: "space-between",
-    backgroundColor: SharedColors.white, borderRadius: 12, borderWidth: 1, borderColor: SharedColors.border,
-    paddingHorizontal: 16, paddingVertical: 14,
-  },
-  selectText: { fontSize: 15, color: SharedColors.navy, fontWeight: "500" },
-  selectPlaceholder: { fontSize: 15, color: "#c1c9d4" },
-  selectArrow: { fontSize: 10, color: SharedColors.slateLight },
-
-  // Time grid
-  timeGrid: {
-    flexDirection: "row", flexWrap: "wrap", gap: 8,
-    backgroundColor: SharedColors.white, borderRadius: 12, borderWidth: 1, borderColor: SharedColors.border,
-    padding: 12, maxHeight: 220,
-  },
-  timeChip: {
-    paddingHorizontal: 12, paddingVertical: 9, borderRadius: 10,
-    backgroundColor: "#f1f5f9", borderWidth: 1, borderColor: "transparent",
-  },
-  timeChipActive: { backgroundColor: PatientTheme.primaryLight, borderColor: PatientTheme.primary },
-  timeChipText: { fontSize: 12, color: SharedColors.slate, fontWeight: "500" },
-  timeChipTextActive: { color: PatientTheme.primary, fontWeight: "700" },
 
   // Flight
   flightInputRow: {
@@ -653,4 +676,34 @@ const s = StyleSheet.create({
     backgroundColor: "rgba(239,68,68,0.04)",
   },
   cancelBtnText: { fontSize: 13, fontWeight: "600", color: SharedColors.red },
+
+  // Calendar
+  calOverlay: {
+    flex: 1, backgroundColor: "rgba(0,0,0,0.4)", justifyContent: "center", alignItems: "center",
+  },
+  calContainer: {
+    backgroundColor: SharedColors.white, borderRadius: 20, padding: 20, width: "85%",
+    shadowColor: "#000", shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.15, shadowRadius: 24, elevation: 10,
+  },
+  calHeader: {
+    flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: 16,
+  },
+  calNavBtn: {
+    width: 36, height: 36, borderRadius: 10, alignItems: "center", justifyContent: "center",
+    backgroundColor: SharedColors.bg, borderWidth: 1, borderColor: SharedColors.border,
+  },
+  calNavText: { fontSize: 16, fontWeight: "700", color: SharedColors.navy },
+  calMonthYear: { fontSize: 16, fontWeight: "700", color: SharedColors.navy },
+  calDayNamesRow: { flexDirection: "row", marginBottom: 8 },
+  calDayName: { flex: 1, textAlign: "center", fontSize: 12, fontWeight: "600", color: SharedColors.slate },
+  calGrid: { flexDirection: "row", flexWrap: "wrap" },
+  calCell: { width: "14.28%", height: 48, alignItems: "center", justifyContent: "center" },
+  calDayCircle: { width: 40, height: 40, borderRadius: 20, alignItems: "center", justifyContent: "center" },
+  calCellToday: { borderWidth: 1.5, borderColor: SharedColors.border },
+  calCellSelected: { backgroundColor: PatientTheme.primary },
+  calDayText: { fontSize: 14, fontWeight: "500", color: SharedColors.navy, textAlign: "center" },
+  calDayTextToday: { fontWeight: "700", color: PatientTheme.primary },
+  calDayTextSelected: { fontWeight: "700", color: SharedColors.white },
+  calCancelBtn: { alignItems: "center", paddingVertical: 12, marginTop: 12, borderTopWidth: 1, borderTopColor: SharedColors.border },
+  calCancelText: { fontSize: 14, fontWeight: "600", color: SharedColors.slate },
 });

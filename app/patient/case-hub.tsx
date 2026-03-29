@@ -53,34 +53,24 @@ export default function CaseHubScreen() {
       <ScrollView style={s.body} contentContainerStyle={s.bodyContent} showsVerticalScrollIndicator={false}>
 
         {/* Status Card */}
-        <View style={[s.statusCard, { backgroundColor: hasFlightInfo ? SharedColors.greenLight : SharedColors.amberLight }]}>
-          <Text style={s.statusEmoji}>{hasFlightInfo ? "✅" : "⏳"}</Text>
-          <View style={{ flex: 1 }}>
-            <Text style={[s.statusLabel, { color: hasFlightInfo ? SharedColors.green : SharedColors.amber }]}>
-              {hasFlightInfo ? "Flight Booked" : "Booked — Add Trip Info"}
-            </Text>
-            <Text style={s.statusSub}>
-              {hasFlightInfo ? "Your trip info has been submitted" : "Input your flight & hotel details to continue"}
-            </Text>
-          </View>
-        </View>
-
-        {/* Next Step Button */}
         {hasFlightInfo ? (
-          <TouchableOpacity
-            style={s.nextStepBtn}
-            onPress={() => router.push(`/patient/hotel-arrived?bookingId=${bookingId}` as any)}
-          >
-            <Text style={s.nextStepText}>Confirm Hotel Arrival →</Text>
-          </TouchableOpacity>
+          <View style={[s.statusCard, { backgroundColor: SharedColors.greenLight }]}>
+            <Text style={s.statusEmoji}>✅</Text>
+            <View style={{ flex: 1 }}>
+              <Text style={[s.statusLabel, { color: SharedColors.green }]}>Flight Booked</Text>
+              <Text style={s.statusSub}>Your trip info has been submitted</Text>
+            </View>
+          </View>
         ) : (
-          <TouchableOpacity
-            style={[s.nextStepBtn, { backgroundColor: SharedColors.amberLight }]}
-            onPress={() => router.push(`/patient/arrival-info?bookingId=${bookingId}` as any)}
-          >
-            <Text style={[s.nextStepText, { color: SharedColors.amber }]}>Add Trip Info →</Text>
-          </TouchableOpacity>
+          <View style={[s.statusCard, { backgroundColor: PatientTheme.primaryLight }]}>
+            <Text style={s.statusEmoji}>⏳</Text>
+            <View style={{ flex: 1 }}>
+              <Text style={[s.statusLabel, { color: PatientTheme.primary }]}>Booked — Add Trip Info</Text>
+              <Text style={s.statusSub}>Input your flight & hotel details to continue</Text>
+            </View>
+          </View>
         )}
+
 
         {/* Visit Schedule */}
         <View style={s.sectionCard}>
@@ -229,10 +219,6 @@ export default function CaseHubScreen() {
             <Text style={s.sectionTitle}>Payment</Text>
           </View>
           <View style={s.paymentRow}>
-            <Text style={s.paymentLabel}>Total</Text>
-            <Text style={s.paymentValue}>${booking.totalPrice?.toLocaleString()}</Text>
-          </View>
-          <View style={s.paymentRow}>
             <Text style={s.paymentLabel}>Service Plan</Text>
             <Text style={[s.paymentValue, { color: SharedColors.green }]}>{booking.serviceTier?.charAt(0).toUpperCase()}{booking.serviceTier?.slice(1)} — ${booking.serviceFee}</Text>
           </View>
@@ -264,6 +250,20 @@ export default function CaseHubScreen() {
           <Text style={s.cancelBtnText}>Cancel My Booking</Text>
         </TouchableOpacity>
 
+        {/* Continue Button */}
+        <TouchableOpacity
+          style={[s.continueBtn, !hasFlightInfo && s.continueBtnDisabled]}
+          onPress={() => {
+            if (hasFlightInfo) router.push(`/patient/hotel-arrived?bookingId=${bookingId}` as any);
+          }}
+          activeOpacity={hasFlightInfo ? 0.85 : 1}
+          disabled={!hasFlightInfo}
+        >
+          <Text style={[s.continueBtnText, !hasFlightInfo && s.continueBtnTextDisabled]}>
+            {hasFlightInfo ? "Continue →" : "Add trip info to continue"}
+          </Text>
+        </TouchableOpacity>
+
         <View style={{ height: 100 }} />
       </ScrollView>
     </View>
@@ -289,13 +289,6 @@ const s = StyleSheet.create({
   statusEmoji: { fontSize: 24, marginRight: 12 },
   statusLabel: { fontSize: 15, fontWeight: "700" },
   statusSub: { fontSize: 12, color: SharedColors.slate, marginTop: 2 },
-
-  /* Next Step */
-  nextStepBtn: {
-    backgroundColor: PatientTheme.primaryLight, borderRadius: 14, paddingVertical: 14,
-    alignItems: "center", marginBottom: 14,
-  },
-  nextStepText: { color: PatientTheme.primary, fontSize: 15, fontWeight: "700" },
 
   /* Section Card */
   sectionCard: {
@@ -398,4 +391,15 @@ const s = StyleSheet.create({
     marginBottom: 14,
   },
   cancelBtnText: { color: "#dc2626", fontSize: 15, fontWeight: "600" as const },
+
+  /* Continue Button */
+  continueBtn: {
+    backgroundColor: PatientTheme.primary, borderRadius: 14, paddingVertical: 16,
+    alignItems: "center" as const, marginBottom: 14,
+  },
+  continueBtnDisabled: {
+    backgroundColor: SharedColors.border, opacity: 0.7,
+  },
+  continueBtnText: { color: SharedColors.white, fontSize: 15, fontWeight: "700" as const },
+  continueBtnTextDisabled: { color: SharedColors.slateLight },
 });

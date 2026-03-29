@@ -2,20 +2,21 @@ import { LinearGradient } from "expo-linear-gradient";
 import { router, useLocalSearchParams } from "expo-router";
 import React, { useEffect, useState } from "react";
 import {
-  ActivityIndicator, Alert, KeyboardAvoidingView, Platform,
+  ActivityIndicator, Alert, Image, KeyboardAvoidingView, Platform,
   ScrollView,
   StyleSheet,
   Text, TextInput, TouchableOpacity,
   View,
 } from "react-native";
+import * as ImagePicker from "expo-image-picker";
 import { Booking, store } from "../../lib/store";
 
 import { PatientTheme, SharedColors } from "../../constants/theme";
-const StarRow = ({ rating, onRate, size = 32 }: { rating: number; onRate: (n: number) => void; size?: number }) => (
+const StarRow = ({ rating, onRate, size = 32, disabled = false }: { rating: number; onRate: (n: number) => void; size?: number; disabled?: boolean }) => (
   <View style={{ flexDirection: "row", gap: 6 }}>
     {[1, 2, 3, 4, 5].map((n) => (
-      <TouchableOpacity key={n} onPress={() => onRate(n)} activeOpacity={0.6}>
-        <Text style={{ fontSize: size }}>{n <= rating ? "⭐" : "☆"}</Text>
+      <TouchableOpacity key={n} onPress={() => !disabled && onRate(n)} activeOpacity={disabled ? 1 : 0.6}>
+        <Text style={{ fontSize: size, opacity: disabled && rating === 0 ? 0.3 : 1 }}>{n <= rating ? "\u2b50" : "\u2606"}</Text>
       </TouchableOpacity>
     ))}
   </View>
@@ -39,12 +40,18 @@ export default function WriteReviewScreen() {
   const [alreadyReviewed, setAlreadyReviewed] = useState(false);
   const [showErrors, setShowErrors] = useState(false);
 
+  // Receipt upload states
+  const [receiptImage, setReceiptImage] = useState<string | null>(null);
+  const [uploading, setUploading] = useState(false);
+  const [receiptUploaded, setReceiptUploaded] = useState(false);
+
   useEffect(() => {
     const load = async () => {
       if (bookingId) {
         const b = await store.getBooking(bookingId);
         setBooking(b);
         if (b) {
+          setReceiptUploaded(b.receiptUploaded || false);
           const existing = await store.getReviewForBooking(bookingId);
           if (existing) setAlreadyReviewed(true);
         }
@@ -53,7 +60,44 @@ export default function WriteReviewScreen() {
     load();
   }, [bookingId]);
 
-  const isComplete = overallRating > 0 && treatmentRating > 0 && clinicRating > 0 && communicationRating > 0 && comment.trim().length >= 10;
+  // Auto-calculate overall rating from category averages
+  useEffect(() => {
+    const ratings = [treatmentRating, clinicRating, communicationRating];
+    const filled = ratings.filter((r) => r > 0);
+    if (filled.length === 3) {
+      setOverallRating(Math.round(filled.reduce((a, b) => a + b, 0) / 3));
+    } else {
+      setOverallRating(0);
+    }
+  }, [treatmentRating, clinicRating, communicationRating]);
+
+  const isComplete = overallRating > 0 && treatmentRating > 0 && clinicRating > 0 && communicationRating > 0;
+
+  const handleUploadReceipt = async () => {
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: "images",
+      quality: 0.7,
+    });
+    if (result.canceled || !result.assets?.[0]) return;
+
+    setUploading(true);
+    setReceiptImage(result.assets[0].uri);
+
+    setTimeout(async () => {
+      if (!booking) return;
+      await store.updateBooking(booking.id, {
+        receiptUploaded: true,
+        dropOffUnlocked: true,
+        receiptData: {
+          hospital: booking.clinicName,
+          date: new Date().toISOString().split("T")[0],
+          amount: booking.totalPrice,
+        },
+      });
+      setReceiptUploaded(true);
+      setUploading(false);
+    }, 2000);
+  };
 
   const handleSubmit = async () => {
     if (!isComplete || !booking) {
@@ -96,7 +140,7 @@ export default function WriteReviewScreen() {
   if (alreadyReviewed) {
     return (
       <View style={[s.container, { justifyContent: "center", alignItems: "center", padding: 32 }]}>
-        <Text style={{ fontSize: 64, marginBottom: 16 }}>✅</Text>
+        <Text style={{ fontSize: 64, marginBottom: 16 }}>{"\u2705"}</Text>
         <Text style={s.successTitle}>Already Reviewed</Text>
         <Text style={s.successDesc}>You've already left a review for this booking.</Text>
         <TouchableOpacity style={s.successBtn} onPress={() => router.back()}>
@@ -109,17 +153,34 @@ export default function WriteReviewScreen() {
   if (submitted) {
     return (
       <View style={[s.container, { justifyContent: "center", alignItems: "center", padding: 32 }]}>
-        <Text style={{ fontSize: 64, marginBottom: 16 }}>🎉</Text>
+        <Text style={{ fontSize: 64, marginBottom: 16 }}>{"\ud83c\udf89"}</Text>
         <Text style={s.successTitle}>Thank You!</Text>
         <Text style={s.successDesc}>
           Your review helps other patients find great dental care in Korea.
         </Text>
         <View style={s.successCard}>
-          <StarRow rating={overallRating} onRate={() => {}} size={28} />
+          <StarRow rating={overallRating} onRate={() => {}} size={28} disabled />
           <Text style={s.successReviewComment}>{comment}</Text>
         </View>
-        <TouchableOpacity style={s.successBtn} onPress={() => router.replace("/patient/dashboard" as any)}>
-          <Text style={s.successBtnText}>Go to Dashboard →</Text>
+
+        {/* Post-review navigation: receipt uploaded → arrange drop-off, else → complete journey */}
+        {receiptUploaded ? (
+          <TouchableOpacity
+            style={s.successBtn}
+            onPress={() => router.replace(`/patient/departure-pickup?bookingId=${booking.id}` as any)}
+          >
+            <Text style={s.successBtnText}>Arrange Drop-off {"\ud83d\ude97"}</Text>
+          </TouchableOpacity>
+        ) : (
+          <TouchableOpacity
+            style={s.successBtn}
+            onPress={() => router.replace(`/patient/treatment-complete?bookingId=${booking.id}` as any)}
+          >
+            <Text style={s.successBtnText}>Complete Journey {"\u2705"}</Text>
+          </TouchableOpacity>
+        )}
+        <TouchableOpacity style={s.skipBtn} onPress={() => router.replace("/patient/dashboard" as any)}>
+          <Text style={s.skipBtnText}>Go to Dashboard</Text>
         </TouchableOpacity>
       </View>
     );
@@ -130,7 +191,7 @@ export default function WriteReviewScreen() {
       <LinearGradient colors={[...PatientTheme.gradient]} style={s.header}>
         <View style={s.headerRow}>
           <TouchableOpacity style={s.backBtn} onPress={() => router.back()}>
-            <Text style={s.backArrow}>‹</Text>
+            <Text style={s.backArrow}>{"\u2039"}</Text>
           </TouchableOpacity>
           <View style={s.headerCenter}>
             <Text style={s.title}>Leave a Review</Text>
@@ -156,27 +217,13 @@ export default function WriteReviewScreen() {
           </View>
         </View>
 
-        {/* Overall Rating */}
-        <View style={[s.ratingSection, showErrors && overallRating === 0 && s.errorBorder]}>
-          <Text style={s.ratingSectionTitle}>Overall Experience</Text>
-          <View style={s.ratingRow}>
-            <StarRow rating={overallRating} onRate={setOverallRating} size={40} />
-            {overallRating > 0 && (
-              <Text style={[s.ratingLabel, overallRating >= 4 && { color: SharedColors.green }]}>
-                {RATING_LABELS[overallRating]}
-              </Text>
-            )}
-          </View>
-          {showErrors && overallRating === 0 && <Text style={s.errorText}>Please select an overall rating</Text>}
-        </View>
-
-        {/* Category Ratings */}
+        {/* Category Ratings — these come FIRST now */}
         <View style={[s.categoriesCard, showErrors && (treatmentRating === 0 || clinicRating === 0 || communicationRating === 0) && s.errorBorder]}>
           <Text style={s.categoriesTitle}>Rate by Category</Text>
 
           <View style={s.categoryRow}>
             <View style={s.categoryLeft}>
-              <Text style={s.categoryIcon}>🦷</Text>
+              <Text style={s.categoryIcon}>{"\ud83e\uddb7"}</Text>
               <Text style={[s.categoryLabel, showErrors && treatmentRating === 0 && { color: SharedColors.red }]}>Treatment Quality</Text>
             </View>
             <StarRow rating={treatmentRating} onRate={setTreatmentRating} size={24} />
@@ -186,7 +233,7 @@ export default function WriteReviewScreen() {
 
           <View style={s.categoryRow}>
             <View style={s.categoryLeft}>
-              <Text style={s.categoryIcon}>🏥</Text>
+              <Text style={s.categoryIcon}>{"\ud83c\udfe5"}</Text>
               <Text style={[s.categoryLabel, showErrors && clinicRating === 0 && { color: SharedColors.red }]}>Clinic & Facilities</Text>
             </View>
             <StarRow rating={clinicRating} onRate={setClinicRating} size={24} />
@@ -196,7 +243,7 @@ export default function WriteReviewScreen() {
 
           <View style={s.categoryRow}>
             <View style={s.categoryLeft}>
-              <Text style={s.categoryIcon}>💬</Text>
+              <Text style={s.categoryIcon}>{"\ud83d\udcac"}</Text>
               <Text style={[s.categoryLabel, showErrors && communicationRating === 0 && { color: SharedColors.red }]}>Communication</Text>
             </View>
             <StarRow rating={communicationRating} onRate={setCommunicationRating} size={24} />
@@ -207,11 +254,71 @@ export default function WriteReviewScreen() {
           )}
         </View>
 
+        {/* Overall Rating — auto-calculated */}
+        <View style={[s.ratingSection, showErrors && overallRating === 0 && s.errorBorder]}>
+          <Text style={s.ratingSectionTitle}>Overall Experience</Text>
+          <Text style={s.autoCalcHint}>Auto-calculated from category ratings</Text>
+          <View style={s.ratingRow}>
+            <StarRow rating={overallRating} onRate={() => {}} size={40} disabled />
+            {overallRating > 0 && (
+              <Text style={[s.ratingLabel, overallRating >= 4 && { color: SharedColors.green }]}>
+                {RATING_LABELS[overallRating]}
+              </Text>
+            )}
+          </View>
+          {showErrors && overallRating === 0 && <Text style={s.errorText}>Please rate all categories above first</Text>}
+        </View>
+
+        {/* Receipt Upload — only show if not already uploaded */}
+        {!receiptUploaded && !booking.receiptUploaded && (
+          <View style={s.receiptCard}>
+            <View style={s.receiptPromo}>
+              <Text style={{ fontSize: 28 }}>{"\ud83d\ude97\u2728"}</Text>
+              <Text style={s.receiptPromoTitle}>Get a FREE Airport Drop-off!</Text>
+              <Text style={s.receiptPromoDesc}>
+                Upload your clinic receipt to unlock a complimentary ride to the airport.
+              </Text>
+            </View>
+
+            {uploading ? (
+              <View style={{ alignItems: "center", padding: 16, gap: 8 }}>
+                <ActivityIndicator color={PatientTheme.primary} />
+                <Text style={{ fontSize: 13, color: SharedColors.slate }}>Processing receipt...</Text>
+              </View>
+            ) : (
+              <>
+                {receiptImage && (
+                  <Image source={{ uri: receiptImage }} style={{ width: "100%", height: 120, borderRadius: 10, marginBottom: 8 }} />
+                )}
+                <TouchableOpacity style={s.receiptUploadBtn} onPress={handleUploadReceipt}>
+                  <Text style={s.receiptUploadBtnText}>
+                    {"\ud83d\udcf8"} {receiptImage ? "Replace Receipt" : "Upload Receipt Photo"}
+                  </Text>
+                </TouchableOpacity>
+              </>
+            )}
+            <Text style={s.receiptPrivacy}>
+              Only hospital name, date, and amount are extracted. The image is not stored.
+            </Text>
+          </View>
+        )}
+
+        {/* Receipt already uploaded banner */}
+        {(receiptUploaded || booking.receiptUploaded) && (
+          <View style={s.receiptUnlockedBanner}>
+            <Text style={{ fontSize: 24 }}>{"\ud83c\udf89"}</Text>
+            <Text style={s.receiptUnlockedTitle}>Free Airport Drop-off Unlocked!</Text>
+            <Text style={s.receiptUnlockedDesc}>
+              Your complimentary airport drop-off has been added to your booking.
+            </Text>
+          </View>
+        )}
+
         {/* Comment */}
         <View style={s.field}>
           <Text style={s.fieldLabel}>Your Review</Text>
           <TextInput
-            style={[s.input, s.textArea, showErrors && comment.trim().length < 10 && s.errorBorder]}
+            style={[s.input, s.textArea]}
             placeholder="Share details about your treatment, the clinic, staff, and your overall experience..."
             placeholderTextColor={SharedColors.slateLight}
             value={comment}
@@ -220,17 +327,14 @@ export default function WriteReviewScreen() {
             maxLength={500}
             textAlignVertical="top"
           />
-          <View style={{ flexDirection: "row", justifyContent: "space-between" }}>
-            {showErrors && comment.trim().length < 10
-              ? <Text style={s.errorText}>At least 10 characters required ({Math.max(0, 10 - comment.trim().length)} more)</Text>
-              : <View />}
+          <View style={{ flexDirection: "row", justifyContent: "flex-end" }}>
             <Text style={s.charCount}>{comment.length}/500</Text>
           </View>
         </View>
 
         {/* Tips */}
         <View style={s.tipsCard}>
-          <Text style={s.tipsTitle}>💡 Tips for a great review</Text>
+          <Text style={s.tipsTitle}>{"\ud83d\udca1"} Tips for a great review</Text>
           <Text style={s.tipsText}>
             Mention specific treatments, how the staff treated you, wait times, and whether you'd recommend this clinic to others.
           </Text>
@@ -248,7 +352,7 @@ export default function WriteReviewScreen() {
           {loading ? (
             <ActivityIndicator color={SharedColors.white} size="small" />
           ) : (
-            <Text style={s.submitBtnText}>Submit Review ⭐</Text>
+            <Text style={s.submitBtnText}>Submit Review {"\u2b50"}</Text>
           )}
         </TouchableOpacity>
         <TouchableOpacity
@@ -292,9 +396,10 @@ const s = StyleSheet.create({
   // Overall rating
   ratingSection: {
     backgroundColor: SharedColors.white, borderRadius: 16, padding: 20,
-    borderWidth: 1, borderColor: SharedColors.border, alignItems: "center", gap: 12,
+    borderWidth: 1, borderColor: SharedColors.border, alignItems: "center", gap: 8,
   },
   ratingSectionTitle: { fontSize: 16, fontWeight: "700", color: SharedColors.navy },
+  autoCalcHint: { fontSize: 11, color: SharedColors.slateLight, fontStyle: "italic" },
   ratingRow: { alignItems: "center", gap: 8 },
   ratingLabel: { fontSize: 14, fontWeight: "600", color: SharedColors.amber },
 
@@ -311,6 +416,30 @@ const s = StyleSheet.create({
   categoryIcon: { fontSize: 18 },
   categoryLabel: { fontSize: 13, fontWeight: "600", color: SharedColors.navy },
   categoryDivider: { height: 1, backgroundColor: SharedColors.border },
+
+  // Receipt upload
+  receiptCard: {
+    backgroundColor: SharedColors.white, borderRadius: 16, padding: 18, gap: 12,
+    borderWidth: 1.5, borderColor: PatientTheme.primary,
+    shadowColor: PatientTheme.primary, shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.12, shadowRadius: 8, elevation: 3,
+  },
+  receiptPromo: { alignItems: "center", gap: 6, marginBottom: 4 },
+  receiptPromoTitle: { fontSize: 16, fontWeight: "800", color: PatientTheme.primary, textAlign: "center" },
+  receiptPromoDesc: { fontSize: 13, color: SharedColors.slate, textAlign: "center", lineHeight: 19 },
+  receiptUploadBtn: {
+    backgroundColor: PatientTheme.primaryLight, borderRadius: 12, paddingVertical: 14, alignItems: "center",
+    borderWidth: 1.5, borderColor: "rgba(74,0,128,0.2)", borderStyle: "dashed",
+  },
+  receiptUploadBtnText: { color: PatientTheme.primary, fontSize: 14, fontWeight: "600" },
+  receiptPrivacy: { fontSize: 11, color: SharedColors.slateLight, fontStyle: "italic", textAlign: "center" },
+
+  receiptUnlockedBanner: {
+    backgroundColor: SharedColors.greenLight, borderRadius: 16, padding: 16, alignItems: "center", gap: 6,
+    borderWidth: 1, borderColor: "rgba(22,163,74,0.2)",
+  },
+  receiptUnlockedTitle: { fontSize: 16, fontWeight: "700", color: "#166534" },
+  receiptUnlockedDesc: { fontSize: 13, color: "#166534", textAlign: "center" },
 
   // Fields
   field: { gap: 6 },

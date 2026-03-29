@@ -317,7 +317,7 @@ export default function ArrivalInfoScreen() {
     }
 
     setSaving(false);
-    setSuccess(true);
+    router.replace(`/patient/case-hub?bookingId=${booking.id}` as any);
   };
 
   const handleSkipDepartureSave = async () => {
@@ -409,7 +409,7 @@ export default function ArrivalInfoScreen() {
     }
 
     setSaving(false);
-    setSuccess(true);
+    router.replace(`/patient/case-hub?bookingId=${booking.id}` as any);
   };
 
   const formatTimeSlot = (slot: string) => {
@@ -521,22 +521,26 @@ export default function ArrivalInfoScreen() {
                 return (
                   <TouchableOpacity
                     key={`day-${day}`}
-                    style={[
-                      st.calCell,
-                      isToday && st.calCellToday,
-                      isSelected && st.calCellSelected,
-                    ]}
+                    style={st.calCell}
                     onPress={() => handleDateSelect(day)}
                   >
-                    <Text
+                    <View
                       style={[
-                        st.calDayText,
-                        isToday && st.calDayTextToday,
-                        isSelected && st.calDayTextSelected,
+                        st.calDayCircle,
+                        isToday && st.calCellToday,
+                        isSelected && st.calCellSelected,
                       ]}
                     >
-                      {day}
-                    </Text>
+                      <Text
+                        style={[
+                          st.calDayText,
+                          isToday && st.calDayTextToday,
+                          isSelected && st.calDayTextSelected,
+                        ]}
+                      >
+                        {day}
+                      </Text>
+                    </View>
                   </TouchableOpacity>
                 );
               })}
@@ -883,6 +887,93 @@ export default function ArrivalInfoScreen() {
                   </View>
                 </View>
               )}
+
+              {/* ── Passengers ── */}
+              <Text style={[st.sectionTitle, { marginTop: 12 }]}>🚗 Pickup & Other</Text>
+
+              <View style={st.field}>
+                <Text style={st.fieldLabel}>Number of Passengers</Text>
+                <View style={st.stepperRow}>
+                  <TouchableOpacity
+                    style={st.stepperBtn}
+                    onPress={() => setPassengers(String(Math.max(1, parseInt(passengers) - 1)))}
+                  >
+                    <Text style={st.stepperBtnText}>−</Text>
+                  </TouchableOpacity>
+                  <View style={st.stepperVal}>
+                    <Text style={st.stepperNum}>{passengers}</Text>
+                    <Text style={st.stepperLabel}>{parseInt(passengers) === 1 ? "person" : "people"}</Text>
+                  </View>
+                  <TouchableOpacity
+                    style={st.stepperBtn}
+                    onPress={() => setPassengers(String(Math.min(10, parseInt(passengers) + 1)))}
+                  >
+                    <Text style={st.stepperBtnText}>+</Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+
+              {/* ── Pickup toggle ── */}
+              <View style={st.field}>
+                <Text style={st.fieldLabel}>Airport Pickup Service</Text>
+                {booking?.serviceTier === "basic" ? (
+                  <View style={{ backgroundColor: SharedColors.amberLight, borderRadius: 10, padding: 14, gap: 4 }}>
+                    <Text style={{ fontSize: 13, fontWeight: "600", color: "#92400e" }}>Not included in Basic plan</Text>
+                    <Text style={{ fontSize: 12, color: "#92400e", lineHeight: 18 }}>
+                      Upgrade to Standard or Premium for airport pickup service.
+                    </Text>
+                  </View>
+                ) : (
+                <View style={st.toggleRow}>
+                  <TouchableOpacity
+                    style={[st.toggleOpt, pickupRequested && st.toggleOptActive]}
+                    onPress={() => setPickupRequested(true)}
+                  >
+                    <Text style={{ fontSize: 18 }}>🚗</Text>
+                    <Text style={[st.toggleLabel, pickupRequested && st.toggleLabelActive]}>
+                      Yes, pick me up
+                    </Text>
+                    <Text style={[st.toggleSub, pickupRequested && { color: "rgba(74,0,128,0.6)" }]}>
+                      Included in your plan
+                    </Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={[st.toggleOpt, !pickupRequested && st.toggleOptInactive]}
+                    onPress={() => setPickupRequested(false)}
+                  >
+                    <Text style={{ fontSize: 18 }}>🚶</Text>
+                    <Text style={[st.toggleLabel, !pickupRequested && { color: SharedColors.navy }]}>
+                      No thanks
+                    </Text>
+                    <Text style={st.toggleSub}>
+                      I'll arrange my own
+                    </Text>
+                  </TouchableOpacity>
+                </View>
+                )}
+                {pickupRequested && booking?.serviceTier !== "basic" && (
+                  <View style={st.pickupNote}>
+                    <Text style={st.pickupNoteText}>
+                      Our driver will meet you at the arrivals gate with a sign. Included in your service plan!
+                    </Text>
+                  </View>
+                )}
+              </View>
+
+              {/* ── Notes ── */}
+              <View style={st.field}>
+                <Text style={st.fieldLabel}>Additional Notes</Text>
+                <TextInput
+                  style={[st.input, { height: 80, textAlignVertical: "top" }]}
+                  value={notes}
+                  onChangeText={setNotes}
+                  placeholder="Special requests, wheelchair assistance, heavy luggage, etc."
+                  placeholderTextColor={SharedColors.faint}
+                  multiline
+                  maxLength={300}
+                />
+                <Text style={st.charCount}>{notes.length}/300</Text>
+              </View>
             </>
           )}
 
@@ -960,92 +1051,6 @@ export default function ArrivalInfoScreen() {
                 />
               </View>
 
-              {/* ── Passengers ── */}
-              <Text style={[st.sectionTitle, { marginTop: 12 }]}>🚗 Pickup & Other</Text>
-
-              <View style={st.field}>
-                <Text style={st.fieldLabel}>Number of Passengers</Text>
-                <View style={st.stepperRow}>
-                  <TouchableOpacity
-                    style={st.stepperBtn}
-                    onPress={() => setPassengers(String(Math.max(1, parseInt(passengers) - 1)))}
-                  >
-                    <Text style={st.stepperBtnText}>−</Text>
-                  </TouchableOpacity>
-                  <View style={st.stepperVal}>
-                    <Text style={st.stepperNum}>{passengers}</Text>
-                    <Text style={st.stepperLabel}>{parseInt(passengers) === 1 ? "person" : "people"}</Text>
-                  </View>
-                  <TouchableOpacity
-                    style={st.stepperBtn}
-                    onPress={() => setPassengers(String(Math.min(10, parseInt(passengers) + 1)))}
-                  >
-                    <Text style={st.stepperBtnText}>+</Text>
-                  </TouchableOpacity>
-                </View>
-              </View>
-
-              {/* ── Pickup toggle ── */}
-              <View style={st.field}>
-                <Text style={st.fieldLabel}>Airport Pickup Service</Text>
-                {booking?.serviceTier === "basic" ? (
-                  <View style={{ backgroundColor: SharedColors.amberLight, borderRadius: 10, padding: 14, gap: 4 }}>
-                    <Text style={{ fontSize: 13, fontWeight: "600", color: "#92400e" }}>Not included in Basic plan</Text>
-                    <Text style={{ fontSize: 12, color: "#92400e", lineHeight: 18 }}>
-                      Upgrade to Standard or Premium for airport pickup service.
-                    </Text>
-                  </View>
-                ) : (
-                <View style={st.toggleRow}>
-                  <TouchableOpacity
-                    style={[st.toggleOpt, pickupRequested && st.toggleOptActive]}
-                    onPress={() => setPickupRequested(true)}
-                  >
-                    <Text style={{ fontSize: 18 }}>🚗</Text>
-                    <Text style={[st.toggleLabel, pickupRequested && st.toggleLabelActive]}>
-                      Yes, pick me up
-                    </Text>
-                    <Text style={[st.toggleSub, pickupRequested && { color: "rgba(74,0,128,0.6)" }]}>
-                      Included in your plan
-                    </Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity
-                    style={[st.toggleOpt, !pickupRequested && st.toggleOptInactive]}
-                    onPress={() => setPickupRequested(false)}
-                  >
-                    <Text style={{ fontSize: 18 }}>🚶</Text>
-                    <Text style={[st.toggleLabel, !pickupRequested && { color: SharedColors.navy }]}>
-                      No thanks
-                    </Text>
-                    <Text style={st.toggleSub}>
-                      I'll arrange my own
-                    </Text>
-                  </TouchableOpacity>
-                </View>
-                )}
-                {pickupRequested && booking?.serviceTier !== "basic" && (
-                  <View style={st.pickupNote}>
-                    <Text style={st.pickupNoteText}>
-                      Our driver will meet you at the arrivals gate with a sign. Completely free!
-                    </Text>
-                  </View>
-                )}
-              </View>
-
-              {/* ── Notes ── */}
-              <View style={st.field}>
-                <Text style={st.fieldLabel}>Additional Notes</Text>
-                <TextInput
-                  style={[st.input, { height: 80, textAlignVertical: "top" }]}
-                  value={notes}
-                  onChangeText={setNotes}
-                  placeholder="Special requests, wheelchair assistance, heavy luggage, etc."
-                  placeholderTextColor={SharedColors.faint}
-                  multiline
-                  maxLength={300}
-                />
-                <Text style={st.charCount}>{notes.length}/300</Text>
-              </View>
             </>
           )}
 
@@ -1140,91 +1145,42 @@ export default function ArrivalInfoScreen() {
 
               <View style={st.field}>
                 <Text style={st.fieldLabel}>Time</Text>
-                <TextInput
-                  style={st.input}
-                  value={depFlightTime}
-                  onChangeText={(t) => {
-                    const digits = t.replace(/\D/g, "");
-                    if (digits.length <= 2) setDepFlightTime(digits);
-                    else setDepFlightTime(digits.slice(0, 2) + ":" + digits.slice(2, 4));
-                  }}
-                  placeholder="HH:MM"
-                  placeholderTextColor={SharedColors.faint}
-                  keyboardType="number-pad"
-                  maxLength={5}
-                />
+                <View style={st.flightInputRow}>
+                  <Text style={st.flightIcon}>🕐</Text>
+                  <TextInput
+                    style={st.flightInput}
+                    value={depFlightTime}
+                    onChangeText={(t) => {
+                      const digits = t.replace(/\D/g, "");
+                      if (digits.length <= 2) setDepFlightTime(digits);
+                      else setDepFlightTime(digits.slice(0, 2) + ":" + digits.slice(2, 4));
+                    }}
+                    placeholder="HH:MM (e.g. 14:30)"
+                    placeholderTextColor={SharedColors.faint}
+                    keyboardType="number-pad"
+                    maxLength={5}
+                  />
+                </View>
               </View>
 
               <View style={st.field}>
                 <Text style={st.fieldLabel}>Terminal</Text>
-                <TextInput
-                  style={st.input}
-                  value={depTerminal}
-                  onChangeText={setDepTerminal}
-                  placeholder="e.g. Terminal 2"
-                  placeholderTextColor={SharedColors.faint}
-                />
+                <View style={st.termRow}>
+                  {["Terminal 1", "Terminal 2"].map((t) => (
+                    <TouchableOpacity
+                      key={t}
+                      style={[st.termChip, depTerminal === t && st.termChipActive]}
+                      onPress={() => setDepTerminal(depTerminal === t ? "" : t)}
+                    >
+                      <Text style={[st.termText, depTerminal === t && st.termTextActive]}>{t}</Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
               </View>
             </>
           )}
 
-          {/* Reschedule & Cancel — show on all steps */}
-          {booking && (booking.status === "confirmed" || booking.status === "flight_submitted") && (
-            <View style={{ gap: 10, marginTop: 8 }}>
-              <TouchableOpacity
-                style={st.rescheduleLink}
-                onPress={() => {
-                  const goReschedule = () => {
-                    const visitsJson = JSON.stringify(
-                      (booking.visitDates || []).map((v) => ({
-                        visit: v.visit, description: v.description,
-                        gapMonths: v.gapMonths, gapDays: v.gapDays,
-                        paymentAmount: v.paymentAmount, paymentPercent: v.paymentPercent,
-                      }))
-                    );
-                    router.push({
-                      pathname: "/patient/visit-schedule" as any,
-                      params: {
-                        mode: "reschedule", bookingId: booking.id,
-                        caseId: booking.caseId, quoteId: booking.quoteId || "",
-                        totalPrice: String(booking.totalPrice),
-                        dentistName: booking.dentistName, clinicName: booking.clinicName,
-                        visitsJson, amount: "", duration: "",
-                      },
-                    });
-                  };
-                  const firstDate = booking.visitDates?.[0]?.date;
-                  if (firstDate) {
-                    const diff = Math.ceil((new Date(firstDate).getTime() - Date.now()) / 86400000);
-                    if (diff <= 7) {
-                      Alert.alert(
-                        "Visit is coming up soon",
-                        diff <= 0
-                          ? "Your visit date has already passed. Rescheduling may not be possible."
-                          : `Your first visit is only ${diff} day${diff === 1 ? "" : "s"} away. The clinic may not be able to accommodate a schedule change on short notice.`,
-                        [{ text: "Cancel", style: "cancel" }, { text: "Reschedule Anyway", onPress: goReschedule }]
-                      );
-                      return;
-                    }
-                  }
-                  goReschedule();
-                }}
-                activeOpacity={0.6}
-              >
-                <Text style={st.rescheduleLinkText}>Reschedule my booking</Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                style={st.cancelLink}
-                onPress={() => router.push(`/patient/cancel-booking?bookingId=${booking.id}` as any)}
-                activeOpacity={0.6}
-              >
-                <Text style={st.cancelLinkText}>Cancel this booking</Text>
-              </TouchableOpacity>
-            </View>
-          )}
-
-          <View style={{ height: 100 }} />
+          <View style={{ height: 20 }} />
         </ScrollView>
       </KeyboardAvoidingView>
 
@@ -1692,16 +1648,19 @@ const st = StyleSheet.create({
     flexDirection: "row", flexWrap: "wrap",
   },
   calCell: {
-    width: "14.28%", aspectRatio: 1, alignItems: "center", justifyContent: "center",
+    width: "14.28%", height: 48, alignItems: "center", justifyContent: "center",
+  },
+  calDayCircle: {
+    width: 40, height: 40, borderRadius: 20, alignItems: "center", justifyContent: "center",
   },
   calCellToday: {
-    borderRadius: 20, borderWidth: 1.5, borderColor: SharedColors.border,
+    borderWidth: 1.5, borderColor: SharedColors.border,
   },
   calCellSelected: {
-    borderRadius: 20, backgroundColor: PatientTheme.primary,
+    backgroundColor: PatientTheme.primary,
   },
   calDayText: {
-    fontSize: 14, fontWeight: "500", color: SharedColors.navy,
+    fontSize: 14, fontWeight: "500", color: SharedColors.navy, textAlign: "center",
   },
   calDayTextToday: {
     fontWeight: "700", color: PatientTheme.primary,

@@ -111,8 +111,8 @@ export default function PatientLayout() {
         screenOptions={({ route }) => ({
           headerShown: false,
           animation: "none",
-          gestureEnabled: route.name !== "hotel-arrived",
-          fullScreenGestureEnabled: route.name !== "hotel-arrived",
+          gestureEnabled: route.name !== "hotel-arrived" && route.name !== "clinic-checkin",
+          fullScreenGestureEnabled: route.name !== "hotel-arrived" && route.name !== "clinic-checkin",
         })}
       />
       {showTabBar && currentTab && (
