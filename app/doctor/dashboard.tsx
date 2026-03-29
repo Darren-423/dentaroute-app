@@ -3,9 +3,11 @@ import { LinearGradient } from "expo-linear-gradient";
 import { router, useFocusEffect } from "expo-router";
 import React, { useCallback, useMemo, useRef, useState } from "react";
 import {
+    Alert,
     Animated,
     Image,
     LayoutAnimation,
+    Modal,
     Platform,
     ScrollView,
     StyleSheet,
@@ -76,6 +78,7 @@ export default function DoctorDashboardScreen() {
   const [patientProfileImage, setPatientProfileImage] = useState<string | null>(initialDashboardData.patientProfileImage);
   const [unreadMessages, setUnreadMessages] = useState(initialDashboardData.unreadMessages);
   const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({});
+  const [deleteCaseId, setDeleteCaseId] = useState<string | null>(null);
   const [doctorName, setDoctorName] = useState("Doctor");
   const [passedCaseIds, setPassedCaseIds] = useState<string[]>([]);
 
@@ -440,7 +443,17 @@ export default function DoctorDashboardScreen() {
                         <View style={[s.statusPill, { backgroundColor: badge.bg }]}>
                           <Text style={[s.statusPillText, { color: badge.color }]}>{badge.label}</Text>
                         </View>
-                        <Text style={s.cardArrow}>›</Text>
+                        {section.key === "cancelled" ? (
+                          <TouchableOpacity
+                            onPress={(e) => { e.stopPropagation(); setDeleteCaseId(c.id); }}
+                            activeOpacity={0.6}
+                            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                          >
+                            <Feather name="more-horizontal" size={16} color={SharedColors.slate} />
+                          </TouchableOpacity>
+                        ) : (
+                          <Text style={s.cardArrow}>›</Text>
+                        )}
                       </View>
                     </View>
                   </TouchableOpacity>
@@ -454,6 +467,48 @@ export default function DoctorDashboardScreen() {
       </ScrollView>
 
       {/* Tab bar is rendered by _layout.tsx */}
+
+      {/* ── Delete Cancelled Case Modal ── */}
+      <Modal visible={!!deleteCaseId} transparent animationType="fade" onRequestClose={() => setDeleteCaseId(null)}>
+        <TouchableOpacity style={s.modalOverlay} activeOpacity={1} onPress={() => setDeleteCaseId(null)}>
+          <View style={s.modalSheet}>
+            <View style={s.modalHandle} />
+            <Text style={s.modalTitle}>Manage Case</Text>
+
+            <TouchableOpacity
+              style={s.modalOption}
+              activeOpacity={0.7}
+              onPress={() => {
+                const caseId = deleteCaseId;
+                setDeleteCaseId(null);
+                Alert.alert(
+                  "Delete this case?",
+                  "This cancelled case will be removed from your dashboard.",
+                  [
+                    { text: "Cancel", style: "cancel" },
+                    { text: "Delete", style: "destructive", onPress: async () => {
+                      await store.updateCase(caseId!, { hidden: true } as any);
+                      const data = await loadDoctorDashboardData();
+                      setCases(data.cases);
+                      setBookings(data.bookings);
+                    }},
+                  ],
+                );
+              }}
+            >
+              <Text style={s.modalOptionIcon}>🗑️</Text>
+              <View style={{ flex: 1 }}>
+                <Text style={[s.modalOptionLabel, { color: "#b91c1c" }]}>Delete this card</Text>
+                <Text style={s.modalOptionDesc}>Remove this cancelled case from your dashboard</Text>
+              </View>
+            </TouchableOpacity>
+
+            <TouchableOpacity style={s.modalCloseBtn} onPress={() => setDeleteCaseId(null)} activeOpacity={0.8}>
+              <Text style={s.modalCloseBtnText}>Close</Text>
+            </TouchableOpacity>
+          </View>
+        </TouchableOpacity>
+      </Modal>
     </View>
   );
 }
@@ -720,4 +775,15 @@ const s = StyleSheet.create({
     fontWeight: "300",
   },
 
+  /* Modal */
+  modalOverlay: { flex: 1, backgroundColor: "rgba(0,0,0,0.4)", justifyContent: "flex-end" },
+  modalSheet: { backgroundColor: "#fff", borderTopLeftRadius: 20, borderTopRightRadius: 20, paddingHorizontal: 20, paddingBottom: 36, paddingTop: 12 },
+  modalHandle: { width: 36, height: 4, borderRadius: 2, backgroundColor: "#d1d5db", alignSelf: "center", marginBottom: 16 },
+  modalTitle: { fontSize: 17, fontWeight: "700", color: SharedColors.navy, marginBottom: 16, textAlign: "center" },
+  modalOption: { flexDirection: "row", alignItems: "center", paddingVertical: 14, gap: 12 },
+  modalOptionIcon: { fontSize: 20, width: 28, textAlign: "center" },
+  modalOptionLabel: { fontSize: 15, fontWeight: "600", color: SharedColors.navy },
+  modalOptionDesc: { fontSize: 12, color: SharedColors.slate, marginTop: 2 },
+  modalCloseBtn: { marginTop: 12, paddingVertical: 14, borderRadius: 12, backgroundColor: "#f1f5f9", alignItems: "center" },
+  modalCloseBtnText: { fontSize: 15, fontWeight: "600", color: SharedColors.slate },
 });

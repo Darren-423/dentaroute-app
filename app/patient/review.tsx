@@ -10,7 +10,6 @@ import {
   ScrollView,
   StyleSheet,
   Text,
-  TextInput,
   TouchableOpacity,
   View,
 } from "react-native";
@@ -19,13 +18,6 @@ import { store } from "../../lib/store";
 import { PatientTheme, SharedColors } from "../../constants/theme";
 
 /* ─── types ─── */
-type HealthAnswers = {
-  bloodThinners: boolean | null;
-  drugAllergies: boolean | null;
-  pregnantNursing: boolean | null;
-  diabetes: boolean | null;
-};
-
 type TreatmentDraft = {
   selected?: Record<string, number>;
   custom?: { name: string; qty: number }[];
@@ -54,44 +46,14 @@ export default function PatientReviewScreen() {
   const [concernPhoto, setConcernPhoto] = useState("");
   const [filesCount, setFilesCount] = useState(0);
 
-  /* quick health screen */
-  const [healthAnswers, setHealthAnswers] = useState<HealthAnswers>({
-    bloodThinners: null,
-    drugAllergies: null,
-    pregnantNursing: null,
-    diabetes: null,
-  });
-  const [healthDetailMap, setHealthDetailMap] = useState<Record<string, string>>({});
-
-  /* derived: show diabetes question only for specific mode with implant */
-  const hasImplant = treatmentList.some((t) =>
-    t.name.toLowerCase().includes("implant")
-  );
-  const showDiabetes = !isProposal && hasImplant;
-
-  /* derived: any "Yes" answer */
-  const anyYes =
-    healthAnswers.bloodThinners === true ||
-    healthAnswers.drugAllergies === true ||
-    healthAnswers.pregnantNursing === true ||
-    (showDiabetes && healthAnswers.diabetes === true);
-
-  /* derived: all health questions answered */
-  const allHealthAnswered =
-    healthAnswers.bloodThinners !== null &&
-    healthAnswers.drugAllergies !== null &&
-    healthAnswers.pregnantNursing !== null &&
-    (!showDiabetes || healthAnswers.diabetes !== null);
 
   /* derived: can submit */
   const canSubmit =
-    allHealthAnswered &&
-    (isProposal ? concernText.length >= 20 : treatmentList.length > 0);
+    isProposal ? concernText.length >= 20 : treatmentList.length > 0;
 
   /* derived: section completion */
   const infoComplete = !!patientName && !!patientCountry;
-  const treatmentComplete = isProposal ? concernText.length >= 20 : treatmentList.length > 0;
-  const healthComplete = allHealthAnswered;
+  const treatmentComplete = canSubmit;
 
   /* load data on mount */
   useEffect(() => {
@@ -103,19 +65,6 @@ export default function PatientReviewScreen() {
         if (profile?.countryName) setPatientCountry(profile.countryName);
         else if (profile?.country) setPatientCountry(profile.country);
       } catch (e) { console.warn("Draft read error:", e); }
-
-      // pre-populate Quick Health from existing medical data
-      try {
-        const medical = await store.getPatientMedical();
-        if (medical) {
-          const hasBloodThinners = medical.medications?.some((m: string) =>
-            m.toLowerCase().includes("blood thinner") || m.toLowerCase().includes("warfarin")
-          ) || false;
-          const hasAllergies = medical.allergies?.some((a: string) => a !== "None") || false;
-          if (hasBloodThinners) setHealthAnswers(prev => ({...prev, bloodThinners: true}));
-          if (hasAllergies) setHealthAnswers(prev => ({...prev, drugAllergies: true}));
-        }
-      } catch (e) { console.warn("Medical read error:", e); }
 
       // treatments (specific mode)
       if (!isProposal) {
@@ -276,32 +225,8 @@ export default function PatientReviewScreen() {
         concernPhoto: finalConcernPhoto,
         medicalNotes: "",
         dentalIssues: [],
-        quickHealth: {
-          bloodThinners: healthAnswers.bloodThinners!,
-          drugAllergies: healthAnswers.drugAllergies!,
-          pregnantNursing: healthAnswers.pregnantNursing!,
-          ...(showDiabetes && { diabetesImplant: healthAnswers.diabetes! }),
-          ...(anyYes && Object.values(healthDetailMap).some(v => v.trim()) && {
-            details: Object.entries(healthDetailMap)
-              .filter(([_, v]) => v.trim())
-              .map(([key, val]) => `${key}: ${val.trim()}`)
-              .join('; '),
-          }),
-        },
         filesCount: finalFilesCount,
       });
-
-      // Sync Quick Health answers back to medical profile
-      try {
-        const currentMedical = await store.getPatientMedical() || {};
-        await store.savePatientMedical({
-          ...currentMedical,
-          quickHealthSynced: true,
-          bloodThinners: healthAnswers.bloodThinners,
-          drugAllergies: healthAnswers.drugAllergies,
-          pregnantNursing: healthAnswers.pregnantNursing,
-        });
-      } catch (e) { console.warn("Medical sync error:", e); }
 
       await AsyncStorage.multiRemove(["CASE_DRAFT_TREATMENTS", "CASE_DRAFT_CONCERN"]);
       setCaseId(newCase.id);
@@ -355,41 +280,6 @@ export default function PatientReviewScreen() {
     );
   }
 
-  /* ─── helper: yes/no toggle ─── */
-  const YesNo = ({
-    label,
-    value,
-    onPress,
-  }: {
-    label: string;
-    value: boolean | null;
-    onPress: (v: boolean) => void;
-  }) => (
-    <View style={s.healthRow}>
-      <Text style={s.healthLabel}>{label}</Text>
-      <View style={s.toggleRow}>
-        <TouchableOpacity
-          style={[s.toggleBtn, value === true && s.toggleBtnYes]}
-          onPress={() => onPress(true)}
-          activeOpacity={0.7}
-        >
-          <Text style={[s.toggleText, value === true && s.toggleTextActive]}>
-            Yes
-          </Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={[s.toggleBtn, value === false && s.toggleBtnNo]}
-          onPress={() => onPress(false)}
-          activeOpacity={0.7}
-        >
-          <Text style={[s.toggleText, value === false && s.toggleTextActive]}>
-            No
-          </Text>
-        </TouchableOpacity>
-      </View>
-    </View>
-  );
-
   /* ─── main UI ─── */
   return (
     <View style={s.container}>
@@ -415,80 +305,6 @@ export default function PatientReviewScreen() {
         contentContainerStyle={s.content}
         showsVerticalScrollIndicator={false}
       >
-        {/* ── Quick Safety Check ── */}
-        <View style={[s.healthCard, healthComplete ? s.sectionComplete : s.sectionIncomplete]}>
-          <View style={s.cardHeader}>
-            {healthComplete && <Text style={s.checkIcon}>✓</Text>}
-            <Text style={s.healthTitle}>Quick Safety Check</Text>
-          </View>
-          <Text style={s.healthSubtitle}>
-            Required before submitting your case. Additional questions may appear based on your selected treatments.
-          </Text>
-
-          <YesNo
-            label="Are you currently taking blood thinners?"
-            value={healthAnswers.bloodThinners}
-            onPress={(v) =>
-              setHealthAnswers((prev) => ({ ...prev, bloodThinners: v }))
-            }
-          />
-          {healthAnswers.bloodThinners === true && (
-            <TextInput
-              style={s.inlineDetailInput}
-              value={healthDetailMap["Blood thinners"] || ""}
-              onChangeText={(t) => setHealthDetailMap((prev) => ({ ...prev, "Blood thinners": t }))}
-              placeholder="Which blood thinners? e.g., Warfarin, Aspirin"
-              placeholderTextColor={SharedColors.slateLight}
-            />
-          )}
-
-          <YesNo
-            label="Do you have any drug allergies?"
-            value={healthAnswers.drugAllergies}
-            onPress={(v) =>
-              setHealthAnswers((prev) => ({ ...prev, drugAllergies: v }))
-            }
-          />
-          {healthAnswers.drugAllergies === true && (
-            <TextInput
-              style={s.inlineDetailInput}
-              value={healthDetailMap["Drug allergies"] || ""}
-              onChangeText={(t) => setHealthDetailMap((prev) => ({ ...prev, "Drug allergies": t }))}
-              placeholder="Which drugs? e.g., Penicillin, Ibuprofen"
-              placeholderTextColor={SharedColors.slateLight}
-            />
-          )}
-
-          <YesNo
-            label="Are you pregnant or nursing?"
-            value={healthAnswers.pregnantNursing}
-            onPress={(v) =>
-              setHealthAnswers((prev) => ({ ...prev, pregnantNursing: v }))
-            }
-          />
-
-          {showDiabetes && (
-            <>
-              <YesNo
-                label="Do you have diabetes?"
-                value={healthAnswers.diabetes}
-                onPress={(v) =>
-                  setHealthAnswers((prev) => ({ ...prev, diabetes: v }))
-                }
-              />
-              {healthAnswers.diabetes === true && (
-                <TextInput
-                  style={s.inlineDetailInput}
-                  value={healthDetailMap["Diabetes"] || ""}
-                  onChangeText={(t) => setHealthDetailMap((prev) => ({ ...prev, "Diabetes": t }))}
-                  placeholder="Type 1 or Type 2? Any medications?"
-                  placeholderTextColor={SharedColors.slateLight}
-                />
-              )}
-            </>
-          )}
-        </View>
-
         {/* ── Your Info card ── */}
         <View style={[s.card, infoComplete ? s.sectionComplete : s.sectionIncomplete]}>
           <View style={s.cardHeader}>
@@ -496,7 +312,7 @@ export default function PatientReviewScreen() {
             <Text style={s.cardIcon}>📋</Text>
             <Text style={s.cardTitle}>Your Info</Text>
             <TouchableOpacity
-              onPress={() => router.push("/patient/patient-info?from=review" as any)}
+              onPress={() => router.push("/patient/edit-profile?from=review" as any)}
             >
               <Text style={s.edit}>Edit</Text>
             </TouchableOpacity>
@@ -616,11 +432,6 @@ export default function PatientReviewScreen() {
             <Text style={s.submitBtnText}>Submit Case →</Text>
           )}
         </TouchableOpacity>
-        {!allHealthAnswered && (
-          <Text style={s.hintText}>
-            Answer all health questions to continue
-          </Text>
-        )}
       </View>
     </View>
   );
@@ -717,58 +528,6 @@ const s = StyleSheet.create({
     backgroundColor: SharedColors.border,
   },
 
-  /* health screen */
-  healthCard: {
-    backgroundColor: SharedColors.white,
-    borderRadius: 14,
-    padding: 16,
-    gap: 14,
-    borderWidth: 1,
-    borderColor: PatientTheme.primaryBorder,
-  },
-  healthTitle: {
-    fontSize: 16,
-    fontWeight: "700",
-    color: SharedColors.navy,
-  },
-  healthSubtitle: {
-    fontSize: 12,
-    color: SharedColors.slate,
-    marginTop: -8,
-  },
-  healthRow: { gap: 8 },
-  healthLabel: { fontSize: 14, color: SharedColors.navy, lineHeight: 20 },
-  toggleRow: { flexDirection: "row", gap: 10 },
-  toggleBtn: {
-    flex: 1,
-    paddingVertical: 10,
-    borderRadius: 10,
-    borderWidth: 1,
-    borderColor: SharedColors.border,
-    alignItems: "center",
-    backgroundColor: SharedColors.bg,
-  },
-  toggleBtnYes: {
-    borderColor: SharedColors.coral,
-    backgroundColor: SharedColors.coralLight,
-  },
-  toggleBtnNo: {
-    borderColor: SharedColors.green,
-    backgroundColor: SharedColors.greenLight,
-  },
-  toggleText: { fontSize: 14, fontWeight: "600", color: SharedColors.slate },
-  toggleTextActive: { color: SharedColors.navy },
-  inlineDetailInput: {
-    borderWidth: 1,
-    borderColor: SharedColors.border,
-    borderRadius: 10,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    fontSize: 14,
-    color: SharedColors.navy,
-    backgroundColor: SharedColors.bg,
-    marginTop: -6,
-  },
   detailsWrap: { gap: 6 },
   detailsLabel: {
     fontSize: 13,

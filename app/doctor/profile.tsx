@@ -18,7 +18,6 @@ export default function DoctorProfileScreen() {
   const initialProfileData = getDoctorProfileCache();
   const [profile, setProfile] = useState<any>(initialProfileData.profile);
   const [stats, setStats] = useState(initialProfileData.stats);
-
   useFocusEffect(
     useCallback(() => {
       const load = async () => {
@@ -220,6 +219,11 @@ export default function DoctorProfileScreen() {
           <TouchableOpacity style={s.menuItem} onPress={goEdit}>
             <Text style={s.menuIcon}>✏️</Text>
             <Text style={s.menuText}>Edit Profile</Text>
+            <Text style={s.menuArrow}>›</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={s.menuItem} onPress={() => router.push("/doctor/deleted-cases" as any)}>
+            <Text style={s.menuIcon}>🗑️</Text>
+            <Text style={s.menuText}>Deleted Cases</Text>
             <Text style={s.menuArrow}>›</Text>
           </TouchableOpacity>
           <TouchableOpacity

@@ -62,7 +62,7 @@ export const loadDoctorDashboardData = async (): Promise<DoctorDashboardData> =>
     store.getChatRooms(),
   ]);
 
-  const sortedCases = [...cases].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+  const sortedCases = cases.filter(c => !c.hidden).sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
   const unreadMessages = rooms.reduce((sum, room) => sum + (room.unreadDoctor || 0), 0);
 
   dashboardCache.cases = sortedCases;

@@ -181,7 +181,7 @@ export default function PatientQuotesScreen() {
         ) : caseData?.caseMode === "specific" ? (
           <View style={{ backgroundColor: PatientTheme.primaryLight, borderRadius: 8, padding: 10, marginBottom: 12, borderWidth: 1, borderColor: PatientTheme.primaryBorder }}>
             <Text style={{ fontSize: 12, fontWeight: "600", color: PatientTheme.primary, marginBottom: 2 }}>🎯 Quotes for your selected treatments</Text>
-            <Text style={{ fontSize: 11, color: PatientTheme.primary, lineHeight: 16 }}>Dentists may also suggest additional treatments based on your photos.</Text>
+            <Text style={{ fontSize: 11, color: PatientTheme.primary, lineHeight: 16 }}>Dentists may add/subtract from the suggestions in the quotes during your visit after your in-person exam.</Text>
           </View>
         ) : null}
 

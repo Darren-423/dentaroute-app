@@ -33,7 +33,7 @@ export default function PatientProfileScreen() {
         const cases = await store.getCases();
         const bookings = await store.getBookings();
         const reviews = await store.getReviews();
-        setStats({ cases: cases.length, bookings: bookings.length, reviews: reviews.length });
+        setStats({ cases: cases.filter(c => !c.hidden).length, bookings: bookings.length, reviews: reviews.length });
       };
       load();
     }, [])
@@ -234,6 +234,11 @@ export default function PatientProfileScreen() {
           <TouchableOpacity style={s.menuItem} onPress={() => router.push("/patient/upload?mode=standalone" as any)}>
             <Text style={s.menuIcon}>📁</Text>
             <Text style={s.menuText}>My Files</Text>
+            <Text style={s.menuArrow}>›</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={s.menuItem} onPress={() => router.push("/patient/deleted-cases" as any)}>
+            <Text style={s.menuIcon}>🗑️</Text>
+            <Text style={s.menuText}>Deleted Cases</Text>
             <Text style={s.menuArrow}>›</Text>
           </TouchableOpacity>
           <TouchableOpacity

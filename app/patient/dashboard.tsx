@@ -1,3 +1,4 @@
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Feather } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { router, useFocusEffect } from "expo-router";
@@ -123,6 +124,7 @@ export default function PatientDashboardScreen() {
   const [statusFilter, setStatusFilter] = useState<"all" | "with_quotes" | "bookings" | "in_treatment" | "completed">("all");
   const [manageBooking, setManageBooking] = useState<Booking | null>(null);
   const [deleteCaseId, setDeleteCaseId] = useState<string | null>(null);
+  const [manageCaseId, setManageCaseId] = useState<string | null>(null);
   const [menuOpen, setMenuOpen] = useState(false);
   const [enrichmentNeeded, setEnrichmentNeeded] = useState<Record<string, boolean>>({});
   const [expandedEnrich, setExpandedEnrich] = useState<string | null>(null);
@@ -494,6 +496,30 @@ export default function PatientDashboardScreen() {
                       )}
                       <View style={{ flex: 1 }} />
                       <Text style={sV1.date}>{dateFormatted}</Text>
+                      {(c.status === "pending" || c.status === "quotes_received") && (
+                        <TouchableOpacity
+                          style={sV1.manageBtn}
+                          onPress={(e) => { e.stopPropagation(); setManageCaseId(c.id); }}
+                          activeOpacity={0.6}
+                          hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                          accessibilityRole="button"
+                          accessibilityLabel="Manage case"
+                        >
+                          <Feather name="more-horizontal" size={16} color={SharedColors.slate} />
+                        </TouchableOpacity>
+                      )}
+                      {c.status === "booked" && bookedBk?.status === "cancelled" && (
+                        <TouchableOpacity
+                          style={sV1.manageBtn}
+                          onPress={(e) => { e.stopPropagation(); setDeleteCaseId(c.id); }}
+                          activeOpacity={0.6}
+                          hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                          accessibilityRole="button"
+                          accessibilityLabel="Delete cancelled case"
+                        >
+                          <Feather name="more-horizontal" size={16} color={SharedColors.slate} />
+                        </TouchableOpacity>
+                      )}
                     </View>
                     <Text style={sV1.title}>Case #{c.id}</Text>
                     <Text style={sV1.treatments} numberOfLines={1}>{treatmentLine}</Text>
@@ -760,6 +786,83 @@ export default function PatientDashboardScreen() {
             </TouchableOpacity>
 
             <TouchableOpacity style={s.modalCloseBtn} onPress={() => setDeleteCaseId(null)} activeOpacity={0.8} accessibilityRole="button" accessibilityLabel="Close">
+              <Text style={s.modalCloseBtnText}>Close</Text>
+            </TouchableOpacity>
+          </View>
+        </TouchableOpacity>
+      </Modal>
+
+      {/* ── Manage Case Modal (pending / quotes_received) ── */}
+      <Modal visible={!!manageCaseId} transparent animationType="fade" onRequestClose={() => setManageCaseId(null)}>
+        <TouchableOpacity style={s.modalOverlay} activeOpacity={1} onPress={() => setManageCaseId(null)}>
+          <View style={s.modalSheet}>
+            <View style={s.modalHandle} />
+            <Text style={s.modalTitle}>Manage Case</Text>
+
+            <TouchableOpacity
+              style={s.modalOption}
+              activeOpacity={0.7}
+              onPress={async () => {
+                const caseId = manageCaseId;
+                setManageCaseId(null);
+                const c = cases.find((x) => x.id === caseId);
+                if (!c) return;
+                const mode = (c as any)?.caseMode === "proposal" ? "proposal" : "specific";
+
+                // 기존 케이스 데이터를 draft에 저장하여 review 페이지에서 로드
+                if (mode === "specific" && c.treatments?.length) {
+                  const selected: Record<string, number> = {};
+                  c.treatments.forEach((t) => { selected[t.name] = t.qty; });
+                  await AsyncStorage.setItem("CASE_DRAFT_TREATMENTS", JSON.stringify({ selected }));
+                }
+                if (mode === "proposal") {
+                  await AsyncStorage.setItem("CASE_DRAFT_CONCERN", JSON.stringify({
+                    text: (c as any).concernDescription || "",
+                    photoUri: (c as any).concernPhoto || "",
+                  }));
+                }
+
+                router.push(`/patient/review?caseMode=${mode}` as any);
+              }}
+            >
+              <Text style={s.modalOptionIcon}>✏️</Text>
+              <View style={{ flex: 1 }}>
+                <Text style={s.modalOptionLabel}>Edit my case</Text>
+                <Text style={s.modalOptionDesc}>Update your treatment details or photos</Text>
+              </View>
+              <View style={s.modalChevron} />
+            </TouchableOpacity>
+
+            <View style={s.modalDivider} />
+
+            <TouchableOpacity
+              style={s.modalOption}
+              activeOpacity={0.7}
+              onPress={() => {
+                const caseId = manageCaseId;
+                setManageCaseId(null);
+                Alert.alert(
+                  "Delete this case?",
+                  "This case and any received quotes will be permanently removed.",
+                  [
+                    { text: "Cancel", style: "cancel" },
+                    { text: "Delete", style: "destructive", onPress: async () => {
+                      await store.updateCase(caseId!, { hidden: true } as any);
+                      loadData();
+                    }},
+                  ],
+                );
+              }}
+            >
+              <Text style={s.modalOptionIcon}>🗑️</Text>
+              <View style={{ flex: 1 }}>
+                <Text style={[s.modalOptionLabel, { color: "#b91c1c" }]}>Delete this case</Text>
+                <Text style={s.modalOptionDesc}>Remove this case from your dashboard</Text>
+              </View>
+              <View style={[s.modalChevron, { borderColor: "#b91c1c" }]} />
+            </TouchableOpacity>
+
+            <TouchableOpacity style={s.modalCloseBtn} onPress={() => setManageCaseId(null)} activeOpacity={0.8}>
               <Text style={s.modalCloseBtnText}>Close</Text>
             </TouchableOpacity>
           </View>
