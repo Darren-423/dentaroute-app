@@ -86,6 +86,12 @@ confirmed → flight_submitted → arrived_korea → checked_in_clinic
 
 ---
 
+## 에이전트 팀
+
+사용자가 "에이전트 팀" 또는 "agent team"을 언급하면 → `AGENT_TEAM.md`를 읽고 그 지시를 따라라.
+
+---
+
 ## 개발 규칙
 
 - Expo 서버 절대 자동 시작 금지 — `--tunnel` 모드, Darren이 요청할 때만
